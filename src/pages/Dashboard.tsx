@@ -1,7 +1,9 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Book, BookOpen, Calendar, GraduationCap, Calculator, Beaker, Globe } from "lucide-react";
+import ClassCalendar from "@/components/ClassCalendar";
 
 const subjects = [
   {
@@ -127,36 +129,7 @@ const Dashboard = () => {
           ))}
         </div>
         
-        <div className="mt-8">
-          <h3 className="text-xl font-medium mb-4">Upcoming Sessions</h3>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between py-2 border-b">
-                <div>
-                  <p className="font-medium">Math Tutoring - Algebra</p>
-                  <p className="text-sm text-gray-600">With Ms. Johnson</p>
-                </div>
-                <div className="text-sm text-right">
-                  <p className="font-medium">Tomorrow</p>
-                  <p className="text-gray-600">4:00 PM - 5:00 PM</p>
-                </div>
-              </div>
-              <div className="flex items-center justify-between py-2 border-b">
-                <div>
-                  <p className="font-medium">Science Group Study</p>
-                  <p className="text-sm text-gray-600">With Mr. Chen</p>
-                </div>
-                <div className="text-sm text-right">
-                  <p className="font-medium">Thursday</p>
-                  <p className="text-gray-600">3:30 PM - 4:30 PM</p>
-                </div>
-              </div>
-              <div className="flex justify-end mt-4">
-                <Button variant="outline" size="sm">View All Sessions</Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <ClassCalendar />
       </main>
     </div>
   );
