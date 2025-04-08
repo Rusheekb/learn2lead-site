@@ -109,9 +109,7 @@ const ClassAnalytics: React.FC = () => {
                 >
                   <XAxis dataKey="name" />
                   <YAxis />
-                  <ChartTooltip>
-                    <ChartTooltipContent />
-                  </ChartTooltip>
+                  <ChartTooltip />
                   <Bar dataKey="count" fill="var(--color-math)" />
                 </BarChart>
               </ResponsiveContainer>
@@ -138,9 +136,7 @@ const ClassAnalytics: React.FC = () => {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
-                  <ChartTooltip>
-                    <ChartTooltipContent />
-                  </ChartTooltip>
+                  <ChartTooltip />
                   <Line 
                     type="monotone" 
                     dataKey="classes" 
@@ -172,9 +168,7 @@ const ClassAnalytics: React.FC = () => {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis domain={[60, 100]} />
-                  <ChartTooltip>
-                    <ChartTooltipContent />
-                  </ChartTooltip>
+                  <ChartTooltip />
                   <Line 
                     type="monotone" 
                     dataKey="avgScore" 
