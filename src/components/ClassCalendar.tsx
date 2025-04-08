@@ -175,7 +175,7 @@ const ClassCalendar: React.FC = () => {
                   hasSession: dayWithSessionsClassNames
                 }}
                 components={{
-                  DayContents: ({ date, ...props }) => (
+                  DayContent: ({ date, ...props }) => (
                     <div {...props}>
                       {date.getDate()}
                       {hasSessionsOnDate(date) && (
