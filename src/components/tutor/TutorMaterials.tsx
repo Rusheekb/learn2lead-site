@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -10,8 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileText, Upload, FileUp, Trash2, Plus, Download } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { mockStudentUploads } from "../shared/mock-data";
+import { toast } from "sonner";
 
-// Mock materials data
 const mockMaterials = [
   {
     id: 1,
@@ -55,7 +55,6 @@ const mockMaterials = [
   }
 ];
 
-// Mock students data
 const mockStudents = [
   { id: 1, name: "Alex Johnson", subjects: ["Mathematics", "Physics"] },
   { id: 2, name: "Jamie Smith", subjects: ["Chemistry", "Biology"] },
@@ -76,26 +75,24 @@ const TutorMaterials: React.FC = () => {
   });
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   
-  // Handle file selection
+  const [studentUploads] = useState(mockStudentUploads);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setUploadedFile(file);
       setMaterialData({
         ...materialData,
-        name: file.name.split('.')[0] // Set name to filename without extension as default
+        name: file.name.split('.')[0]
       });
     }
   };
-  
-  // Handle upload form submission
+
   const handleUpload = () => {
-    // In a real app, this would upload to a server/storage
     console.log("Uploading material:", materialData);
     console.log("File:", uploadedFile);
     setIsUploadOpen(false);
     
-    // Reset form
     setMaterialData({
       name: "",
       description: "",
@@ -104,15 +101,13 @@ const TutorMaterials: React.FC = () => {
     });
     setUploadedFile(null);
   };
-  
-  // Handle sharing materials with students
+
   const handleShareMaterial = () => {
     console.log("Sharing material:", selectedMaterial?.id, "with students:", selectedStudents);
     setIsShareOpen(false);
     setSelectedStudents([]);
   };
-  
-  // Open share dialog for a material
+
   const openShareDialog = (material: any) => {
     setSelectedMaterial(material);
     setSelectedStudents(material.sharedWith.map((name: string) => {
@@ -120,6 +115,13 @@ const TutorMaterials: React.FC = () => {
       return student ? student.id.toString() : "";
     }).filter(Boolean));
     setIsShareOpen(true);
+  };
+
+  const handleDownloadStudentFile = (uploadId: number) => {
+    const upload = studentUploads.find(u => u.id === uploadId);
+    if (upload) {
+      toast.success(`Downloading ${upload.fileName}`);
+    }
   };
 
   return (
@@ -207,16 +209,56 @@ const TutorMaterials: React.FC = () => {
               <CardTitle>Student Uploaded Materials</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8 text-gray-500">
-                <FileText className="w-10 h-10 mx-auto mb-2" />
-                <p>No student materials have been uploaded yet</p>
-              </div>
+              {studentUploads.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>File Name</TableHead>
+                      <TableHead>Student</TableHead>
+                      <TableHead>Date Uploaded</TableHead>
+                      <TableHead>Size</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {studentUploads.map((upload) => (
+                      <TableRow key={upload.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center">
+                            <FileText className="h-4 w-4 mr-2" />
+                            {upload.fileName}
+                          </div>
+                        </TableCell>
+                        <TableCell>{upload.studentName}</TableCell>
+                        <TableCell>{upload.uploadDate}</TableCell>
+                        <TableCell>{upload.fileSize}</TableCell>
+                        <TableCell>
+                          <div className="flex space-x-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleDownloadStudentFile(upload.id)}
+                            >
+                              <Download className="h-4 w-4 mr-1" />
+                              Download
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <FileText className="w-10 h-10 mx-auto mb-2" />
+                  <p>No student materials have been uploaded yet</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
       
-      {/* Upload Material Dialog */}
       <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -322,7 +364,6 @@ const TutorMaterials: React.FC = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Share Material Dialog */}
       <Dialog open={isShareOpen} onOpenChange={setIsShareOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -359,7 +400,6 @@ const TutorMaterials: React.FC = () => {
                   </Select>
                 </div>
                 
-                {/* Selected students list */}
                 <div>
                   <h4 className="text-sm font-medium mb-2">Selected Students:</h4>
                   <div className="space-y-2">

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
@@ -8,9 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Clock, Plus, User, Video, FileText } from "lucide-react";
+import { Clock, Plus, User, Video, FileText, MessageSquare } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import StudentContent from "../shared/StudentContent";
+import { mockStudentMessages, mockStudentUploads } from "../shared/mock-data";
+import { toast } from "sonner";
 
-// Mock data for students
 const mockStudents = [
   { id: 1, name: "Alex Johnson", subjects: ["Mathematics", "Physics"] },
   { id: 2, name: "Jamie Smith", subjects: ["Chemistry", "Biology"] },
@@ -34,7 +36,6 @@ interface ClassEvent {
   recurringDays?: string[];
 }
 
-// Mock data for scheduled classes
 const mockScheduledClasses: ClassEvent[] = [
   {
     id: 1,
@@ -73,7 +74,6 @@ const TutorScheduler: React.FC = () => {
   const [isViewEventOpen, setIsViewEventOpen] = useState<boolean>(false);
   const [selectedEvent, setSelectedEvent] = useState<ClassEvent | null>(null);
   
-  // New class event form state
   const [newEvent, setNewEvent] = useState({
     title: "",
     date: new Date(),
@@ -86,16 +86,17 @@ const TutorScheduler: React.FC = () => {
     recurring: false,
     recurringDays: []
   });
-  
-  // Get events for the selected date
+
+  const [studentUploads, setStudentUploads] = useState(mockStudentUploads);
+  const [studentMessages, setStudentMessages] = useState(mockStudentMessages);
+  const [activeEventTab, setActiveEventTab] = useState<string>("details");
+
   const getEventsForDate = (date: Date) => {
     return mockScheduledClasses.filter(event => {
-      // Check for exact date match
       const sameDay = event.date.getDate() === date.getDate() && 
                      event.date.getMonth() === date.getMonth() && 
                      event.date.getFullYear() === date.getFullYear();
       
-      // Check for recurring events
       if (event.recurring && event.recurringDays) {
         const dayOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][date.getDay()];
         return sameDay || event.recurringDays.includes(dayOfWeek);
@@ -104,13 +105,11 @@ const TutorScheduler: React.FC = () => {
       return sameDay;
     });
   };
-  
-  // Check if date has events for calendar highlighting
+
   const hasEventsOnDate = (date: Date) => {
     return getEventsForDate(date).length > 0;
   };
-  
-  // Format time for display
+
   const formatTime = (timeString: string) => {
     const [hourStr, minuteStr] = timeString.split(':');
     const hour = parseInt(hourStr);
@@ -121,19 +120,15 @@ const TutorScheduler: React.FC = () => {
     
     return `${hour12}:${minute.toString().padStart(2, '0')} ${period}`;
   };
-  
-  // Handle selecting an event to view
+
   const handleSelectEvent = (event: ClassEvent) => {
     setSelectedEvent(event);
     setIsViewEventOpen(true);
   };
-  
-  // Handle creating a new class event
+
   const handleCreateEvent = () => {
-    // In a real app, this would save to a database
     console.log("Creating new class event:", newEvent);
     setIsAddEventOpen(false);
-    // Reset form
     setNewEvent({
       title: "",
       date: new Date(),
@@ -147,7 +142,27 @@ const TutorScheduler: React.FC = () => {
       recurringDays: []
     });
   };
-  
+
+  const handleMarkMessageRead = (messageId: number) => {
+    setStudentMessages(messages => 
+      messages.map(message => 
+        message.id === messageId ? { ...message, isRead: true } : message
+      )
+    );
+    toast.success("Message marked as read");
+  };
+
+  const handleDownloadFile = (uploadId: number) => {
+    const upload = studentUploads.find(u => u.id === uploadId);
+    if (upload) {
+      toast.success(`Downloading ${upload.fileName}`);
+    }
+  };
+
+  const getUnreadMessageCount = (classId: number) => {
+    return studentMessages.filter(m => m.classId === classId && !m.isRead).length;
+  };
+
   const eventsForSelectedDate = getEventsForDate(selectedDate);
 
   return (
@@ -207,11 +222,19 @@ const TutorScheduler: React.FC = () => {
                           <span>{event.studentName}</span>
                         </div>
                       </div>
-                      {event.recurring && (
-                        <span className="text-xs bg-tutoring-blue/10 text-tutoring-blue px-2 py-1 rounded">
-                          Recurring
-                        </span>
-                      )}
+                      <div className="flex gap-2">
+                        {event.recurring && (
+                          <span className="text-xs bg-tutoring-blue/10 text-tutoring-blue px-2 py-1 rounded">
+                            Recurring
+                          </span>
+                        )}
+                        {getUnreadMessageCount(event.id) > 0 && (
+                          <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded flex items-center">
+                            <MessageSquare className="h-3 w-3 mr-1" />
+                            {getUnreadMessageCount(event.id)} new
+                          </span>
+                        )}
+                      </div>
                     </div>
                     
                     <div className="flex items-center text-sm text-gray-600 mt-2">
@@ -254,70 +277,93 @@ const TutorScheduler: React.FC = () => {
         </Card>
       </div>
       
-      {/* Dialog for viewing class details */}
       <Dialog open={isViewEventOpen} onOpenChange={setIsViewEventOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>{selectedEvent?.title}</DialogTitle>
           </DialogHeader>
           
           {selectedEvent && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h4 className="text-sm font-medium text-gray-500">Student</h4>
-                  <p>{selectedEvent.studentName}</p>
+            <Tabs value={activeEventTab} onValueChange={setActiveEventTab}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="details">Class Details</TabsTrigger>
+                <TabsTrigger value="student-content">
+                  Student Content
+                  {getUnreadMessageCount(selectedEvent.id) > 0 && (
+                    <span className="ml-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-red-100 text-xs font-medium text-red-800">
+                      {getUnreadMessageCount(selectedEvent.id)}
+                    </span>
+                  )}
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="details" className="space-y-4 pt-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500">Student</h4>
+                    <p>{selectedEvent.studentName}</p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500">Subject</h4>
+                    <p>{selectedEvent.subject}</p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500">Date</h4>
+                    <p>{selectedEvent.date.toLocaleDateString()}</p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500">Time</h4>
+                    <p>{formatTime(selectedEvent.startTime)} - {formatTime(selectedEvent.endTime)}</p>
+                  </div>
                 </div>
+                
                 <div>
-                  <h4 className="text-sm font-medium text-gray-500">Subject</h4>
-                  <p>{selectedEvent.subject}</p>
+                  <h4 className="text-sm font-medium text-gray-500">Zoom Link</h4>
+                  <a 
+                    href={selectedEvent.zoomLink} 
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-tutoring-blue hover:underline flex items-center"
+                  >
+                    <Video className="h-4 w-4 mr-1" />
+                    <span>Join Meeting</span>
+                  </a>
                 </div>
-                <div>
-                  <h4 className="text-sm font-medium text-gray-500">Date</h4>
-                  <p>{selectedEvent.date.toLocaleDateString()}</p>
-                </div>
-                <div>
-                  <h4 className="text-sm font-medium text-gray-500">Time</h4>
-                  <p>{formatTime(selectedEvent.startTime)} - {formatTime(selectedEvent.endTime)}</p>
-                </div>
-              </div>
+                
+                {selectedEvent.materials && selectedEvent.materials.length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500">Materials</h4>
+                    <ul className="list-disc list-inside">
+                      {selectedEvent.materials.map((material, index) => (
+                        <li key={index} className="text-tutoring-blue hover:underline cursor-pointer">
+                          <div className="inline-flex items-center">
+                            <FileText className="h-4 w-4 mr-1" />
+                            <span>{material}</span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                
+                {selectedEvent.notes && (
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500">Notes</h4>
+                    <p className="text-gray-700">{selectedEvent.notes}</p>
+                  </div>
+                )}
+              </TabsContent>
               
-              <div>
-                <h4 className="text-sm font-medium text-gray-500">Zoom Link</h4>
-                <a 
-                  href={selectedEvent.zoomLink} 
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-tutoring-blue hover:underline flex items-center"
-                >
-                  <Video className="h-4 w-4 mr-1" />
-                  <span>Join Meeting</span>
-                </a>
-              </div>
-              
-              {selectedEvent.materials && selectedEvent.materials.length > 0 && (
-                <div>
-                  <h4 className="text-sm font-medium text-gray-500">Materials</h4>
-                  <ul className="list-disc list-inside">
-                    {selectedEvent.materials.map((material, index) => (
-                      <li key={index} className="text-tutoring-blue hover:underline cursor-pointer">
-                        <div className="inline-flex items-center">
-                          <FileText className="h-4 w-4 mr-1" />
-                          <span>{material}</span>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              
-              {selectedEvent.notes && (
-                <div>
-                  <h4 className="text-sm font-medium text-gray-500">Notes</h4>
-                  <p className="text-gray-700">{selectedEvent.notes}</p>
-                </div>
-              )}
-            </div>
+              <TabsContent value="student-content" className="space-y-4 pt-4">
+                <StudentContent 
+                  classId={selectedEvent.id}
+                  uploads={studentUploads}
+                  messages={studentMessages}
+                  onDownload={handleDownloadFile}
+                  onMarkAsRead={handleMarkMessageRead}
+                />
+              </TabsContent>
+            </Tabs>
           )}
           
           <DialogFooter>
@@ -329,7 +375,6 @@ const TutorScheduler: React.FC = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Dialog for adding new class */}
       <Dialog open={isAddEventOpen} onOpenChange={setIsAddEventOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>

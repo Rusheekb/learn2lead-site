@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -7,12 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar as CalendarIcon, Clock, Search, Filter, User, Beaker, Calculator, BookOpen, Book, Globe } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Search, Filter, User, MessageSquare } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
+import StudentContent from "../shared/StudentContent";
+import { mockStudentMessages, mockStudentUploads } from "../shared/mock-data";
+import { toast } from "sonner";
 
-// Mock class data
 const mockClasses = [
   {
     id: 1,
@@ -86,7 +87,6 @@ const mockClasses = [
   }
 ];
 
-// Status badges
 const statusBadge = (status: string) => {
   switch (status) {
     case 'completed':
@@ -100,7 +100,6 @@ const statusBadge = (status: string) => {
   }
 };
 
-// Attendance badges
 const attendanceBadge = (attendance: string) => {
   switch (attendance) {
     case 'attended':
@@ -121,34 +120,30 @@ const ClassLogs: React.FC = () => {
   const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
   const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false);
   const [selectedClass, setSelectedClass] = useState<any>(null);
-  
-  // Apply filters to class data
+  const [studentUploads] = useState(mockStudentUploads);
+  const [studentMessages, setStudentMessages] = useState(mockStudentMessages);
+  const [activeDetailsTab, setActiveDetailsTab] = useState<string>("details");
+
   const filteredClasses = mockClasses.filter((cls) => {
-    // Search term filter
     const searchMatch = searchTerm === "" || 
       cls.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       cls.tutorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       cls.studentName.toLowerCase().includes(searchTerm.toLowerCase());
     
-    // Status filter
     const statusMatch = statusFilter === "all" || cls.status === statusFilter;
     
-    // Subject filter
     const subjectMatch = subjectFilter === "all" || cls.subject.toLowerCase() === subjectFilter.toLowerCase();
     
-    // Date filter
     const dateMatch = !dateFilter || new Date(cls.date).toDateString() === dateFilter.toDateString();
     
     return searchMatch && statusMatch && subjectMatch && dateMatch;
   });
-  
-  // Handle class row click to show details
+
   const handleClassClick = (cls: any) => {
     setSelectedClass(cls);
     setIsDetailsOpen(true);
   };
-  
-  // Format time for display
+
   const formatTime = (timeString: string) => {
     const [hourStr, minuteStr] = timeString.split(':');
     const hour = parseInt(hourStr);
@@ -159,13 +154,32 @@ const ClassLogs: React.FC = () => {
     
     return `${hour12}:${minute.toString().padStart(2, '0')} ${period}`;
   };
-  
-  // Clear all filters
+
   const clearFilters = () => {
     setSearchTerm("");
     setStatusFilter("all");
     setSubjectFilter("all");
     setDateFilter(undefined);
+  };
+
+  const handleMarkMessageRead = (messageId: number) => {
+    setStudentMessages(messages => 
+      messages.map(message => 
+        message.id === messageId ? { ...message, isRead: true } : message
+      )
+    );
+    toast.success("Message marked as read");
+  };
+
+  const getUnreadMessageCount = (classId: number) => {
+    return studentMessages.filter(m => m.classId === classId && !m.isRead).length;
+  };
+
+  const handleDownloadFile = (uploadId: number) => {
+    const upload = studentUploads.find(u => u.id === uploadId);
+    if (upload) {
+      toast.success(`Downloading ${upload.fileName}`);
+    }
   };
 
   return (
@@ -178,7 +192,6 @@ const ClassLogs: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Search */}
             <div className="relative">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
               <Input
@@ -189,7 +202,6 @@ const ClassLogs: React.FC = () => {
               />
             </div>
             
-            {/* Status filter */}
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger>
                 <SelectValue placeholder="Status" />
@@ -202,7 +214,6 @@ const ClassLogs: React.FC = () => {
               </SelectContent>
             </Select>
             
-            {/* Subject filter */}
             <Select value={subjectFilter} onValueChange={setSubjectFilter}>
               <SelectTrigger>
                 <SelectValue placeholder="Subject" />
@@ -216,7 +227,6 @@ const ClassLogs: React.FC = () => {
               </SelectContent>
             </Select>
             
-            {/* Date filter */}
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -267,7 +277,7 @@ const ClassLogs: React.FC = () => {
                     <TableHead>Date</TableHead>
                     <TableHead>Time</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Attendance</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -276,7 +286,6 @@ const ClassLogs: React.FC = () => {
                       <TableRow 
                         key={cls.id} 
                         className="cursor-pointer hover:bg-gray-50"
-                        onClick={() => handleClassClick(cls)}
                       >
                         <TableCell className="font-medium">{cls.title}</TableCell>
                         <TableCell>{cls.subject}</TableCell>
@@ -285,7 +294,18 @@ const ClassLogs: React.FC = () => {
                         <TableCell>{new Date(cls.date).toLocaleDateString()}</TableCell>
                         <TableCell>{formatTime(cls.startTime)} - {formatTime(cls.endTime)}</TableCell>
                         <TableCell>{statusBadge(cls.status)}</TableCell>
-                        <TableCell>{attendanceBadge(cls.attendance)}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Button variant="outline" size="sm" onClick={() => handleClassClick(cls)}>
+                              View
+                            </Button>
+                            {getUnreadMessageCount(cls.id) > 0 && (
+                              <span className="bg-red-100 text-red-800 text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                                {getUnreadMessageCount(cls.id)}
+                              </span>
+                            )}
+                          </div>
+                        </TableCell>
                       </TableRow>
                     ))
                   ) : (
@@ -374,65 +394,88 @@ const ClassLogs: React.FC = () => {
         </TabsContent>
       </Tabs>
       
-      {/* Class Details Dialog */}
       <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>{selectedClass?.title}</DialogTitle>
           </DialogHeader>
           
           {selectedClass && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h4 className="text-sm font-medium text-gray-500">Subject</h4>
-                  <p>{selectedClass.subject}</p>
-                </div>
-                <div>
-                  <h4 className="text-sm font-medium text-gray-500">Status</h4>
-                  <div>{statusBadge(selectedClass.status)}</div>
-                </div>
-                <div>
-                  <h4 className="text-sm font-medium text-gray-500">Tutor</h4>
-                  <p>{selectedClass.tutorName}</p>
-                </div>
-                <div>
-                  <h4 className="text-sm font-medium text-gray-500">Student</h4>
-                  <p>{selectedClass.studentName}</p>
-                </div>
-                <div>
-                  <h4 className="text-sm font-medium text-gray-500">Date</h4>
-                  <p>{new Date(selectedClass.date).toLocaleDateString()}</p>
-                </div>
-                <div>
-                  <h4 className="text-sm font-medium text-gray-500">Time</h4>
-                  <p>{formatTime(selectedClass.startTime)} - {formatTime(selectedClass.endTime)}</p>
-                </div>
-                <div>
-                  <h4 className="text-sm font-medium text-gray-500">Attendance</h4>
-                  <div>{attendanceBadge(selectedClass.attendance)}</div>
-                </div>
-              </div>
+            <Tabs value={activeDetailsTab} onValueChange={setActiveDetailsTab}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="details">Class Details</TabsTrigger>
+                <TabsTrigger value="student-content">
+                  Student Content
+                  {getUnreadMessageCount(selectedClass.id) > 0 && (
+                    <span className="ml-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-red-100 text-xs font-medium text-red-800">
+                      {getUnreadMessageCount(selectedClass.id)}
+                    </span>
+                  )}
+                </TabsTrigger>
+              </TabsList>
               
-              <div>
-                <h4 className="text-sm font-medium text-gray-500">Zoom Link</h4>
-                <a 
-                  href={selectedClass.zoomLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-tutoring-blue hover:underline"
-                >
-                  {selectedClass.zoomLink}
-                </a>
-              </div>
+              <TabsContent value="details" className="space-y-4 pt-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500">Subject</h4>
+                    <p>{selectedClass.subject}</p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500">Status</h4>
+                    <div>{statusBadge(selectedClass.status)}</div>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500">Tutor</h4>
+                    <p>{selectedClass.tutorName}</p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500">Student</h4>
+                    <p>{selectedClass.studentName}</p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500">Date</h4>
+                    <p>{new Date(selectedClass.date).toLocaleDateString()}</p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500">Time</h4>
+                    <p>{formatTime(selectedClass.startTime)} - {formatTime(selectedClass.endTime)}</p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-500">Attendance</h4>
+                    <div>{attendanceBadge(selectedClass.attendance)}</div>
+                  </div>
+                </div>
+                
+                <div>
+                  <h4 className="text-sm font-medium text-gray-500">Zoom Link</h4>
+                  <a 
+                    href={selectedClass.zoomLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-tutoring-blue hover:underline"
+                  >
+                    {selectedClass.zoomLink}
+                  </a>
+                </div>
+                
+                <div>
+                  <h4 className="text-sm font-medium text-gray-500">Notes</h4>
+                  <p className="mt-1 text-gray-700">
+                    {selectedClass.notes || "No notes recorded for this class."}
+                  </p>
+                </div>
+              </TabsContent>
               
-              <div>
-                <h4 className="text-sm font-medium text-gray-500">Notes</h4>
-                <p className="mt-1 text-gray-700">
-                  {selectedClass.notes || "No notes recorded for this class."}
-                </p>
-              </div>
-            </div>
+              <TabsContent value="student-content" className="space-y-4 pt-4">
+                <StudentContent 
+                  classId={selectedClass.id}
+                  uploads={studentUploads}
+                  messages={studentMessages}
+                  onDownload={handleDownloadFile}
+                  onMarkAsRead={handleMarkMessageRead}
+                />
+              </TabsContent>
+            </Tabs>
           )}
           
           <DialogFooter>
