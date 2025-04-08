@@ -1,8 +1,7 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Book, BookOpen, Calendar, GraduationCap } from "lucide-react";
+import { Book, BookOpen, Calendar, GraduationCap, Calculator, Beaker, Globe } from "lucide-react";
 
 const subjects = [
   {
@@ -15,7 +14,7 @@ const subjects = [
   {
     id: 2,
     name: "Science",
-    icon: <Flask className="h-8 w-8 text-green-500" />,
+    icon: <Beaker className="h-8 w-8 text-green-500" />,
     description: "Biology, Chemistry, Physics, and more",
     topics: ["Biology", "Chemistry", "Physics", "Environmental Science", "Astronomy"]
   },
@@ -48,9 +47,6 @@ const subjects = [
     topics: ["SAT Prep", "ACT Prep", "AP Exams", "State Tests"]
   }
 ];
-
-// Let's fix the missing imports
-import { Calculator, Flask, Globe } from "lucide-react";
 
 const Dashboard = () => {
   const [selectedSubject, setSelectedSubject] = useState<number | null>(null);
