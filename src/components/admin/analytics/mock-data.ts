@@ -38,24 +38,28 @@ export const statsData = [
     title: "Total Classes",
     value: "158",
     change: "+12% from last month",
-    icon: <Calendar className="h-8 w-8 text-tutoring-blue" />
+    iconName: "Calendar",
+    iconColor: "text-tutoring-blue"
   },
   {
     title: "Active Students",
     value: "42",
     change: "+5 from last month",
-    icon: <Users className="h-8 w-8 text-green-600" />
+    iconName: "Users",
+    iconColor: "text-green-600"
   },
   {
     title: "Average Class Duration",
     value: "54 min",
     change: "+2 min from last month",
-    icon: <Clock className="h-8 w-8 text-amber-500" />
+    iconName: "Clock",
+    iconColor: "text-amber-500"
   },
   {
     title: "Active Tutors",
     value: "12",
     change: "Same as last month",
-    icon: <Users className="h-8 w-8 text-purple-600" />
+    iconName: "Users",
+    iconColor: "text-purple-600"
   }
 ];

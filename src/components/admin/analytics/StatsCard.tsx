@@ -1,15 +1,37 @@
 
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Calendar, Clock, Users } from "lucide-react";
 
 interface StatsCardProps {
   title: string;
   value: string;
   change: string;
-  icon: React.ReactNode;
+  iconName: string;
+  iconColor: string;
 }
 
-const StatsCard: React.FC<StatsCardProps> = ({ title, value, change, icon }) => {
+const StatsCard: React.FC<StatsCardProps> = ({ 
+  title, 
+  value, 
+  change, 
+  iconName, 
+  iconColor 
+}) => {
+  // Render the appropriate icon based on the iconName
+  const renderIcon = () => {
+    switch (iconName) {
+      case "Calendar":
+        return <Calendar className={`h-8 w-8 ${iconColor}`} />;
+      case "Users":
+        return <Users className={`h-8 w-8 ${iconColor}`} />;
+      case "Clock":
+        return <Clock className={`h-8 w-8 ${iconColor}`} />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <Card>
       <CardContent className="flex p-6 items-center justify-between">
@@ -19,7 +41,7 @@ const StatsCard: React.FC<StatsCardProps> = ({ title, value, change, icon }) => 
           <p className="text-xs text-gray-500 mt-1">{change}</p>
         </div>
         <div className="bg-gray-100 p-3 rounded-full">
-          {icon}
+          {renderIcon()}
         </div>
       </CardContent>
     </Card>

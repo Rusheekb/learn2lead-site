@@ -12,7 +12,8 @@ const StatsGrid: React.FC = () => {
           title={stat.title}
           value={stat.value}
           change={stat.change}
-          icon={stat.icon}
+          iconName={stat.iconName}
+          iconColor={stat.iconColor}
         />
       ))}
     </div>
