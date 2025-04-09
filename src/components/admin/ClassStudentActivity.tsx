@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, MessageSquare, User, Calendar, ArrowRight } from "lucide-react";
-import StudentContent from "../shared/StudentContent";
+import StudentContent, { StudentUpload, StudentMessage } from "../shared/StudentContent";
 import { mockStudentMessages, mockStudentUploads } from "../shared/mock-data";
 import ClassContentUpload from "../shared/ClassContentUpload";
 import { toast } from "sonner";
