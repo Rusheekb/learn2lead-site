@@ -4,6 +4,8 @@ import DashboardLayout from "@/components/DashboardLayout";
 import ClassAnalytics from "@/components/admin/ClassAnalytics";
 import ClassLogs from "@/components/admin/ClassLogs";
 import PaymentsManager from "@/components/admin/PaymentsManager";
+import TutorsManager from "@/components/admin/TutorsManager";
+import StudentsManager from "@/components/admin/StudentsManager";
 
 const AdminDashboard: React.FC = () => {
   const [activeSection, setActiveSection] = React.useState<string>("");
@@ -26,6 +28,10 @@ const AdminDashboard: React.FC = () => {
         return <ClassLogs />;
       case "payments":
         return <PaymentsManager />;
+      case "tutors":
+        return <TutorsManager />;
+      case "students":
+        return <StudentsManager />;
       case "analytics":
       default:
         // Default to analytics
