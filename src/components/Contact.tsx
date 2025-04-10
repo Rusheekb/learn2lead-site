@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +13,7 @@ const Contact = () => {
             Get in Touch
           </h2>
           <p className="text-lg text-gray-600">
-            Have questions or ready to start? Reach out and we'll respond promptly.
+            Have questions? We'd love to hear from you.
           </p>
         </div>
 
@@ -28,7 +27,7 @@ const Contact = () => {
                   <Mail className="h-6 w-6 mr-4 mt-1" />
                   <div>
                     <p className="font-medium">Email Us</p>
-                    <p className="mt-1">info@learn2lead.com</p>
+                    <p className="mt-1">learn2leadtutoring@gmail.com</p>
                   </div>
                 </div>
                 
@@ -36,35 +35,22 @@ const Contact = () => {
                   <Phone className="h-6 w-6 mr-4 mt-1" />
                   <div>
                     <p className="font-medium">Call Us</p>
-                    <p className="mt-1">(555) 123-4567</p>
+                    <p className="mt-1">(925) 854-7020</p>
                   </div>
                 </div>
                 
                 <div className="flex items-start">
                   <MapPin className="h-6 w-6 mr-4 mt-1" />
                   <div>
-                    <p className="font-medium">Visit Us</p>
-                    <p className="mt-1">123 Education Lane<br />Knowledge City, KS 12345</p>
+                    <p className="font-medium">Location</p>
+                    <p className="mt-1">Dallas Area</p>
                   </div>
                 </div>
               </div>
               
               <div className="mt-12">
                 <h4 className="font-medium mb-4">Follow Us</h4>
-                <div className="flex space-x-4">
-                  <a href="#" className="h-10 w-10 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition duration-300">
-                    <span className="sr-only">Facebook</span>
-                    <div className="h-5 w-5 bg-white"></div>
-                  </a>
-                  <a href="#" className="h-10 w-10 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition duration-300">
-                    <span className="sr-only">Twitter</span>
-                    <div className="h-5 w-5 bg-white"></div>
-                  </a>
-                  <a href="#" className="h-10 w-10 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition duration-300">
-                    <span className="sr-only">Instagram</span>
-                    <div className="h-5 w-5 bg-white"></div>
-                  </a>
-                </div>
+                <p>Coming Soon...</p>
               </div>
             </div>
             

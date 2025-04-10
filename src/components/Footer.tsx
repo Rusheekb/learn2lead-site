@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 const Footer = () => {
@@ -9,54 +8,39 @@ const Footer = () => {
           <div>
             <h3 className="text-xl font-bold mb-4">Learn<span className="text-tutoring-teal">2</span>Lead</h3>
             <p className="text-gray-400 mb-4">
-              Empowering students to achieve academic excellence through personalized tutoring.
+              Empowering students to achieve academic excellence and develop strong leadership skills.
             </p>
           </div>
           
           <div>
             <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-2">
-              <li><a href="#home" className="text-gray-400 hover:text-white transition-colors">Home</a></li>
-              <li><a href="#about" className="text-gray-400 hover:text-white transition-colors">About Us</a></li>
               <li><a href="#services" className="text-gray-400 hover:text-white transition-colors">Services</a></li>
               <li><a href="#testimonials" className="text-gray-400 hover:text-white transition-colors">Testimonials</a></li>
+              <li><a href="#blog" className="text-gray-400 hover:text-white transition-colors">Blog</a></li>
               <li><a href="#contact" className="text-gray-400 hover:text-white transition-colors">Contact</a></li>
             </ul>
           </div>
           
           <div>
-            <h4 className="text-lg font-semibold mb-4">Services</h4>
-            <ul className="space-y-2">
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Math Tutoring</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Science Tutoring</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Language Arts</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Test Preparation</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">College Admissions</a></li>
+            <h4 className="text-lg font-semibold mb-4">Contact Us</h4>
+            <ul className="space-y-2 text-gray-400">
+              <li>Phone: (925) 854-7020</li>
+              <li>Email: learn2leadtutoring@gmail.com</li>
             </ul>
           </div>
           
           <div>
-            <h4 className="text-lg font-semibold mb-4">Contact</h4>
-            <ul className="space-y-2 text-gray-400">
-              <li>123 Education Lane</li>
-              <li>Knowledge City, KS 12345</li>
-              <li>info@learn2lead.com</li>
-              <li>(555) 123-4567</li>
-            </ul>
+            <h4 className="text-lg font-semibold mb-4">Follow Us</h4>
+            <p className="text-gray-400">Coming Soon...</p>
           </div>
         </div>
         
         <div className="border-t border-gray-800 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-400 text-sm mb-4 md:mb-0">
-              &copy; {new Date().getFullYear()} Learn2Lead. All rights reserved.
+              © 2025 Learn2Lead. All rights reserved.
             </p>
-            
-            <div className="flex space-x-6">
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">Privacy Policy</a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">Terms of Service</a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">Cookie Policy</a>
-            </div>
           </div>
         </div>
       </div>

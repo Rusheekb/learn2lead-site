@@ -6,13 +6,19 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar as CalendarIcon, Clock, Search, Filter, User, MessageSquare } from "lucide-react";
+import { Calendar as CalendarIcon, Clock, Search, Filter, User, MessageSquare, Download, FileDown, Printer, RefreshCw } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import StudentContent from "../shared/StudentContent";
 import { mockStudentMessages, mockStudentUploads } from "../shared/mock-data";
 import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const mockClasses = [
   {
@@ -123,6 +129,7 @@ const ClassLogs: React.FC = () => {
   const [studentUploads] = useState(mockStudentUploads);
   const [studentMessages, setStudentMessages] = useState(mockStudentMessages);
   const [activeDetailsTab, setActiveDetailsTab] = useState<string>("details");
+  const [isExporting, setIsExporting] = useState(false);
 
   const filteredClasses = mockClasses.filter((cls) => {
     const searchMatch = searchTerm === "" || 
@@ -182,13 +189,74 @@ const ClassLogs: React.FC = () => {
     }
   };
 
+  const handleExport = async (format: 'csv' | 'pdf') => {
+    setIsExporting(true);
+    try {
+      // Simulate export delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const fileName = `class-logs-${format === 'csv' ? 'spreadsheet.csv' : 'report.pdf'}`;
+      toast.success(`Exported ${fileName} successfully`);
+    } catch (error) {
+      toast.error('Failed to export file');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleRefreshData = () => {
+    // Simulate data refresh
+    toast.success('Data refreshed successfully');
+  };
+
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Class Logs</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Class Logs</h2>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefreshData}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="flex items-center gap-2">
+                <FileDown className="h-4 w-4" />
+                Export
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => handleExport('csv')}>
+                <Download className="h-4 w-4 mr-2" />
+                Export as CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleExport('pdf')}>
+                <Printer className="h-4 w-4 mr-2" />
+                Export as PDF
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
       
       <Card>
         <CardHeader>
-          <CardTitle>Filter Classes</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>Filter Classes</CardTitle>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={clearFilters}
+              className="text-sm text-muted-foreground"
+            >
+              Clear Filters
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -201,32 +269,29 @@ const ClassLogs: React.FC = () => {
                 className="pl-8"
               />
             </div>
-            
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger>
-                <SelectValue placeholder="Status" />
+                <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="completed">Completed</SelectItem>
                 <SelectItem value="upcoming">Upcoming</SelectItem>
                 <SelectItem value="cancelled">Cancelled</SelectItem>
               </SelectContent>
             </Select>
-            
             <Select value={subjectFilter} onValueChange={setSubjectFilter}>
               <SelectTrigger>
-                <SelectValue placeholder="Subject" />
+                <SelectValue placeholder="Filter by subject" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Subjects</SelectItem>
-                <SelectItem value="mathematics">Mathematics</SelectItem>
-                <SelectItem value="science">Science</SelectItem>
-                <SelectItem value="english">English</SelectItem>
-                <SelectItem value="history">History</SelectItem>
+                <SelectItem value="Mathematics">Mathematics</SelectItem>
+                <SelectItem value="Science">Science</SelectItem>
+                <SelectItem value="English">English</SelectItem>
+                <SelectItem value="History">History</SelectItem>
               </SelectContent>
             </Select>
-            
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -234,10 +299,10 @@ const ClassLogs: React.FC = () => {
                   className="w-full justify-start text-left font-normal"
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dateFilter ? format(dateFilter, "PPP") : "Filter by date"}
+                  {dateFilter ? format(dateFilter, "PPP") : "Pick a date"}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
+              <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                   mode="single"
                   selected={dateFilter}
@@ -247,152 +312,70 @@ const ClassLogs: React.FC = () => {
               </PopoverContent>
             </Popover>
           </div>
-          
-          <div className="flex justify-end mt-4">
-            <Button variant="outline" onClick={clearFilters} className="flex items-center gap-1">
-              <Filter className="h-4 w-4" />
-              <span>Clear Filters</span>
-            </Button>
-          </div>
         </CardContent>
       </Card>
-      
-      <Tabs defaultValue="all">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="all">All Classes</TabsTrigger>
-          <TabsTrigger value="completed">Completed</TabsTrigger>
-          <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="all">
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Class Title</TableHead>
-                    <TableHead>Subject</TableHead>
-                    <TableHead>Tutor</TableHead>
-                    <TableHead>Student</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Time</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredClasses.length > 0 ? (
-                    filteredClasses.map((cls) => (
-                      <TableRow 
-                        key={cls.id} 
-                        className="cursor-pointer hover:bg-gray-50"
-                      >
-                        <TableCell className="font-medium">{cls.title}</TableCell>
-                        <TableCell>{cls.subject}</TableCell>
-                        <TableCell>{cls.tutorName}</TableCell>
-                        <TableCell>{cls.studentName}</TableCell>
-                        <TableCell>{new Date(cls.date).toLocaleDateString()}</TableCell>
-                        <TableCell>{formatTime(cls.startTime)} - {formatTime(cls.endTime)}</TableCell>
-                        <TableCell>{statusBadge(cls.status)}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Button variant="outline" size="sm" onClick={() => handleClassClick(cls)}>
-                              View
-                            </Button>
-                            {getUnreadMessageCount(cls.id) > 0 && (
-                              <span className="bg-red-100 text-red-800 text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                                {getUnreadMessageCount(cls.id)}
-                              </span>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8 text-gray-500">
-                        No classes match your filter criteria
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="completed">
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Class Title</TableHead>
-                    <TableHead>Subject</TableHead>
-                    <TableHead>Tutor</TableHead>
-                    <TableHead>Student</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Time</TableHead>
-                    <TableHead>Attendance</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredClasses.filter(cls => cls.status === 'completed').map((cls) => (
-                    <TableRow 
-                      key={cls.id} 
-                      className="cursor-pointer hover:bg-gray-50"
-                      onClick={() => handleClassClick(cls)}
-                    >
-                      <TableCell className="font-medium">{cls.title}</TableCell>
-                      <TableCell>{cls.subject}</TableCell>
-                      <TableCell>{cls.tutorName}</TableCell>
-                      <TableCell>{cls.studentName}</TableCell>
-                      <TableCell>{new Date(cls.date).toLocaleDateString()}</TableCell>
-                      <TableCell>{formatTime(cls.startTime)} - {formatTime(cls.endTime)}</TableCell>
-                      <TableCell>{attendanceBadge(cls.attendance)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="upcoming">
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Class Title</TableHead>
-                    <TableHead>Subject</TableHead>
-                    <TableHead>Tutor</TableHead>
-                    <TableHead>Student</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Time</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredClasses.filter(cls => cls.status === 'upcoming').map((cls) => (
-                    <TableRow 
-                      key={cls.id} 
-                      className="cursor-pointer hover:bg-gray-50"
-                      onClick={() => handleClassClick(cls)}
-                    >
-                      <TableCell className="font-medium">{cls.title}</TableCell>
-                      <TableCell>{cls.subject}</TableCell>
-                      <TableCell>{cls.tutorName}</TableCell>
-                      <TableCell>{cls.studentName}</TableCell>
-                      <TableCell>{new Date(cls.date).toLocaleDateString()}</TableCell>
-                      <TableCell>{formatTime(cls.startTime)} - {formatTime(cls.endTime)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Class Records</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Showing {filteredClasses.length} of {mockClasses.length} classes
+            </p>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Class Details</TableHead>
+                <TableHead>Date & Time</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Attendance</TableHead>
+                <TableHead>Messages</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredClasses.map((cls) => (
+                <TableRow key={cls.id} className="cursor-pointer hover:bg-muted/50" onClick={() => handleClassClick(cls)}>
+                  <TableCell>
+                    <div className="space-y-1">
+                      <div className="font-medium">{cls.title}</div>
+                      <div className="text-sm text-muted-foreground">
+                        <div>Tutor: {cls.tutorName}</div>
+                        <div>Student: {cls.studentName}</div>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="space-y-1">
+                      <div>{format(new Date(cls.date), "MMM d, yyyy")}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {formatTime(cls.startTime)} - {formatTime(cls.endTime)}
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>{statusBadge(cls.status)}</TableCell>
+                  <TableCell>{attendanceBadge(cls.attendance)}</TableCell>
+                  <TableCell>
+                    {getUnreadMessageCount(cls.id) > 0 && (
+                      <div className="inline-flex items-center justify-center w-6 h-6 text-xs font-medium text-white bg-red-500 rounded-full">
+                        {getUnreadMessageCount(cls.id)}
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Button variant="ghost" size="sm" className="hover:bg-muted">
+                      View Details
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
       
       <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
         <DialogContent className="max-w-2xl">

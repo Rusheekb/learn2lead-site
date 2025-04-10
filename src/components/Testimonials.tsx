@@ -1,25 +1,24 @@
-
 import React from 'react';
 import { Star } from 'lucide-react';
 
 const Testimonials = () => {
   const testimonials = [
     {
-      quote: "My daughter's confidence in math has improved dramatically since working with Learn2Lead tutors. Her grades went from C's to A's in just one semester!",
-      author: "Sarah Johnson",
-      role: "Parent of 8th Grader",
+      quote: "My tutor helps me learn a lot of new topics to keep me ahead in my classes. They always explains new topics in a way that I can understand. In science I learned about the periodic table and in the end of class we played a quiz game to have fun and learn! They make class fun by playing educational games to help me learn but also have fun!",
+      author: "Anonymous Student",
+      role: "Middle School Student",
       rating: 5
     },
     {
-      quote: "The personalized approach made all the difference. My SAT scores improved by over 200 points after just 10 sessions.",
-      author: "Michael Chen",
-      role: "High School Senior",
+      quote: "My tutor is really good at teaching and understanding with what I'm struggling with. She comes up with several teaching methods if one is not working for me and she makes sure I'm growing.",
+      author: "Anonymous Student",
+      role: "High School Student",
       rating: 5
     },
     {
-      quote: "Learn2Lead helped me overcome my fear of science. My tutor explained complex concepts in ways that finally made sense to me.",
-      author: "Emma Rodriguez",
-      role: "College Freshman",
+      quote: "...",
+      author: "Anonymous Parent",
+      role: "Parent",
       rating: 5
     }
   ];
@@ -32,7 +31,7 @@ const Testimonials = () => {
             What Our Students Say
           </h2>
           <p className="text-lg text-gray-600">
-            Hear from students and parents who have experienced the Learn2Lead difference
+            Success stories from our community of learners
           </p>
         </div>
 

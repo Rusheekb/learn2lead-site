@@ -1,9 +1,22 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { useNavigate } from 'react-router-dom';
 
 const Hero = () => {
+  const navigate = useNavigate();
+
+  const handleGetStarted = () => {
+    navigate('/pricing');
+  };
+
+  const handleLearnMore = () => {
+    const featuresSection = document.getElementById('services');
+    if (featuresSection) {
+      featuresSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <section id="home" className="pt-28 pb-16 md:pt-32 md:pb-24">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -16,26 +29,28 @@ const Hero = () => {
             </h1>
             
             <p className="text-lg text-gray-600 mb-8 max-w-lg">
-              Personalized tutoring services designed to help students excel in their studies and develop a lifelong love for learning.
+              Personalized tutoring designed to help you achieve your academic goals. Our expert tutors are here to guide you every step of the way!
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button className="bg-tutoring-blue hover:bg-blue-700 text-white py-6 px-6 rounded-lg text-lg">
-                Get Started
+              <Button 
+                onClick={handleGetStarted}
+                className="bg-tutoring-blue hover:bg-blue-700 text-white py-6 px-6 rounded-lg text-lg"
+              >
+                Get Started Today
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
-              <Button variant="outline" className="border-tutoring-blue text-tutoring-blue hover:bg-tutoring-lightBlue py-6 px-6 rounded-lg text-lg">
+              <Button 
+                onClick={handleLearnMore}
+                variant="outline" 
+                className="border-tutoring-blue text-tutoring-blue hover:bg-tutoring-lightBlue py-6 px-6 rounded-lg text-lg"
+              >
                 Learn More
               </Button>
             </div>
             
             <div className="mt-8 flex items-center space-x-4">
-              <p className="text-sm text-gray-500">Trusted by:</p>
-              <div className="flex space-x-6">
-                <div className="w-16 h-6 bg-gray-200 rounded opacity-70"></div>
-                <div className="w-16 h-6 bg-gray-200 rounded opacity-70"></div>
-                <div className="w-16 h-6 bg-gray-200 rounded opacity-70"></div>
-              </div>
+              <p className="text-sm text-gray-500">Trusted by students across Dallas Area</p>
             </div>
           </div>
           
@@ -49,7 +64,7 @@ const Hero = () => {
                 <div className="aspect-w-16 aspect-h-9 rounded-xl overflow-hidden bg-tutoring-lightBlue">
                   {/* Replace with your actual image or illustration */}
                   <div className="w-full h-96 flex items-center justify-center hero-gradient rounded-xl">
-                    <p className="text-white text-lg font-medium">Tutoring in action</p>
+                    <p className="text-white text-lg font-medium">Students learning together</p>
                   </div>
                 </div>
               </div>

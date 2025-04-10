@@ -1,14 +1,19 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LogIn } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useNavigate, Link } from 'react-router-dom';
 
 const NavBar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleLogin = () => {
+    navigate('/login');
   };
 
   return (
@@ -17,33 +22,44 @@ const NavBar = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
-            <a href="#" className="text-2xl font-bold text-tutoring-blue">
+            <Link to="/" className="text-2xl font-bold text-tutoring-blue">
               Learn<span className="text-tutoring-teal">2</span>Lead
-            </a>
+            </Link>
           </div>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <a href="#home" className="text-gray-600 hover:text-tutoring-blue transition-colors">
+            <Link to="/" className="text-gray-600 hover:text-tutoring-blue transition-colors">
               Home
-            </a>
-            <a href="#about" className="text-gray-600 hover:text-tutoring-blue transition-colors">
+            </Link>
+            <Link to="/about" className="text-gray-600 hover:text-tutoring-blue transition-colors">
               About
-            </a>
-            <a href="#services" className="text-gray-600 hover:text-tutoring-blue transition-colors">
+            </Link>
+            <Link to="/services" className="text-gray-600 hover:text-tutoring-blue transition-colors">
               Services
-            </a>
-            <a href="#testimonials" className="text-gray-600 hover:text-tutoring-blue transition-colors">
+            </Link>
+            <Link to="/testimonials" className="text-gray-600 hover:text-tutoring-blue transition-colors">
               Testimonials
-            </a>
-            <a href="#contact" className="text-gray-600 hover:text-tutoring-blue transition-colors">
+            </Link>
+            <Link to="/contact" className="text-gray-600 hover:text-tutoring-blue transition-colors">
               Contact
-            </a>
+            </Link>
           </div>
 
-          {/* CTA Button */}
-          <div className="hidden md:flex">
-            <Button className="bg-tutoring-blue hover:bg-blue-700 text-white">
+          {/* CTA and Login Buttons */}
+          <div className="hidden md:flex items-center space-x-4">
+            <Button 
+              variant="ghost"
+              onClick={handleLogin}
+              className="flex items-center space-x-2 text-tutoring-blue hover:bg-tutoring-blue/10"
+            >
+              <LogIn className="h-4 w-4" />
+              <span>Login</span>
+            </Button>
+            <Button 
+              onClick={() => navigate('/book')}
+              className="bg-tutoring-blue hover:bg-blue-700 text-white"
+            >
               Book a Session
             </Button>
           </div>
@@ -66,22 +82,33 @@ const NavBar = () => {
         isMenuOpen ? "block" : "hidden"
       )}>
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white shadow-lg">
-          <a href="#home" className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-tutoring-blue">
+          <Link to="/" className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-tutoring-blue">
             Home
-          </a>
-          <a href="#about" className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-tutoring-blue">
+          </Link>
+          <Link to="/about" className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-tutoring-blue">
             About
-          </a>
-          <a href="#services" className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-tutoring-blue">
+          </Link>
+          <Link to="/services" className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-tutoring-blue">
             Services
-          </a>
-          <a href="#testimonials" className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-tutoring-blue">
+          </Link>
+          <Link to="/testimonials" className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-tutoring-blue">
             Testimonials
-          </a>
-          <a href="#contact" className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-tutoring-blue">
+          </Link>
+          <Link to="/contact" className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-tutoring-blue">
             Contact
-          </a>
-          <Button className="w-full mt-4 bg-tutoring-blue hover:bg-blue-700 text-white">
+          </Link>
+          <Button 
+            onClick={handleLogin}
+            variant="ghost"
+            className="w-full mt-2 flex items-center justify-center space-x-2 text-tutoring-blue hover:bg-tutoring-blue/10"
+          >
+            <LogIn className="h-4 w-4" />
+            <span>Login</span>
+          </Button>
+          <Button 
+            onClick={() => navigate('/book')}
+            className="w-full mt-2 bg-tutoring-blue hover:bg-blue-700 text-white"
+          >
             Book a Session
           </Button>
         </div>
