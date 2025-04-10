@@ -19,6 +19,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title, role
     const handleRouteChange = () => {
       setCurrentPath(window.location.pathname);
       setCurrentHash(window.location.hash);
+      console.log("Hash changed to:", window.location.hash);
     };
 
     // Set initial values
@@ -120,8 +121,16 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title, role
                     )}
                     onClick={() => {
                       // Force update path and hash immediately on click
-                      setCurrentPath(item.href.split('#')[0]);
-                      setCurrentHash(item.href.includes('#') ? '#' + item.href.split('#')[1] : '');
+                      const newPath = item.href.split('#')[0];
+                      const newHash = item.href.includes('#') ? '#' + item.href.split('#')[1] : '';
+                      
+                      setCurrentPath(newPath);
+                      setCurrentHash(newHash);
+                      
+                      // This is crucial - manually trigger hashchange event for immediate update
+                      if (window.location.hash !== newHash) {
+                        window.location.hash = newHash.replace('#', '');
+                      }
                     }}
                   >
                     {item.icon}

@@ -14,12 +14,20 @@ const AdminDashboard: React.FC = () => {
   // Listen for hash changes in URL and update on component mount
   useEffect(() => {
     const handleHashChange = () => {
+      // Extract hash without the # symbol
       const hash = window.location.hash.substring(1);
+      
       if (hash) {
+        console.log("Setting active section to:", hash);
         setActiveSection(hash);
       } else {
         // Default to analytics if no hash is present
+        console.log("No hash found, defaulting to analytics");
         setActiveSection("analytics");
+        // Set default hash if none exists
+        if (window.location.pathname === "/admin-dashboard" && !window.location.hash) {
+          window.location.hash = "analytics";
+        }
       }
     };
     
