@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import TutorScheduler from "@/components/tutor/TutorScheduler";
 import TutorStudents from "@/components/tutor/TutorStudents";
@@ -8,13 +8,42 @@ import TutorMaterials from "@/components/tutor/TutorMaterials";
 const TutorDashboard: React.FC = () => {
   const [activeSection, setActiveSection] = useState<string>("");
   
-  // Check for hash in URL to set active section
-  React.useEffect(() => {
-    const hash = window.location.hash.substring(1);
-    if (hash) {
-      setActiveSection(hash);
-    }
+  // Listen for hash changes in URL and update on component mount
+  useEffect(() => {
+    const handleHashChange = () => {
+      // Extract hash without the # symbol
+      const hash = window.location.hash.substring(1);
+      
+      if (hash) {
+        console.log("Setting active section to:", hash);
+        setActiveSection(hash);
+      } else {
+        // Default to overview if no hash is present
+        console.log("No hash found, defaulting to overview");
+        setActiveSection("");
+        // Set default hash if none exists and we're on the main dashboard page
+        if (window.location.pathname === "/tutor-dashboard" && !window.location.hash) {
+          window.location.hash = "";
+        }
+      }
+    };
+    
+    // Set active section on initial load
+    handleHashChange();
+    
+    // Add event listener for hash changes
+    window.addEventListener('hashchange', handleHashChange);
+    
+    return () => {
+      // Cleanup event listener on component unmount
+      window.removeEventListener('hashchange', handleHashChange);
+    };
   }, []);
+
+  // For debugging
+  useEffect(() => {
+    console.log("Current active section:", activeSection);
+  }, [activeSection]);
 
   // Render appropriate section based on the active section
   const renderSection = () => {
