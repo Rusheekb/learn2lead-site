@@ -68,11 +68,11 @@ const StudentsManager: React.FC = () => {
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
       case "active":
-        return "success";
+        return "default"; // Changed from "success" to "default"
       case "inactive":
         return "secondary";
       case "pending":
-        return "warning";
+        return "outline"; // Changed from "warning" to "outline"
       default:
         return "default";
     }
@@ -81,9 +81,9 @@ const StudentsManager: React.FC = () => {
   const getPaymentBadgeVariant = (status: string) => {
     switch (status) {
       case "paid":
-        return "success";
+        return "default"; // Changed from "success" to "default"
       case "unpaid":
-        return "warning";
+        return "outline"; // Changed from "warning" to "outline"
       case "overdue":
         return "destructive";
       default:
