@@ -1,5 +1,5 @@
 
-import React, { ReactNode } from "react";
+import React, { ReactNode, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Calendar, User, Users, FileText, DollarSign, BarChart, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -11,6 +11,27 @@ interface DashboardLayoutProps {
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title, role }) => {
+  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+  const [currentHash, setCurrentHash] = useState(window.location.hash);
+
+  // Update current path and hash when they change
+  useEffect(() => {
+    const handleRouteChange = () => {
+      setCurrentPath(window.location.pathname);
+      setCurrentHash(window.location.hash);
+    };
+
+    // Set initial values
+    handleRouteChange();
+    
+    // Listen for hash changes
+    window.addEventListener('hashchange', handleRouteChange);
+    
+    return () => {
+      window.removeEventListener('hashchange', handleRouteChange);
+    };
+  }, []);
+
   const getNavItems = () => {
     switch (role) {
       case "student":
@@ -39,8 +60,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title, role
   };
 
   const navItems = getNavItems();
-  const currentPath = window.location.pathname;
-  const currentHash = window.location.hash;
+
+  // For debugging
+  useEffect(() => {
+    console.log("Current hash:", currentHash);
+    console.log("Current path:", currentPath);
+  }, [currentHash, currentPath]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -76,8 +101,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title, role
           <aside className="md:w-64 flex-shrink-0">
             <nav className="space-y-1">
               {navItems.map((item) => {
-                const isActive = currentPath === item.href.split('#')[0] && 
-                                 (item.href.includes('#') ? currentHash === '#' + item.href.split('#')[1] : true);
+                const isActive = 
+                  currentPath === item.href.split('#')[0] && 
+                  (item.href.includes('#') ? 
+                    currentHash === '#' + item.href.split('#')[1] || 
+                    (currentHash === '' && item.href.includes('#analytics')) : 
+                    true);
                 
                 return (
                   <Link
@@ -88,6 +117,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title, role
                       "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
                       isActive ? "bg-tutoring-blue/10 text-tutoring-blue" : ""
                     )}
+                    onClick={() => {
+                      // Force update path and hash immediately on click
+                      setCurrentPath(item.href.split('#')[0]);
+                      setCurrentHash(item.href.includes('#') ? '#' + item.href.split('#')[1] : '');
+                    }}
                   >
                     {item.icon}
                     <span className="ml-3">{item.name}</span>

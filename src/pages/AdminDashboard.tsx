@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import ClassAnalytics from "@/components/admin/ClassAnalytics";
 import ClassLogs from "@/components/admin/ClassLogs";
@@ -8,9 +8,10 @@ import TutorsManager from "@/components/admin/TutorsManager";
 import StudentsManager from "@/components/admin/StudentsManager";
 
 const AdminDashboard: React.FC = () => {
-  const [activeSection, setActiveSection] = React.useState<string>("analytics");
+  // Store active section in state
+  const [activeSection, setActiveSection] = useState<string>("analytics");
   
-  // Listen for hash changes in URL
+  // Listen for hash changes in URL and update on component mount
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.substring(1);
@@ -29,9 +30,15 @@ const AdminDashboard: React.FC = () => {
     window.addEventListener('hashchange', handleHashChange);
     
     return () => {
+      // Cleanup event listener on component unmount
       window.removeEventListener('hashchange', handleHashChange);
     };
   }, []);
+
+  // For debugging
+  useEffect(() => {
+    console.log("Current active section:", activeSection);
+  }, [activeSection]);
 
   // Render appropriate section based on the active section
   const renderSection = () => {
