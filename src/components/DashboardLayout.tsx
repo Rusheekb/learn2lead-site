@@ -101,6 +101,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title, role
           <aside className="md:w-64 flex-shrink-0">
             <nav className="space-y-1">
               {navItems.map((item) => {
+                // Improved logic for determining active state
                 const isActive = 
                   currentPath === item.href.split('#')[0] && 
                   (item.href.includes('#') ? 
