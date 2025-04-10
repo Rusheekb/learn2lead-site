@@ -27,7 +27,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title, role
         ];
       case "admin":
         return [
-          { name: "Dashboard", href: "/admin-dashboard", icon: <BarChart className="h-5 w-5" /> },
+          { name: "Dashboard", href: "/admin-dashboard#analytics", icon: <BarChart className="h-5 w-5" /> },
           { name: "Class Schedule", href: "/admin-dashboard#schedule", icon: <Calendar className="h-5 w-5" /> },
           { name: "Tutors", href: "/admin-dashboard#tutors", icon: <User className="h-5 w-5" /> },
           { name: "Students", href: "/admin-dashboard#students", icon: <Users className="h-5 w-5" /> },
@@ -39,6 +39,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title, role
   };
 
   const navItems = getNavItems();
+  const currentPath = window.location.pathname;
+  const currentHash = window.location.hash;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -73,22 +75,25 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title, role
         <div className="flex flex-col md:flex-row gap-8">
           <aside className="md:w-64 flex-shrink-0">
             <nav className="space-y-1">
-              {navItems.map((item) => (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={cn(
-                    "flex items-center px-4 py-3 text-sm font-medium rounded-md",
-                    "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
-                    window.location.pathname === item.href || window.location.hash === item.href.split('#')[1]
-                      ? "bg-tutoring-blue/10 text-tutoring-blue"
-                      : ""
-                  )}
-                >
-                  {item.icon}
-                  <span className="ml-3">{item.name}</span>
-                </Link>
-              ))}
+              {navItems.map((item) => {
+                const isActive = currentPath === item.href.split('#')[0] && 
+                                 (item.href.includes('#') ? currentHash === '#' + item.href.split('#')[1] : true);
+                
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={cn(
+                      "flex items-center px-4 py-3 text-sm font-medium rounded-md",
+                      "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
+                      isActive ? "bg-tutoring-blue/10 text-tutoring-blue" : ""
+                    )}
+                  >
+                    {item.icon}
+                    <span className="ml-3">{item.name}</span>
+                  </Link>
+                );
+              })}
             </nav>
           </aside>
 

@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import ClassAnalytics from "@/components/admin/ClassAnalytics";
 import ClassLogs from "@/components/admin/ClassLogs";
@@ -8,17 +8,29 @@ import TutorsManager from "@/components/admin/TutorsManager";
 import StudentsManager from "@/components/admin/StudentsManager";
 
 const AdminDashboard: React.FC = () => {
-  const [activeSection, setActiveSection] = React.useState<string>("");
+  const [activeSection, setActiveSection] = React.useState<string>("analytics");
   
-  // Check for hash in URL to set active section
-  React.useEffect(() => {
-    const hash = window.location.hash.substring(1);
-    if (hash) {
-      setActiveSection(hash);
-    } else {
-      // Default to analytics if no hash is present
-      setActiveSection("analytics");
-    }
+  // Listen for hash changes in URL
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.substring(1);
+      if (hash) {
+        setActiveSection(hash);
+      } else {
+        // Default to analytics if no hash is present
+        setActiveSection("analytics");
+      }
+    };
+    
+    // Set active section on initial load
+    handleHashChange();
+    
+    // Add event listener for hash changes
+    window.addEventListener('hashchange', handleHashChange);
+    
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
   }, []);
 
   // Render appropriate section based on the active section
