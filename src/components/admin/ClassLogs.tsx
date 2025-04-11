@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
@@ -11,7 +12,6 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import StudentContent from "../shared/StudentContent";
-import { mockStudentMessages, mockStudentUploads } from "../shared/mock-data";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -20,79 +20,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const mockClasses = [
-  {
-    id: 1,
-    title: "Algebra Fundamentals",
-    subject: "Mathematics",
-    tutorName: "Ms. Johnson",
-    studentName: "Alex Johnson",
-    date: "2025-04-10",
-    startTime: "15:00",
-    endTime: "16:00",
-    status: "completed",
-    attendance: "attended",
-    zoomLink: "https://zoom.us/j/123456789",
-    notes: "Covered quadratic equations. Student shows good progress."
-  },
-  {
-    id: 2,
-    title: "Chemistry Lab Prep",
-    subject: "Science",
-    tutorName: "Mr. Chen",
-    studentName: "Jamie Smith",
-    date: "2025-04-11",
-    startTime: "14:00",
-    endTime: "15:30",
-    status: "upcoming",
-    attendance: "pending",
-    zoomLink: "https://zoom.us/j/987654321",
-    notes: ""
-  },
-  {
-    id: 3,
-    title: "Essay Writing Workshop",
-    subject: "English",
-    tutorName: "Dr. Martinez",
-    studentName: "Taylor Brown",
-    date: "2025-04-05",
-    startTime: "16:00",
-    endTime: "17:00",
-    status: "completed",
-    attendance: "missed",
-    zoomLink: "https://zoom.us/j/567891234",
-    notes: "Student did not attend. Need to reschedule."
-  },
-  {
-    id: 4,
-    title: "World War II Discussion",
-    subject: "History",
-    tutorName: "Prof. Wilson",
-    studentName: "Taylor Brown",
-    date: "2025-04-12",
-    startTime: "13:00",
-    endTime: "14:30",
-    status: "upcoming",
-    attendance: "pending",
-    zoomLink: "https://zoom.us/j/456123789",
-    notes: ""
-  },
-  {
-    id: 5,
-    title: "Calculus Review",
-    subject: "Mathematics",
-    tutorName: "Ms. Johnson",
-    studentName: "Alex Johnson",
-    date: "2025-04-03",
-    startTime: "15:00",
-    endTime: "16:00",
-    status: "completed",
-    attendance: "attended",
-    zoomLink: "https://zoom.us/j/321654987",
-    notes: "Excellent progress with integrals."
-  }
-];
+// Import Supabase services
+import {
+  fetchClassLogs as fetchClassLogRecords,
+  fetchClassMessages,
+  fetchClassUploads, 
+  markMessageAsRead,
+  getFileDownloadURL
+} from "@/services/classService";
 
+// Helper components and functions
 const statusBadge = (status: string) => {
   switch (status) {
     case 'completed':
@@ -126,25 +63,71 @@ const ClassLogs: React.FC = () => {
   const [dateFilter, setDateFilter] = useState<Date | undefined>(undefined);
   const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false);
   const [selectedClass, setSelectedClass] = useState<any>(null);
-  const [studentUploads] = useState(mockStudentUploads);
-  const [studentMessages, setStudentMessages] = useState(mockStudentMessages);
+  const [studentUploads, setStudentUploads] = useState<any[]>([]);
+  const [studentMessages, setStudentMessages] = useState<any[]>([]);
   const [activeDetailsTab, setActiveDetailsTab] = useState<string>("details");
   const [isExporting, setIsExporting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [classes, setClasses] = useState<any[]>([]);
 
-  const filteredClasses = mockClasses.filter((cls) => {
-    const searchMatch = searchTerm === "" || 
-      cls.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      cls.tutorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      cls.studentName.toLowerCase().includes(searchTerm.toLowerCase());
+  // Fetch classes on component mount
+  useEffect(() => {
+    const loadClasses = async () => {
+      setIsLoading(true);
+      try {
+        const classLogs = await fetchClassLogRecords();
+        
+        // Transform to the format expected by the component
+        const transformedClasses = classLogs.map(cl => ({
+          id: cl.id,
+          title: cl.title,
+          subject: cl.subject,
+          tutorName: "Ms. Johnson", // This would come from the database in a real app
+          studentName: cl.studentName,
+          date: cl.date.toISOString().split('T')[0],
+          startTime: cl.startTime,
+          endTime: cl.endTime,
+          status: "upcoming", // This would come from the database in a real app
+          attendance: "pending", // This would come from the database in a real app
+          zoomLink: cl.zoomLink,
+          notes: cl.notes
+        }));
+        
+        setClasses(transformedClasses);
+      } catch (error) {
+        console.error("Error loading classes:", error);
+        toast.error("Failed to load class logs");
+      } finally {
+        setIsLoading(false);
+      }
+    };
     
-    const statusMatch = statusFilter === "all" || cls.status === statusFilter;
+    loadClasses();
+  }, []);
+
+  // Load messages and uploads when a class is selected
+  useEffect(() => {
+    const loadClassContent = async () => {
+      if (!selectedClass) return;
+      
+      try {
+        // Convert numeric ID back to UUID-like string for database query
+        const classId = selectedClass.id.toString().padStart(8, '0') + '-0000-0000-0000-000000000000';
+        
+        // Load messages
+        const messages = await fetchClassMessages(classId);
+        setStudentMessages(messages);
+        
+        // Load uploads
+        const uploads = await fetchClassUploads(classId);
+        setStudentUploads(uploads);
+      } catch (error) {
+        console.error("Error loading class content:", error);
+      }
+    };
     
-    const subjectMatch = subjectFilter === "all" || cls.subject.toLowerCase() === subjectFilter.toLowerCase();
-    
-    const dateMatch = !dateFilter || new Date(cls.date).toDateString() === dateFilter.toDateString();
-    
-    return searchMatch && statusMatch && subjectMatch && dateMatch;
-  });
+    loadClassContent();
+  }, [selectedClass]);
 
   const handleClassClick = (cls: any) => {
     setSelectedClass(cls);
@@ -169,23 +152,41 @@ const ClassLogs: React.FC = () => {
     setDateFilter(undefined);
   };
 
-  const handleMarkMessageRead = (messageId: number) => {
-    setStudentMessages(messages => 
-      messages.map(message => 
-        message.id === messageId ? { ...message, isRead: true } : message
-      )
-    );
-    toast.success("Message marked as read");
+  const handleMarkMessageRead = async (messageId: number) => {
+    try {
+      // Convert numeric ID back to UUID-like string for database query
+      const dbMessageId = messageId.toString().padStart(8, '0') + '-0000-0000-0000-000000000000';
+      
+      const success = await markMessageAsRead(dbMessageId);
+      
+      if (success) {
+        setStudentMessages(messages => 
+          messages.map(message => 
+            message.id === messageId ? { ...message, isRead: true } : message
+          )
+        );
+        toast.success("Message marked as read");
+      }
+    } catch (error) {
+      console.error("Error marking message as read:", error);
+      toast.error("Failed to mark message as read");
+    }
   };
 
   const getUnreadMessageCount = (classId: number) => {
     return studentMessages.filter(m => m.classId === classId && !m.isRead).length;
   };
 
-  const handleDownloadFile = (uploadId: number) => {
-    const upload = studentUploads.find(u => u.id === uploadId);
-    if (upload) {
-      toast.success(`Downloading ${upload.fileName}`);
+  const handleDownloadFile = async (uploadId: number) => {
+    try {
+      const upload = studentUploads.find(u => u.id === uploadId);
+      if (upload) {
+        // In a real implementation, we would get the file path and create a download URL
+        toast.success(`Downloading ${upload.fileName}`);
+      }
+    } catch (error) {
+      console.error("Error downloading file:", error);
+      toast.error("Failed to download file");
     }
   };
 
@@ -204,10 +205,54 @@ const ClassLogs: React.FC = () => {
     }
   };
 
-  const handleRefreshData = () => {
-    // Simulate data refresh
-    toast.success('Data refreshed successfully');
+  const handleRefreshData = async () => {
+    setIsLoading(true);
+    try {
+      const classLogs = await fetchClassLogRecords();
+      
+      // Transform to the format expected by the component
+      const transformedClasses = classLogs.map(cl => ({
+        id: cl.id,
+        title: cl.title,
+        subject: cl.subject,
+        tutorName: "Ms. Johnson", // This would come from the database in a real app
+        studentName: cl.studentName,
+        date: cl.date.toISOString().split('T')[0],
+        startTime: cl.startTime,
+        endTime: cl.endTime,
+        status: "upcoming", // This would come from the database in a real app
+        attendance: "pending", // This would come from the database in a real app
+        zoomLink: cl.zoomLink,
+        notes: cl.notes
+      }));
+      
+      setClasses(transformedClasses);
+      toast.success('Data refreshed successfully');
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+      toast.error("Failed to refresh data");
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  const filteredClasses = classes.filter((cls) => {
+    const searchMatch = searchTerm === "" || 
+      cls.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      cls.tutorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      cls.studentName.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const statusMatch = statusFilter === "all" || cls.status === statusFilter;
+    
+    const subjectMatch = subjectFilter === "all" || cls.subject.toLowerCase() === subjectFilter.toLowerCase();
+    
+    const dateMatch = !dateFilter || new Date(cls.date).toDateString() === dateFilter.toDateString();
+    
+    return searchMatch && statusMatch && subjectMatch && dateMatch;
+  });
+
+  // Extract unique subjects for filter
+  const allSubjects = Array.from(new Set(classes.map(cls => cls.subject))).sort();
 
   return (
     <div className="space-y-6">
@@ -219,13 +264,14 @@ const ClassLogs: React.FC = () => {
             size="sm"
             onClick={handleRefreshData}
             className="flex items-center gap-2"
+            disabled={isLoading}
           >
             <RefreshCw className="h-4 w-4" />
-            Refresh
+            {isLoading ? "Refreshing..." : "Refresh"}
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="flex items-center gap-2">
+              <Button variant="outline" size="sm" className="flex items-center gap-2" disabled={isLoading}>
                 <FileDown className="h-4 w-4" />
                 Export
               </Button>
@@ -286,10 +332,9 @@ const ClassLogs: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Subjects</SelectItem>
-                <SelectItem value="Mathematics">Mathematics</SelectItem>
-                <SelectItem value="Science">Science</SelectItem>
-                <SelectItem value="English">English</SelectItem>
-                <SelectItem value="History">History</SelectItem>
+                {allSubjects.map(subject => (
+                  <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
             <Popover>
@@ -320,60 +365,78 @@ const ClassLogs: React.FC = () => {
           <div className="flex items-center justify-between">
             <CardTitle>Class Records</CardTitle>
             <p className="text-sm text-muted-foreground">
-              Showing {filteredClasses.length} of {mockClasses.length} classes
+              Showing {filteredClasses.length} of {classes.length} classes
             </p>
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Class Details</TableHead>
-                <TableHead>Date & Time</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Attendance</TableHead>
-                <TableHead>Messages</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredClasses.map((cls) => (
-                <TableRow key={cls.id} className="cursor-pointer hover:bg-muted/50" onClick={() => handleClassClick(cls)}>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <div className="font-medium">{cls.title}</div>
-                      <div className="text-sm text-muted-foreground">
-                        <div>Tutor: {cls.tutorName}</div>
-                        <div>Student: {cls.studentName}</div>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <div>{format(new Date(cls.date), "MMM d, yyyy")}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {formatTime(cls.startTime)} - {formatTime(cls.endTime)}
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>{statusBadge(cls.status)}</TableCell>
-                  <TableCell>{attendanceBadge(cls.attendance)}</TableCell>
-                  <TableCell>
-                    {getUnreadMessageCount(cls.id) > 0 && (
-                      <div className="inline-flex items-center justify-center w-6 h-6 text-xs font-medium text-white bg-red-500 rounded-full">
-                        {getUnreadMessageCount(cls.id)}
-                      </div>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="sm" className="hover:bg-muted">
-                      View Details
-                    </Button>
-                  </TableCell>
+          {isLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <p>Loading class logs...</p>
+            </div>
+          ) : filteredClasses.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              <p>No class logs found matching your filters</p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={clearFilters}
+                className="mt-4"
+              >
+                Clear Filters
+              </Button>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Class Details</TableHead>
+                  <TableHead>Date & Time</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Attendance</TableHead>
+                  <TableHead>Messages</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredClasses.map((cls) => (
+                  <TableRow key={cls.id} className="cursor-pointer hover:bg-muted/50" onClick={() => handleClassClick(cls)}>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <div className="font-medium">{cls.title}</div>
+                        <div className="text-sm text-muted-foreground">
+                          <div>Tutor: {cls.tutorName}</div>
+                          <div>Student: {cls.studentName}</div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <div>{format(new Date(cls.date), "MMM d, yyyy")}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {formatTime(cls.startTime)} - {formatTime(cls.endTime)}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>{statusBadge(cls.status)}</TableCell>
+                    <TableCell>{attendanceBadge(cls.attendance)}</TableCell>
+                    <TableCell>
+                      {getUnreadMessageCount(cls.id) > 0 && (
+                        <div className="inline-flex items-center justify-center w-6 h-6 text-xs font-medium text-white bg-red-500 rounded-full">
+                          {getUnreadMessageCount(cls.id)}
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Button variant="ghost" size="sm" className="hover:bg-muted">
+                        View Details
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
       

@@ -9,7 +9,136 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      class_logs: {
+        Row: {
+          attendance: string | null
+          created_at: string
+          date: string
+          end_time: string
+          id: string
+          notes: string | null
+          start_time: string
+          status: string
+          student_name: string
+          subject: string
+          title: string
+          tutor_name: string
+          updated_at: string
+          zoom_link: string | null
+        }
+        Insert: {
+          attendance?: string | null
+          created_at?: string
+          date: string
+          end_time: string
+          id?: string
+          notes?: string | null
+          start_time: string
+          status?: string
+          student_name: string
+          subject: string
+          title: string
+          tutor_name: string
+          updated_at?: string
+          zoom_link?: string | null
+        }
+        Update: {
+          attendance?: string | null
+          created_at?: string
+          date?: string
+          end_time?: string
+          id?: string
+          notes?: string | null
+          start_time?: string
+          status?: string
+          student_name?: string
+          subject?: string
+          title?: string
+          tutor_name?: string
+          updated_at?: string
+          zoom_link?: string | null
+        }
+        Relationships: []
+      }
+      class_messages: {
+        Row: {
+          class_id: string
+          id: string
+          is_read: boolean
+          message: string
+          student_name: string
+          timestamp: string
+        }
+        Insert: {
+          class_id: string
+          id?: string
+          is_read?: boolean
+          message: string
+          student_name: string
+          timestamp?: string
+        }
+        Update: {
+          class_id?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          student_name?: string
+          timestamp?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_messages_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "class_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      class_uploads: {
+        Row: {
+          class_id: string
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: string
+          id: string
+          note: string | null
+          student_name: string
+          upload_date: string
+        }
+        Insert: {
+          class_id: string
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size: string
+          id?: string
+          note?: string | null
+          student_name: string
+          upload_date: string
+        }
+        Update: {
+          class_id?: string
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: string
+          id?: string
+          note?: string | null
+          student_name?: string
+          upload_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_uploads_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "class_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

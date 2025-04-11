@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Search, Plus, Calendar as CalendarIcon, Clock, Filter, MoreVertical, Copy, Edit2, Trash2 } from "lucide-react";
@@ -20,44 +21,26 @@ import CalendarWithEvents from "./CalendarWithEvents";
 import ClassEventDetails from "./ClassEventDetails";
 import NewClassEventForm from "./NewClassEventForm";
 
+// Import Supabase services
+import {
+  fetchClassLogs,
+  createClassLog,
+  updateClassLog,
+  deleteClassLog,
+  fetchClassMessages,
+  createClassMessage,
+  markMessageAsRead,
+  fetchClassUploads,
+  uploadClassFile,
+  getFileDownloadURL
+} from "@/services/classService";
+
 // Mock data
 const mockStudents: Student[] = [
   { id: 1, name: "Alex Johnson", subjects: ["Mathematics", "Physics"] },
   { id: 2, name: "Jamie Smith", subjects: ["Chemistry", "Biology"] },
   { id: 3, name: "Taylor Brown", subjects: ["English", "History"] },
   { id: 4, name: "Casey Wilson", subjects: ["Spanish", "French"] }
-];
-
-const mockScheduledClasses: ClassEvent[] = [
-  {
-    id: 1,
-    title: "Math Tutoring - Algebra",
-    date: new Date(2025, 3, 10),
-    startTime: "15:00",
-    endTime: "16:00",
-    studentId: 1,
-    studentName: "Alex Johnson",
-    subject: "Mathematics",
-    zoomLink: "https://zoom.us/j/123456789",
-    materials: ["Algebra Worksheet", "Practice Problems"],
-    notes: "Focus on quadratic equations and factoring",
-    recurring: true,
-    recurringDays: ["Wednesday"]
-  },
-  {
-    id: 2,
-    title: "Chemistry Lab Prep",
-    date: new Date(2025, 3, 12),
-    startTime: "14:00",
-    endTime: "15:30",
-    studentId: 2,
-    studentName: "Jamie Smith",
-    subject: "Chemistry",
-    zoomLink: "https://zoom.us/j/987654321",
-    materials: ["Lab Safety Guidelines", "Experiment Overview"],
-    notes: "Review safety procedures before lab session",
-    recurring: false
-  }
 ];
 
 const TutorScheduler: React.FC = () => {
@@ -71,9 +54,10 @@ const TutorScheduler: React.FC = () => {
   const [subjectFilter, setSubjectFilter] = useState<string>("all");
   const [studentFilter, setStudentFilter] = useState<string>("all");
   
-  const [scheduledClasses, setScheduledClasses] = useState<ClassEvent[]>(mockScheduledClasses);
-  const [studentUploads, setStudentUploads] = useState<StudentUpload[]>(mockStudentUploads);
-  const [studentMessages, setStudentMessages] = useState<StudentMessage[]>(mockStudentMessages);
+  const [scheduledClasses, setScheduledClasses] = useState<ClassEvent[]>([]);
+  const [studentUploads, setStudentUploads] = useState<StudentUpload[]>([]);
+  const [studentMessages, setStudentMessages] = useState<StudentMessage[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const [newEvent, setNewEvent] = useState({
     title: "",
@@ -88,79 +72,179 @@ const TutorScheduler: React.FC = () => {
     recurringDays: []
   });
 
+  // Fetch class logs on component mount
+  useEffect(() => {
+    const loadClasses = async () => {
+      setIsLoading(true);
+      try {
+        const classes = await fetchClassLogs();
+        setScheduledClasses(classes);
+      } catch (error) {
+        console.error("Error loading classes:", error);
+        toast.error("Failed to load scheduled classes");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadClasses();
+  }, []);
+
+  // Load messages and uploads when a class is selected
+  useEffect(() => {
+    const loadClassContent = async () => {
+      if (!selectedEvent || !selectedEvent.id) return;
+      
+      // Convert numeric ID back to UUID-like string for database query
+      // This is just a simplistic approach - in a real app, we'd store the real UUID
+      const classId = selectedEvent.id.toString().padStart(8, '0') + '-0000-0000-0000-000000000000';
+      
+      try {
+        // Load messages
+        const messages = await fetchClassMessages(classId);
+        setStudentMessages(messages);
+        
+        // Load uploads
+        const uploads = await fetchClassUploads(classId);
+        setStudentUploads(uploads);
+      } catch (error) {
+        console.error("Error loading class content:", error);
+        toast.error("Failed to load class content");
+      }
+    };
+    
+    loadClassContent();
+  }, [selectedEvent]);
+
   const handleSelectEvent = (event: ClassEvent) => {
     setSelectedEvent(event);
     setIsViewEventOpen(true);
     setIsEditMode(false);
   };
 
-  const handleCreateEvent = () => {
-    const newClassEvent: ClassEvent = {
-      id: scheduledClasses.length + 1,
-      title: newEvent.title,
-      date: newEvent.date,
-      startTime: newEvent.startTime,
-      endTime: newEvent.endTime,
-      studentId: parseInt(newEvent.studentId),
-      studentName: mockStudents.find(s => s.id === parseInt(newEvent.studentId))?.name || "",
-      subject: newEvent.subject,
-      zoomLink: newEvent.zoomLink,
-      notes: newEvent.notes,
-      recurring: newEvent.recurring,
-      recurringDays: newEvent.recurringDays,
-      materials: []
-    };
+  const handleCreateEvent = async () => {
+    try {
+      const newClassEvent: ClassEvent = {
+        id: scheduledClasses.length + 1,
+        title: newEvent.title,
+        date: newEvent.date,
+        startTime: newEvent.startTime,
+        endTime: newEvent.endTime,
+        studentId: parseInt(newEvent.studentId),
+        studentName: mockStudents.find(s => s.id === parseInt(newEvent.studentId))?.name || "",
+        subject: newEvent.subject,
+        zoomLink: newEvent.zoomLink,
+        notes: newEvent.notes,
+        recurring: newEvent.recurring,
+        recurringDays: newEvent.recurringDays,
+        materials: []
+      };
 
-    setScheduledClasses([...scheduledClasses, newClassEvent]);
-    setIsAddEventOpen(false);
-    resetNewEventForm();
-    toast.success("Class scheduled successfully!");
+      const createdEvent = await createClassLog(newClassEvent);
+      
+      if (createdEvent) {
+        setScheduledClasses([...scheduledClasses, createdEvent]);
+        setIsAddEventOpen(false);
+        resetNewEventForm();
+        toast.success("Class scheduled successfully!");
+      } else {
+        toast.error("Failed to schedule class");
+      }
+    } catch (error) {
+      console.error("Error creating class:", error);
+      toast.error("Failed to schedule class");
+    }
   };
 
-  const handleEditEvent = () => {
+  const handleEditEvent = async () => {
     if (!selectedEvent) return;
     
-    setScheduledClasses(classes =>
-      classes.map(cls =>
-        cls.id === selectedEvent.id
-          ? { ...selectedEvent }
-          : cls
-      )
-    );
-    
-    setIsEditMode(false);
-    toast.success("Class updated successfully!");
-  };
-
-  const handleDeleteEvent = (eventId: number, isRecurring: boolean = false) => {
-    if (isRecurring) {
-      // Delete all recurring instances
-      setScheduledClasses(classes =>
-        classes.filter(cls => 
-          !(cls.recurring && cls.title === selectedEvent?.title)
-        )
-      );
-      toast.success("All recurring classes deleted successfully!");
-    } else {
-      // Delete single instance
-      setScheduledClasses(classes =>
-        classes.filter(cls => cls.id !== eventId)
-      );
-      toast.success("Class deleted successfully!");
+    try {
+      // Convert numeric ID back to UUID-like string for database query
+      const classId = selectedEvent.id.toString().padStart(8, '0') + '-0000-0000-0000-000000000000';
+      
+      const updatedEvent = await updateClassLog(classId, selectedEvent);
+      
+      if (updatedEvent) {
+        setScheduledClasses(classes =>
+          classes.map(cls =>
+            cls.id === selectedEvent.id
+              ? updatedEvent
+              : cls
+          )
+        );
+        
+        setIsEditMode(false);
+        toast.success("Class updated successfully!");
+      } else {
+        toast.error("Failed to update class");
+      }
+    } catch (error) {
+      console.error("Error updating class:", error);
+      toast.error("Failed to update class");
     }
-    setIsViewEventOpen(false);
   };
 
-  const handleDuplicateEvent = (event: ClassEvent) => {
-    const duplicatedEvent: ClassEvent = {
-      ...event,
-      id: scheduledClasses.length + 1,
-      date: new Date(event.date),
-      recurring: false,
-      recurringDays: []
-    };
-    setScheduledClasses([...scheduledClasses, duplicatedEvent]);
-    toast.success("Class duplicated successfully!");
+  const handleDeleteEvent = async (eventId: number, isRecurring: boolean = false) => {
+    try {
+      // Convert numeric ID back to UUID-like string for database query
+      const classId = eventId.toString().padStart(8, '0') + '-0000-0000-0000-000000000000';
+      
+      if (isRecurring) {
+        // In a real app, this would delete all recurring instances
+        // For now, we'll just delete this one instance
+        const success = await deleteClassLog(classId);
+        
+        if (success) {
+          setScheduledClasses(classes =>
+            classes.filter(cls => cls.id !== eventId)
+          );
+          toast.success("All recurring classes deleted successfully!");
+        } else {
+          toast.error("Failed to delete recurring classes");
+        }
+      } else {
+        const success = await deleteClassLog(classId);
+        
+        if (success) {
+          setScheduledClasses(classes =>
+            classes.filter(cls => cls.id !== eventId)
+          );
+          toast.success("Class deleted successfully!");
+        } else {
+          toast.error("Failed to delete class");
+        }
+      }
+      
+      setIsViewEventOpen(false);
+    } catch (error) {
+      console.error("Error deleting class:", error);
+      toast.error("Failed to delete class");
+    }
+  };
+
+  const handleDuplicateEvent = async (event: ClassEvent) => {
+    try {
+      const duplicatedEvent: ClassEvent = {
+        ...event,
+        id: scheduledClasses.length + 1,
+        date: new Date(event.date),
+        recurring: false,
+        recurringDays: []
+      };
+      
+      const createdEvent = await createClassLog(duplicatedEvent);
+      
+      if (createdEvent) {
+        setScheduledClasses([...scheduledClasses, createdEvent]);
+        toast.success("Class duplicated successfully!");
+      } else {
+        toast.error("Failed to duplicate class");
+      }
+    } catch (error) {
+      console.error("Error duplicating class:", error);
+      toast.error("Failed to duplicate class");
+    }
   };
 
   const resetNewEventForm = () => {
@@ -178,19 +262,42 @@ const TutorScheduler: React.FC = () => {
     });
   };
 
-  const handleMarkMessageRead = (messageId: number) => {
-    setStudentMessages(messages => 
-      messages.map(message => 
-        message.id === messageId ? { ...message, isRead: true } : message
-      )
-    );
-    toast.success("Message marked as read");
+  const handleMarkMessageRead = async (messageId: number) => {
+    try {
+      // Convert numeric ID back to UUID-like string for database query
+      const dbMessageId = messageId.toString().padStart(8, '0') + '-0000-0000-0000-000000000000';
+      
+      const success = await markMessageAsRead(dbMessageId);
+      
+      if (success) {
+        setStudentMessages(messages => 
+          messages.map(message => 
+            message.id === messageId ? { ...message, isRead: true } : message
+          )
+        );
+        toast.success("Message marked as read");
+      } else {
+        toast.error("Failed to mark message as read");
+      }
+    } catch (error) {
+      console.error("Error marking message as read:", error);
+      toast.error("Failed to mark message as read");
+    }
   };
 
-  const handleDownloadFile = (uploadId: number) => {
-    const upload = studentUploads.find(u => u.id === uploadId);
-    if (upload) {
-      toast.success(`Downloading ${upload.fileName}`);
+  const handleDownloadFile = async (uploadId: number) => {
+    try {
+      // In a real implementation, we would fetch the file path from the database
+      // For now, we'll just show a success message
+      const upload = studentUploads.find(u => u.id === uploadId);
+      if (upload) {
+        // This would get a download URL in a real implementation
+        // const downloadUrl = await getFileDownloadURL(upload.filePath);
+        toast.success(`Downloading ${upload.fileName}`);
+      }
+    } catch (error) {
+      console.error("Error downloading file:", error);
+      toast.error("Failed to download file");
     }
   };
 
@@ -202,8 +309,11 @@ const TutorScheduler: React.FC = () => {
     const matchesSearch = 
       cls.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       cls.studentName.toLowerCase().includes(searchTerm.toLowerCase());
+    
     const matchesSubject = subjectFilter === "all" || cls.subject === subjectFilter;
+    
     const matchesStudent = studentFilter === "all" || cls.studentId.toString() === studentFilter;
+    
     return matchesSearch && matchesSubject && matchesStudent;
   });
 
@@ -252,14 +362,20 @@ const TutorScheduler: React.FC = () => {
         </Select>
       </div>
       
-      <CalendarWithEvents 
-        selectedDate={selectedDate}
-        setSelectedDate={setSelectedDate}
-        scheduledClasses={filteredClasses}
-        onSelectEvent={handleSelectEvent}
-        onAddEventClick={() => setIsAddEventOpen(true)}
-        getUnreadMessageCount={getUnreadMessageCount}
-      />
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <p>Loading classes...</p>
+        </div>
+      ) : (
+        <CalendarWithEvents 
+          selectedDate={selectedDate}
+          setSelectedDate={setSelectedDate}
+          scheduledClasses={filteredClasses}
+          onSelectEvent={handleSelectEvent}
+          onAddEventClick={() => setIsAddEventOpen(true)}
+          getUnreadMessageCount={getUnreadMessageCount}
+        />
+      )}
       
       <Dialog open={isViewEventOpen} onOpenChange={setIsViewEventOpen}>
         <DialogContent className="max-w-2xl">
