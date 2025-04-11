@@ -1,8 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { ClassEvent, Student } from "@/types/tutorTypes";
 import { fetchClassLogs, createClassLog, updateClassLog, deleteClassLog, fetchClassMessages, createClassMessage, markMessageAsRead, fetchClassUploads, uploadClassFile, getFileDownloadURL } from "@/services/classService";
+import { supabase } from "@/integrations/supabase/client";
 
 export function useTutorScheduler() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -51,6 +51,38 @@ export function useTutorScheduler() {
     loadClasses();
   }, []);
 
+  // Subscribe to real-time updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('tutor-class-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen for all events (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'class_logs'
+        },
+        (payload) => {
+          console.log('Real-time update received in tutor scheduler:', payload);
+          
+          // Handle different types of changes
+          if (payload.eventType === 'INSERT') {
+            handleClassInserted(payload.new);
+          } else if (payload.eventType === 'UPDATE') {
+            handleClassUpdated(payload.new);
+          } else if (payload.eventType === 'DELETE') {
+            handleClassDeleted(payload.old);
+          }
+        }
+      )
+      .subscribe();
+    
+    // Cleanup subscription when component unmounts
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [scheduledClasses]); // Depend on scheduledClasses to ensure we have the latest reference when handling events
+
   // Load messages and uploads when a class is selected
   useEffect(() => {
     const loadClassContent = async () => {
@@ -76,6 +108,75 @@ export function useTutorScheduler() {
     
     loadClassContent();
   }, [selectedEvent]);
+
+  // Handle a newly inserted class
+  const handleClassInserted = (newClass: any) => {
+    const classEvent: ClassEvent = {
+      id: parseInt(newClass.id.substring(0, 8), 16),
+      title: newClass.title,
+      date: new Date(newClass.date),
+      startTime: newClass.start_time.substring(0, 5),
+      endTime: newClass.end_time.substring(0, 5),
+      studentId: parseInt(newClass.id.substring(0, 8), 16), // Placeholder 
+      studentName: newClass.student_name,
+      subject: newClass.subject,
+      zoomLink: newClass.zoom_link || "",
+      notes: newClass.notes || "",
+      recurring: false, // Default to false
+      materials: [] 
+    };
+
+    setScheduledClasses(prevClasses => [...prevClasses, classEvent]);
+    toast.success(`New class scheduled: ${classEvent.title}`);
+  };
+
+  // Handle an updated class
+  const handleClassUpdated = (updatedClass: any) => {
+    const classEvent: ClassEvent = {
+      id: parseInt(updatedClass.id.substring(0, 8), 16),
+      title: updatedClass.title,
+      date: new Date(updatedClass.date),
+      startTime: updatedClass.start_time.substring(0, 5),
+      endTime: updatedClass.end_time.substring(0, 5),
+      studentId: parseInt(updatedClass.id.substring(0, 8), 16), // Placeholder
+      studentName: updatedClass.student_name,
+      subject: updatedClass.subject,
+      zoomLink: updatedClass.zoom_link || "",
+      notes: updatedClass.notes || "",
+      recurring: false, // Default to false
+      materials: []
+    };
+
+    setScheduledClasses(prevClasses => 
+      prevClasses.map(cls => 
+        cls.id === classEvent.id ? classEvent : cls
+      )
+    );
+
+    // If this is the currently selected event, update it
+    if (selectedEvent && selectedEvent.id === classEvent.id) {
+      setSelectedEvent(classEvent);
+    }
+
+    toast.info(`Class updated: ${classEvent.title}`);
+  };
+
+  // Handle a deleted class
+  const handleClassDeleted = (deletedClass: any) => {
+    const classId = parseInt(deletedClass.id.substring(0, 8), 16);
+    
+    setScheduledClasses(prevClasses => 
+      prevClasses.filter(cls => cls.id !== classId)
+    );
+
+    // If this is the currently selected event, close the details dialog
+    if (selectedEvent && selectedEvent.id === classId) {
+      setIsViewEventOpen(false);
+      setSelectedEvent(null);
+    }
+
+    toast.info(`Class removed: ${deletedClass.title}`);
+  };
 
   const handleSelectEvent = (event: ClassEvent) => {
     setSelectedEvent(event);

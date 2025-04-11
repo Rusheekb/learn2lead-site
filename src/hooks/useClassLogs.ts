@@ -1,7 +1,7 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { fetchClassLogs, fetchClassMessages, fetchClassUploads, markMessageAsRead, getFileDownloadURL } from "@/services/classService";
+import { supabase } from "@/integrations/supabase/client";
 
 export const useClassLogs = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -21,6 +21,38 @@ export const useClassLogs = () => {
   useEffect(() => {
     loadClasses();
   }, []);
+
+  // Subscribe to real-time updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('class-logs-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen for all events (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'class_logs'
+        },
+        (payload) => {
+          console.log('Real-time update received:', payload);
+          
+          // Handle different types of changes
+          if (payload.eventType === 'INSERT') {
+            handleClassInserted(payload.new);
+          } else if (payload.eventType === 'UPDATE') {
+            handleClassUpdated(payload.new);
+          } else if (payload.eventType === 'DELETE') {
+            handleClassDeleted(payload.old);
+          }
+        }
+      )
+      .subscribe();
+    
+    // Cleanup subscription when component unmounts
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [classes]); // Depend on classes to ensure we have the latest reference when handling events
 
   // Load messages and uploads when a class is selected
   useEffect(() => {
@@ -45,6 +77,77 @@ export const useClassLogs = () => {
     
     loadClassContent();
   }, [selectedClass]);
+
+  // Handle a newly inserted class
+  const handleClassInserted = (newClass: any) => {
+    // Transform to the format expected by the component
+    const transformedClass = {
+      id: parseInt(newClass.id.substring(0, 8), 16),
+      title: newClass.title,
+      subject: newClass.subject,
+      tutorName: newClass.tutor_name,
+      studentName: newClass.student_name,
+      date: newClass.date,
+      startTime: newClass.start_time.substring(0, 5),
+      endTime: newClass.end_time.substring(0, 5),
+      status: newClass.status,
+      attendance: newClass.attendance,
+      zoomLink: newClass.zoom_link,
+      notes: newClass.notes
+    };
+
+    setClasses(prevClasses => [...prevClasses, transformedClass]);
+    toast.success(`New class added: ${transformedClass.title}`);
+  };
+
+  // Handle an updated class
+  const handleClassUpdated = (updatedClass: any) => {
+    // Transform to the format expected by the component
+    const transformedClass = {
+      id: parseInt(updatedClass.id.substring(0, 8), 16),
+      title: updatedClass.title,
+      subject: updatedClass.subject,
+      tutorName: updatedClass.tutor_name,
+      studentName: updatedClass.student_name,
+      date: updatedClass.date,
+      startTime: updatedClass.start_time.substring(0, 5),
+      endTime: updatedClass.end_time.substring(0, 5),
+      status: updatedClass.status,
+      attendance: updatedClass.attendance,
+      zoomLink: updatedClass.zoom_link,
+      notes: updatedClass.notes
+    };
+
+    setClasses(prevClasses => 
+      prevClasses.map(cls => 
+        cls.id === transformedClass.id ? transformedClass : cls
+      )
+    );
+
+    // If this is the currently selected class, update it
+    if (selectedClass && selectedClass.id === transformedClass.id) {
+      setSelectedClass(transformedClass);
+    }
+
+    toast.info(`Class updated: ${transformedClass.title}`);
+  };
+
+  // Handle a deleted class
+  const handleClassDeleted = (deletedClass: any) => {
+    const classId = parseInt(deletedClass.id.substring(0, 8), 16);
+    
+    setClasses(prevClasses => 
+      prevClasses.filter(cls => cls.id !== classId)
+    );
+
+    // If this is the currently selected class, close the details dialog
+    if (selectedClass && selectedClass.id === classId) {
+      setIsDetailsOpen(false);
+      setSelectedClass(null);
+    }
+
+    toast.info(`Class removed: ${deletedClass.title}`);
+  };
 
   const loadClasses = async () => {
     setIsLoading(true);
