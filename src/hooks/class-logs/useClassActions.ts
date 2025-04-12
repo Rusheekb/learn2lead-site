@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { toast } from "sonner";
 import { 
@@ -14,6 +15,8 @@ export const useClassActions = () => {
   const [studentMessages, setStudentMessages] = useState<any[]>([]);
   const [activeDetailsTab, setActiveDetailsTab] = useState<string>("details");
   const [isExporting, setIsExporting] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const handleClassClick = (cls: any) => {
     setSelectedClass(cls);
@@ -92,6 +95,15 @@ export const useClassActions = () => {
     return studentMessages.filter(m => m.classId === classId && !m.isRead).length;
   };
 
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize);
+    setPage(1); // Reset to first page when changing page size
+  };
+
   return {
     // State
     isDetailsOpen,
@@ -103,6 +115,10 @@ export const useClassActions = () => {
     activeDetailsTab,
     setActiveDetailsTab,
     isExporting,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
     
     // Methods
     handleClassClick,
@@ -111,6 +127,8 @@ export const useClassActions = () => {
     handleDownloadFile,
     handleExport,
     getUnreadMessageCount,
+    handlePageChange,
+    handlePageSizeChange,
   };
 };
 

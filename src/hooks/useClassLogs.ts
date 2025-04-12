@@ -21,12 +21,16 @@ export const useClassLogs = () => {
     studentUploads, studentMessages,
     activeDetailsTab, setActiveDetailsTab,
     isExporting,
+    page, setPage,
+    pageSize, setPageSize,
     handleClassClick,
     loadClassContent,
     handleMarkMessageRead,
     handleDownloadFile,
     handleExport,
-    getUnreadMessageCount
+    getUnreadMessageCount,
+    handlePageChange,
+    handlePageSizeChange
   } = useClassActions();
 
   const {
@@ -49,6 +53,11 @@ export const useClassLogs = () => {
 
   // Apply filters to classes
   const filteredClasses = applyFilters(classes);
+  
+  // Calculate pagination values
+  const totalItems = filteredClasses.length;
+  const totalPages = Math.ceil(totalItems / pageSize);
+  const paginatedClasses = filteredClasses.slice((page - 1) * pageSize, page * pageSize);
 
   return {
     // State
@@ -65,7 +74,12 @@ export const useClassLogs = () => {
     isLoading,
     classes,
     filteredClasses,
+    paginatedClasses,
     allSubjects,
+    page, 
+    pageSize,
+    totalPages,
+    totalItems,
 
     // Methods
     handleClassClick,
@@ -75,7 +89,9 @@ export const useClassLogs = () => {
     getUnreadMessageCount,
     handleDownloadFile,
     handleExport,
-    handleRefreshData
+    handleRefreshData,
+    handlePageChange,
+    handlePageSizeChange
   };
 };
 

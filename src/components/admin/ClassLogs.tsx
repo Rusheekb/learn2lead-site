@@ -36,7 +36,12 @@ const ClassLogs: React.FC = () => {
     isLoading,
     classes,
     filteredClasses,
+    paginatedClasses,
     allSubjects,
+    page,
+    pageSize,
+    totalPages,
+    totalItems,
     handleClassClick,
     formatTime,
     clearFilters,
@@ -44,7 +49,9 @@ const ClassLogs: React.FC = () => {
     getUnreadMessageCount,
     handleDownloadFile,
     handleExport,
-    handleRefreshData
+    handleRefreshData,
+    handlePageChange,
+    handlePageSizeChange
   } = useClassLogs();
 
   return (
@@ -99,11 +106,18 @@ const ClassLogs: React.FC = () => {
       <ClassTable
         classes={classes}
         filteredClasses={filteredClasses}
+        paginatedClasses={paginatedClasses}
         isLoading={isLoading}
         handleClassClick={handleClassClick}
         clearFilters={clearFilters}
         getUnreadMessageCount={getUnreadMessageCount}
         formatTime={formatTime}
+        page={page}
+        pageSize={pageSize}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
       />
       
       <ClassDetailsDialog
