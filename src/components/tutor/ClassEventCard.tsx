@@ -3,6 +3,7 @@ import React from "react";
 import { Clock, MessageSquare, User, Video } from "lucide-react";
 import { ClassEvent } from "@/types/tutorTypes";
 import { formatTime } from "@/utils/dateTimeUtils";
+import { RecurringBadge, MessageBadge } from "@/components/shared/ClassBadges";
 
 interface ClassEventCardProps {
   event: ClassEvent;
@@ -26,16 +27,9 @@ const ClassEventCard: React.FC<ClassEventCardProps> = ({ event, onClick, unreadM
           </div>
         </div>
         <div className="flex gap-2">
-          {event.recurring && (
-            <span className="text-xs bg-tutoring-blue/10 text-tutoring-blue px-2 py-1 rounded">
-              Recurring
-            </span>
-          )}
+          {event.recurring && <RecurringBadge />}
           {unreadMessagesCount > 0 && (
-            <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded flex items-center">
-              <MessageSquare className="h-3 w-3 mr-1" />
-              {unreadMessagesCount} new
-            </span>
+            <MessageBadge count={unreadMessagesCount} />
           )}
         </div>
       </div>

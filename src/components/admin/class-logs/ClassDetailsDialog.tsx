@@ -1,10 +1,10 @@
-
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import StudentContent from "../../shared/StudentContent";
 import { StatusBadge, AttendanceBadge } from "./BadgeComponents";
+import { MessageCountBadge } from "@/components/shared/ClassBadges";
 
 interface ClassDetailsDialogProps {
   isDetailsOpen: boolean;
@@ -47,11 +47,7 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
             <TabsTrigger value="details">Class Details</TabsTrigger>
             <TabsTrigger value="student-content">
               Student Content
-              {getUnreadMessageCount(selectedClass.id) > 0 && (
-                <span className="ml-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-red-100 text-xs font-medium text-red-800">
-                  {getUnreadMessageCount(selectedClass.id)}
-                </span>
-              )}
+              <MessageCountBadge count={getUnreadMessageCount(selectedClass.id)} />
             </TabsTrigger>
           </TabsList>
           

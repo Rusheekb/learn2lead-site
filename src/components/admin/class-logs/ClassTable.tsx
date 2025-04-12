@@ -1,10 +1,10 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { StatusBadge, AttendanceBadge } from "./BadgeComponents";
+import { CircleMessageBadge } from "@/components/shared/ClassBadges";
 import TablePagination from "./TablePagination";
 
 interface ClassTableProps {
@@ -103,11 +103,7 @@ const ClassTable: React.FC<ClassTableProps> = ({
                     <TableCell><StatusBadge status={cls.status} /></TableCell>
                     <TableCell><AttendanceBadge attendance={cls.attendance} /></TableCell>
                     <TableCell>
-                      {getUnreadMessageCount(cls.id) > 0 && (
-                        <div className="inline-flex items-center justify-center w-6 h-6 text-xs font-medium text-white bg-red-500 rounded-full">
-                          {getUnreadMessageCount(cls.id)}
-                        </div>
-                      )}
+                      <CircleMessageBadge count={getUnreadMessageCount(cls.id)} />
                     </TableCell>
                     <TableCell>
                       <Button variant="ghost" size="sm" className="hover:bg-muted">

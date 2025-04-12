@@ -1,10 +1,10 @@
-
 import React from "react";
 import { Video, FileText } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ClassEvent } from "@/types/tutorTypes";
 import { StudentMessage, StudentUpload } from "../shared/StudentContent";
 import StudentContent from "../shared/StudentContent";
+import { MessageCountBadge } from "@/components/shared/ClassBadges";
 
 interface ClassEventDetailsProps {
   selectedEvent: ClassEvent;
@@ -33,11 +33,7 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
         <TabsTrigger value="details">Class Details</TabsTrigger>
         <TabsTrigger value="student-content">
           Student Content
-          {unreadMessageCount > 0 && (
-            <span className="ml-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-red-100 text-xs font-medium text-red-800">
-              {unreadMessageCount}
-            </span>
-          )}
+          <MessageCountBadge count={unreadMessageCount} />
         </TabsTrigger>
       </TabsList>
 
