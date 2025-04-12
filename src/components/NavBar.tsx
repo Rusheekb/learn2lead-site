@@ -1,12 +1,21 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogIn } from "lucide-react";
+import { Menu, X, LogIn, LogOut, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
 
 const NavBar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -14,6 +23,10 @@ const NavBar = () => {
 
   const handleLogin = () => {
     navigate('/login');
+  };
+
+  const handleLogout = async () => {
+    await signOut();
   };
 
   return (
@@ -46,16 +59,36 @@ const NavBar = () => {
             </Link>
           </div>
 
-          {/* CTA and Login Buttons */}
+          {/* CTA and Login/User Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            <Button 
-              variant="ghost"
-              onClick={handleLogin}
-              className="flex items-center space-x-2 text-tutoring-blue hover:bg-tutoring-blue/10"
-            >
-              <LogIn className="h-4 w-4" />
-              <span>Login</span>
-            </Button>
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex items-center space-x-2 text-tutoring-blue hover:bg-tutoring-blue/10">
+                    <User className="h-4 w-4" />
+                    <span>{user.email?.split('@')[0] || 'Account'}</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => navigate('/dashboard')}>
+                    Dashboard
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="h-4 w-4 mr-2" />
+                    <span>Logout</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button 
+                variant="ghost"
+                onClick={handleLogin}
+                className="flex items-center space-x-2 text-tutoring-blue hover:bg-tutoring-blue/10"
+              >
+                <LogIn className="h-4 w-4" />
+                <span>Login</span>
+              </Button>
+            )}
             <Button 
               onClick={() => navigate('/book')}
               className="bg-tutoring-blue hover:bg-blue-700 text-white"
@@ -97,14 +130,30 @@ const NavBar = () => {
           <Link to="/contact" className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-tutoring-blue">
             Contact
           </Link>
-          <Button 
-            onClick={handleLogin}
-            variant="ghost"
-            className="w-full mt-2 flex items-center justify-center space-x-2 text-tutoring-blue hover:bg-tutoring-blue/10"
-          >
-            <LogIn className="h-4 w-4" />
-            <span>Login</span>
-          </Button>
+          {user ? (
+            <>
+              <Link to="/dashboard" className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-tutoring-blue">
+                Dashboard
+              </Link>
+              <Button 
+                onClick={handleLogout}
+                variant="ghost"
+                className="w-full mt-2 flex items-center justify-center space-x-2 text-tutoring-blue hover:bg-tutoring-blue/10"
+              >
+                <LogOut className="h-4 w-4" />
+                <span>Logout</span>
+              </Button>
+            </>
+          ) : (
+            <Button 
+              onClick={handleLogin}
+              variant="ghost"
+              className="w-full mt-2 flex items-center justify-center space-x-2 text-tutoring-blue hover:bg-tutoring-blue/10"
+            >
+              <LogIn className="h-4 w-4" />
+              <span>Login</span>
+            </Button>
+          )}
           <Button 
             onClick={() => navigate('/book')}
             className="w-full mt-2 bg-tutoring-blue hover:bg-blue-700 text-white"
