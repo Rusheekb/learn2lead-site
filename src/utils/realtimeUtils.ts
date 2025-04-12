@@ -1,6 +1,7 @@
 
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { createRealtimeSubscription, RealtimeSubscriptionConfig } from "./realtimeSubscription";
 
 export interface RealtimeConfig {
   channelName: string;
@@ -11,7 +12,8 @@ export interface RealtimeConfig {
 }
 
 /**
- * Creates a Supabase realtime subscription
+ * Creates a Supabase realtime subscription (legacy version)
+ * @deprecated Use createRealtimeSubscription from realtimeSubscription.ts instead
  */
 export const createRealtimeSubscription = ({
   channelName,
@@ -20,6 +22,8 @@ export const createRealtimeSubscription = ({
   onUpdate,
   onDelete
 }: RealtimeConfig) => {
+  console.warn('Using deprecated createRealtimeSubscription from realtimeUtils.ts. Please update to use the new utility from realtimeSubscription.ts');
+  
   const channel = supabase
     .channel(channelName)
     .on(

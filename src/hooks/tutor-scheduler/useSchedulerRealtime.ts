@@ -3,7 +3,8 @@ import { useEffect } from "react";
 import { toast } from "sonner";
 import { ClassEvent } from "@/types/tutorTypes";
 import { supabase } from "@/integrations/supabase/client";
-import { createRealtimeSubscription, dbIdToNumeric } from "@/utils/realtimeUtils";
+import { createRealtimeSubscription } from "@/utils/realtimeSubscription";
+import { dbIdToNumeric } from "@/utils/realtimeUtils";
 
 export const useSchedulerRealtime = (
   scheduledClasses: ClassEvent[], 
@@ -17,9 +18,15 @@ export const useSchedulerRealtime = (
     const channel = createRealtimeSubscription({
       channelName: 'tutor-class-updates',
       tableName: 'class_logs',
-      onInsert: (newClass) => handleClassInserted(newClass),
-      onUpdate: (updatedClass) => handleClassUpdated(updatedClass),
-      onDelete: (deletedClass) => handleClassDeleted(deletedClass)
+      onData: (payload) => {
+        if (payload.eventType === 'INSERT' && payload.new) {
+          handleClassInserted(payload.new);
+        } else if (payload.eventType === 'UPDATE' && payload.new) {
+          handleClassUpdated(payload.new);
+        } else if (payload.eventType === 'DELETE' && payload.old) {
+          handleClassDeleted(payload.old);
+        }
+      }
     });
     
     // Cleanup subscription when component unmounts

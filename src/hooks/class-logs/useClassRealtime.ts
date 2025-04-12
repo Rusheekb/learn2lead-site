@@ -1,18 +1,31 @@
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { toast } from "sonner";
-import { createRealtimeSubscription, dbIdToNumeric } from "@/utils/realtimeUtils";
 import { supabase } from "@/integrations/supabase/client";
+import { createRealtimeSubscription } from "@/utils/realtimeSubscription";
+import { dbIdToNumeric } from "@/utils/realtimeUtils";
 
-export const useClassRealtime = (classes: any[], setClasses: React.Dispatch<React.SetStateAction<any[]>>, selectedClass: any | null, setSelectedClass: React.Dispatch<React.SetStateAction<any | null>>, setIsDetailsOpen: React.Dispatch<React.SetStateAction<boolean>>) => {
+export const useClassRealtime = (
+  classes: any[],
+  setClasses: React.Dispatch<React.SetStateAction<any[]>>,
+  selectedClass: any | null,
+  setSelectedClass: React.Dispatch<React.SetStateAction<any | null>>,
+  setIsDetailsOpen: React.Dispatch<React.SetStateAction<boolean>>
+) => {
   // Subscribe to real-time updates
   useEffect(() => {
     const channel = createRealtimeSubscription({
       channelName: 'class-logs-changes',
       tableName: 'class_logs',
-      onInsert: (newClass) => handleClassInserted(newClass),
-      onUpdate: (updatedClass) => handleClassUpdated(updatedClass),
-      onDelete: (deletedClass) => handleClassDeleted(deletedClass)
+      onData: (payload) => {
+        if (payload.eventType === 'INSERT' && payload.new) {
+          handleClassInserted(payload.new);
+        } else if (payload.eventType === 'UPDATE' && payload.new) {
+          handleClassUpdated(payload.new);
+        } else if (payload.eventType === 'DELETE' && payload.old) {
+          handleClassDeleted(payload.old);
+        }
+      }
     });
     
     // Cleanup subscription when component unmounts

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -14,6 +15,7 @@ import {
   fetchClassUploads, 
   uploadClassFile 
 } from "@/services/classUploadsService";
+import useStudentRealtime from "@/hooks/student/useStudentRealtime";
 
 interface ClassItem {
   id: number;
@@ -37,6 +39,15 @@ const ClassStudentActivity: React.FC = () => {
   const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false);
   const [classes, setClasses] = useState<ClassItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const currentStudentName = "Current Student"; // This would come from auth context in a real app
+  
+  // Setup realtime subscriptions
+  useStudentRealtime(
+    currentStudentName,
+    setClasses,
+    setStudentMessages,
+    setStudentUploads
+  );
   
   useEffect(() => {
     const loadClasses = async () => {
@@ -97,7 +108,7 @@ const ClassStudentActivity: React.FC = () => {
       
       const upload = await uploadClassFile(
         dbClassId,
-        "Current Student",
+        currentStudentName,
         file,
         note
       );
@@ -120,7 +131,7 @@ const ClassStudentActivity: React.FC = () => {
       
       const message = await createClassMessage(
         dbClassId,
-        "Current Student",
+        currentStudentName,
         messageText
       );
       
