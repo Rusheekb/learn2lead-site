@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { fetchClassLogs } from "@/services/classService";
+import { fetchClassLogs } from "@/services/classLogsService";
 
 export const useClassData = () => {
   const [isLoading, setIsLoading] = useState(true);

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -6,13 +5,15 @@ import UpcomingClassesTable from "../student/UpcomingClassesTable";
 import ClassDetailsDialog from "../student/ClassDetailsDialog";
 import { StudentUpload, StudentMessage } from "../shared/StudentContent";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  fetchClassLogs,
-  fetchClassMessages,
-  fetchClassUploads,
-  createClassMessage,
-  uploadClassFile
-} from "@/services/classService";
+import { fetchClassLogs } from "@/services/classLogsService";
+import { 
+  fetchClassMessages, 
+  createClassMessage 
+} from "@/services/classMessagesService";
+import { 
+  fetchClassUploads, 
+  uploadClassFile 
+} from "@/services/classUploadsService";
 
 interface ClassItem {
   id: number;
@@ -37,24 +38,22 @@ const ClassStudentActivity: React.FC = () => {
   const [classes, setClasses] = useState<ClassItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Fetch classes on component mount
   useEffect(() => {
     const loadClasses = async () => {
       setIsLoading(true);
       try {
         const classLogs = await fetchClassLogs();
         
-        // Transform to the format expected by the component
         const transformedClasses: ClassItem[] = classLogs.map(cl => ({
           id: cl.id,
           title: cl.title,
           subject: cl.subject,
-          tutorName: "Ms. Johnson", // This would come from the database in a real app
+          tutorName: "Ms. Johnson",
           date: cl.date.toISOString().split('T')[0],
           startTime: cl.startTime,
           endTime: cl.endTime,
-          status: "upcoming", // This would come from the database in a real app
-          attendance: "pending", // This would come from the database in a real app
+          status: "upcoming",
+          attendance: "pending",
           zoomLink: cl.zoomLink,
           notes: cl.notes || "",
           studentName: cl.studentName
@@ -72,20 +71,16 @@ const ClassStudentActivity: React.FC = () => {
     loadClasses();
   }, []);
 
-  // Load messages and uploads when a class is selected
   useEffect(() => {
     const loadClassContent = async () => {
       if (!selectedClass) return;
       
       try {
-        // Convert numeric ID back to UUID-like string for database query
         const classId = selectedClass.id.toString().padStart(8, '0') + '-0000-0000-0000-000000000000';
         
-        // Load messages
         const messages = await fetchClassMessages(classId);
         setStudentMessages(messages);
         
-        // Load uploads
         const uploads = await fetchClassUploads(classId);
         setStudentUploads(uploads);
       } catch (error) {
@@ -96,15 +91,13 @@ const ClassStudentActivity: React.FC = () => {
     loadClassContent();
   }, [selectedClass]);
   
-  // Handle file upload
   const handleFileUpload = async (classId: number, file: File, note: string) => {
     try {
-      // Convert numeric ID back to UUID-like string for database query
       const dbClassId = classId.toString().padStart(8, '0') + '-0000-0000-0000-000000000000';
       
       const upload = await uploadClassFile(
         dbClassId,
-        "Current Student", // This would come from auth context in a real app
+        "Current Student",
         file,
         note
       );
@@ -121,15 +114,13 @@ const ClassStudentActivity: React.FC = () => {
     }
   };
   
-  // Handle sending a message
   const handleSendMessage = async (classId: number, messageText: string) => {
     try {
-      // Convert numeric ID back to UUID-like string for database query
       const dbClassId = classId.toString().padStart(8, '0') + '-0000-0000-0000-000000000000';
       
       const message = await createClassMessage(
         dbClassId,
-        "Current Student", // This would come from auth context in a real app
+        "Current Student",
         messageText
       );
       
@@ -145,7 +136,6 @@ const ClassStudentActivity: React.FC = () => {
     }
   };
   
-  // Handle viewing class details
   const handleViewClass = (cls: ClassItem) => {
     setSelectedClass(cls);
     setIsDetailsOpen(true);
@@ -177,7 +167,6 @@ const ClassStudentActivity: React.FC = () => {
         </CardContent>
       </Card>
       
-      {/* Class Details Dialog */}
       <ClassDetailsDialog
         open={isDetailsOpen}
         onOpenChange={setIsDetailsOpen}

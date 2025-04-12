@@ -1,7 +1,12 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { fetchClassMessages, fetchClassUploads, markMessageAsRead, getFileDownloadURL } from "@/services/classService";
+import { 
+  fetchClassMessages, 
+  fetchClassUploads, 
+  markMessageAsRead 
+} from "@/services/classMessagesService";
+import { getFileDownloadURL } from "@/services/classUploadsService";
 import { numericIdToDbId } from "@/utils/realtimeUtils";
 
 export const useClassActions = () => {

@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { fetchClassLogs } from "@/services/classService";
+import { fetchClassLogs } from "@/services/classLogsService";
 import { ClassEvent } from "@/types/tutorTypes";
 
 export const useSchedulerData = () => {

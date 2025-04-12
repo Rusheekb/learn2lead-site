@@ -2,7 +2,11 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { ClassEvent } from "@/types/tutorTypes";
-import { createClassLog, updateClassLog, deleteClassLog } from "@/services/classService";
+import { 
+  createClassLog, 
+  updateClassLog, 
+  deleteClassLog 
+} from "@/services/classLogsService";
 import { numericIdToDbId } from "@/utils/realtimeUtils";
 import { mockStudents } from "../mockStudents";
 
