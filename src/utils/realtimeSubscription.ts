@@ -23,16 +23,24 @@ export const createRealtimeSubscription = <T>(
 
   console.log(`Setting up realtime subscription for ${tableName} on ${channelName}`);
 
+  // Define the proper PostgresChangesPayload type to match Supabase's structure
+  interface PostgresChangesPayload {
+    new: T;
+    old: T | null;
+    eventType: string;
+    [key: string]: any;
+  }
+
   const channel = supabase
     .channel(channelName)
     .on(
-      "postgres_changes" as any,
+      "postgres_changes",
       {
         event,
         schema,
         table: tableName,
       },
-      (payload) => {
+      (payload: PostgresChangesPayload) => {
         console.log(`Realtime update for ${tableName}:`, payload);
         onData({
           new: payload.new as T,
@@ -61,7 +69,7 @@ export const createRealtimeSubscription = <T>(
 export const useRealtimeSubscription = <T>(
   config: RealtimeSubscriptionConfig<T>
 ): (() => void) => {
-  const channel = createRealtimeSubscription(config);
+  const channel = createRealtimeSubscription<T>(config);
 
   return () => {
     console.log(`Cleaning up realtime subscription for ${config.tableName}`);
