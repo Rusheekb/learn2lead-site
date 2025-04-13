@@ -7,6 +7,7 @@ import Testimonials from '@/components/Testimonials';
 import Contact from '@/components/Contact';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
+import DashboardAccess from '@/components/DashboardAccess';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -64,6 +65,7 @@ const Index = () => {
       
       <Contact />
       <Footer />
+      <DashboardAccess />
     </div>
   );
 };

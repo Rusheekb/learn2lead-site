@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { ClassEvent } from "@/types/tutorTypes";
 import { 
@@ -6,13 +5,20 @@ import {
   mapToClassEvent, 
   mapToClassLogRecord 
 } from "./utils/classMappers";
+import { addDays, format } from "date-fns";
 
 // Fetch all class logs
 export const fetchClassLogs = async (): Promise<ClassEvent[]> => {
+  const today = new Date();
+  const sevenDaysFromNow = addDays(today, 7);
+  
   const { data, error } = await supabase
     .from('class_logs')
     .select('*')
-    .order('date', { ascending: true });
+    .gte('date', format(today, 'yyyy-MM-dd'))
+    .lte('date', format(sevenDaysFromNow, 'yyyy-MM-dd'))
+    .order('date', { ascending: true })
+    .order('start_time', { ascending: true });
   
   if (error) {
     console.error("Error fetching class logs:", error);
