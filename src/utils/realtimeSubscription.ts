@@ -34,8 +34,7 @@ export const createRealtimeSubscription = <T>(
   const channel = supabase
     .channel(channelName)
     .on(
-      // Use type assertion to handle the TypeScript error with "postgres_changes"
-      "postgres_changes" as "postgres_changes",
+      'postgres_changes' as any,
       {
         event,
         schema,
