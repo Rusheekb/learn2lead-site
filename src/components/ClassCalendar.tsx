@@ -2,9 +2,9 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Video, Link, Clock, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Video, Link, Clock, User, Calendar as CalendarIcon } from "lucide-react";
+import { format, isBefore, isToday, addDays, startOfDay } from "date-fns";
 
 // Type definitions
 interface ClassSession {
@@ -90,6 +90,18 @@ const getSessionsForDate = (date: Date, sessions: ClassSession[]) => {
   });
 };
 
+// Helper function to get upcoming sessions in the next few days
+const getUpcomingSessions = (sessions: ClassSession[], daysToShow = 7) => {
+  const today = startOfDay(new Date());
+  const futureDate = addDays(today, daysToShow);
+  
+  return sessions.filter(session => {
+    const sessionDate = startOfDay(session.date);
+    return (isToday(sessionDate) || isBefore(today, sessionDate)) && 
+           isBefore(sessionDate, futureDate);
+  }).sort((a, b) => a.date.getTime() - b.date.getTime());
+};
+
 // Session Detail Component
 const SessionDetail: React.FC<{ session: ClassSession }> = ({ session }) => {
   return (
@@ -135,9 +147,8 @@ const SessionDetail: React.FC<{ session: ClassSession }> = ({ session }) => {
 // Main Calendar Component
 const ClassCalendar: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false);
-  
   const sessionsForSelectedDate = getSessionsForDate(selectedDate, mockSessions);
+  const upcomingSessions = getUpcomingSessions(mockSessions);
   
   // Function to check if a date has sessions
   const hasSessionsOnDate = (date: Date) => {
@@ -153,20 +164,13 @@ const ClassCalendar: React.FC = () => {
       <h3 className="text-xl font-medium mb-4">Class Calendar</h3>
       <Card>
         <CardContent className="p-6">
-          <div className="flex flex-col md:flex-row gap-6">
-            <div className="md:w-1/2">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Calendar Column */}
+            <div>
               <Calendar
                 mode="single"
                 selected={selectedDate}
-                onSelect={(date) => {
-                  if (date) {
-                    setSelectedDate(date);
-                    // Open details dialog if there are sessions on this date
-                    if (hasSessionsOnDate(date)) {
-                      setIsDetailsOpen(true);
-                    }
-                  }
-                }}
+                onSelect={(date) => date && setSelectedDate(date)}
                 className="rounded border p-3"
                 modifiers={{
                   hasSession: (date) => hasSessionsOnDate(date),
@@ -187,44 +191,75 @@ const ClassCalendar: React.FC = () => {
               />
             </div>
             
-            <div className="md:w-1/2">
+            {/* Selected Date Classes Column */}
+            <div>
               <h4 className="text-lg font-medium mb-3">
-                Upcoming Classes {sessionsForSelectedDate.length > 0 && `(${sessionsForSelectedDate.length})`}
+                Classes on {format(selectedDate, 'MMMM d, yyyy')}
               </h4>
               
               {sessionsForSelectedDate.length > 0 ? (
-                <div className="space-y-3">
+                <div className="space-y-3 max-h-[320px] overflow-y-auto">
                   {sessionsForSelectedDate.map((session) => (
                     <SessionDetail key={session.id} session={session} />
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 text-gray-500">
+                <div className="text-center py-8 text-gray-500 border rounded-md">
+                  <CalendarIcon className="h-10 w-10 mx-auto mb-2 text-gray-400" />
                   <p>No classes scheduled for this date</p>
+                </div>
+              )}
+            </div>
+            
+            {/* Upcoming Classes Column */}
+            <div>
+              <h4 className="text-lg font-medium mb-3">
+                Upcoming Classes
+              </h4>
+              
+              {upcomingSessions.length > 0 ? (
+                <div className="space-y-3 max-h-[320px] overflow-y-auto">
+                  {upcomingSessions.map((session) => (
+                    <div key={session.id} className="p-4 border rounded-md">
+                      <div className="flex justify-between items-start">
+                        <h3 className="font-medium">{session.title}</h3>
+                        {session.recurring && (
+                          <span className="text-xs bg-tutoring-blue/10 text-tutoring-blue px-2 py-1 rounded">
+                            Recurring
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center text-sm text-gray-600 mt-1">
+                        <User className="h-4 w-4 mr-1" />
+                        <span>{session.tutorName}</span>
+                      </div>
+                      <div className="flex items-center text-sm text-gray-600 mt-2">
+                        <CalendarIcon className="h-4 w-4 mr-1" />
+                        <span>{format(session.date, 'EEE, MMM d')} • {formatTime(session.startTime)}</span>
+                      </div>
+                      <Button 
+                        variant="link" 
+                        className="p-0 h-auto text-tutoring-blue mt-2"
+                        asChild
+                      >
+                        <a href={session.zoomLink} target="_blank" rel="noopener noreferrer">
+                          <Video className="h-4 w-4 mr-1 inline" />
+                          Join Class
+                        </a>
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500 border rounded-md">
+                  <CalendarIcon className="h-10 w-10 mx-auto mb-2 text-gray-400" />
+                  <p>No upcoming classes</p>
                 </div>
               )}
             </div>
           </div>
         </CardContent>
       </Card>
-      
-      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Classes for {selectedDate.toLocaleDateString('en-US', { 
-              weekday: 'long', 
-              month: 'long', 
-              day: 'numeric' 
-            })}</DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4 mt-4">
-            {sessionsForSelectedDate.map(session => (
-              <SessionDetail key={session.id} session={session} />
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
