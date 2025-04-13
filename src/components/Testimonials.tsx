@@ -51,16 +51,6 @@ const Testimonials = () => {
             </div>
           ))}
         </div>
-
-        <div className="mt-16 text-center">
-          <p className="text-xl text-tutoring-blue font-medium mb-4">Ready to experience the difference?</p>
-          <a 
-            href="#contact" 
-            className="inline-flex items-center justify-center bg-tutoring-blue hover:bg-blue-700 text-white py-3 px-6 rounded-lg transition duration-300"
-          >
-            Schedule a Free Consultation
-          </a>
-        </div>
       </div>
     </section>
   );

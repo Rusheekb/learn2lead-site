@@ -1,6 +1,5 @@
-
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import NavBar from '@/components/NavBar';
 import Hero from '@/components/Hero';
 import Features from '@/components/Features';
@@ -11,6 +10,28 @@ import { Button } from '@/components/ui/button';
 
 const Index = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    // Check if there's a section parameter in the URL
+    const params = new URLSearchParams(location.search);
+    const section = params.get('section');
+    
+    if (section) {
+      // Remove the section parameter from the URL
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+      
+      // Scroll to the section
+      const element = document.getElementById(section);
+      if (element) {
+        // Add a small delay to ensure the page is fully loaded
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+    }
+  }, [location]);
 
   const handleStudentLogin = () => {
     navigate('/login');

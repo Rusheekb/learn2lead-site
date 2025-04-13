@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Menu, X, LogIn, LogOut, User } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
   DropdownMenu, 
@@ -15,6 +14,7 @@ import {
 const NavBar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, signOut } = useAuth();
 
   const toggleMenu = () => {
@@ -27,6 +27,23 @@ const NavBar = () => {
 
   const handleLogout = async () => {
     await signOut();
+  };
+
+  const handleNavigation = (sectionId: string) => {
+    // Close mobile menu if open
+    setIsMenuOpen(false);
+
+    // If we're not on the homepage, navigate to homepage first
+    if (location.pathname !== '/') {
+      navigate('/?section=' + sectionId);
+      return;
+    }
+
+    // If we're already on the homepage, scroll to the section
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   return (
@@ -42,21 +59,36 @@ const NavBar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link to="/" className="text-gray-600 hover:text-tutoring-blue transition-colors">
+            <button 
+              onClick={() => handleNavigation('home')}
+              className="text-gray-600 hover:text-tutoring-blue transition-colors"
+            >
               Home
-            </Link>
-            <Link to="/about" className="text-gray-600 hover:text-tutoring-blue transition-colors">
+            </button>
+            <button 
+              onClick={() => handleNavigation('about')}
+              className="text-gray-600 hover:text-tutoring-blue transition-colors"
+            >
               About
-            </Link>
-            <Link to="/services" className="text-gray-600 hover:text-tutoring-blue transition-colors">
+            </button>
+            <button 
+              onClick={() => handleNavigation('services')}
+              className="text-gray-600 hover:text-tutoring-blue transition-colors"
+            >
               Services
-            </Link>
-            <Link to="/testimonials" className="text-gray-600 hover:text-tutoring-blue transition-colors">
+            </button>
+            <button 
+              onClick={() => handleNavigation('testimonials')}
+              className="text-gray-600 hover:text-tutoring-blue transition-colors"
+            >
               Testimonials
-            </Link>
-            <Link to="/contact" className="text-gray-600 hover:text-tutoring-blue transition-colors">
+            </button>
+            <button 
+              onClick={() => handleNavigation('contact')}
+              className="text-gray-600 hover:text-tutoring-blue transition-colors"
+            >
               Contact
-            </Link>
+            </button>
           </div>
 
           {/* CTA and Login/User Buttons */}
@@ -115,21 +147,36 @@ const NavBar = () => {
         isMenuOpen ? "block" : "hidden"
       )}>
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white shadow-lg">
-          <Link to="/" className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-tutoring-blue">
+          <button 
+            onClick={() => handleNavigation('home')}
+            className="block w-full text-left px-3 py-2 text-base font-medium text-gray-600 hover:text-tutoring-blue"
+          >
             Home
-          </Link>
-          <Link to="/about" className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-tutoring-blue">
+          </button>
+          <button 
+            onClick={() => handleNavigation('about')}
+            className="block w-full text-left px-3 py-2 text-base font-medium text-gray-600 hover:text-tutoring-blue"
+          >
             About
-          </Link>
-          <Link to="/services" className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-tutoring-blue">
+          </button>
+          <button 
+            onClick={() => handleNavigation('services')}
+            className="block w-full text-left px-3 py-2 text-base font-medium text-gray-600 hover:text-tutoring-blue"
+          >
             Services
-          </Link>
-          <Link to="/testimonials" className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-tutoring-blue">
+          </button>
+          <button 
+            onClick={() => handleNavigation('testimonials')}
+            className="block w-full text-left px-3 py-2 text-base font-medium text-gray-600 hover:text-tutoring-blue"
+          >
             Testimonials
-          </Link>
-          <Link to="/contact" className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-tutoring-blue">
+          </button>
+          <button 
+            onClick={() => handleNavigation('contact')}
+            className="block w-full text-left px-3 py-2 text-base font-medium text-gray-600 hover:text-tutoring-blue"
+          >
             Contact
-          </Link>
+          </button>
           {user ? (
             <>
               <Link to="/dashboard" className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-tutoring-blue">
