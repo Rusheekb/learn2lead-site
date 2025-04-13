@@ -121,11 +121,11 @@ const ClassDialogs: React.FC<ClassDialogsProps> = ({
                     setNewEvent={(event) => setNewEvent({ ...selectedEvent, ...event })}
                     students={students}
                   />
-                  <div className="flex justify-end gap-2 mt-4">
+                  <div className="flex justify-end gap-2 mt-6">
                     <Button variant="outline" onClick={() => setIsEditMode(false)}>
                       Cancel
                     </Button>
-                    <Button onClick={onEditEvent}>
+                    <Button onClick={onEditEvent} className="bg-tutoring-blue hover:bg-tutoring-blue/90">
                       Save Changes
                     </Button>
                   </div>
@@ -156,9 +156,9 @@ const ClassDialogs: React.FC<ClassDialogsProps> = ({
       </Dialog>
       
       <Dialog open={isAddEventOpen} onOpenChange={setIsAddEventOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-xl">
           <DialogHeader>
-            <DialogTitle>Schedule New Class</DialogTitle>
+            <DialogTitle className="text-xl font-semibold">Schedule New Class</DialogTitle>
           </DialogHeader>
           
           <NewClassEventForm 
@@ -167,7 +167,7 @@ const ClassDialogs: React.FC<ClassDialogsProps> = ({
             students={students}
           />
           
-          <DialogFooter>
+          <DialogFooter className="pt-2">
             <div className="flex gap-2 justify-end w-full">
               <Button variant="outline" onClick={() => {
                 setIsAddEventOpen(false);
@@ -175,7 +175,9 @@ const ClassDialogs: React.FC<ClassDialogsProps> = ({
               }}>
                 Cancel
               </Button>
-              <Button onClick={onCreateEvent}>Schedule Class</Button>
+              <Button onClick={onCreateEvent} className="bg-tutoring-blue hover:bg-tutoring-blue/90">
+                Schedule Class
+              </Button>
             </div>
           </DialogFooter>
         </DialogContent>
