@@ -6,15 +6,66 @@ import { createRealtimeSubscription } from "@/utils/realtimeSubscription";
 import { dbIdToNumeric } from "@/utils/realtimeUtils";
 import { StudentMessage, StudentUpload } from "@/components/shared/StudentContent";
 
+// Define types for the database records
+interface ClassLogRecord {
+  id: string;
+  title: string;
+  subject: string;
+  tutor_name: string;
+  student_name: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  status: string;
+  attendance: string;
+  zoom_link: string | null;
+  notes: string | null;
+}
+
+interface ClassMessageRecord {
+  id: string;
+  class_id: string;
+  student_name: string;
+  message: string;
+  timestamp: string;
+  is_read: boolean;
+}
+
+interface ClassUploadRecord {
+  id: string;
+  class_id: string;
+  student_name: string;
+  file_name: string;
+  file_size: string;
+  upload_date: string;
+  note: string | null;
+}
+
+// Define types for the component's props
+interface ClassItem {
+  id: number;
+  title: string;
+  subject: string;
+  tutorName: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  status: string;
+  attendance: string;
+  zoomLink: string;
+  notes: string;
+  studentName: string;
+}
+
 export const useStudentRealtime = (
   studentName: string,
-  setClasses: React.Dispatch<React.SetStateAction<any[]>>,
+  setClasses: React.Dispatch<React.SetStateAction<ClassItem[]>>,
   setMessages: React.Dispatch<React.SetStateAction<StudentMessage[]>>,
   setUploads: React.Dispatch<React.SetStateAction<StudentUpload[]>>
 ) => {
   useEffect(() => {
     // Subscribe to class changes
-    const classChannel = createRealtimeSubscription({
+    const classChannel = createRealtimeSubscription<ClassLogRecord>({
       channelName: 'student-class-updates',
       tableName: 'class_logs',
       onData: (payload) => {
@@ -23,7 +74,7 @@ export const useStudentRealtime = (
             && payload.new 
             && payload.new.student_name === studentName) {
           
-          const classItem = {
+          const classItem: ClassItem = {
             id: dbIdToNumeric(payload.new.id),
             title: payload.new.title,
             subject: payload.new.subject,
@@ -63,7 +114,7 @@ export const useStudentRealtime = (
     });
 
     // Subscribe to message changes
-    const messageChannel = createRealtimeSubscription({
+    const messageChannel = createRealtimeSubscription<ClassMessageRecord>({
       channelName: 'student-message-updates',
       tableName: 'class_messages',
       onData: (payload) => {
@@ -99,7 +150,7 @@ export const useStudentRealtime = (
     });
 
     // Subscribe to upload changes
-    const uploadChannel = createRealtimeSubscription({
+    const uploadChannel = createRealtimeSubscription<ClassUploadRecord>({
       channelName: 'student-upload-updates',
       tableName: 'class_uploads',
       onData: (payload) => {

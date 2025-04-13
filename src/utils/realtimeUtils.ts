@@ -1,7 +1,7 @@
 
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { createRealtimeSubscription, RealtimeSubscriptionConfig } from "./realtimeSubscription";
+import { createRealtimeSubscription as createRealtimeSubscriptionNew, RealtimeSubscriptionConfig } from "./realtimeSubscription";
 
 export interface RealtimeConfig {
   channelName: string;
@@ -15,7 +15,7 @@ export interface RealtimeConfig {
  * Creates a Supabase realtime subscription (legacy version)
  * @deprecated Use createRealtimeSubscription from realtimeSubscription.ts instead
  */
-export const createRealtimeSubscription = ({
+export const createLegacyRealtimeSubscription = ({
   channelName,
   tableName,
   onInsert,
@@ -51,6 +51,9 @@ export const createRealtimeSubscription = ({
   // Return channel for cleanup
   return channel;
 };
+
+// Re-export the new createRealtimeSubscription for convenience
+export { createRealtimeSubscriptionNew as createRealtimeSubscription };
 
 /**
  * Converts a database UUID to a numeric ID for frontend use

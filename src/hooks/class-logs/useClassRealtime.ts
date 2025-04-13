@@ -5,6 +5,22 @@ import { supabase } from "@/integrations/supabase/client";
 import { createRealtimeSubscription } from "@/utils/realtimeSubscription";
 import { dbIdToNumeric } from "@/utils/realtimeUtils";
 
+// Define types for database record
+interface ClassLogRecord {
+  id: string;
+  title: string;
+  subject: string;
+  tutor_name: string;
+  student_name: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  status: string;
+  attendance: string;
+  zoom_link: string | null;
+  notes: string | null;
+}
+
 export const useClassRealtime = (
   classes: any[],
   setClasses: React.Dispatch<React.SetStateAction<any[]>>,
@@ -14,7 +30,7 @@ export const useClassRealtime = (
 ) => {
   // Subscribe to real-time updates
   useEffect(() => {
-    const channel = createRealtimeSubscription({
+    const channel = createRealtimeSubscription<ClassLogRecord>({
       channelName: 'class-logs-changes',
       tableName: 'class_logs',
       onData: (payload) => {
@@ -34,7 +50,7 @@ export const useClassRealtime = (
     };
   }, [classes]); // Depend on classes to ensure we have the latest reference when handling events
 
-  const handleClassInserted = (newClass: any) => {
+  const handleClassInserted = (newClass: ClassLogRecord) => {
     // Transform to the format expected by the component
     const transformedClass = {
       id: dbIdToNumeric(newClass.id),
@@ -55,7 +71,7 @@ export const useClassRealtime = (
     toast.success(`New class added: ${transformedClass.title}`);
   };
 
-  const handleClassUpdated = (updatedClass: any) => {
+  const handleClassUpdated = (updatedClass: ClassLogRecord) => {
     // Transform to the format expected by the component
     const transformedClass = {
       id: dbIdToNumeric(updatedClass.id),
@@ -86,7 +102,7 @@ export const useClassRealtime = (
     toast.info(`Class updated: ${transformedClass.title}`);
   };
 
-  const handleClassDeleted = (deletedClass: any) => {
+  const handleClassDeleted = (deletedClass: ClassLogRecord) => {
     const classId = dbIdToNumeric(deletedClass.id);
     
     setClasses(prevClasses => 
