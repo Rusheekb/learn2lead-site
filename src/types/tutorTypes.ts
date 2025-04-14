@@ -1,18 +1,20 @@
-
 export interface ClassEvent {
-  id: number;
+  id: string;
   title: string;
   date: Date;
   startTime: string;
   endTime: string;
-  studentId: number;
   studentName: string;
+  tutorName: string;
   subject: string;
-  zoomLink: string;
-  materials?: string[];
-  notes?: string;
-  recurring: boolean;
-  recurringDays?: string[];
+  zoomLink?: string | null;
+  notes?: string | null;
+  status: 'completed' | 'pending' | 'cancelled';
+  attendance?: string | null;
+  paymentStatus: 'completed' | 'pending';
+  tutorPaymentStatus: 'completed' | 'pending';
+  classCost: number;
+  tutorCost: number;
 }
 
 export interface Student {

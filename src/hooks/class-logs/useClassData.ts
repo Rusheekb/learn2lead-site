@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { fetchClassLogs } from "@/services/classLogsService";
@@ -28,24 +27,7 @@ export const useClassData = () => {
     setIsLoading(true);
     try {
       const classLogs = await fetchClassLogs();
-      
-      // Transform to the format expected by the component
-      const transformedClasses = classLogs.map(cl => ({
-        id: cl.id,
-        title: cl.title,
-        subject: cl.subject,
-        tutorName: "Ms. Johnson", // This would come from the database in a real app
-        studentName: cl.studentName,
-        date: cl.date.toISOString().split('T')[0],
-        startTime: cl.startTime,
-        endTime: cl.endTime,
-        status: "upcoming", // This would come from the database in a real app
-        attendance: "pending", // This would come from the database in a real app
-        zoomLink: cl.zoomLink,
-        notes: cl.notes
-      }));
-      
-      setClasses(transformedClasses);
+      setClasses(classLogs);
     } catch (error) {
       console.error("Error loading classes:", error);
       toast.error("Failed to load class logs");

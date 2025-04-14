@@ -1,21 +1,28 @@
-
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { FileDown, Printer, RefreshCw, Download } from "lucide-react";
+import { FileDown, Printer, RefreshCw, Download, Upload } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 // Import refactored components
 import ClassFilters from "./class-logs/ClassFilters";
 import ClassTable from "./class-logs/ClassTable";
 import ClassDetailsDialog from "./class-logs/ClassDetailsDialog";
+import CsvUploader from "./class-logs/CsvUploader";
 import useClassLogs from "@/hooks/useClassLogs";
 
 const ClassLogs: React.FC = () => {
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
   const {
     searchTerm,
     setSearchTerm,
@@ -57,10 +64,19 @@ const ClassLogs: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Class Logs</h2>
+      <h2 className="text-2xl font-bold">Class Logs</h2>
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
+            size="sm"
+            onClick={() => setIsUploadOpen(true)}
+            className="flex items-center gap-2"
+          >
+            <Upload className="h-4 w-4" />
+            Import CSV
+          </Button>
+                <Button
+                  variant="outline"
             size="sm"
             onClick={handleRefreshData}
             className="flex items-center gap-2"
@@ -74,7 +90,7 @@ const ClassLogs: React.FC = () => {
               <Button variant="outline" size="sm" className="flex items-center gap-2" disabled={isLoading}>
                 <FileDown className="h-4 w-4" />
                 Export
-              </Button>
+                </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuItem onClick={() => handleExport('csv')}>
@@ -88,8 +104,8 @@ const ClassLogs: React.FC = () => {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </div>
-      
+          </div>
+          
       <ClassFilters
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
@@ -133,6 +149,20 @@ const ClassLogs: React.FC = () => {
         getUnreadMessageCount={getUnreadMessageCount}
         formatTime={formatTime}
       />
+
+      <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Import Class Logs</DialogTitle>
+          </DialogHeader>
+          <CsvUploader 
+            onUploadComplete={() => {
+              setIsUploadOpen(false);
+              handleRefreshData();
+            }} 
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

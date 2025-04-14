@@ -1,57 +1,108 @@
-
 import { ClassEvent } from "@/types/tutorTypes";
 import { StudentMessage, StudentUpload } from "@/components/shared/StudentContent";
 
 // Types for database records
 export interface ClassLogRecord {
   id: string;
-  title: string;
-  subject: string;
-  tutor_name: string;
-  student_name: string;
-  date: string;
-  start_time: string;
-  end_time: string;
-  status: string;
-  attendance: string;
-  zoom_link: string | null;
-  notes: string | null;
-  created_at: string;
-  updated_at: string;
+  "Class Number": string;
+  "Tutor Name": string;
+  "Student Name": string;
+  "Date": string;
+  "Day": string;
+  "Time (CST)": string;
+  "Time (hrs)": string;
+  "Subject": string;
+  "Content": string;
+  "HW": string;
+  "Class ID": string;
+  "Class Cost": string;
+  "Tutor Cost": string;
+  "Student Payment": string;
+  "Tutor Payment": string;
+  "Additional Info": string;
 }
 
 // Convert database record to ClassEvent
 export const mapToClassEvent = (record: ClassLogRecord): ClassEvent => {
+  // Parse and validate date
+  let formattedDate = record.Date;
+  try {
+    // Try to parse the date and format it to YYYY-MM-DD
+    const dateObj = new Date(record.Date);
+    if (!isNaN(dateObj.getTime())) {
+      formattedDate = dateObj.toISOString().split('T')[0];
+    }
+  } catch (e) {
+    console.warn('Invalid date format:', record.Date);
+  }
+
+  // Parse and validate time
+  let startTime = '00:00';
+  let endTime = '01:00';
+  try {
+    if (record['Time (CST)']) {
+      startTime = record['Time (CST)'].trim();
+      // Ensure time is in HH:mm format
+      if (!startTime.includes(':')) {
+        startTime = startTime + ':00';
+      }
+      const [hours, minutes] = startTime.split(':').map(Number);
+      if (isNaN(hours) || isNaN(minutes)) {
+        throw new Error('Invalid time format');
+      }
+      startTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+      
+      // Calculate end time
+      const durationHours = parseFloat(record['Time (hrs)']) || 1;
+      const totalMinutes = hours * 60 + minutes + durationHours * 60;
+      const endHours = Math.floor(totalMinutes / 60);
+      const endMinutes = Math.floor(totalMinutes % 60);
+      endTime = `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
+    }
+  } catch (e) {
+    console.warn('Invalid time format:', record['Time (CST)']);
+  }
+
   return {
-    id: parseInt(record.id.substring(0, 8), 16), // Convert UUID to number ID
-    title: record.title,
-    date: new Date(record.date),
-    startTime: record.start_time.substring(0, 5), // HH:MM format
-    endTime: record.end_time.substring(0, 5), // HH:MM format
-    studentId: parseInt(record.id.substring(0, 8), 16), // This is just a placeholder
-    studentName: record.student_name,
-    subject: record.subject,
-    zoomLink: record.zoom_link || "",
-    notes: record.notes || "",
-    recurring: false, // Default to false, we'd need another field for this
-    materials: [] // Default empty, we'd need to fetch materials separately
+    id: record.id || String(Math.random()),
+    title: `Class ${record['Class Number'] || 'N/A'} - ${record.Subject || 'N/A'}: ${record.Content || 'N/A'}`,
+    subject: record.Subject || 'N/A',
+    tutorName: record['Tutor Name'] || 'N/A',
+    studentName: record['Student Name'] || 'N/A',
+    date: formattedDate,
+    startTime,
+    endTime,
+    status: 'completed',
+    attendance: 'present',
+    notes: `Content: ${record.Content || 'N/A'}\nHomework: ${record.HW || 'None'}\nAdditional Info: ${record['Additional Info'] || 'None'}`,
+    paymentStatus: record['Student Payment']?.toLowerCase() === 'paid' ? 'completed' : 'pending',
+    tutorPaymentStatus: record['Tutor Payment']?.toLowerCase() === 'paid' ? 'completed' : 'pending',
+    classCost: parseFloat(record['Class Cost']) || 0,
+    tutorCost: parseFloat(record['Tutor Cost']) || 0
   };
 };
 
 // Convert ClassEvent to database record
-export const mapToClassLogRecord = (event: ClassEvent): Omit<ClassLogRecord, 'id' | 'created_at' | 'updated_at'> => {
+export const mapToClassLogRecord = (event: ClassEvent): Omit<ClassLogRecord, 'id'> => {
   return {
-    title: event.title,
-    subject: event.subject,
-    tutor_name: "Current Tutor", // This should come from auth context in a real app
-    student_name: event.studentName,
-    date: event.date.toISOString().split('T')[0], // YYYY-MM-DD format
-    start_time: event.startTime + ":00", // HH:MM:SS format
-    end_time: event.endTime + ":00", // HH:MM:SS format
-    status: "upcoming",
-    attendance: "pending",
-    zoom_link: event.zoomLink,
-    notes: event.notes
+    "Class Number": event.title.split(' - ')[0].replace('Class ', ''),
+    "Tutor Name": event.tutorName,
+    "Student Name": event.studentName,
+    "Date": event.date,
+    "Day": new Date(event.date).toLocaleDateString('en-US', { weekday: 'long' }),
+    "Time (CST)": event.startTime,
+    "Time (hrs)": ((new Date(`2000/01/01 ${event.endTime}`).getTime() - 
+                    new Date(`2000/01/01 ${event.startTime}`).getTime()) / 
+                    (1000 * 60 * 60)).toString(),
+    "Subject": event.subject,
+    "Content": event.notes?.split('\nHomework:')[0].replace('Content: ', '') || '',
+    "HW": event.notes?.split('\nHomework:')[1]?.split('\nAdditional Info:')[0].trim() || '',
+    "Class ID": '',
+    "Class Cost": event.classCost.toString(),
+    "Tutor Cost": event.tutorCost.toString(),
+    "Student Payment": event.paymentStatus === 'completed' ? 'paid' : 'unpaid',
+    "Tutor Payment": event.tutorPaymentStatus === 'completed' ? 'paid' : 'unpaid',
+    "Additional Info": event.notes?.split('\nAdditional Info:')[1]?.trim() || ''
   };
 };
 
@@ -68,8 +119,8 @@ export interface ClassMessageRecord {
 // Map DB message record to frontend model
 export const mapToStudentMessage = (record: ClassMessageRecord): StudentMessage => {
   return {
-    id: parseInt(record.id.substring(0, 8), 16),
-    classId: parseInt(record.class_id.substring(0, 8), 16),
+    id: record.id,
+    classId: record.class_id,
     studentName: record.student_name,
     message: record.message,
     timestamp: record.timestamp,
@@ -92,8 +143,8 @@ export interface ClassUploadRecord {
 // Map DB upload record to frontend model
 export const mapToStudentUpload = (record: ClassUploadRecord): StudentUpload => {
   return {
-    id: parseInt(record.id.substring(0, 8), 16),
-    classId: parseInt(record.class_id.substring(0, 8), 16),
+    id: record.id,
+    classId: record.class_id,
     studentName: record.student_name,
     fileName: record.file_name,
     fileSize: record.file_size,

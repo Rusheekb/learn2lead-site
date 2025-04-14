@@ -18,15 +18,16 @@ interface CalendarWithEventsProps {
 }
 
 // Helper function to get upcoming events in the next few days
-const getUpcomingEvents = (events: ClassEvent[], daysToShow = 7) => {
+export const getUpcomingEvents = (events: ClassEvent[], days: number = 7): ClassEvent[] => {
   const today = startOfDay(new Date());
-  const futureDate = addDays(today, daysToShow);
-  
-  return events.filter(event => {
-    const eventDate = startOfDay(event.date);
-    return (isToday(eventDate) || isBefore(today, eventDate)) && 
-           isBefore(eventDate, futureDate);
-  }).sort((a, b) => a.date.getTime() - b.date.getTime());
+  const futureDate = addDays(today, days);
+
+  return events
+    .filter((event) => {
+      const eventDate = startOfDay(new Date(event.date));
+      return (isToday(eventDate) || isBefore(today, eventDate)) && isBefore(eventDate, futureDate);
+    })
+    .sort((a, b) => a.date.getTime() - b.date.getTime());
 };
 
 const EmptyState = ({ onAddEventClick }: { onAddEventClick: () => void }) => (
@@ -65,9 +66,9 @@ const CalendarWithEvents: React.FC<CalendarWithEventsProps> = ({
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
       {/* Calendar Column */}
-      <Card className="lg:col-span-2">
+      <Card className="lg:col-span-6">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <CardTitle className="text-2xl font-bold">
             {format(currentMonth, 'MMMM yyyy')}
@@ -125,11 +126,83 @@ const CalendarWithEvents: React.FC<CalendarWithEventsProps> = ({
           />
         </CardContent>
       </Card>
+
+      {/* Selected Date Events */}
+      <Card className="lg:col-span-3">
+        <CardHeader>
+          <CardTitle className="text-xl font-bold">
+            {format(selectedDate, 'MMMM d, yyyy')}
+          </CardTitle>
+          {eventsForSelectedDate.length > 0 ? (
+            <p className="text-sm text-gray-500">
+              {eventsForSelectedDate.length} class{eventsForSelectedDate.length === 1 ? '' : 'es'} scheduled
+            </p>
+          ) : (
+            <p className="text-sm text-gray-500">No classes scheduled</p>
+          )}
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {eventsForSelectedDate.length > 0 ? (
+              eventsForSelectedDate.map((event) => (
+                <div 
+                  key={event.id} 
+                  className="p-3 border rounded-md hover:border-tutoring-teal cursor-pointer transition-colors"
+                  onClick={() => onSelectEvent(event)}
+                >
+                  <div className="flex justify-between items-start">
+                    <h3 className="font-medium">{event.title}</h3>
+                    {getUnreadMessageCount(parseInt(event.id, 10)) > 0 && (
+                      <span className="inline-flex items-center justify-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-700">
+                        {getUnreadMessageCount(parseInt(event.id, 10))}
+                      </span>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center text-sm text-gray-600 mt-1">
+                    <User className="h-4 w-4 mr-1" />
+                    <span>{event.studentName}</span>
+                  </div>
+                  
+                  <div className="flex items-center text-sm text-gray-600 mt-2">
+                    <Clock className="h-4 w-4 mr-1" />
+                    <span>{event.startTime} - {event.endTime}</span>
+                  </div>
+                  
+                  {event.zoomLink && (
+                    <Button 
+                      variant="link" 
+                      className="p-0 h-auto text-tutoring-blue mt-2"
+                      asChild
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <a href={event.zoomLink} target="_blank" rel="noopener noreferrer">
+                        <Video className="h-4 w-4 mr-1 inline" />
+                        Join Class
+                      </a>
+                    </Button>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-6">
+                <Button 
+                  onClick={onAddEventClick}
+                  className="bg-tutoring-blue hover:bg-blue-700 text-white"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Schedule a Class
+                </Button>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
       
       {/* Upcoming Events Column */}
-      <Card>
+      <Card className="lg:col-span-3">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold">Upcoming Classes</CardTitle>
+          <CardTitle className="text-xl font-bold">Upcoming Classes</CardTitle>
         </CardHeader>
         <CardContent>
           {upcomingEvents.length > 0 ? (
@@ -142,9 +215,9 @@ const CalendarWithEvents: React.FC<CalendarWithEventsProps> = ({
                 >
                   <div className="flex justify-between items-start">
                     <h3 className="font-medium">{event.title}</h3>
-                    {getUnreadMessageCount(event.id) > 0 && (
+                    {getUnreadMessageCount(parseInt(event.id, 10)) > 0 && (
                       <span className="inline-flex items-center justify-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-700">
-                        {getUnreadMessageCount(event.id)}
+                        {getUnreadMessageCount(parseInt(event.id, 10))}
                       </span>
                     )}
                   </div>

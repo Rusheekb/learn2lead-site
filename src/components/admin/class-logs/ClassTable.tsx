@@ -6,15 +6,16 @@ import { format } from "date-fns";
 import { StatusBadge, AttendanceBadge } from "./BadgeComponents";
 import { CircleMessageBadge } from "@/components/shared/ClassBadges";
 import TablePagination from "./TablePagination";
+import { ClassEvent } from "@/types/tutorTypes";
 
 interface ClassTableProps {
-  classes: any[];
-  filteredClasses: any[];
-  paginatedClasses: any[];
+  classes: ClassEvent[];
+  filteredClasses: ClassEvent[];
+  paginatedClasses: ClassEvent[];
   isLoading: boolean;
-  handleClassClick: (cls: any) => void;
+  handleClassClick: (cls: ClassEvent) => void;
   clearFilters: () => void;
-  getUnreadMessageCount: (classId: number) => number;
+  getUnreadMessageCount: (classId: string) => number;
   formatTime: (time: string) => string;
   page: number;
   pageSize: number;
@@ -40,6 +41,18 @@ const ClassTable: React.FC<ClassTableProps> = ({
   onPageChange,
   onPageSizeChange
 }) => {
+  const formatDate = (dateStr: string) => {
+    try {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) {
+        return dateStr; // Return original string if invalid
+      }
+      return format(date, "MMM d, yyyy");
+    } catch (e) {
+      return dateStr; // Return original string if parsing fails
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -94,14 +107,14 @@ const ClassTable: React.FC<ClassTableProps> = ({
                     </TableCell>
                     <TableCell>
                       <div className="space-y-1">
-                        <div>{format(new Date(cls.date), "MMM d, yyyy")}</div>
+                        <div>{formatDate(cls.date)}</div>
                         <div className="text-sm text-muted-foreground">
                           {formatTime(cls.startTime)} - {formatTime(cls.endTime)}
                         </div>
                       </div>
                     </TableCell>
                     <TableCell><StatusBadge status={cls.status} /></TableCell>
-                    <TableCell><AttendanceBadge attendance={cls.attendance} /></TableCell>
+                    <TableCell><AttendanceBadge attendance={cls.attendance || 'pending'} /></TableCell>
                     <TableCell>
                       <CircleMessageBadge count={getUnreadMessageCount(cls.id)} />
                     </TableCell>

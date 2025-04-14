@@ -25,6 +25,10 @@ export type Database = {
           tutor_name: string
           updated_at: string
           zoom_link: string | null
+          payment_status: string
+          tutor_payment_status: string
+          class_cost: number
+          tutor_cost: number
         }
         Insert: {
           attendance?: string | null
@@ -41,6 +45,10 @@ export type Database = {
           tutor_name: string
           updated_at?: string
           zoom_link?: string | null
+          payment_status?: string
+          tutor_payment_status?: string
+          class_cost?: number
+          tutor_cost?: number
         }
         Update: {
           attendance?: string | null
@@ -57,6 +65,10 @@ export type Database = {
           tutor_name?: string
           updated_at?: string
           zoom_link?: string | null
+          payment_status?: string
+          tutor_payment_status?: string
+          class_cost?: number
+          tutor_cost?: number
         }
         Relationships: []
       }
