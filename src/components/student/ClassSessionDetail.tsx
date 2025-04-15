@@ -5,11 +5,11 @@ import { Video, User, Clock, Calendar as CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 
 interface ClassSession {
-  id: number;
+  id: string; // Changed from number to string
   title: string;
-  subjectId: number;
+  subjectId: string | number;
   tutorName: string;
-  date: Date;
+  date: Date | string;
   startTime: string;
   endTime: string;
   zoomLink: string;

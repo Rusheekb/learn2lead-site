@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import ClassSessionDetail from "./ClassSessionDetail";
-import { StudentContent } from "@/components/shared/StudentContent"; // Using named export
+import { StudentContent } from "@/components/shared/StudentContent";
 import { StudentMessage, StudentUpload } from "@/types/classTypes";
 import { ClassItem, ClassSession } from "@/types/classTypes";
 

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,8 +11,7 @@ import MaterialsTable from "./MaterialsTable";
 import StudentUploadsTable from "./StudentUploadsTable";
 import UploadMaterialDialog from "./UploadMaterialDialog";
 import ShareMaterialDialog from "./ShareMaterialDialog";
-import { Material, Student } from "./types/studentTypes"; // Import from tutor's types
-import { mockStudents } from "./mock-data-students";
+import { Material, Student } from "./types/studentTypes"; // Import types
 
 // Define a complete mock data set for uploads
 const mockUploads: StudentUpload[] = [
@@ -140,8 +138,8 @@ const TutorMaterials: React.FC = () => {
             </CardHeader>
             <CardContent>
               <MaterialsTable 
-                materials={mockMaterials as Material[]} 
-                onShareMaterial={(material: Material) => openShareDialog(material as Material)} 
+                materials={mockMaterials} 
+                onShareMaterial={openShareDialog} 
               />
             </CardContent>
           </Card>
@@ -175,8 +173,8 @@ const TutorMaterials: React.FC = () => {
       <ShareMaterialDialog 
         isOpen={isShareOpen}
         onOpenChange={setIsShareOpen}
-        selectedMaterial={selectedMaterial as Material}
-        students={mockStudents as Student[]}
+        selectedMaterial={selectedMaterial}
+        students={mockStudents}
         selectedStudents={selectedStudents}
         onSelectedStudentsChange={setSelectedStudents}
         onShareMaterial={handleShareMaterial}

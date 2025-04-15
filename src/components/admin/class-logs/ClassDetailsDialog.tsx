@@ -3,7 +3,7 @@ import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { StudentContent } from "@/components/shared/StudentContent"; // Using named export
+import { StudentContent } from "@/components/shared/StudentContent";
 import { StatusBadge, AttendanceBadge } from "./BadgeComponents";
 import { MessageCountBadge } from "@/components/shared/ClassBadges";
 

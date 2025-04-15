@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button";
 import { FileText, Download, Plus, Trash2 } from "lucide-react";
 
 interface Material {
-  id: number;
+  id: string; // Changed from number to string
   name: string;
   type: string;
   subject: string;
   dateUploaded: string;
+  uploadDate?: string;
+  size?: string;
   sharedWith: string[];
 }
 

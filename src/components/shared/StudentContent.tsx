@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsList, TabsContent, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -40,8 +39,7 @@ interface StudentContentProps {
   showUploadControls?: boolean;
 }
 
-// Export the StudentContent component as default AND as a named export
-const StudentContent: React.FC<StudentContentProps> = ({
+export const StudentContent: React.FC<StudentContentProps> = ({
   classId,
   uploads,
   messages,
@@ -209,6 +207,4 @@ const StudentContent: React.FC<StudentContentProps> = ({
   );
 };
 
-// Export both as default and named export
-export { StudentContent };
 export default StudentContent;

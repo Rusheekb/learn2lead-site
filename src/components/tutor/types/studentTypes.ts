@@ -1,6 +1,6 @@
 
 export interface Student {
-  id: string;
+  id: string; // Changed from number to string
   name: string;
   subjects: string[];
   email: string;
@@ -36,12 +36,12 @@ export interface StudentNoteCollection {
 }
 
 export interface Material {
-  id: string;
+  id: string; // Changed from number to string
   name: string;
   type: string;
   subject: string;
   dateUploaded: string;
   uploadDate?: string;
-  size: string;
+  size: string; // Required field from error
   sharedWith: string[];
 }

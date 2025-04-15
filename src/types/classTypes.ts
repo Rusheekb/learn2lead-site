@@ -64,7 +64,7 @@ export interface ClassItem {
 }
 
 export interface ClassSession {
-  id: string;  // Changed from number to string
+  id: string;  // Using string consistently
   title: string;
   subjectId: string;
   tutorName: string;
