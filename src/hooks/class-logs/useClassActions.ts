@@ -1,135 +1,95 @@
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { ClassEvent } from "@/types/tutorTypes";
-import { StudentMessage, StudentUpload } from "@/components/shared/StudentContent";
-import { fetchClassMessages, fetchClassUploads, markMessageAsRead } from "@/services/classService";
 import { toast } from "sonner";
-import { exportClassLogs } from "@/services/exportService";
+import { 
+  deleteClassLog, 
+  updateClassLogStatus, 
+  updateClassLogAttendance 
+} from "@/services/classLogsService";
+import { exportToCsv, exportToPdf, exportClassLogs } from "@/services/exportService";
 import { ExportFormat } from "@/types/classTypes";
 
-export const useClassActions = () => {
-  const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false);
-  const [selectedClass, setSelectedClass] = useState<ClassEvent | null>(null);
-  const [studentUploads, setStudentUploads] = useState<StudentUpload[]>([]);
-  const [studentMessages, setStudentMessages] = useState<StudentMessage[]>([]);
-  const [activeDetailsTab, setActiveDetailsTab] = useState<string>("details");
+export default function useClassActions() {
   const [isExporting, setIsExporting] = useState<boolean>(false);
-  const [page, setPage] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(10);
-  
-  const loadClassContent = useCallback(async (classId: string) => {
+
+  const handleUpdateStatus = async (classId: string, status: string) => {
     try {
-      // Fetch messages for this class
-      const messages = await fetchClassMessages(classId);
-      setStudentMessages(messages);
-
-      // Fetch uploads for this class
-      const uploads = await fetchClassUploads(classId);
-      setStudentUploads(uploads);
-    } catch (error) {
-      console.error("Error loading class content:", error);
-      toast.error("Failed to load class content");
-    }
-  }, []);
-
-  const handleClassClick = useCallback((cls: ClassEvent) => {
-    setSelectedClass(cls);
-    setIsDetailsOpen(true);
-    setActiveDetailsTab("details");
-  }, []);
-
-  const handleMarkMessageRead = useCallback(async (messageId: string): Promise<void> => {
-    try {
-      const success = await markMessageAsRead(messageId);
-      
+      const success = await updateClassLogStatus(classId, status);
       if (success) {
-        // Update local state
-        setStudentMessages(prevMessages => 
-          prevMessages.map(msg => 
-            msg.id === messageId ? { ...msg, isRead: true } : msg
-          )
-        );
-        toast.success("Message marked as read");
+        toast.success(`Class status updated to ${status}`);
+        return true;
       } else {
-        toast.error("Failed to mark message as read");
+        toast.error("Failed to update class status");
+        return false;
       }
     } catch (error) {
-      console.error("Error marking message as read:", error);
-      toast.error("Failed to mark message as read");
+      console.error("Error updating class status:", error);
+      toast.error("Error updating class status");
+      return false;
     }
-  }, []);
-  
-  const handleDownloadFile = useCallback(async (uploadId: string): Promise<void> => {
-    try {
-      // In a real implementation, we would actually download the file here
-      const upload = studentUploads.find(u => u.id === uploadId);
-      
-      if (upload) {
-        toast.success(`Downloading ${upload.fileName}`);
-      } else {
-        toast.error("File not found");
-      }
-    } catch (error) {
-      console.error("Error downloading file:", error);
-      toast.error("Failed to download file");
-    }
-  }, [studentUploads]);
+  };
 
-  const getUnreadMessageCount = useCallback((classId: string): number => {
-    return studentMessages.filter(msg => msg.classId === classId && !msg.isRead).length;
-  }, [studentMessages]);
-  
-  const handleExport = useCallback(async (format: ExportFormat) => {
+  const handleUpdateAttendance = async (classId: string, attendance: string) => {
     try {
-      setIsExporting(true);
-      const classes = selectedClass ? [selectedClass] : []; // Use real class data in a real app
-      const success = await exportClassLogs(classes, format);
-      
+      const success = await updateClassLogAttendance(classId, attendance);
       if (success) {
-        toast.success(`Export as ${format.toUpperCase()} completed successfully`);
+        toast.success(`Attendance marked as ${attendance}`);
+        return true;
       } else {
-        toast.error(`Failed to export as ${format.toUpperCase()}`);
+        toast.error("Failed to update attendance");
+        return false;
       }
     } catch (error) {
-      console.error(`Error exporting as ${format}:`, error);
-      toast.error(`Failed to export as ${format.toUpperCase()}`);
-    } finally {
+      console.error("Error updating attendance:", error);
+      toast.error("Error updating attendance");
+      return false;
+    }
+  };
+
+  const handleDeleteClass = async (classId: string) => {
+    try {
+      const success = await deleteClassLog(classId);
+      if (success) {
+        toast.success("Class deleted successfully");
+        return true;
+      } else {
+        toast.error("Failed to delete class");
+        return false;
+      }
+    } catch (error) {
+      console.error("Error deleting class:", error);
+      toast.error("Error deleting class");
+      return false;
+    }
+  };
+
+  const handleExport = async (classes: ClassEvent[], format: ExportFormat) => {
+    setIsExporting(true);
+    try {
+      let success = false;
+      
+      if (format === 'csv') {
+        success = await exportToCsv(classes);
+      } else if (format === 'pdf') {
+        success = await exportToPdf(classes);
+      }
+      
       setIsExporting(false);
+      return success;
+    } catch (error) {
+      console.error(`Error exporting to ${format}:`, error);
+      toast.error(`Failed to export to ${format}`);
+      setIsExporting(false);
+      return false;
     }
-  }, [selectedClass]);
-
-  const handlePageChange = useCallback((newPage: number) => {
-    setPage(newPage);
-  }, []);
-
-  const handlePageSizeChange = useCallback((newSize: number) => {
-    setPageSize(newSize);
-    setPage(1); // Reset to first page when page size changes
-  }, []);
+  };
 
   return {
-    isDetailsOpen,
-    setIsDetailsOpen,
-    selectedClass,
-    setSelectedClass,
-    studentUploads,
-    studentMessages,
-    activeDetailsTab,
-    setActiveDetailsTab,
     isExporting,
-    page,
-    setPage,
-    pageSize,
-    setPageSize,
-    handleClassClick,
-    loadClassContent,
-    handleMarkMessageRead,
-    handleDownloadFile,
+    handleUpdateStatus,
+    handleUpdateAttendance,
+    handleDeleteClass,
     handleExport,
-    getUnreadMessageCount,
-    handlePageChange,
-    handlePageSizeChange
   };
-};
-
-export default useClassActions;
+}

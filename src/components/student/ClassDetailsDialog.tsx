@@ -4,7 +4,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import ClassSessionDetail from "./ClassSessionDetail";
-import { StudentContent, StudentUpload, StudentMessage } from "../shared/StudentContent";
+import { StudentContent } from "../shared/StudentContent";
+import { StudentMessage, StudentUpload } from "../shared/StudentContent";
 import { ClassItem, ClassSession } from "@/types/classTypes";
 
 interface ClassDetailsDialogProps {
@@ -29,9 +30,16 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
   if (!selectedClass) return null;
   
   const classSession: ClassSession = {
-    ...selectedClass,
+    id: selectedClass.id,
+    title: selectedClass.title,
     subjectId: selectedClass.subjectId || selectedClass.subject,
-    recurring: selectedClass.recurring || false
+    tutorName: selectedClass.tutorName,
+    date: selectedClass.date,
+    startTime: selectedClass.startTime,
+    endTime: selectedClass.endTime,
+    zoomLink: selectedClass.zoomLink,
+    recurring: selectedClass.recurring || false,
+    studentName: selectedClass.studentName
   };
 
   return (

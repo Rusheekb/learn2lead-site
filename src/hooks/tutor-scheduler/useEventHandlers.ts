@@ -28,19 +28,20 @@ export const useEventHandlers = (
   const handleCreateEvent = async (newEvent: any) => {
     try {
       const newClassEvent: ClassEvent = {
-        id: scheduledClasses.length + 1,
+        id: String(scheduledClasses.length + 1),
         title: newEvent.title,
         date: newEvent.date,
         startTime: newEvent.startTime,
         endTime: newEvent.endTime,
-        studentId: parseInt(newEvent.studentId),
-        studentName: mockStudents.find(s => s.id === parseInt(newEvent.studentId))?.name || "",
+        studentId: newEvent.studentId,
+        studentName: mockStudents.find(s => s.id === newEvent.studentId)?.name || "",
         subject: newEvent.subject,
         zoomLink: newEvent.zoomLink,
         notes: newEvent.notes,
         recurring: newEvent.recurring,
         recurringDays: newEvent.recurringDays,
-        materials: []
+        materials: [],
+        tutorName: "Current Tutor" // Default value
       };
 
       const createdEvent = await createClassLog(newClassEvent);
@@ -65,7 +66,7 @@ export const useEventHandlers = (
     
     try {
       // Convert numeric ID to UUID-like string for database query
-      const classId = numericIdToDbId(selectedEvent.id);
+      const classId = selectedEvent.id;
       
       const updatedEvent = await updateClassLog(classId, selectedEvent);
       
@@ -92,10 +93,9 @@ export const useEventHandlers = (
     }
   };
 
-  const handleDeleteEvent = async (eventId: number, isRecurring: boolean = false) => {
+  const handleDeleteEvent = async (eventId: string, isRecurring: boolean = false) => {
     try {
-      // Convert numeric ID to UUID-like string for database query
-      const classId = numericIdToDbId(eventId);
+      const classId = eventId;
       
       if (isRecurring) {
         // In a real app, this would delete all recurring instances
@@ -138,7 +138,7 @@ export const useEventHandlers = (
     try {
       const duplicatedEvent: ClassEvent = {
         ...event,
-        id: scheduledClasses.length + 1,
+        id: String(scheduledClasses.length + 1),
         date: new Date(event.date),
         recurring: false,
         recurringDays: []

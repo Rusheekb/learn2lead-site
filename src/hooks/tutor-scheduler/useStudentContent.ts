@@ -1,84 +1,91 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { fetchClassMessages, fetchClassUploads, markMessageAsRead } from "@/services/classService";
-import { numericIdToDbId } from "@/utils/realtimeUtils";
-import { StudentMessage, StudentUpload } from "@/components/shared/StudentContent";
 import { ClassEvent } from "@/types/tutorTypes";
+import { StudentMessage, StudentUpload } from "@/components/shared/StudentContent";
+import { 
+  fetchClassMessages, 
+  markMessageAsRead,
+  createClassMessage
+} from "@/services/classMessagesService";
+import { 
+  fetchClassUploads,
+  downloadClassFile
+} from "@/services/classUploadsService";
 
 export const useStudentContent = (selectedEvent: ClassEvent | null) => {
-  const [studentUploads, setStudentUploads] = useState<StudentUpload[]>([]);
   const [studentMessages, setStudentMessages] = useState<StudentMessage[]>([]);
-
-  // Load messages and uploads when a class is selected
+  const [studentUploads, setStudentUploads] = useState<StudentUpload[]>([]);
+  
+  // Load messages and uploads when selected event changes
   useEffect(() => {
-    const loadClassContent = async () => {
-      if (!selectedEvent || !selectedEvent.id) return;
-      
-      // Convert numeric ID to UUID-like string for database query
-      const classId = numericIdToDbId(selectedEvent.id);
-      
+    if (!selectedEvent) return;
+    
+    const loadStudentContent = async () => {
       try {
-        // Load messages
+        const classId = selectedEvent.id;
+        
         const messages = await fetchClassMessages(classId);
         setStudentMessages(messages);
         
-        // Load uploads
         const uploads = await fetchClassUploads(classId);
         setStudentUploads(uploads);
       } catch (error) {
-        console.error("Error loading class content:", error);
-        toast.error("Failed to load class content");
+        console.error("Error loading student content:", error);
+        toast.error("Failed to load student content");
       }
     };
     
-    loadClassContent();
+    loadStudentContent();
   }, [selectedEvent]);
 
-  const handleMarkMessageRead = async (messageId: number) => {
+  // Mark a message as read
+  const handleMarkMessageRead = async (messageId: string) => {
     try {
-      // Convert numeric ID to UUID-like string for database query
-      const dbMessageId = numericIdToDbId(messageId);
-      
-      const success = await markMessageAsRead(dbMessageId);
+      const success = await markMessageAsRead(messageId);
       
       if (success) {
-        setStudentMessages(messages => 
-          messages.map(message => 
-            message.id === messageId ? { ...message, isRead: true } : message
+        setStudentMessages(messages =>
+          messages.map(msg =>
+            msg.id === messageId
+              ? { ...msg, isRead: true }
+              : msg
           )
         );
-        toast.success("Message marked as read");
-      } else {
-        toast.error("Failed to mark message as read");
+        return;
       }
     } catch (error) {
       console.error("Error marking message as read:", error);
       toast.error("Failed to mark message as read");
     }
   };
-
-  const handleDownloadFile = async (uploadId: number) => {
+  
+  // Download a file
+  const handleDownloadFile = async (uploadId: string) => {
     try {
-      // In a real implementation, we would fetch the file path from the database
-      const upload = studentUploads.find(u => u.id === uploadId);
-      if (upload) {
-        // This would get a download URL in a real implementation
-        toast.success(`Downloading ${upload.fileName}`);
+      const success = await downloadClassFile(uploadId);
+      
+      if (success) {
+        const upload = studentUploads.find(u => u.id === uploadId);
+        if (upload) {
+          toast.success(`Downloading ${upload.fileName}`);
+        }
+        return;
       }
     } catch (error) {
       console.error("Error downloading file:", error);
       toast.error("Failed to download file");
     }
   };
-
-  const getUnreadMessageCount = (classId: number) => {
-    return studentMessages.filter(m => m.classId === classId && !m.isRead).length;
+  
+  // Get count of unread messages for a class
+  const getUnreadMessageCount = (classId: string) => {
+    return studentMessages.filter(msg => msg.classId === classId && !msg.isRead).length;
   };
 
   return {
-    studentUploads,
     studentMessages,
+    studentUploads,
     handleMarkMessageRead,
     handleDownloadFile,
     getUnreadMessageCount

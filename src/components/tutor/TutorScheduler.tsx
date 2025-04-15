@@ -48,7 +48,7 @@ const TutorScheduler: React.FC = () => {
     getUnreadMessageCount,
   } = useTutorScheduler();
 
-  // Type adapter functions to handle string/number ID mismatches
+  // Type adapter functions to handle string/string ID mismatches
   const adaptedHandleDeleteEvent = (eventId: string, isRecurring?: boolean) => {
     return handleDeleteEvent(eventId, isRecurring);
   };

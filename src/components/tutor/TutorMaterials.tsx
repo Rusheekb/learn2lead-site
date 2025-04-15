@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -49,7 +48,7 @@ const mockUploads: StudentUpload[] = [
 const TutorMaterials: React.FC = () => {
   const [isUploadOpen, setIsUploadOpen] = useState<boolean>(false);
   const [isShareOpen, setIsShareOpen] = useState<boolean>(false);
-  const [selectedMaterial, setSelectedMaterial] = useState<any>(null);
+  const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [activeTab, setActiveTab] = useState<string>("my-materials");
   const [materialData, setMaterialData] = useState({

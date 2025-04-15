@@ -1,9 +1,7 @@
 
 import { StudentMessage as SharedStudentMessage, StudentUpload as SharedStudentUpload } from "../components/shared/StudentContent";
 
-export interface StudentMessage extends SharedStudentMessage {
-  studentId?: string;
-}
+export interface StudentMessage extends SharedStudentMessage {}
 
 export interface StudentUpload extends SharedStudentUpload {}
 
@@ -46,7 +44,16 @@ export interface ClassItem {
   recurring?: boolean;
 }
 
-export interface ClassSession extends ClassItem {
+export interface ClassSession {
+  id: string;
+  title: string;
   subjectId: string;
+  tutorName: string;
+  date: string | Date;
+  startTime: string;
+  endTime: string;
+  zoomLink: string;
   recurring: boolean;
+  recurringDays?: string[];
+  studentName?: string;
 }

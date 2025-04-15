@@ -4,180 +4,164 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { createRealtimeSubscription } from "@/utils/realtimeSubscription";
 import { dbIdToNumeric } from "@/utils/realtimeUtils";
-import { StudentMessage, StudentUpload } from "@/components/shared/StudentContent";
-
-// Define types for the database records
-interface ClassLogRecord {
-  id: string;
-  title: string;
-  subject: string;
-  tutor_name: string;
-  student_name: string;
-  date: string;
-  start_time: string;
-  end_time: string;
-  status: string;
-  attendance: string;
-  zoom_link: string | null;
-  notes: string | null;
-}
-
-interface ClassMessageRecord {
-  id: string;
-  class_id: string;
-  student_name: string;
-  message: string;
-  timestamp: string;
-  is_read: boolean;
-}
-
-interface ClassUploadRecord {
-  id: string;
-  class_id: string;
-  student_name: string;
-  file_name: string;
-  file_size: string;
-  upload_date: string;
-  note: string | null;
-}
-
-// Define types for the component's props
-interface ClassItem {
-  id: number;
-  title: string;
-  subject: string;
-  tutorName: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  status: string;
-  attendance: string;
-  zoomLink: string;
-  notes: string;
-  studentName: string;
-}
+import { ClassItem } from "@/types/classTypes";
 
 export const useStudentRealtime = (
-  studentName: string,
+  currentStudentName: string,
   setClasses: React.Dispatch<React.SetStateAction<ClassItem[]>>,
-  setMessages: React.Dispatch<React.SetStateAction<StudentMessage[]>>,
-  setUploads: React.Dispatch<React.SetStateAction<StudentUpload[]>>
+  setMessages: React.Dispatch<React.SetStateAction<any[]>>,
+  setUploads: React.Dispatch<React.SetStateAction<any[]>>
 ) => {
+  // Subscribe to real-time updates for classes
   useEffect(() => {
-    // Subscribe to class changes
-    const classChannel = createRealtimeSubscription<ClassLogRecord>({
+    const classChannel = createRealtimeSubscription({
       channelName: 'student-class-updates',
       tableName: 'class_logs',
+      filter: `student_name=eq.${currentStudentName}`,
       onData: (payload) => {
-        // Only handle new classes or updates where this student is involved
-        if ((payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') 
-            && payload.new 
-            && payload.new.student_name === studentName) {
-          
-          const classItem: ClassItem = {
-            id: dbIdToNumeric(payload.new.id),
-            title: payload.new.title,
-            subject: payload.new.subject,
-            tutorName: payload.new.tutor_name,
-            date: payload.new.date,
-            startTime: payload.new.start_time.substring(0, 5),
-            endTime: payload.new.end_time.substring(0, 5),
-            status: payload.new.status,
-            attendance: payload.new.attendance,
-            zoomLink: payload.new.zoom_link || "",
-            notes: payload.new.notes || "",
-            studentName: payload.new.student_name
-          };
-
-          if (payload.eventType === 'INSERT') {
-            setClasses(prevClasses => [...prevClasses, classItem]);
-            toast.success(`New class scheduled: ${classItem.title}`);
-          } else {
-            setClasses(prevClasses => 
-              prevClasses.map(cls => 
-                cls.id === classItem.id ? classItem : cls
-              )
-            );
-            toast.info(`Class updated: ${classItem.title}`);
-          }
-        } else if (payload.eventType === 'DELETE' 
-                  && payload.old 
-                  && payload.old.student_name === studentName) {
-          
-          const classId = dbIdToNumeric(payload.old.id);
-          setClasses(prevClasses => 
-            prevClasses.filter(cls => cls.id !== classId)
-          );
-          toast.info(`Class removed: ${payload.old.title}`);
+        if (payload.eventType === 'INSERT' && payload.new) {
+          handleClassInserted(payload.new);
+        } else if (payload.eventType === 'UPDATE' && payload.new) {
+          handleClassUpdated(payload.new);
+        } else if (payload.eventType === 'DELETE' && payload.old) {
+          handleClassDeleted(payload.old);
         }
       }
     });
 
-    // Subscribe to message changes
-    const messageChannel = createRealtimeSubscription<ClassMessageRecord>({
+    // Subscribe to real-time updates for messages
+    const messageChannel = createRealtimeSubscription({
       channelName: 'student-message-updates',
       tableName: 'class_messages',
+      filter: `student_name=eq.${currentStudentName}`,
       onData: (payload) => {
-        if (payload.eventType === 'INSERT' && payload.new.student_name === studentName) {
-          const newMessage: StudentMessage = {
-            id: dbIdToNumeric(payload.new.id),
-            classId: dbIdToNumeric(payload.new.class_id),
-            studentName: payload.new.student_name,
-            message: payload.new.message,
-            timestamp: payload.new.timestamp,
-            isRead: payload.new.is_read
-          };
-          
-          setMessages(prevMessages => [...prevMessages, newMessage]);
-          toast.success(`Message sent successfully`);
-        } else if (payload.eventType === 'UPDATE' && payload.new.student_name === studentName) {
-          const updatedMessage: StudentMessage = {
-            id: dbIdToNumeric(payload.new.id),
-            classId: dbIdToNumeric(payload.new.class_id),
-            studentName: payload.new.student_name,
-            message: payload.new.message,
-            timestamp: payload.new.timestamp,
-            isRead: payload.new.is_read
-          };
-          
-          setMessages(prevMessages => 
-            prevMessages.map(msg => 
-              msg.id === updatedMessage.id ? updatedMessage : msg
-            )
-          );
+        if (payload.eventType === 'INSERT' && payload.new) {
+          handleMessageInserted(payload.new);
+        } else if (payload.eventType === 'UPDATE' && payload.new) {
+          handleMessageUpdated(payload.new);
         }
       }
     });
 
-    // Subscribe to upload changes
-    const uploadChannel = createRealtimeSubscription<ClassUploadRecord>({
+    // Subscribe to real-time updates for uploads
+    const uploadChannel = createRealtimeSubscription({
       channelName: 'student-upload-updates',
       tableName: 'class_uploads',
+      filter: `student_name=eq.${currentStudentName}`,
       onData: (payload) => {
-        if (payload.eventType === 'INSERT' && payload.new.student_name === studentName) {
-          const newUpload: StudentUpload = {
-            id: dbIdToNumeric(payload.new.id),
-            classId: dbIdToNumeric(payload.new.class_id),
-            studentName: payload.new.student_name,
-            fileName: payload.new.file_name,
-            fileSize: payload.new.file_size,
-            uploadDate: payload.new.upload_date,
-            note: payload.new.note || undefined
-          };
-          
-          setUploads(prevUploads => [...prevUploads, newUpload]);
-          toast.success(`File uploaded successfully`);
+        if (payload.eventType === 'INSERT' && payload.new) {
+          handleUploadInserted(payload.new);
         }
       }
     });
-
-    // Cleanup subscriptions when component unmounts
+    
     return () => {
       supabase.removeChannel(classChannel);
       supabase.removeChannel(messageChannel);
       supabase.removeChannel(uploadChannel);
     };
-  }, [studentName]);
+  }, [currentStudentName]);
+
+  const handleClassInserted = (newClass: any) => {
+    const classItem: ClassItem = {
+      id: newClass.id.toString(),
+      title: newClass.title || `Class with ${newClass.tutor_name}`,
+      subject: newClass.subject,
+      tutorName: newClass.tutor_name,
+      studentName: newClass.student_name,
+      date: newClass.date,
+      startTime: newClass.start_time?.substring(0, 5) || "00:00",
+      endTime: newClass.end_time?.substring(0, 5) || "00:00",
+      status: newClass.status || "upcoming",
+      attendance: newClass.attendance || "pending",
+      zoomLink: newClass.zoom_link || "",
+      notes: newClass.notes || "",
+    };
+
+    setClasses(prevClasses => [...prevClasses, classItem]);
+    toast.success(`New class scheduled: ${classItem.title}`);
+  };
+
+  const handleClassUpdated = (updatedClass: any) => {
+    const classItem: ClassItem = {
+      id: updatedClass.id.toString(),
+      title: updatedClass.title || `Class with ${updatedClass.tutor_name}`,
+      subject: updatedClass.subject,
+      tutorName: updatedClass.tutor_name,
+      studentName: updatedClass.student_name,
+      date: updatedClass.date,
+      startTime: updatedClass.start_time?.substring(0, 5) || "00:00",
+      endTime: updatedClass.end_time?.substring(0, 5) || "00:00",
+      status: updatedClass.status || "upcoming",
+      attendance: updatedClass.attendance || "pending",
+      zoomLink: updatedClass.zoom_link || "",
+      notes: updatedClass.notes || "",
+    };
+
+    setClasses(prevClasses => 
+      prevClasses.map(cls => 
+        cls.id === classItem.id ? classItem : cls
+      )
+    );
+    
+    toast.info(`Class updated: ${classItem.title}`);
+  };
+
+  const handleClassDeleted = (deletedClass: any) => {
+    const classId = deletedClass.id.toString();
+    
+    setClasses(prevClasses => 
+      prevClasses.filter(cls => cls.id !== classId)
+    );
+    
+    toast.info(`Class removed: ${deletedClass.title || 'Untitled Class'}`);
+  };
+
+  const handleMessageInserted = (newMessage: any) => {
+    const message = {
+      id: newMessage.id.toString(),
+      classId: newMessage.class_id.toString(),
+      studentName: newMessage.student_name,
+      message: newMessage.message,
+      timestamp: newMessage.timestamp,
+      isRead: newMessage.is_read
+    };
+    
+    setMessages(prevMessages => [...prevMessages, message]);
+    toast.success("New message received!");
+  };
+
+  const handleMessageUpdated = (updatedMessage: any) => {
+    const message = {
+      id: updatedMessage.id.toString(),
+      classId: updatedMessage.class_id.toString(),
+      studentName: updatedMessage.student_name,
+      message: updatedMessage.message,
+      timestamp: updatedMessage.timestamp,
+      isRead: updatedMessage.is_read
+    };
+    
+    setMessages(prevMessages => 
+      prevMessages.map(msg => 
+        msg.id === message.id ? message : msg
+      )
+    );
+  };
+
+  const handleUploadInserted = (newUpload: any) => {
+    const upload = {
+      id: newUpload.id.toString(),
+      classId: newUpload.class_id.toString(),
+      studentName: newUpload.student_name,
+      fileName: newUpload.file_name,
+      fileSize: newUpload.file_size,
+      uploadDate: newUpload.upload_date,
+      note: newUpload.note
+    };
+    
+    setUploads(prevUploads => [...prevUploads, upload]);
+    toast.success("New file uploaded!");
+  };
 };
 
 export default useStudentRealtime;

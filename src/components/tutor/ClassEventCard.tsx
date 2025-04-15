@@ -5,7 +5,7 @@ import { ClassEvent } from "@/types/tutorTypes";
 import { formatTime } from "@/utils/dateTimeUtils";
 import { RecurringBadge, MessageBadge } from "@/components/shared/ClassBadges";
 
-interface ClassEventCardProps {
+export interface ClassEventCardProps {
   event: ClassEvent;
   onClick: (event: ClassEvent) => void;
   unreadMessagesCount: number;

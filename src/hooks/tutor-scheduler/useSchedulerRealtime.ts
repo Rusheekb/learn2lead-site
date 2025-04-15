@@ -37,18 +37,19 @@ export const useSchedulerRealtime = (
 
   const handleClassInserted = (newClass: any) => {
     const classEvent: ClassEvent = {
-      id: dbIdToNumeric(newClass.id),
+      id: String(newClass.id),
       title: newClass.title,
       date: new Date(newClass.date),
       startTime: newClass.start_time.substring(0, 5),
       endTime: newClass.end_time.substring(0, 5),
-      studentId: dbIdToNumeric(newClass.id), // Placeholder 
+      studentId: String(newClass.id), // Placeholder 
       studentName: newClass.student_name,
       subject: newClass.subject,
       zoomLink: newClass.zoom_link || "",
       notes: newClass.notes || "",
       recurring: false, // Default to false
-      materials: [] 
+      materials: [],
+      tutorName: "Current Tutor" // Default value
     };
 
     setScheduledClasses(prevClasses => [...prevClasses, classEvent]);
@@ -57,18 +58,19 @@ export const useSchedulerRealtime = (
 
   const handleClassUpdated = (updatedClass: any) => {
     const classEvent: ClassEvent = {
-      id: dbIdToNumeric(updatedClass.id),
+      id: String(updatedClass.id),
       title: updatedClass.title,
       date: new Date(updatedClass.date),
       startTime: updatedClass.start_time.substring(0, 5),
       endTime: updatedClass.end_time.substring(0, 5),
-      studentId: dbIdToNumeric(updatedClass.id), // Placeholder
+      studentId: String(updatedClass.id), // Placeholder
       studentName: updatedClass.student_name,
       subject: updatedClass.subject,
       zoomLink: updatedClass.zoom_link || "",
       notes: updatedClass.notes || "",
       recurring: false, // Default to false
-      materials: []
+      materials: [],
+      tutorName: "Current Tutor" // Default value
     };
 
     setScheduledClasses(prevClasses => 
@@ -86,7 +88,7 @@ export const useSchedulerRealtime = (
   };
 
   const handleClassDeleted = (deletedClass: any) => {
-    const classId = dbIdToNumeric(deletedClass.id);
+    const classId = String(deletedClass.id);
     
     setScheduledClasses(prevClasses => 
       prevClasses.filter(cls => cls.id !== classId)

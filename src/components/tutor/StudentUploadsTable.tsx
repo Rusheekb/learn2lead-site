@@ -3,18 +3,11 @@ import React from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { FileText, Download } from "lucide-react";
-
-interface StudentUpload {
-  id: number;
-  fileName: string;
-  studentName: string;
-  uploadDate: string;
-  fileSize: string;
-}
+import { StudentUpload } from "../shared/StudentContent";
 
 interface StudentUploadsTableProps {
   uploads: StudentUpload[];
-  onDownload: (uploadId: number) => void;
+  onDownload: (uploadId: string) => void;
 }
 
 const StudentUploadsTable: React.FC<StudentUploadsTableProps> = ({ uploads, onDownload }) => {

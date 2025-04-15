@@ -1,28 +1,41 @@
 
 import { Student } from "@/types/tutorTypes";
 
-// Mock students data for testing and development
 export const mockStudents: Student[] = [
   {
     id: "1",
     name: "Alex Johnson",
-    subjects: ["Algebra", "Calculus", "Physics"]
+    email: "alex@example.com",
+    subjects: ["Math", "Science"],
+    lastSession: "2023-03-15",
+    nextSession: "2023-03-22",
+    progress: "Making good progress with fractions"
   },
   {
     id: "2",
-    name: "Jamie Smith",
-    subjects: ["Chemistry", "Biology"]
+    name: "Sam Taylor",
+    email: "sam@example.com",
+    subjects: ["English", "History"],
+    lastSession: "2023-03-16",
+    nextSession: "2023-03-23",
+    progress: "Working on essay structure"
   },
   {
     id: "3",
-    name: "Taylor Brown",
-    subjects: ["English Literature", "Essay Writing", "History"]
+    name: "Jordan Smith",
+    email: "jordan@example.com",
+    subjects: ["Chemistry", "Physics"],
+    lastSession: "2023-03-14",
+    nextSession: "2023-03-21",
+    progress: "Struggling with balancing equations"
   },
   {
     id: "4",
     name: "Morgan Lee",
-    subjects: ["Spanish", "French", "ESL"]
+    email: "morgan@example.com",
+    subjects: ["Spanish", "French"],
+    lastSession: "2023-03-17",
+    nextSession: "2023-03-24", 
+    progress: "Vocabulary improving, working on grammar"
   }
 ];
-
-export default mockStudents;

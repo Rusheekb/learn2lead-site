@@ -61,3 +61,12 @@ export const exportToPdf = async (classes: ClassEvent[], filename = 'class_logs.
     return false;
   }
 };
+
+// Add the exportClassLogs function
+export const exportClassLogs = async (classes: ClassEvent[], format: 'csv' | 'pdf') => {
+  if (format === 'csv') {
+    return exportToCsv(classes);
+  } else {
+    return exportToPdf(classes);
+  }
+};

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsList, TabsContent, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -14,6 +13,8 @@ export interface StudentMessage {
   message: string;
   timestamp: string;
   isRead: boolean;
+  sender?: "student" | "tutor";
+  text?: string;
 }
 
 export interface StudentUpload {

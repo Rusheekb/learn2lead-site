@@ -1,6 +1,5 @@
 
-import { Material } from "@/types/tutorTypes";
-import { Student, StudentMessage, StudentNote } from "./types/studentTypes";
+import { Material, Student, StudentMessage, StudentMessageCollection, StudentNote, StudentNoteCollection } from "./types/studentTypes";
 
 // Mock materials data
 export const mockMaterials: Material[] = [
@@ -86,52 +85,62 @@ export const mockStudents: Student[] = [
   }
 ];
 
-// Mock messages for a selected student
-export const mockStudentMessages: StudentMessage[] = [
+// Mock messages for students
+export const mockMessages: StudentMessageCollection[] = [
   {
-    id: "1",
-    content: "Do we need to bring the textbook to our next session?",
-    timestamp: "2023-04-10T14:30:00Z",
-    read: true,
-    sender: "student",
-    text: "Do we need to bring the textbook to our next session?"
-  },
-  {
-    id: "2",
-    content: "Yes, please bring your textbook. We'll be working on chapter 4.",
-    timestamp: "2023-04-10T15:00:00Z",
-    read: true,
-    sender: "tutor",
-    text: "Yes, please bring your textbook. We'll be working on chapter 4."
-  },
-  {
-    id: "3",
-    content: "I've completed the homework assignments. Can we review them?",
-    timestamp: "2023-04-11T09:15:00Z",
-    read: false,
-    sender: "student",
-    text: "I've completed the homework assignments. Can we review them?"
+    studentId: "1",
+    messages: [
+      {
+        id: "1",
+        content: "Do we need to bring the textbook to our next session?",
+        timestamp: "2023-04-10T14:30:00Z",
+        read: true,
+        sender: "student",
+        text: "Do we need to bring the textbook to our next session?"
+      },
+      {
+        id: "2",
+        content: "Yes, please bring your textbook. We'll be working on chapter 4.",
+        timestamp: "2023-04-10T15:00:00Z",
+        read: true,
+        sender: "tutor",
+        text: "Yes, please bring your textbook. We'll be working on chapter 4."
+      },
+      {
+        id: "3",
+        content: "I've completed the homework assignments. Can we review them?",
+        timestamp: "2023-04-11T09:15:00Z",
+        read: false,
+        sender: "student",
+        text: "I've completed the homework assignments. Can we review them?"
+      }
+    ]
   }
 ];
 
-// Mock notes for a selected student
-export const mockStudentNotes: StudentNote[] = [
+// Mock notes for students
+export const mockNotes: StudentNoteCollection[] = [
   {
-    id: "1",
-    title: "First Session Notes",
-    content: "Initial assessment complete. Student shows strong aptitude for algebra but needs work on geometry concepts.",
-    date: "2023-03-15"
-  },
-  {
-    id: "2",
-    title: "Homework Review",
-    content: "Reviewed chapter 3 homework. Most problems correct, but struggling with word problems.",
-    date: "2023-03-22"
-  },
-  {
-    id: "3",
-    title: "Test Preparation",
-    content: "Focused on test-taking strategies. Created study guide for upcoming exam.",
-    date: "2023-04-05"
+    studentId: "1",
+    notes: [
+      {
+        id: "1",
+        title: "First Session Notes",
+        content: "Initial assessment complete. Student shows strong aptitude for algebra but needs work on geometry concepts.",
+        date: "2023-03-15"
+      },
+      {
+        id: "2",
+        title: "Homework Review",
+        content: "Reviewed chapter 3 homework. Most problems correct, but struggling with word problems.",
+        date: "2023-03-22"
+      },
+      {
+        id: "3",
+        title: "Test Preparation",
+        content: "Focused on test-taking strategies. Created study guide for upcoming exam.",
+        date: "2023-04-05"
+      }
+    ]
   }
 ];

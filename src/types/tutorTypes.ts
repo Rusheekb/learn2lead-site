@@ -57,3 +57,14 @@ export interface Student {
   nextSession?: string;
   progress?: string;
 }
+
+export interface Material {
+  id: string;
+  name: string;
+  type: string;
+  subject: string;
+  dateUploaded: string;
+  uploadDate?: string;
+  size: string;
+  sharedWith: string[];
+}
