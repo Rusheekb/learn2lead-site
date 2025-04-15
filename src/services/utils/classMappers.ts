@@ -1,3 +1,4 @@
+
 import { ClassEvent } from "@/types/tutorTypes";
 import { StudentMessage, StudentUpload } from "@/components/shared/StudentContent";
 
@@ -69,39 +70,48 @@ export const mapToClassEvent = (record: ClassLogRecord): ClassEvent => {
     subject: record.Subject || 'N/A',
     tutorName: record['Tutor Name'] || 'N/A',
     studentName: record['Student Name'] || 'N/A',
-    date: formattedDate,
+    date: formattedDate, // Keep as string for compatibility
     startTime,
     endTime,
     status: 'completed',
     attendance: 'present',
     notes: `Content: ${record.Content || 'N/A'}\nHomework: ${record.HW || 'None'}\nAdditional Info: ${record['Additional Info'] || 'None'}`,
-    paymentStatus: record['Student Payment']?.toLowerCase() === 'paid' ? 'completed' : 'pending',
-    tutorPaymentStatus: record['Tutor Payment']?.toLowerCase() === 'paid' ? 'completed' : 'pending',
     classCost: parseFloat(record['Class Cost']) || 0,
-    tutorCost: parseFloat(record['Tutor Cost']) || 0
+    tutorCost: parseFloat(record['Tutor Cost']) || 0,
+    studentPayment: record['Student Payment'] || 'pending',
+    tutorPayment: record['Tutor Payment'] || 'pending',
+    duration: parseFloat(record['Time (hrs)']) || 1,
+    content: record.Content || '',
+    homework: record.HW || '',
+    paymentStatus: record['Student Payment']?.toLowerCase() === 'paid' ? 'completed' : 'pending',
+    tutorPaymentStatus: record['Tutor Payment']?.toLowerCase() === 'paid' ? 'completed' : 'pending'
   };
 };
 
 // Convert ClassEvent to database record
 export const mapToClassLogRecord = (event: ClassEvent): Omit<ClassLogRecord, 'id'> => {
+  const eventDate = event.date instanceof Date ? 
+                    event.date.toISOString().split('T')[0] : 
+                    String(event.date);
+
   return {
     "Class Number": event.title.split(' - ')[0].replace('Class ', ''),
     "Tutor Name": event.tutorName,
     "Student Name": event.studentName,
-    "Date": event.date,
-    "Day": new Date(event.date).toLocaleDateString('en-US', { weekday: 'long' }),
+    "Date": eventDate,
+    "Day": new Date(eventDate).toLocaleDateString('en-US', { weekday: 'long' }),
     "Time (CST)": event.startTime,
     "Time (hrs)": ((new Date(`2000/01/01 ${event.endTime}`).getTime() - 
                     new Date(`2000/01/01 ${event.startTime}`).getTime()) / 
                     (1000 * 60 * 60)).toString(),
     "Subject": event.subject,
-    "Content": event.notes?.split('\nHomework:')[0].replace('Content: ', '') || '',
-    "HW": event.notes?.split('\nHomework:')[1]?.split('\nAdditional Info:')[0].trim() || '',
+    "Content": event.content || (event.notes?.split('\nHomework:')[0].replace('Content: ', '') || ''),
+    "HW": event.homework || (event.notes?.split('\nHomework:')[1]?.split('\nAdditional Info:')[0].trim() || ''),
     "Class ID": '',
     "Class Cost": event.classCost.toString(),
     "Tutor Cost": event.tutorCost.toString(),
-    "Student Payment": event.paymentStatus === 'completed' ? 'paid' : 'unpaid',
-    "Tutor Payment": event.tutorPaymentStatus === 'completed' ? 'paid' : 'unpaid',
+    "Student Payment": event.studentPayment || (event.paymentStatus === 'completed' ? 'paid' : 'unpaid'),
+    "Tutor Payment": event.tutorPayment || (event.tutorPaymentStatus === 'completed' ? 'paid' : 'unpaid'),
     "Additional Info": event.notes?.split('\nAdditional Info:')[1]?.trim() || ''
   };
 };

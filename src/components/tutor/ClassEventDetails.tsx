@@ -1,17 +1,17 @@
+
 import React from "react";
 import { Video, FileText } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ClassEvent } from "@/types/tutorTypes";
-import { StudentMessage, StudentUpload } from "../shared/StudentContent";
-import StudentContent from "../shared/StudentContent.tsx";
+import { StudentMessage, StudentUpload, StudentContent } from "../shared/StudentContent";
 import { MessageCountBadge } from "@/components/shared/ClassBadges";
 
 interface ClassEventDetailsProps {
   selectedEvent: ClassEvent;
   studentMessages: StudentMessage[];
   studentUploads: StudentUpload[];
-  onMarkAsRead: (messageId: number) => void;
-  onDownloadFile: (uploadId: number) => void;
+  onMarkAsRead: (messageId: string) => void;
+  onDownloadFile: (uploadId: string) => void;
   activeTab: string;
   setActiveTab: (tab: string) => void;
   unreadMessageCount: number;
@@ -49,7 +49,10 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
           </div>
           <div>
             <h4 className="text-sm font-medium text-gray-500">Date</h4>
-            <p>{selectedEvent.date.toLocaleDateString()}</p>
+            <p>{selectedEvent.date instanceof Date ? 
+                selectedEvent.date.toLocaleDateString() : 
+                new Date(selectedEvent.date).toLocaleDateString()}
+            </p>
           </div>
           <div>
             <h4 className="text-sm font-medium text-gray-500">Time</h4>

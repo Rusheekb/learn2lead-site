@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
-import { FileUpload, MessageSquare, CheckCircle } from 'lucide-react';
+import { Upload, MessageSquare, CheckCircle } from 'lucide-react';
 
 export interface StudentMessage {
   id: string;
@@ -195,7 +195,7 @@ const StudentContent: React.FC<StudentContentProps> = ({
               disabled={!file}
               className="w-full"
             >
-              <FileUpload className="h-4 w-4 mr-2" />
+              <Upload className="h-4 w-4 mr-2" />
               Upload
             </Button>
           </div>
@@ -206,3 +206,5 @@ const StudentContent: React.FC<StudentContentProps> = ({
 };
 
 export default StudentContent;
+
+export { StudentContent };

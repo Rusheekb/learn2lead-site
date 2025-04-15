@@ -1,21 +1,11 @@
-export interface StudentMessage {
-  id: number;
-  classId: number;
-  content: string;
-  isRead: boolean;
-  timestamp: string;
-  studentId: number;
+
+import { StudentMessage as SharedStudentMessage, StudentUpload as SharedStudentUpload } from "../components/shared/StudentContent";
+
+export interface StudentMessage extends SharedStudentMessage {
+  studentId?: string;
 }
 
-export interface StudentUpload {
-  id: string;
-  classId: string;
-  studentName: string;
-  fileName: string;
-  fileSize: string;
-  uploadDate: string;
-  note: string | null;
-}
+export interface StudentUpload extends SharedStudentUpload {}
 
 export interface ClassTab {
   id: string;
@@ -38,3 +28,25 @@ export interface ClassDetailsState {
   uploads: StudentUpload[];
   messages: StudentMessage[];
 } 
+
+export interface ClassItem {
+  id: string; // Changed from number to string
+  title: string;
+  subject: string;
+  tutorName: string;
+  studentName: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  status: string;
+  attendance: string;
+  zoomLink: string;
+  notes: string;
+  subjectId?: string;
+  recurring?: boolean;
+}
+
+export interface ClassSession extends ClassItem {
+  subjectId: string;
+  recurring: boolean;
+}

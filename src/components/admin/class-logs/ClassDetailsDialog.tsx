@@ -1,8 +1,9 @@
+
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import StudentContent from "../../shared/StudentContent.tsx";
+import { StudentContent } from "../../shared/StudentContent";
 import { StatusBadge, AttendanceBadge } from "./BadgeComponents";
 import { MessageCountBadge } from "@/components/shared/ClassBadges";
 
@@ -14,9 +15,9 @@ interface ClassDetailsDialogProps {
   setActiveDetailsTab: (tab: string) => void;
   studentUploads: any[];
   studentMessages: any[];
-  handleDownloadFile: (uploadId: number) => Promise<void>;
-  handleMarkMessageRead: (messageId: number) => Promise<void>;
-  getUnreadMessageCount: (classId: number) => number;
+  handleDownloadFile: (uploadId: string) => Promise<void>;
+  handleMarkMessageRead: (messageId: string) => Promise<void>;
+  getUnreadMessageCount: (classId: string) => number;
   formatTime: (time: string) => string;
 }
 

@@ -4,22 +4,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import ClassSessionDetail from "./ClassSessionDetail";
-import { StudentUpload, StudentMessage } from "../shared/StudentContent"; 
-import * as StudentContent from "../shared/StudentContent";
-
-interface ClassItem {
-  id: number;
-  title: string;
-  subject: string;
-  tutorName: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  status: string;
-  attendance: string;
-  zoomLink: string;
-  notes: string;
-}
+import { StudentUpload, StudentMessage, StudentContent } from "../shared/StudentContent";
+import { ClassItem } from "@/types/classTypes";
 
 interface ClassDetailsDialogProps {
   open: boolean;
@@ -27,8 +13,8 @@ interface ClassDetailsDialogProps {
   selectedClass: ClassItem | null;
   studentUploads: StudentUpload[];
   studentMessages: StudentMessage[];
-  onFileUpload: (classId: number, file: File, note: string) => void;
-  onSendMessage: (classId: number, message: string) => void;
+  onFileUpload: (classId: string, file: File, note: string) => void;
+  onSendMessage: (classId: string, message: string) => void;
 }
 
 const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
@@ -59,7 +45,7 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
             </TabsContent>
             
             <TabsContent value="materials" className="space-y-4">
-              <StudentContent.default
+              <StudentContent
                 classId={selectedClass.id.toString()}
                 uploads={studentUploads}
                 messages={studentMessages}

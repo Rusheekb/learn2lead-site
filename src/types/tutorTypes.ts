@@ -4,7 +4,7 @@ export interface ClassEvent {
   title: string;
   tutorName: string;
   studentName: string;
-  date: Date;
+  date: string | Date;
   startTime: string;
   endTime: string;
   duration: number;
@@ -26,6 +26,8 @@ export interface ClassEvent {
   recurringDays?: string[];
   studentId?: string;
   materials?: string[];
+  paymentStatus?: string;
+  tutorPaymentStatus?: string;
 }
 
 export interface DbClassLog {
@@ -47,7 +49,7 @@ export interface DbClassLog {
 }
 
 export interface Student {
-  id: number;
+  id: string; // Changed from number to string
   name: string;
   subjects: string[];
 }

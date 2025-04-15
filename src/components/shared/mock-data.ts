@@ -27,7 +27,8 @@ export const mockStudentUploads: StudentUpload[] = [
     studentName: "Alex Johnson",
     fileName: "Quadratics-Practice.pdf",
     fileSize: "540 KB",
-    uploadDate: "2025-04-07"
+    uploadDate: "2025-04-07",
+    note: null
   }
 ];
 

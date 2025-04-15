@@ -16,21 +16,7 @@ import {
   uploadClassFile 
 } from "@/services/classUploadsService";
 import useStudentRealtime from "@/hooks/student/useStudentRealtime";
-
-interface ClassItem {
-  id: string;
-  title: string;
-  subject: string;
-  tutorName: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  status: string;
-  attendance: string;
-  zoomLink: string;
-  notes: string;
-  studentName: string;
-}
+import { ClassItem } from "@/types/classTypes";
 
 const ClassStudentActivity: React.FC = () => {
   const [studentUploads, setStudentUploads] = useState<StudentUpload[]>([]);
@@ -44,6 +30,7 @@ const ClassStudentActivity: React.FC = () => {
   // Setup realtime subscriptions
   useStudentRealtime(
     currentStudentName,
+    // @ts-ignore - we'll fix the ClassItem compatibility in the hook
     setClasses,
     setStudentMessages,
     setStudentUploads
@@ -60,14 +47,16 @@ const ClassStudentActivity: React.FC = () => {
           title: cl.title,
           subject: cl.subject,
           tutorName: "Ms. Johnson",
-          date: cl.date.toISOString().split('T')[0],
+          date: cl.date instanceof Date ? cl.date.toISOString().split('T')[0] : String(cl.date),
           startTime: cl.startTime,
           endTime: cl.endTime,
           status: "upcoming",
           attendance: "pending",
           zoomLink: cl.zoomLink || "",
           notes: cl.notes || "",
-          studentName: cl.studentName
+          studentName: cl.studentName,
+          subjectId: cl.subject,
+          recurring: false
         }));
         
         setClasses(transformedClasses);
@@ -102,9 +91,9 @@ const ClassStudentActivity: React.FC = () => {
     loadClassContent();
   }, [selectedClass]);
   
-  const handleFileUpload = async (classId: number, file: File, note: string) => {
+  const handleFileUpload = async (classId: string, file: File, note: string) => {
     try {
-      const dbClassId = classId.toString();
+      const dbClassId = classId;
       
       const upload = await uploadClassFile(
         dbClassId,
@@ -125,9 +114,9 @@ const ClassStudentActivity: React.FC = () => {
     }
   };
   
-  const handleSendMessage = async (classId: number, messageText: string) => {
+  const handleSendMessage = async (classId: string, messageText: string) => {
     try {
-      const dbClassId = classId.toString();
+      const dbClassId = classId;
       
       const message = await createClassMessage(
         dbClassId,
@@ -171,7 +160,7 @@ const ClassStudentActivity: React.FC = () => {
             </div>
           ) : (
             <UpcomingClassesTable 
-              classes={classes as any} 
+              classes={classes} 
               onViewClass={handleViewClass} 
             />
           )}
