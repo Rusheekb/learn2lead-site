@@ -1,9 +1,8 @@
-
 import React from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { FileText, Download } from "lucide-react";
-import { StudentUpload } from "../shared/StudentContent";
+import { StudentUpload } from "@/components/shared/StudentContent";
 
 interface StudentUploadsTableProps {
   uploads: StudentUpload[];

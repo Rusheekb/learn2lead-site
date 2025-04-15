@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -7,7 +6,7 @@ import { MoreVertical, Edit2, Copy, Trash2 } from "lucide-react";
 import { ClassEvent } from "@/types/tutorTypes";
 import NewClassEventForm from "./NewClassEventForm";
 import ClassEventDetails from "./ClassEventDetails";
-import { StudentMessage, StudentUpload } from "../shared/StudentContent";
+import { StudentMessage, StudentUpload } from "@/components/shared/StudentContent";
 
 interface ClassDialogsProps {
   isViewEventOpen: boolean;
