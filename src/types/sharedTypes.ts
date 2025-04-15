@@ -65,7 +65,7 @@ export type ExportFormat = 'csv' | 'pdf';
 
 export interface TopPerformer {
   name: string;
-  value: number | Record<string, number>;
+  value: number;
 }
 
 export interface PopularSubject {

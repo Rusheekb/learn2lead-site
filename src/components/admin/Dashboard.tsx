@@ -22,8 +22,18 @@ const Dashboard: React.FC = () => {
   } = useAnalytics(classes);
 
   const isLoading = isLoadingClasses || isLoadingAnalytics;
-  const topTutors = getTopPerformingTutors('totalClasses') as TopPerformer[];
-  const topStudents = getTopPerformingStudents('totalClasses') as TopPerformer[];
+  
+  // Ensure we're converting the returned values to match our TopPerformer type
+  const topTutors = getTopPerformingTutors('totalClasses').map(item => ({
+    name: item.name,
+    value: typeof item.value === 'number' ? item.value : 0
+  }));
+  
+  const topStudents = getTopPerformingStudents('totalClasses').map(item => ({
+    name: item.name,
+    value: typeof item.value === 'number' ? item.value : 0
+  }));
+  
   const monthlyClasses = getRevenueByMonth();
   const popularSubjects = getSubjectPopularity();
 
