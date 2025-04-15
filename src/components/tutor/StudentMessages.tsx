@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { StudentMessage } from "./types/studentTypes";
+import { StudentMessage } from "@/types/sharedTypes";
 
 interface StudentMessagesProps {
   messages: StudentMessage[];
@@ -35,7 +35,7 @@ const StudentMessages: React.FC<StudentMessagesProps> = ({ messages, onSendMessa
                     : 'bg-gray-100 text-gray-800'
                 }`}
               >
-                <p>{msg.text}</p>
+                <p>{msg.text || msg.content}</p>
                 <p className="text-xs mt-1 opacity-70">
                   {new Date(msg.timestamp).toLocaleString()}
                 </p>

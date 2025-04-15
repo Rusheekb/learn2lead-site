@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { FileText } from "lucide-react";
-import { StudentNote } from "./types/studentTypes";
+import { StudentNote } from "@/types/sharedTypes";
 
 interface StudentNotesProps {
   notes: StudentNote[];

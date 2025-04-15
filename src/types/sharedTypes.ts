@@ -62,3 +62,13 @@ export interface ClassSession {
 }
 
 export type ExportFormat = 'csv' | 'pdf';
+
+export interface TopPerformer {
+  name: string;
+  value: number | Record<string, number>;
+}
+
+export interface PopularSubject {
+  subject: string;
+  count: number;
+}

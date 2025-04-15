@@ -1,5 +1,5 @@
 
-import { Student } from "@/types/tutorTypes";
+import { Student } from "@/types/sharedTypes";
 
 export const mockStudents: Student[] = [
   {

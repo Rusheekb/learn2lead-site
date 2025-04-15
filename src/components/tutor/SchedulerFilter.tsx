@@ -1,7 +1,7 @@
 
 import React from "react";
 import FilterControls from "@/components/shared/FilterControls";
-import { Student } from "@/types/tutorTypes";
+import { Student } from "@/types/sharedTypes";
 
 interface SchedulerFilterProps {
   searchTerm: string;

@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User } from "lucide-react";
-import { Student, StudentMessage, StudentNote } from "./types/studentTypes";
+import { Student, StudentMessage, StudentNote } from "@/types/sharedTypes";
 import StudentOverview from "./StudentOverview";
 import StudentMessages from "./StudentMessages";
 import StudentNotes from "./StudentNotes";

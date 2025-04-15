@@ -2,7 +2,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { MessageSquare, FileText } from "lucide-react";
-import { Student } from "./types/studentTypes";
+import { Student } from "@/types/sharedTypes";
 
 interface StudentOverviewProps {
   student: Student;
@@ -24,11 +24,11 @@ const StudentOverview: React.FC<StudentOverviewProps> = ({ student, onViewMessag
         </div>
         <div>
           <h4 className="text-sm font-medium text-gray-500">Last Session</h4>
-          <p>{new Date(student.lastSession).toLocaleDateString()}</p>
+          <p>{student.lastSession && new Date(student.lastSession).toLocaleDateString()}</p>
         </div>
         <div>
           <h4 className="text-sm font-medium text-gray-500">Next Session</h4>
-          <p>{new Date(student.nextSession).toLocaleDateString()}</p>
+          <p>{student.nextSession && new Date(student.nextSession).toLocaleDateString()}</p>
         </div>
       </div>
       

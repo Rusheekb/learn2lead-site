@@ -8,6 +8,7 @@ import AnalyticsMetricsGrid from './analytics/AnalyticsMetricsGrid';
 import TopPerformersGrid from './analytics/TopPerformersGrid';
 import PopularSubjectsTable from './analytics/PopularSubjectsTable';
 import MonthlyDistributionTable from './analytics/MonthlyDistributionTable';
+import { TopPerformer } from '@/types/sharedTypes';
 
 const Dashboard: React.FC = () => {
   const { classes, isLoading: isLoadingClasses } = useClassLogs();
@@ -21,8 +22,8 @@ const Dashboard: React.FC = () => {
   } = useAnalytics(classes);
 
   const isLoading = isLoadingClasses || isLoadingAnalytics;
-  const topTutors = getTopPerformingTutors('totalClasses');
-  const topStudents = getTopPerformingStudents('totalClasses');
+  const topTutors = getTopPerformingTutors('totalClasses') as TopPerformer[];
+  const topStudents = getTopPerformingStudents('totalClasses') as TopPerformer[];
   const monthlyClasses = getRevenueByMonth();
   const popularSubjects = getSubjectPopularity();
 

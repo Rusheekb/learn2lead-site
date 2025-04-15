@@ -2,7 +2,7 @@
 import React from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Student } from "./types/studentTypes";
+import { Student } from "@/types/sharedTypes";
 
 interface StudentListProps {
   students: Student[];

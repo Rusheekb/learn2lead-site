@@ -1,5 +1,5 @@
 
-import { Material, Student, StudentMessage, StudentMessageCollection, StudentNote, StudentNoteCollection } from "./types/studentTypes";
+import { Material, Student, StudentMessage, StudentMessageCollection, StudentNote, StudentNoteCollection } from "@/types/sharedTypes";
 
 // Mock materials data
 export const mockMaterials: Material[] = [

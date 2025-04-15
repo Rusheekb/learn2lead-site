@@ -15,11 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-interface PopularSubject {
-  subject: string;
-  count: number;
-}
+import { PopularSubject } from '@/types/sharedTypes';
 
 interface PopularSubjectsTableProps {
   popularSubjects: PopularSubject[];
