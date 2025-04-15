@@ -5,15 +5,15 @@ import { Button } from "@/components/ui/button";
 import { FileUp } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { StudentUpload } from "../shared/StudentContent";
+import { StudentUpload } from "@/types/classTypes";
 
-// Imported components
+// Import components
 import MaterialsTable from "./MaterialsTable";
 import StudentUploadsTable from "./StudentUploadsTable";
 import UploadMaterialDialog from "./UploadMaterialDialog";
 import ShareMaterialDialog from "./ShareMaterialDialog";
+import { Material, Student } from "./types/studentTypes"; // Import from tutor's types
 import { mockStudents } from "./mock-data-students";
-import { Material } from "./types/studentTypes";
 
 // Define a complete mock data set for uploads
 const mockUploads: StudentUpload[] = [
@@ -140,8 +140,8 @@ const TutorMaterials: React.FC = () => {
             </CardHeader>
             <CardContent>
               <MaterialsTable 
-                materials={mockMaterials} 
-                onShareMaterial={openShareDialog} 
+                materials={mockMaterials as Material[]} 
+                onShareMaterial={(material: Material) => openShareDialog(material as Material)} 
               />
             </CardContent>
           </Card>
@@ -175,8 +175,8 @@ const TutorMaterials: React.FC = () => {
       <ShareMaterialDialog 
         isOpen={isShareOpen}
         onOpenChange={setIsShareOpen}
-        selectedMaterial={selectedMaterial}
-        students={mockStudents}
+        selectedMaterial={selectedMaterial as Material}
+        students={mockStudents as Student[]}
         selectedStudents={selectedStudents}
         onSelectedStudentsChange={setSelectedStudents}
         onShareMaterial={handleShareMaterial}

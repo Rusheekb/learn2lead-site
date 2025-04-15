@@ -2,19 +2,11 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { StudentUpload } from "@/types/classTypes";
-
-// Mapper function to convert DB records to StudentUpload types
-export const mapDbUploadsToStudentUploads = (dbUploads: any[]): StudentUpload[] => {
-  return dbUploads.map(upload => ({
-    id: upload.id,
-    classId: upload.class_id,
-    studentName: upload.student_name,
-    fileName: upload.file_name,
-    fileSize: upload.file_size,
-    uploadDate: upload.upload_date,
-    note: upload.note
-  }));
-};
+import { 
+  ClassUploadRecord, 
+  mapToStudentUpload, 
+  mapToStudentUploads 
+} from "./utils/classMappers";
 
 export async function fetchClassUploads(classId: string): Promise<StudentUpload[]> {
   try {
@@ -24,7 +16,7 @@ export async function fetchClassUploads(classId: string): Promise<StudentUpload[
       .eq('class_id', classId);
     
     if (error) throw error;
-    return mapDbUploadsToStudentUploads(data || []);
+    return mapToStudentUploads(data as ClassUploadRecord[] || []);
   } catch (error) {
     console.error("Error fetching class uploads:", error);
     return [];
@@ -57,15 +49,7 @@ export async function uploadClassFile(classId: string, studentName: string, file
     if (dbError) throw dbError;
     
     toast.success('File uploaded successfully');
-    return data ? {
-      id: data.id,
-      classId: data.class_id,
-      studentName: data.student_name,
-      fileName: data.file_name,
-      fileSize: data.file_size,
-      uploadDate: data.upload_date,
-      note: data.note
-    } : null;
+    return data ? mapToStudentUpload(data as ClassUploadRecord) : null;
   } catch (error) {
     console.error("Error uploading file:", error);
     toast.error('Failed to upload file');

@@ -12,6 +12,7 @@ import {
   fetchClassUploads,
   downloadClassFile
 } from "@/services/classUploadsService";
+import { mapToStudentMessages, mapToStudentUploads } from "@/services/utils/classMappers";
 
 export const useStudentContent = (selectedEvent: ClassEvent | null) => {
   const [studentMessages, setStudentMessages] = useState<StudentMessage[]>([]);

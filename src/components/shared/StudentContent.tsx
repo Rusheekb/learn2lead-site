@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { Upload, MessageSquare, CheckCircle } from 'lucide-react';
 
+// Export these interfaces so they can be imported elsewhere
 export interface StudentMessage {
   id: string;
   classId: string;
@@ -39,7 +40,8 @@ interface StudentContentProps {
   showUploadControls?: boolean;
 }
 
-export const StudentContent: React.FC<StudentContentProps> = ({
+// Export the StudentContent component as default AND as a named export
+const StudentContent: React.FC<StudentContentProps> = ({
   classId,
   uploads,
   messages,
@@ -207,4 +209,6 @@ export const StudentContent: React.FC<StudentContentProps> = ({
   );
 };
 
+// Export both as default and named export
+export { StudentContent };
 export default StudentContent;

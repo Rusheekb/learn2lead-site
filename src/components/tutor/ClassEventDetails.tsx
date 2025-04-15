@@ -3,8 +3,8 @@ import React from "react";
 import { Video, FileText } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ClassEvent } from "@/types/tutorTypes";
-import { StudentMessage, StudentUpload } from "../shared/StudentContent";
-import { StudentContent } from "../shared/StudentContent";
+import { StudentMessage, StudentUpload } from "@/types/classTypes";
+import { StudentContent } from "@/components/shared/StudentContent"; // Using named export
 import { MessageCountBadge } from "@/components/shared/ClassBadges";
 
 interface ClassEventDetailsProps {
