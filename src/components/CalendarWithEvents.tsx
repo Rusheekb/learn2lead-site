@@ -1,3 +1,4 @@
+
 import { startOfDay, addDays } from 'date-fns';
 import { ClassEvent } from '../types/tutorTypes';
 
@@ -9,4 +10,4 @@ const getUpcomingEvents = (events: ClassEvent[]): ClassEvent[] => {
     const eventDate = startOfDay(event.date); // event.date is already a Date object
     return eventDate >= today && eventDate <= nextWeek;
   });
-}; 
+};

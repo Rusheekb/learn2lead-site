@@ -1,3 +1,4 @@
+
 export const formatTime = (timeString: string): string => {
   try {
     if (!timeString) return 'N/A';
@@ -26,4 +27,4 @@ export const formatTime = (timeString: string): string => {
     console.warn('Error formatting time:', timeString, error);
     return 'Invalid Time';
   }
-}; 
+};

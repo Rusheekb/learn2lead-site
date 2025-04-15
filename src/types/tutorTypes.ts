@@ -1,3 +1,4 @@
+
 export interface ClassEvent {
   id: string;
   title: string;
