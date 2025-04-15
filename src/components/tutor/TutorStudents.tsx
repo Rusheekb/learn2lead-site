@@ -1,11 +1,16 @@
 
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Student } from "./types/studentTypes";
 import { mockStudents } from "./mock-data-students";
 import StudentList from "./StudentList";
 import StudentDetailsDialog from "./StudentDetailsDialog";
-import { StudentMessage, StudentNote, StudentMessageCollection, StudentNoteCollection } from "./types/studentTypes";
+import { 
+  Student, 
+  StudentMessage, 
+  StudentNote, 
+  StudentMessageCollection, 
+  StudentNoteCollection 
+} from "@/types/sharedTypes";
 
 // Create mock messages and notes directly in this file
 const mockMessages: StudentMessageCollection[] = [

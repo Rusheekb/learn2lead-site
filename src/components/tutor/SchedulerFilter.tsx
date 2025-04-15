@@ -1,8 +1,6 @@
 
 import React from "react";
-import { Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import FilterControls from "@/components/shared/FilterControls";
 import { Student } from "@/types/tutorTypes";
 
 interface SchedulerFilterProps {
@@ -26,40 +24,32 @@ const SchedulerFilter: React.FC<SchedulerFilterProps> = ({
   allSubjects,
   students,
 }) => {
+  const studentOptions = students.map(student => ({
+    value: student.id.toString(),
+    label: student.name
+  }));
+
+  const clearFilters = () => {
+    setSearchTerm("");
+    setSubjectFilter("all");
+    setStudentFilter("all");
+  };
+
   return (
-    <div className="flex flex-col sm:flex-row gap-4">
-      <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-        <Input
-          placeholder="Search classes..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10"
-        />
-      </div>
-      <Select value={subjectFilter || "all"} onValueChange={setSubjectFilter}>
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Filter by subject" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem key="all-subjects" value="all">All Subjects</SelectItem>
-          {allSubjects.map(subject => (
-            <SelectItem key={subject} value={subject || `subject-${subject.toLowerCase()}`}>{subject}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Select value={studentFilter || "all"} onValueChange={setStudentFilter}>
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Filter by student" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem key="all-students" value="all">All Students</SelectItem>
-          {students.map(student => (
-            <SelectItem key={student.id} value={student.id.toString() || `student-${student.id}`}>{student.name}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+    <FilterControls
+      searchTerm={searchTerm}
+      setSearchTerm={setSearchTerm}
+      searchPlaceholder="Search classes..."
+      showSubjectFilter={true}
+      subjectFilter={subjectFilter}
+      setSubjectFilter={setSubjectFilter}
+      subjectOptions={allSubjects}
+      showStudentFilter={true}
+      studentFilter={studentFilter}
+      setStudentFilter={setStudentFilter}
+      studentOptions={studentOptions}
+      clearFilters={clearFilters}
+    />
   );
 };
 

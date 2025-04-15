@@ -7,18 +7,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Trash2 } from "lucide-react";
 
 interface Student {
-  id: string; // Changed from number to string
+  id: string;
   name: string;
   subjects: string[];
 }
 
 interface Material {
-  id: string; // Changed from number to string
+  id: string;
   name: string;
   type: string;
   subject: string;
   dateUploaded: string;
-  size: string; // Required field
+  size: string;
   sharedWith: string[];
 }
 
@@ -41,6 +41,11 @@ const ShareMaterialDialog: React.FC<ShareMaterialDialogProps> = ({
   onSelectedStudentsChange,
   onShareMaterial
 }) => {
+  // Filter out already selected students
+  const availableStudents = students.filter(
+    student => !selectedStudents.includes(student.id)
+  );
+  
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
@@ -59,9 +64,9 @@ const ShareMaterialDialog: React.FC<ShareMaterialDialogProps> = ({
               <div>
                 <Label htmlFor="select-students">Select Students</Label>
                 <Select 
-                  value=""
+                  value="placeholder"
                   onValueChange={(value) => {
-                    if (value && !selectedStudents.includes(value)) {
+                    if (value && value !== "placeholder" && !selectedStudents.includes(value)) {
                       onSelectedStudentsChange([...selectedStudents, value]);
                     }
                   }}
@@ -70,11 +75,17 @@ const ShareMaterialDialog: React.FC<ShareMaterialDialogProps> = ({
                     <SelectValue placeholder="Add students" />
                   </SelectTrigger>
                   <SelectContent>
-                    {students.map(student => (
-                      <SelectItem key={student.id} value={student.id}>
-                        {student.name}
+                    {availableStudents.length > 0 ? (
+                      availableStudents.map(student => (
+                        <SelectItem key={student.id} value={student.id}>
+                          {student.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="no-students" disabled>
+                        All students already selected
                       </SelectItem>
-                    ))}
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -84,7 +95,7 @@ const ShareMaterialDialog: React.FC<ShareMaterialDialogProps> = ({
                 <div className="space-y-2">
                   {selectedStudents.length > 0 ? (
                     selectedStudents.map(studentId => {
-                      const student = students.find(s => s.id.toString() === studentId);
+                      const student = students.find(s => s.id === studentId);
                       return (
                         <div key={studentId} className="flex justify-between items-center bg-gray-50 p-2 rounded">
                           <span>{student?.name}</span>

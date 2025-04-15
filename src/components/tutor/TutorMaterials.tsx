@@ -5,14 +5,14 @@ import { FileUp } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { StudentUpload } from "@/types/classTypes";
+import { Material, Student } from "@/types/sharedTypes";
 
 // Import components
 import MaterialsTable from "./MaterialsTable";
 import StudentUploadsTable from "./StudentUploadsTable";
 import UploadMaterialDialog from "./UploadMaterialDialog";
 import ShareMaterialDialog from "./ShareMaterialDialog";
-import { Material, Student } from "./types/studentTypes"; // Import types
-import { mockStudents, mockMaterials } from "./mock-data-students"; // Import mock data
+import { mockStudents, mockMaterials } from "./mock-data-students";
 
 // Define a complete mock data set for uploads
 const mockUploads: StudentUpload[] = [
