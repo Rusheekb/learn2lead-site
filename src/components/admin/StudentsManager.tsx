@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -8,30 +8,20 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Plus, Edit2, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-
-interface Student {
-  id: number;
-  name: string;
-  email: string;
-  grade: string;
-  subjects: string[];
-  status: "active" | "inactive" | "pending";
-  enrollDate: string;
-  lastSession: string;
-  paymentStatus: "paid" | "unpaid" | "overdue";
-}
+import { Student, validateStudent } from "@/types/studentTypes";
+import { supabase } from "@/lib/supabase";
 
 const mockStudents: Student[] = [
   {
     id: 1,
-    name: "Emma Thompson",
-    email: "emma@example.com",
-    grade: "11th Grade",
-    subjects: ["Calculus", "Physics"],
-    status: "active",
-    enrollDate: "2023-09-01",
-    lastSession: "2025-04-07",
-    paymentStatus: "paid"
+    name: "John Doe",
+    email: "john@example.com",
+    grade: "10th",
+    subjects: ["Math", "Physics"],
+    status: "active" as const,
+    enrollDate: "2023-01-15",
+    lastSession: "2023-03-20",
+    paymentStatus: "paid" as const,
   },
   {
     id: 2,
@@ -66,7 +56,7 @@ const mockStudents: Student[] = [
     lastSession: "N/A",
     paymentStatus: "paid"
   },
-];
+] as const;
 
 const StudentsManager: React.FC = () => {
   const [students, setStudents] = useState<Student[]>(mockStudents);
@@ -130,6 +120,26 @@ const StudentsManager: React.FC = () => {
     const matchesPayment = paymentFilter === "all" || student.paymentStatus === paymentFilter;
     return matchesSearch && matchesStatus && matchesPayment;
   });
+
+  useEffect(() => {
+    const fetchStudents = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("class_logs")
+          .select("*");
+        
+        if (error) throw error;
+        
+        // Validate and transform the data
+        const validatedStudents = data.map(validateStudent);
+        setStudents(validatedStudents);
+      } catch (error) {
+        console.error("Error fetching students:", error);
+      }
+    };
+
+    fetchStudents();
+  }, []);
 
   return (
     <div className="space-y-6">

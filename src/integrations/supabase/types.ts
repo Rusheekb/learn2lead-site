@@ -6,71 +6,67 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export type Database = {
+export interface Database {
   public: {
     Tables: {
       class_logs: {
         Row: {
-          attendance: string | null
-          created_at: string
-          date: string
-          end_time: string
-          id: string
-          notes: string | null
-          start_time: string
-          status: string
-          student_name: string
-          subject: string
-          title: string
-          tutor_name: string
-          updated_at: string
-          zoom_link: string | null
-          payment_status: string
-          tutor_payment_status: string
-          class_cost: number
-          tutor_cost: number
+          id: string;
+          class_number: string;
+          tutor_name: string;
+          student_name: string;
+          date: string;
+          day: string;
+          time_cst: string;
+          time_hrs: string;
+          subject: string;
+          content: string | null;
+          hw: string | null;
+          class_id: string;
+          class_cost: string | null;
+          tutor_cost: string | null;
+          student_payment: string | null;
+          tutor_payment: string | null;
+          additional_info: string | null;
         }
         Insert: {
-          attendance?: string | null
-          created_at?: string
-          date: string
-          end_time: string
-          id?: string
-          notes?: string | null
-          start_time: string
-          status?: string
-          student_name: string
-          subject: string
-          title: string
-          tutor_name: string
-          updated_at?: string
-          zoom_link?: string | null
-          payment_status?: string
-          tutor_payment_status?: string
-          class_cost?: number
-          tutor_cost?: number
+          id?: string;
+          class_number: string;
+          tutor_name: string;
+          student_name: string;
+          date: string;
+          day: string;
+          time_cst: string;
+          time_hrs: string;
+          subject: string;
+          content?: string | null;
+          hw?: string | null;
+          class_id: string;
+          class_cost?: string | null;
+          tutor_cost?: string | null;
+          student_payment?: string | null;
+          tutor_payment?: string | null;
+          additional_info?: string | null;
         }
         Update: {
-          attendance?: string | null
-          created_at?: string
-          date?: string
-          end_time?: string
-          id?: string
-          notes?: string | null
-          start_time?: string
-          status?: string
-          student_name?: string
-          subject?: string
-          title?: string
-          tutor_name?: string
-          updated_at?: string
-          zoom_link?: string | null
-          payment_status?: string
-          tutor_payment_status?: string
-          class_cost?: number
-          tutor_cost?: number
+          id?: string;
+          class_number?: string;
+          tutor_name?: string;
+          student_name?: string;
+          date?: string;
+          day?: string;
+          time_cst?: string;
+          time_hrs?: string;
+          subject?: string;
+          content?: string | null;
+          hw?: string | null;
+          class_id?: string;
+          class_cost?: string | null;
+          tutor_cost?: string | null;
+          student_payment?: string | null;
+          tutor_payment?: string | null;
+          additional_info?: string | null;
         }
-        Relationships: []
       }
       class_messages: {
         Row: {

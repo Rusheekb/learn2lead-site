@@ -109,7 +109,11 @@ const ClassTable: React.FC<ClassTableProps> = ({
                       <div className="space-y-1">
                         <div>{cls.date instanceof Date ? format(cls.date, "MMM d, yyyy") : format(new Date(cls.date), "MMM d, yyyy")}</div>
                         <div className="text-sm text-muted-foreground">
-                          {formatTime(cls.startTime)} - {formatTime(cls.endTime)}
+                          {cls.startTime && cls.endTime ? (
+                            `${formatTime(cls.startTime)} - ${formatTime(cls.endTime)}`
+                          ) : (
+                            'Time not set'
+                          )}
                         </div>
                       </div>
                     </TableCell>
