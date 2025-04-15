@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -36,25 +37,25 @@ const SchedulerFilter: React.FC<SchedulerFilterProps> = ({
           className="pl-10"
         />
       </div>
-      <Select value={subjectFilter} onValueChange={setSubjectFilter}>
+      <Select value={subjectFilter || "all"} onValueChange={setSubjectFilter}>
         <SelectTrigger className="w-[180px]">
           <SelectValue placeholder="Filter by subject" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem key="all-subjects" value="all">All Subjects</SelectItem>
           {allSubjects.map(subject => (
-            <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+            <SelectItem key={subject} value={subject || `subject-${subject.toLowerCase()}`}>{subject}</SelectItem>
           ))}
         </SelectContent>
       </Select>
-      <Select value={studentFilter} onValueChange={setStudentFilter}>
+      <Select value={studentFilter || "all"} onValueChange={setStudentFilter}>
         <SelectTrigger className="w-[180px]">
           <SelectValue placeholder="Filter by student" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem key="all-students" value="all">All Students</SelectItem>
           {students.map(student => (
-            <SelectItem key={student.id} value={student.id.toString()}>{student.name}</SelectItem>
+            <SelectItem key={student.id} value={student.id.toString() || `student-${student.id}`}>{student.name}</SelectItem>
           ))}
         </SelectContent>
       </Select>

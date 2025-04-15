@@ -69,7 +69,7 @@ const ClassFilters: React.FC<ClassFiltersProps> = ({
       </div>
       
       <div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
+        <Select value={statusFilter || "all"} onValueChange={setStatusFilter}>
           <SelectTrigger>
             <SelectValue placeholder="Status" />
           </SelectTrigger>
@@ -83,14 +83,14 @@ const ClassFilters: React.FC<ClassFiltersProps> = ({
       </div>
       
       <div>
-        <Select value={subjectFilter} onValueChange={setSubjectFilter}>
+        <Select value={subjectFilter || "all"} onValueChange={setSubjectFilter}>
           <SelectTrigger>
             <SelectValue placeholder="Subject" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Subjects</SelectItem>
             {allSubjects.map((subject) => (
-              <SelectItem key={subject} value={subject.toLowerCase()}>
+              <SelectItem key={subject} value={subject.toLowerCase() || `subject-${subject.toLowerCase()}`}>
                 {subject}
               </SelectItem>
             ))}

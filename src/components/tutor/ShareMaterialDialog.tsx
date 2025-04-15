@@ -59,8 +59,9 @@ const ShareMaterialDialog: React.FC<ShareMaterialDialogProps> = ({
               <div>
                 <Label htmlFor="select-students">Select Students</Label>
                 <Select 
+                  value=""
                   onValueChange={(value) => {
-                    if (!selectedStudents.includes(value)) {
+                    if (value && !selectedStudents.includes(value)) {
                       onSelectedStudentsChange([...selectedStudents, value]);
                     }
                   }}
@@ -70,7 +71,7 @@ const ShareMaterialDialog: React.FC<ShareMaterialDialogProps> = ({
                   </SelectTrigger>
                   <SelectContent>
                     {students.map(student => (
-                      <SelectItem key={student.id} value={student.id.toString()}>
+                      <SelectItem key={student.id} value={student.id}>
                         {student.name}
                       </SelectItem>
                     ))}
