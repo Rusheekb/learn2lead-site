@@ -2,9 +2,55 @@
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Student } from "./types/studentTypes";
-import { mockStudents, mockMessages, mockNotes } from "./mock-data-students";
+import { mockStudents } from "./mock-data-students";
 import StudentList from "./StudentList";
 import StudentDetailsDialog from "./StudentDetailsDialog";
+import { StudentMessage, StudentNote, StudentMessageCollection, StudentNoteCollection } from "./types/studentTypes";
+
+// Create mock messages and notes directly in this file
+const mockMessages: StudentMessageCollection[] = [
+  {
+    studentId: "1",
+    messages: [
+      {
+        id: "1",
+        content: "Do we need to bring the textbook to our next session?",
+        timestamp: "2023-04-10T14:30:00Z",
+        read: true,
+        sender: "student",
+        text: "Do we need to bring the textbook to our next session?"
+      },
+      {
+        id: "2",
+        content: "Yes, please bring your textbook. We'll be working on chapter 4.",
+        timestamp: "2023-04-10T15:00:00Z",
+        read: true,
+        sender: "tutor",
+        text: "Yes, please bring your textbook. We'll be working on chapter 4."
+      }
+    ]
+  }
+];
+
+const mockNotes: StudentNoteCollection[] = [
+  {
+    studentId: "1",
+    notes: [
+      {
+        id: "1",
+        title: "First Session Notes",
+        content: "Initial assessment complete. Student shows strong aptitude for algebra but needs work on geometry concepts.",
+        date: "2023-03-15"
+      },
+      {
+        id: "2",
+        title: "Homework Review",
+        content: "Reviewed chapter 3 homework. Most problems correct, but struggling with word problems.",
+        date: "2023-03-22"
+      }
+    ]
+  }
+];
 
 const TutorStudents: React.FC = () => {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);

@@ -1,9 +1,9 @@
 
-import { StudentMessage as SharedStudentMessage, StudentUpload as SharedStudentUpload } from "../components/shared/StudentContent";
+import { StudentMessage, StudentUpload } from "../components/shared/StudentContent";
 
-export interface StudentMessage extends SharedStudentMessage {}
+export interface StudentMessage extends StudentMessage {}
 
-export interface StudentUpload extends SharedStudentUpload {}
+export interface StudentUpload extends StudentUpload {}
 
 export interface ClassTab {
   id: string;

@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,7 +12,7 @@ import MaterialsTable from "./MaterialsTable";
 import StudentUploadsTable from "./StudentUploadsTable";
 import UploadMaterialDialog from "./UploadMaterialDialog";
 import ShareMaterialDialog from "./ShareMaterialDialog";
-import { mockMaterials, mockStudents } from "./mock-data-students";
+import { mockStudents } from "./mock-data-students";
 import { Material } from "./types/studentTypes";
 
 // Define a complete mock data set for uploads
@@ -44,6 +45,9 @@ const mockUploads: StudentUpload[] = [
     note: "First draft of essay"
   }
 ];
+
+// Import mockMaterials from mock-data-students
+import { mockMaterials } from "./mock-data-students";
 
 const TutorMaterials: React.FC = () => {
   const [isUploadOpen, setIsUploadOpen] = useState<boolean>(false);
@@ -87,9 +91,11 @@ const TutorMaterials: React.FC = () => {
   };
 
   const handleShareMaterial = () => {
-    console.log("Sharing material:", selectedMaterial?.id, "with students:", selectedStudents);
-    setIsShareOpen(false);
-    setSelectedStudents([]);
+    if (selectedMaterial) {
+      console.log("Sharing material:", selectedMaterial.id, "with students:", selectedStudents);
+      setIsShareOpen(false);
+      setSelectedStudents([]);
+    }
   };
 
   const openShareDialog = (material: Material) => {

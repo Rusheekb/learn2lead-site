@@ -1,6 +1,7 @@
 
 import { ClassEvent } from "@/types/tutorTypes";
 import { toast } from "sonner";
+import { ExportFormat } from "@/types/classTypes";
 
 export const exportToCsv = async (classes: ClassEvent[], filename = 'class_logs.csv') => {
   try {
@@ -63,7 +64,7 @@ export const exportToPdf = async (classes: ClassEvent[], filename = 'class_logs.
 };
 
 // Add the exportClassLogs function
-export const exportClassLogs = async (classes: ClassEvent[], format: 'csv' | 'pdf') => {
+export const exportClassLogs = async (classes: ClassEvent[], format: ExportFormat) => {
   if (format === 'csv') {
     return exportToCsv(classes);
   } else {

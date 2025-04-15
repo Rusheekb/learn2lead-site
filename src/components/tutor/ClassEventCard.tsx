@@ -8,10 +8,10 @@ import { RecurringBadge, MessageBadge } from "@/components/shared/ClassBadges";
 export interface ClassEventCardProps {
   event: ClassEvent;
   onClick: (event: ClassEvent) => void;
-  unreadMessagesCount: number;
+  unreadMessageCount: number;
 }
 
-const ClassEventCard: React.FC<ClassEventCardProps> = ({ event, onClick, unreadMessagesCount }) => {
+const ClassEventCard: React.FC<ClassEventCardProps> = ({ event, onClick, unreadMessageCount }) => {
   return (
     <div 
       key={event.id}
@@ -28,8 +28,8 @@ const ClassEventCard: React.FC<ClassEventCardProps> = ({ event, onClick, unreadM
         </div>
         <div className="flex gap-2">
           {event.recurring && <RecurringBadge />}
-          {unreadMessagesCount > 0 && (
-            <MessageBadge count={unreadMessagesCount} />
+          {unreadMessageCount > 0 && (
+            <MessageBadge count={unreadMessageCount} />
           )}
         </div>
       </div>

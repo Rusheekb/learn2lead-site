@@ -21,6 +21,7 @@ import ClassTable from "./class-logs/ClassTable";
 import ClassDetailsDialog from "./class-logs/ClassDetailsDialog";
 import CsvUploader from "./class-logs/CsvUploader";
 import useClassLogs from "@/hooks/useClassLogs";
+import { ExportFormat } from "@/types/classTypes";
 
 const ClassLogs: React.FC = () => {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
@@ -65,6 +66,11 @@ const ClassLogs: React.FC = () => {
     handlePageSizeChange
   } = useClassLogs();
 
+  // Function to handle export with proper arguments
+  const handleExportFormat = (format: ExportFormat) => {
+    handleExport(filteredClasses, format);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -97,11 +103,11 @@ const ClassLogs: React.FC = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => handleExport('csv')}>
+              <DropdownMenuItem onClick={() => handleExportFormat('csv')}>
                 <Download className="h-4 w-4 mr-2" />
                 Export as CSV
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleExport('pdf')}>
+              <DropdownMenuItem onClick={() => handleExportFormat('pdf')}>
                 <Printer className="h-4 w-4 mr-2" />
                 Export as PDF
               </DropdownMenuItem>
