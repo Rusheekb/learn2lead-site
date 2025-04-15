@@ -44,14 +44,21 @@ const ClassTable: React.FC<ClassTableProps> = ({
   onPageChange,
   onPageSizeChange
 }) => {
+  // Make sure formatDate can handle both Date objects and strings
   const formatDate = (date: Date | string) => {
     try {
+      if (!date) return 'Date not available';
+      
       const dateObj = date instanceof Date ? date : new Date(date);
+      
       if (isNaN(dateObj.getTime())) {
-        return String(date); // Return original value if invalid
+        console.warn('Invalid date encountered:', date);
+        return 'Invalid date';
       }
+      
       return format(dateObj, "MMM d, yyyy");
     } catch (e) {
+      console.error('Error formatting date:', e, date);
       return String(date); // Return original value if parsing fails
     }
   };
@@ -122,7 +129,7 @@ const ClassTable: React.FC<ClassTableProps> = ({
                     </TableCell>
                     <TableCell>
                       <div className="space-y-1">
-                        <div>{cls.date instanceof Date ? format(cls.date, "MMM d, yyyy") : format(new Date(cls.date), "MMM d, yyyy")}</div>
+                        <div>{formatDate(cls.date)}</div>
                         <div className="text-sm text-muted-foreground">
                           {cls.startTime && cls.endTime ? (
                             `${formatTime(cls.startTime)} - ${formatTime(cls.endTime)}`

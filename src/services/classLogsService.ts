@@ -28,22 +28,37 @@ const calculateEndTime = (startTime: string, durationHrs: number): string => {
 // Transform database record to ClassEvent
 const transformDbRecordToClassEvent = (record: any): ClassEvent => {
   try {
-    // Parse the date string (assuming it's in YYYY-MM-DD format)
+    // Parse the date string from the database 'Date' field
     let dateObj: Date;
-    let dateString: string = '';
     
     if (record.Date) {
       try {
-        dateObj = parse(record.Date, 'yyyy-MM-dd', new Date());
-        dateString = format(dateObj, 'yyyy-MM-dd');
+        // Try multiple date formats to handle different possible formats
+        const formats = ['yyyy-MM-dd', 'MM/dd/yyyy', 'M/d/yyyy'];
+        let parsedSuccessfully = false;
+        
+        for (const format of formats) {
+          try {
+            dateObj = parse(record.Date, format, new Date());
+            if (!isNaN(dateObj.getTime())) {
+              parsedSuccessfully = true;
+              break;
+            }
+          } catch (e) {
+            // Continue trying other formats
+          }
+        }
+        
+        if (!parsedSuccessfully) {
+          console.error('Failed to parse date with any format:', record.Date);
+          dateObj = new Date(); // Fallback to current date
+        }
       } catch (e) {
-        console.error('Error parsing date:', record.Date);
+        console.error('Error parsing date:', record.Date, e);
         dateObj = new Date(); // Fallback to current date
-        dateString = format(dateObj, 'yyyy-MM-dd');
       }
     } else {
       dateObj = new Date(); // Fallback to current date
-      dateString = format(dateObj, 'yyyy-MM-dd');
     }
 
     const duration = parseNumericString(record['Time (hrs)']);
@@ -55,7 +70,7 @@ const transformDbRecordToClassEvent = (record: any): ClassEvent => {
       title: record['Class Number'] || '',
       tutorName: record['Tutor Name'] || '',
       studentName: record['Student Name'] || '',
-      date: dateString,
+      date: dateObj, // Use the correctly parsed Date object
       startTime: startTime,
       endTime: endTime,
       duration: duration,
@@ -80,7 +95,7 @@ const transformDbRecordToClassEvent = (record: any): ClassEvent => {
       title: 'Error Loading',
       tutorName: 'Error Loading',
       studentName: 'Error Loading',
-      date: new Date().toISOString().split('T')[0],
+      date: new Date(),
       startTime: '',
       endTime: '',
       duration: 0,
@@ -123,8 +138,8 @@ export const fetchClassLogs = async (): Promise<ClassEvent[]> => {
     
     // Sort logs by date (most recent first)
     return transformedLogs.sort((a, b) => {
-      const dateA = new Date(a.date).getTime();
-      const dateB = new Date(b.date).getTime();
+      const dateA = a.date instanceof Date ? a.date.getTime() : new Date(a.date).getTime();
+      const dateB = b.date instanceof Date ? b.date.getTime() : new Date(b.date).getTime();
       return dateB - dateA;
     });
   } catch (error) {

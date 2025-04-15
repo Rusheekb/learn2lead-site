@@ -7,6 +7,7 @@ import { MoreVertical, Edit2, Copy, Trash2 } from "lucide-react";
 import { ClassEvent } from "@/types/tutorTypes";
 import ClassEventDetails from "../ClassEventDetails";
 import { StudentMessage, StudentUpload } from "@/types/classTypes";
+import { format } from "date-fns";
 
 interface ViewClassDialogProps {
   isOpen: boolean;
@@ -40,6 +41,25 @@ const ViewClassDialog: React.FC<ViewClassDialogProps> = ({
   getUnreadMessageCount,
 }) => {
   if (!selectedEvent) return null;
+
+  // Ensure we properly format event dates for display
+  const formatEventDate = (date: Date | string | undefined) => {
+    if (!date) return '';
+    try {
+      const dateObj = date instanceof Date ? date : new Date(date);
+      if (isNaN(dateObj.getTime())) return String(date);
+      return format(dateObj, "MMMM d, yyyy");
+    } catch (e) {
+      console.error('Error formatting date:', e);
+      return String(date);
+    }
+  };
+
+  // Add formatted date to the event if needed
+  const eventWithFormattedDate = {
+    ...selectedEvent,
+    formattedDate: formatEventDate(selectedEvent.date)
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -82,7 +102,7 @@ const ViewClassDialog: React.FC<ViewClassDialogProps> = ({
         </DialogHeader>
         
         <ClassEventDetails 
-          selectedEvent={selectedEvent}
+          selectedEvent={eventWithFormattedDate}
           studentMessages={studentMessages}
           studentUploads={studentUploads}
           onMarkAsRead={onMarkAsRead}
