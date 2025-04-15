@@ -41,15 +41,15 @@ const ClassTable: React.FC<ClassTableProps> = ({
   onPageChange,
   onPageSizeChange
 }) => {
-  const formatDate = (dateStr: string) => {
+  const formatDate = (date: Date | string) => {
     try {
-      const date = new Date(dateStr);
-      if (isNaN(date.getTime())) {
-        return dateStr; // Return original string if invalid
+      const dateObj = date instanceof Date ? date : new Date(date);
+      if (isNaN(dateObj.getTime())) {
+        return String(date); // Return original value if invalid
       }
-      return format(date, "MMM d, yyyy");
+      return format(dateObj, "MMM d, yyyy");
     } catch (e) {
-      return dateStr; // Return original string if parsing fails
+      return String(date); // Return original value if parsing fails
     }
   };
 
@@ -107,7 +107,7 @@ const ClassTable: React.FC<ClassTableProps> = ({
                     </TableCell>
                     <TableCell>
                       <div className="space-y-1">
-                        <div>{formatDate(cls.date)}</div>
+                        <div>{cls.date instanceof Date ? format(cls.date, "MMM d, yyyy") : format(new Date(cls.date), "MMM d, yyyy")}</div>
                         <div className="text-sm text-muted-foreground">
                           {formatTime(cls.startTime)} - {formatTime(cls.endTime)}
                         </div>

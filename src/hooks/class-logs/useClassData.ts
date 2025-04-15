@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { fetchClassLogs } from "@/services/classLogsService";
+import { ClassEvent } from "@/types/tutorTypes";
 
 export const useClassData = () => {
   const [isLoading, setIsLoading] = useState(true);
-  const [classes, setClasses] = useState<any[]>([]);
+  const [classes, setClasses] = useState<ClassEvent[]>([]);
 
   // Format time utility function
   const formatTime = (timeString: string) => {
@@ -27,7 +28,12 @@ export const useClassData = () => {
     setIsLoading(true);
     try {
       const classLogs = await fetchClassLogs();
-      setClasses(classLogs);
+      // Ensure dates are properly converted to Date objects
+      const processedLogs = classLogs.map(log => ({
+        ...log,
+        date: log.date instanceof Date ? log.date : new Date(log.date)
+      }));
+      setClasses(processedLogs);
     } catch (error) {
       console.error("Error loading classes:", error);
       toast.error("Failed to load class logs");

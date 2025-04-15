@@ -3,7 +3,7 @@ import { Video, FileText } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ClassEvent } from "@/types/tutorTypes";
 import { StudentMessage, StudentUpload } from "../shared/StudentContent";
-import StudentContent from "../shared/StudentContent";
+import StudentContent from "../shared/StudentContent.tsx";
 import { MessageCountBadge } from "@/components/shared/ClassBadges";
 
 interface ClassEventDetailsProps {

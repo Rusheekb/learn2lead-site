@@ -15,6 +15,7 @@ export interface ClassEvent {
   tutorPaymentStatus: 'completed' | 'pending';
   classCost: number;
   tutorCost: number;
+  materials?: string[];
 }
 
 export interface Student {
