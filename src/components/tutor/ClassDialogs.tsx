@@ -1,12 +1,11 @@
+
 import React from "react";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Edit2, Copy, Trash2 } from "lucide-react";
 import { ClassEvent } from "@/types/tutorTypes";
-import NewClassEventForm from "./NewClassEventForm";
-import ClassEventDetails from "./ClassEventDetails";
-import { StudentMessage, StudentUpload } from "@/components/shared/StudentContent";
+import { StudentMessage, StudentUpload } from "@/types/classTypes";
+import ViewClassDialog from "./dialogs/ViewClassDialog";
+import EditClassForm from "./dialogs/EditClassForm";
+import AddClassDialog from "./dialogs/AddClassDialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface ClassDialogsProps {
   isViewEventOpen: boolean;
@@ -59,128 +58,49 @@ const ClassDialogs: React.FC<ClassDialogsProps> = ({
 }) => {
   return (
     <>
-      <Dialog open={isViewEventOpen} onOpenChange={setIsViewEventOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader className="flex flex-row items-center justify-between">
-            <DialogTitle>{selectedEvent?.title}</DialogTitle>
-            {selectedEvent && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setIsEditMode(true)}>
-                    <Edit2 className="h-4 w-4 mr-2" />
-                    Edit Class
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onDuplicateEvent(selectedEvent)}>
-                    <Copy className="h-4 w-4 mr-2" />
-                    Duplicate Class
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    className="text-red-600"
-                    onClick={() => onDeleteEvent(selectedEvent.id)}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete Class
-                  </DropdownMenuItem>
-                  {selectedEvent.recurring && (
-                    <DropdownMenuItem 
-                      className="text-red-600"
-                      onClick={() => onDeleteEvent(selectedEvent.id, true)}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete All Recurring
-                    </DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-          </DialogHeader>
-          
-          {selectedEvent && (
-            <>
-              {isEditMode ? (
-                <div className="py-4">
-                  <NewClassEventForm 
-                    newEvent={{
-                      title: selectedEvent.title,
-                      date: typeof selectedEvent.date === 'string' ? new Date(selectedEvent.date) : selectedEvent.date,
-                      startTime: selectedEvent.startTime,
-                      endTime: selectedEvent.endTime,
-                      studentId: selectedEvent.studentId || '',
-                      subject: selectedEvent.subject,
-                      zoomLink: selectedEvent.zoomLink || '',
-                      notes: selectedEvent.notes || '',
-                      recurring: selectedEvent.recurring || false,
-                      recurringDays: selectedEvent.recurringDays || []
-                    }}
-                    setNewEvent={(event) => setNewEvent({ ...selectedEvent, ...event })}
-                    students={students}
-                  />
-                  <div className="flex justify-end gap-2 mt-6">
-                    <Button variant="outline" onClick={() => setIsEditMode(false)}>
-                      Cancel
-                    </Button>
-                    <Button onClick={onEditEvent} className="bg-tutoring-blue hover:bg-tutoring-blue/90">
-                      Save Changes
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <ClassEventDetails 
-                  selectedEvent={selectedEvent}
-                  studentMessages={studentMessages}
-                  studentUploads={studentUploads}
-                  onMarkAsRead={onMarkAsRead}
-                  onDownloadFile={onDownloadFile}
-                  activeTab={activeEventTab}
-                  setActiveTab={setActiveEventTab}
-                  unreadMessageCount={getUnreadMessageCount(selectedEvent.id)}
-                />
-              )}
-            </>
-          )}
-          
-          {!isEditMode && (
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsViewEventOpen(false)}>
-                Close
-              </Button>
-            </DialogFooter>
-          )}
-        </DialogContent>
-      </Dialog>
+      {isEditMode && selectedEvent ? (
+        <Dialog open={isViewEventOpen} onOpenChange={setIsViewEventOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>{selectedEvent.title}</DialogTitle>
+            </DialogHeader>
+            <EditClassForm
+              selectedEvent={selectedEvent}
+              newEvent={newEvent}
+              setNewEvent={setNewEvent}
+              onCancel={() => setIsEditMode(false)}
+              onSave={onEditEvent}
+              students={students}
+            />
+          </DialogContent>
+        </Dialog>
+      ) : (
+        <ViewClassDialog
+          isOpen={isViewEventOpen}
+          setIsOpen={setIsViewEventOpen}
+          selectedEvent={selectedEvent}
+          setIsEditMode={setIsEditMode}
+          activeTab={activeEventTab}
+          setActiveTab={setActiveEventTab}
+          studentMessages={studentMessages}
+          studentUploads={studentUploads}
+          onDuplicateEvent={onDuplicateEvent}
+          onDeleteEvent={onDeleteEvent}
+          onMarkAsRead={onMarkAsRead}
+          onDownloadFile={onDownloadFile}
+          getUnreadMessageCount={getUnreadMessageCount}
+        />
+      )}
       
-      <Dialog open={isAddEventOpen} onOpenChange={setIsAddEventOpen}>
-        <DialogContent className="max-w-xl">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-semibold">Schedule New Class</DialogTitle>
-          </DialogHeader>
-          
-          <NewClassEventForm 
-            newEvent={newEvent}
-            setNewEvent={setNewEvent}
-            students={students}
-          />
-          
-          <DialogFooter className="pt-2">
-            <div className="flex gap-2 justify-end w-full">
-              <Button variant="outline" onClick={() => {
-                setIsAddEventOpen(false);
-                onResetForm();
-              }}>
-                Cancel
-              </Button>
-              <Button onClick={onCreateEvent} className="bg-tutoring-blue hover:bg-tutoring-blue/90">
-                Schedule Class
-              </Button>
-            </div>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <AddClassDialog
+        isOpen={isAddEventOpen}
+        setIsOpen={setIsAddEventOpen}
+        newEvent={newEvent}
+        setNewEvent={setNewEvent}
+        students={students}
+        onCreateEvent={onCreateEvent}
+        onResetForm={onResetForm}
+      />
     </>
   );
 };
