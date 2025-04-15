@@ -1,84 +1,190 @@
 
-import { Student, StudentMessages, StudentNotes } from "./types/studentTypes";
+import { Student } from "@/types/tutorTypes";
 
-// Mock student data with messages and notes
+// Mock student data
 export const mockStudents: Student[] = [
-  { 
-    id: 1, 
-    name: "Alex Johnson", 
-    email: "alex@example.com",
-    subjects: ["Mathematics", "Physics"],
-    progress: "Good progress in algebra, needs help with calculus",
-    lastSession: "2025-04-01",
-    nextSession: "2025-04-08"
+  {
+    id: "1",
+    name: "Alex Johnson",
+    subjects: ["Algebra", "Calculus", "Physics"]
   },
-  { 
-    id: 2, 
-    name: "Jamie Smith", 
-    email: "jamie@example.com",
-    subjects: ["Chemistry", "Biology"],
-    progress: "Excellent understanding of molecular structures",
-    lastSession: "2025-04-03",
-    nextSession: "2025-04-10"
+  {
+    id: "2",
+    name: "Jamie Smith",
+    subjects: ["Chemistry", "Biology"]
   },
-  { 
-    id: 3, 
-    name: "Taylor Brown", 
-    email: "taylor@example.com",
-    subjects: ["English", "History"],
-    progress: "Working on essay structure and analysis",
-    lastSession: "2025-04-06",
-    nextSession: "2025-04-13"
+  {
+    id: "3",
+    name: "Taylor Brown",
+    subjects: ["English Literature", "Essay Writing", "History"]
   }
 ];
 
-// Mock messages between tutor and students
-export const mockMessages: StudentMessages[] = [
+// Mock student messages data
+export interface StudentMessageCollection {
+  studentId: string;
+  messages: {
+    id: string;
+    content: string;
+    timestamp: string;
+    read: boolean;
+  }[];
+}
+
+export const mockMessages: StudentMessageCollection[] = [
   {
-    studentId: 1,
+    studentId: "1",
     messages: [
-      { id: 1, sender: "student", text: "Hi, I'm having trouble with the homework problems 3-5.", timestamp: "2025-04-02T14:30:00" },
-      { id: 2, sender: "tutor", text: "Let's go over them in our next session. Could you send me your work so far?", timestamp: "2025-04-02T15:05:00" },
-      { id: 3, sender: "student", text: "Attached is what I've done so far. I'm stuck on problem 4.", timestamp: "2025-04-02T16:22:00" }
+      {
+        id: "1",
+        content: "Hi, I have a question about the homework problems for calculus.",
+        timestamp: "2025-04-01T14:30:00",
+        read: true
+      },
+      {
+        id: "2",
+        content: "I'm not sure how to approach problem #8 on differentiation.",
+        timestamp: "2025-04-01T14:35:00",
+        read: true
+      },
+      {
+        id: "3",
+        content: "Thanks for the help! I understand it now.",
+        timestamp: "2025-04-02T10:15:00",
+        read: false
+      }
     ]
   },
   {
-    studentId: 2,
+    studentId: "2",
     messages: [
-      { id: 1, sender: "student", text: "When will we cover the periodic table?", timestamp: "2025-04-03T09:15:00" },
-      { id: 2, sender: "tutor", text: "We'll cover that in our next session on Thursday. Please review chapter 4 beforehand.", timestamp: "2025-04-03T10:30:00" }
+      {
+        id: "1",
+        content: "Could we go over the chemical reactions from last class?",
+        timestamp: "2025-04-03T09:45:00",
+        read: true
+      }
     ]
   },
   {
-    studentId: 3,
+    studentId: "3",
     messages: [
-      { id: 1, sender: "student", text: "I've revised my essay based on your feedback. Could you take a look?", timestamp: "2025-04-04T12:00:00" },
-      { id: 2, sender: "tutor", text: "I'll review it tonight and provide feedback by tomorrow morning.", timestamp: "2025-04-04T13:45:00" },
-      { id: 3, sender: "tutor", text: "Your revised essay is much improved! I've added a few more suggestions in the document.", timestamp: "2025-04-05T08:30:00" }
+      {
+        id: "1",
+        content: "I've completed my essay draft. When would be a good time to review it?",
+        timestamp: "2025-04-04T16:20:00",
+        read: false
+      }
     ]
   }
 ];
 
-// Mock notes about students
-export const mockNotes: StudentNotes[] = [
+// Mock student notes data
+export interface StudentNote {
+  id: string;
+  title: string;
+  content: string;
+  date: string;
+}
+
+export interface StudentNoteCollection {
+  studentId: string;
+  notes: StudentNote[];
+}
+
+export const mockNotes: StudentNoteCollection[] = [
   {
-    studentId: 1,
+    studentId: "1",
     notes: [
-      { id: 1, title: "Initial Assessment", content: "Strong foundation in basic algebra but struggles with word problems. Visual learning approach works best.", date: "2025-03-15" },
-      { id: 2, title: "Progress Report - Q1", content: "Significant improvement in problem-solving. Still needs work on applications of derivatives.", date: "2025-04-01" }
+      {
+        id: "1",
+        title: "Algebra Progress",
+        content: "Alex is showing good progress with factoring quadratics. Need to focus more on complex fractions.",
+        date: "2025-03-15"
+      },
+      {
+        id: "2",
+        title: "Calculus Concerns",
+        content: "Struggling with the derivative chain rule. Provided additional practice problems.",
+        date: "2025-03-22"
+      }
     ]
   },
   {
-    studentId: 2,
+    studentId: "2",
     notes: [
-      { id: 1, title: "Learning Style", content: "Prefers hands-on experiments and practical applications. Excellent at memorization but needs help connecting concepts.", date: "2025-03-10" }
+      {
+        id: "1",
+        title: "Chemistry Lab Preparation",
+        content: "Jamie needs to review safety protocols before the next lab session.",
+        date: "2025-03-18"
+      }
     ]
   },
   {
-    studentId: 3,
+    studentId: "3",
     notes: [
-      { id: 1, title: "Writing Assessment", content: "Strong vocabulary but struggling with essay structure and thesis development.", date: "2025-03-20" },
-      { id: 2, title: "Progress - April", content: "Essays showing improved organization. Next focus: strengthening analytical arguments.", date: "2025-04-05" }
+      {
+        id: "1",
+        title: "Essay Structure",
+        content: "Taylor's thesis statements are strong, but needs work on paragraph transitions.",
+        date: "2025-03-25"
+      },
+      {
+        id: "2", 
+        title: "Reading Comprehension",
+        content: "Excellent analysis of symbolic elements in the novel. Continue with this approach.",
+        date: "2025-04-01"
+      }
     ]
+  }
+];
+
+// Mock materials data for the materials tab
+export const mockMaterials = [
+  {
+    id: "1",
+    name: "Algebra Fundamentals",
+    type: "PDF",
+    subject: "Algebra",
+    uploadDate: "2025-03-10",
+    size: "2.4 MB",
+    sharedWith: ["Alex Johnson"]
+  },
+  {
+    id: "2",
+    name: "Chemical Reactions Worksheet",
+    type: "DOCX",
+    subject: "Chemistry",
+    uploadDate: "2025-03-15",
+    size: "850 KB",
+    sharedWith: ["Jamie Smith"]
+  },
+  {
+    id: "3",
+    name: "Essay Writing Guide",
+    type: "PDF",
+    subject: "English",
+    uploadDate: "2025-03-20",
+    size: "1.2 MB",
+    sharedWith: ["Taylor Brown"]
+  },
+  {
+    id: "4",
+    name: "Calculus Practice Problems",
+    type: "PDF",
+    subject: "Calculus",
+    uploadDate: "2025-03-25",
+    size: "1.5 MB",
+    sharedWith: ["Alex Johnson"]
+  },
+  {
+    id: "5",
+    name: "Literary Analysis Framework",
+    type: "DOCX",
+    subject: "English Literature",
+    uploadDate: "2025-04-01",
+    size: "720 KB",
+    sharedWith: ["Taylor Brown"]
   }
 ];

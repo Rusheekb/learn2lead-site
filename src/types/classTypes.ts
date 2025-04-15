@@ -30,7 +30,7 @@ export interface ClassDetailsState {
 } 
 
 export interface ClassItem {
-  id: string; // Changed from number to string
+  id: string;
   title: string;
   subject: string;
   tutorName: string;

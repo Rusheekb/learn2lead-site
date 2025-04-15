@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { ClassEvent, DbClassLog } from "@/types/tutorTypes";
-import { addDays, format, parse } from "date-fns";
+import { ClassEvent } from "@/types/tutorTypes";
+import { format, parse } from "date-fns";
 
 // Helper function to parse numeric string to number
 const parseNumericString = (value: string | null): number => {
@@ -30,15 +30,20 @@ const transformDbRecordToClassEvent = (record: any): ClassEvent => {
   try {
     // Parse the date string (assuming it's in YYYY-MM-DD format)
     let dateObj: Date;
+    let dateString: string = '';
+    
     if (record.Date) {
       try {
         dateObj = parse(record.Date, 'yyyy-MM-dd', new Date());
+        dateString = format(dateObj, 'yyyy-MM-dd');
       } catch (e) {
         console.error('Error parsing date:', record.Date);
         dateObj = new Date(); // Fallback to current date
+        dateString = format(dateObj, 'yyyy-MM-dd');
       }
     } else {
-      dateObj = new Date(); // Fallback to current date if date is undefined
+      dateObj = new Date(); // Fallback to current date
+      dateString = format(dateObj, 'yyyy-MM-dd');
     }
 
     const duration = parseNumericString(record['Time (hrs)']);
@@ -50,7 +55,7 @@ const transformDbRecordToClassEvent = (record: any): ClassEvent => {
       title: record['Class Number'] || '',
       tutorName: record['Tutor Name'] || '',
       studentName: record['Student Name'] || '',
-      date: dateObj,
+      date: dateString,
       startTime: startTime,
       endTime: endTime,
       duration: duration,
@@ -59,12 +64,14 @@ const transformDbRecordToClassEvent = (record: any): ClassEvent => {
       homework: record.HW || '',
       status: 'completed', // Default status for existing logs
       attendance: 'present', // Default attendance for existing logs
-      zoomLink: null,
-      notes: record['Additional Info'] || null,
+      zoomLink: "",
+      notes: record['Additional Info'] || '',
       classCost: parseNumericString(record['Class Cost']),
       tutorCost: parseNumericString(record['Tutor Cost']),
       studentPayment: record['Student Payment'] || 'Pending',
-      tutorPayment: record['Tutor Payment'] || 'Pending'
+      tutorPayment: record['Tutor Payment'] || 'Pending',
+      recurring: false,
+      materials: []
     };
   } catch (error) {
     console.error('Error transforming record:', error, record);
@@ -73,7 +80,7 @@ const transformDbRecordToClassEvent = (record: any): ClassEvent => {
       title: 'Error Loading',
       tutorName: 'Error Loading',
       studentName: 'Error Loading',
-      date: new Date(),
+      date: new Date().toISOString().split('T')[0],
       startTime: '',
       endTime: '',
       duration: 0,
@@ -82,12 +89,14 @@ const transformDbRecordToClassEvent = (record: any): ClassEvent => {
       homework: '',
       status: 'error',
       attendance: 'unknown',
-      zoomLink: null,
+      zoomLink: "",
       notes: 'Error loading class data',
       classCost: 0,
       tutorCost: 0,
       studentPayment: 'Error',
-      tutorPayment: 'Error'
+      tutorPayment: 'Error',
+      recurring: false,
+      materials: []
     };
   }
 };
@@ -113,9 +122,11 @@ export const fetchClassLogs = async (): Promise<ClassEvent[]> => {
     console.log('Transformed class logs:', transformedLogs);
     
     // Sort logs by date (most recent first)
-    return transformedLogs.sort((a, b) => 
-      b.date.getTime() - a.date.getTime()
-    );
+    return transformedLogs.sort((a, b) => {
+      const dateA = new Date(a.date).getTime();
+      const dateB = new Date(b.date).getTime();
+      return dateB - dateA;
+    });
   } catch (error) {
     console.error('Error in fetchClassLogs:', error);
     return [];
@@ -129,8 +140,8 @@ export const createClassLog = async (classEvent: ClassEvent): Promise<ClassEvent
     'Class Number': classEvent.title,
     'Tutor Name': classEvent.tutorName,
     'Student Name': classEvent.studentName,
-    'Date': format(classEvent.date, 'yyyy-MM-dd'),
-    'Day': format(classEvent.date, 'EEEE'),
+    'Date': classEvent.date instanceof Date ? format(classEvent.date, 'yyyy-MM-dd') : classEvent.date,
+    'Day': classEvent.date instanceof Date ? format(classEvent.date, 'EEEE') : format(new Date(classEvent.date), 'EEEE'),
     'Time (CST)': classEvent.startTime,
     'Time (hrs)': classEvent.duration.toString(),
     'Subject': classEvent.subject,
@@ -166,8 +177,8 @@ export const updateClassLog = async (id: string, classEvent: Partial<ClassEvent>
   if (classEvent.tutorName !== undefined) record['Tutor Name'] = classEvent.tutorName;
   if (classEvent.studentName !== undefined) record['Student Name'] = classEvent.studentName;
   if (classEvent.date !== undefined) {
-    record['Date'] = format(classEvent.date, 'yyyy-MM-dd');
-    record['Day'] = format(classEvent.date, 'EEEE');
+    record['Date'] = classEvent.date instanceof Date ? format(classEvent.date, 'yyyy-MM-dd') : classEvent.date;
+    record['Day'] = classEvent.date instanceof Date ? format(classEvent.date, 'EEEE') : format(new Date(classEvent.date), 'EEEE');
   }
   if (classEvent.startTime !== undefined) record['Time (CST)'] = classEvent.startTime;
   if (classEvent.duration !== undefined) record['Time (hrs)'] = classEvent.duration.toString();

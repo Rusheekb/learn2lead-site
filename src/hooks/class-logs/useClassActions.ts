@@ -1,12 +1,11 @@
 
-import { useState } from "react";
-import { toast } from "sonner";
+import { useState, useCallback } from "react";
 import { ClassEvent } from "@/types/tutorTypes";
-import { fetchClassMessages, markMessageAsRead } from "@/services/classMessagesService";
-import { fetchClassUploads } from "@/services/classUploadsService";
 import { StudentMessage, StudentUpload } from "@/components/shared/StudentContent";
+import { fetchClassMessages, fetchClassUploads, markMessageAsRead } from "@/services/classService";
+import { toast } from "sonner";
+import { exportClassLogs } from "@/services/exportService";
 import { ExportFormat } from "@/types/classTypes";
-import { exportToCsv, exportToPdf } from "@/services/exportService";
 
 export const useClassActions = () => {
   const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false);
@@ -15,96 +14,98 @@ export const useClassActions = () => {
   const [studentMessages, setStudentMessages] = useState<StudentMessage[]>([]);
   const [activeDetailsTab, setActiveDetailsTab] = useState<string>("details");
   const [isExporting, setIsExporting] = useState<boolean>(false);
-  
-  // Pagination state
   const [page, setPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
-
-  // Load student uploads and messages for a class
-  const loadClassContent = async (classId: string) => {
+  
+  const loadClassContent = useCallback(async (classId: string) => {
     try {
-      const uploads = await fetchClassUploads(classId);
-      setStudentUploads(uploads);
-      console.log('Fetched uploads:', uploads);
-      
+      // Fetch messages for this class
       const messages = await fetchClassMessages(classId);
       setStudentMessages(messages);
-      console.log('Fetched messages:', messages);
-      
+
+      // Fetch uploads for this class
+      const uploads = await fetchClassUploads(classId);
+      setStudentUploads(uploads);
     } catch (error) {
       console.error("Error loading class content:", error);
+      toast.error("Failed to load class content");
     }
-  };
+  }, []);
 
-  // Handle click on a class row
-  const handleClassClick = (cls: ClassEvent) => {
+  const handleClassClick = useCallback((cls: ClassEvent) => {
     setSelectedClass(cls);
     setIsDetailsOpen(true);
-    loadClassContent(cls.id);
-  };
+    setActiveDetailsTab("details");
+  }, []);
 
-  // Mark message as read
-  const handleMarkMessageRead = async (messageId: string) => {
+  const handleMarkMessageRead = useCallback(async (messageId: string): Promise<void> => {
     try {
       const success = await markMessageAsRead(messageId);
+      
       if (success) {
-        setStudentMessages(studentMessages.map(msg => 
-          msg.id === messageId ? { ...msg, isRead: true } : msg
-        ));
-        console.log('Marked message as read:', messageId);
+        // Update local state
+        setStudentMessages(prevMessages => 
+          prevMessages.map(msg => 
+            msg.id === messageId ? { ...msg, isRead: true } : msg
+          )
+        );
+        toast.success("Message marked as read");
+      } else {
+        toast.error("Failed to mark message as read");
       }
     } catch (error) {
       console.error("Error marking message as read:", error);
+      toast.error("Failed to mark message as read");
     }
-  };
-
-  // Handle downloading a file
-  const handleDownloadFile = (uploadId: string) => {
-    // This is just a stub - in a real app, this would trigger a file download
-    const upload = studentUploads.find(u => u.id === uploadId);
-    if (!upload) {
-      toast.error("File not found");
-      return;
-    }
-    
-    toast.success(`Downloading ${upload.fileName}...`);
-    console.log("Download file:", upload);
-  };
-
-  // Handle exporting classes
-  const handleExport = async (format: ExportFormat) => {
-    if (!selectedClass) return;
-    
-    setIsExporting(true);
+  }, []);
+  
+  const handleDownloadFile = useCallback(async (uploadId: string): Promise<void> => {
     try {
-      const exportFn = format === 'csv' ? exportToCsv : exportToPdf;
-      await exportFn([selectedClass], format);
-      toast.success(`Class exported as ${format.toUpperCase()}`);
+      // In a real implementation, we would actually download the file here
+      const upload = studentUploads.find(u => u.id === uploadId);
+      
+      if (upload) {
+        toast.success(`Downloading ${upload.fileName}`);
+      } else {
+        toast.error("File not found");
+      }
     } catch (error) {
-      toast.error(`Failed to export as ${format.toUpperCase()}`);
+      console.error("Error downloading file:", error);
+      toast.error("Failed to download file");
+    }
+  }, [studentUploads]);
+
+  const getUnreadMessageCount = useCallback((classId: string): number => {
+    return studentMessages.filter(msg => msg.classId === classId && !msg.isRead).length;
+  }, [studentMessages]);
+  
+  const handleExport = useCallback(async (format: ExportFormat) => {
+    try {
+      setIsExporting(true);
+      const classes = selectedClass ? [selectedClass] : []; // Use real class data in a real app
+      const success = await exportClassLogs(classes, format);
+      
+      if (success) {
+        toast.success(`Export as ${format.toUpperCase()} completed successfully`);
+      } else {
+        toast.error(`Failed to export as ${format.toUpperCase()}`);
+      }
+    } catch (error) {
       console.error(`Error exporting as ${format}:`, error);
+      toast.error(`Failed to export as ${format.toUpperCase()}`);
     } finally {
       setIsExporting(false);
     }
-  };
+  }, [selectedClass]);
 
-  // Get unread message count for a class
-  const getUnreadMessageCount = (classId: string): number => {
-    return studentMessages.filter(msg => 
-      msg.classId === classId && !msg.isRead
-    ).length;
-  };
-
-  // Handle page change
-  const handlePageChange = (newPage: number) => {
+  const handlePageChange = useCallback((newPage: number) => {
     setPage(newPage);
-  };
-  
-  // Handle page size change
-  const handlePageSizeChange = (newPageSize: number) => {
-    setPageSize(newPageSize);
-    setPage(1); // Reset to first page when changing page size
-  };
+  }, []);
+
+  const handlePageSizeChange = useCallback((newSize: number) => {
+    setPageSize(newSize);
+    setPage(1); // Reset to first page when page size changes
+  }, []);
 
   return {
     isDetailsOpen,

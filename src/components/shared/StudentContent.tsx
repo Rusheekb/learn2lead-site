@@ -32,12 +32,12 @@ interface StudentContentProps {
   messages: StudentMessage[];
   onSendMessage?: (message: string) => void;
   onFileUpload?: (file: File, note: string) => void;
-  onMarkAsRead?: (messageId: string) => void;
-  onDownload?: (uploadId: string) => void;
+  onMarkAsRead?: (messageId: string) => Promise<void>;
+  onDownload?: (uploadId: string) => Promise<void>;
   showUploadControls?: boolean;
 }
 
-const StudentContent: React.FC<StudentContentProps> = ({
+export const StudentContent: React.FC<StudentContentProps> = ({
   classId,
   uploads,
   messages,
@@ -206,5 +206,3 @@ const StudentContent: React.FC<StudentContentProps> = ({
 };
 
 export default StudentContent;
-
-export { StudentContent };

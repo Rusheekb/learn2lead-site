@@ -29,8 +29,8 @@ interface ClassDialogsProps {
   onDuplicateEvent: (event: ClassEvent) => void;
   onDeleteEvent: (eventId: string, isRecurring?: boolean) => void;
   onResetForm: () => void;
-  onMarkAsRead: (messageId: string) => void;
-  onDownloadFile: (uploadId: string) => void;
+  onMarkAsRead: (messageId: string) => Promise<void>;
+  onDownloadFile: (uploadId: string) => Promise<void>;
   getUnreadMessageCount: (classId: string) => number;
 }
 
@@ -108,13 +108,13 @@ const ClassDialogs: React.FC<ClassDialogsProps> = ({
                   <NewClassEventForm 
                     newEvent={{
                       title: selectedEvent.title,
-                      date: selectedEvent.date,
+                      date: typeof selectedEvent.date === 'string' ? new Date(selectedEvent.date) : selectedEvent.date,
                       startTime: selectedEvent.startTime,
                       endTime: selectedEvent.endTime,
                       studentId: selectedEvent.studentId || '',
                       subject: selectedEvent.subject,
-                      zoomLink: selectedEvent.zoomLink,
-                      notes: selectedEvent.notes,
+                      zoomLink: selectedEvent.zoomLink || '',
+                      notes: selectedEvent.notes || '',
                       recurring: selectedEvent.recurring || false,
                       recurringDays: selectedEvent.recurringDays || []
                     }}

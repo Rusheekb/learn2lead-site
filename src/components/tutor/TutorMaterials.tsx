@@ -6,13 +6,17 @@ import { FileUp } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { mockStudentUploads } from "../shared/mock-data";
+import { StudentUpload as SharedStudentUpload } from "../shared/StudentContent";
 
 // Imported components
 import MaterialsTable from "./MaterialsTable";
 import StudentUploadsTable from "./StudentUploadsTable";
 import UploadMaterialDialog from "./UploadMaterialDialog";
 import ShareMaterialDialog from "./ShareMaterialDialog";
-import { mockMaterials, mockStudents } from "./mock-data";
+import { mockMaterials, mockStudents } from "./mock-data-students";
+
+// Define a local interface that's compatible with both the component's needs and shared interface
+interface StudentUpload extends SharedStudentUpload {}
 
 const TutorMaterials: React.FC = () => {
   const [isUploadOpen, setIsUploadOpen] = useState<boolean>(false);
@@ -28,7 +32,7 @@ const TutorMaterials: React.FC = () => {
   });
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   
-  const [studentUploads] = useState(mockStudentUploads);
+  const [studentUploads] = useState<StudentUpload[]>(mockStudentUploads);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -70,7 +74,7 @@ const TutorMaterials: React.FC = () => {
     setIsShareOpen(true);
   };
 
-  const handleDownloadStudentFile = (uploadId: number) => {
+  const handleDownloadStudentFile = (uploadId: string) => {
     const upload = studentUploads.find(u => u.id === uploadId);
     if (upload) {
       toast.success(`Downloading ${upload.fileName}`);

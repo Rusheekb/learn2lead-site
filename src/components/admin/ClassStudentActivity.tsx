@@ -30,8 +30,7 @@ const ClassStudentActivity: React.FC = () => {
   // Setup realtime subscriptions
   useStudentRealtime(
     currentStudentName,
-    // @ts-ignore - we'll fix the ClassItem compatibility in the hook
-    setClasses,
+    setClasses as React.Dispatch<React.SetStateAction<any[]>>,
     setStudentMessages,
     setStudentUploads
   );
@@ -46,17 +45,17 @@ const ClassStudentActivity: React.FC = () => {
           id: cl.id,
           title: cl.title,
           subject: cl.subject,
-          tutorName: "Ms. Johnson",
+          tutorName: cl.tutorName || "Ms. Johnson",
           date: cl.date instanceof Date ? cl.date.toISOString().split('T')[0] : String(cl.date),
           startTime: cl.startTime,
           endTime: cl.endTime,
-          status: "upcoming",
-          attendance: "pending",
+          status: cl.status || "upcoming",
+          attendance: cl.attendance || "pending",
           zoomLink: cl.zoomLink || "",
           notes: cl.notes || "",
           studentName: cl.studentName,
           subjectId: cl.subject,
-          recurring: false
+          recurring: cl.recurring || false
         }));
         
         setClasses(transformedClasses);
@@ -160,8 +159,8 @@ const ClassStudentActivity: React.FC = () => {
             </div>
           ) : (
             <UpcomingClassesTable 
-              classes={classes} 
-              onViewClass={handleViewClass} 
+              classes={classes as any} 
+              onViewClass={handleViewClass as any} 
             />
           )}
         </CardContent>
@@ -170,7 +169,7 @@ const ClassStudentActivity: React.FC = () => {
       <ClassDetailsDialog
         open={isDetailsOpen}
         onOpenChange={setIsDetailsOpen}
-        selectedClass={selectedClass as any}
+        selectedClass={selectedClass}
         studentUploads={studentUploads}
         studentMessages={studentMessages}
         onFileUpload={handleFileUpload}

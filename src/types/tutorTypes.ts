@@ -21,7 +21,7 @@ export interface ClassEvent {
   tutorPayment: string;
   isCodeLog?: boolean;
   
-  // Add missing properties needed by Tutor components
+  // Add properties needed by Tutor components
   recurring?: boolean;
   recurringDays?: string[];
   studentId?: string;
@@ -49,7 +49,7 @@ export interface DbClassLog {
 }
 
 export interface Student {
-  id: string; // Changed from number to string
+  id: string;
   name: string;
   subjects: string[];
 }

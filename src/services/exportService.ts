@@ -67,3 +67,7 @@ function exportAsPDF(classes: ClassEvent[]): boolean {
   toast.info("PDF export feature is coming soon");
   return false;
 }
+
+// Add these for compatibility with old imports
+export const exportToCsv = exportAsCSV;
+export const exportToPdf = exportAsPDF;

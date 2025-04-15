@@ -70,11 +70,12 @@ export const mapToClassEvent = (record: ClassLogRecord): ClassEvent => {
     subject: record.Subject || 'N/A',
     tutorName: record['Tutor Name'] || 'N/A',
     studentName: record['Student Name'] || 'N/A',
-    date: formattedDate, // Keep as string for compatibility
+    date: formattedDate, 
     startTime,
     endTime,
     status: 'completed',
     attendance: 'present',
+    zoomLink: '', // Provide default empty string
     notes: `Content: ${record.Content || 'N/A'}\nHomework: ${record.HW || 'None'}\nAdditional Info: ${record['Additional Info'] || 'None'}`,
     classCost: parseFloat(record['Class Cost']) || 0,
     tutorCost: parseFloat(record['Tutor Cost']) || 0,
@@ -84,7 +85,9 @@ export const mapToClassEvent = (record: ClassLogRecord): ClassEvent => {
     content: record.Content || '',
     homework: record.HW || '',
     paymentStatus: record['Student Payment']?.toLowerCase() === 'paid' ? 'completed' : 'pending',
-    tutorPaymentStatus: record['Tutor Payment']?.toLowerCase() === 'paid' ? 'completed' : 'pending'
+    tutorPaymentStatus: record['Tutor Payment']?.toLowerCase() === 'paid' ? 'completed' : 'pending',
+    recurring: false,
+    materials: []
   };
 };
 

@@ -2,33 +2,29 @@
 export interface Student {
   id: string;
   name: string;
-  email: string;
   subjects: string[];
-  progress: string;
-  lastSession: string;
-  nextSession: string;
 }
 
 export interface StudentMessage {
-  id: number;
-  sender: "student" | "tutor";
-  text: string;
+  id: string;
+  content: string;
   timestamp: string;
+  read: boolean;
+}
+
+export interface StudentMessageCollection {
+  studentId: string;
+  messages: StudentMessage[];
 }
 
 export interface StudentNote {
-  id: number;
+  id: string;
   title: string;
   content: string;
   date: string;
 }
 
-export interface StudentMessages {
-  studentId: string;
-  messages: StudentMessage[];
-}
-
-export interface StudentNotes {
+export interface StudentNoteCollection {
   studentId: string;
   notes: StudentNote[];
 }

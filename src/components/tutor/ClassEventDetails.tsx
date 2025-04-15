@@ -10,8 +10,8 @@ interface ClassEventDetailsProps {
   selectedEvent: ClassEvent;
   studentMessages: StudentMessage[];
   studentUploads: StudentUpload[];
-  onMarkAsRead: (messageId: string) => void;
-  onDownloadFile: (uploadId: string) => void;
+  onMarkAsRead: (messageId: string) => Promise<void>;
+  onDownloadFile: (uploadId: string) => Promise<void>;
   activeTab: string;
   setActiveTab: (tab: string) => void;
   unreadMessageCount: number;
@@ -63,7 +63,7 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
         <div>
           <h4 className="text-sm font-medium text-gray-500">Zoom Link</h4>
           <a 
-            href={selectedEvent.zoomLink} 
+            href={selectedEvent.zoomLink || "#"} 
             target="_blank"
             rel="noopener noreferrer"
             className="text-tutoring-blue hover:underline flex items-center"

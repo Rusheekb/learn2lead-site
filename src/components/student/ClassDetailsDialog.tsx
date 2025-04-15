@@ -26,6 +26,14 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
   onFileUpload,
   onSendMessage
 }) => {
+  if (!selectedClass) return null;
+  
+  const classSession = {
+    ...selectedClass,
+    subjectId: selectedClass.subjectId || selectedClass.subject,
+    recurring: selectedClass.recurring || false
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl">
@@ -41,7 +49,7 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
             </TabsList>
             
             <TabsContent value="details">
-              <ClassSessionDetail session={selectedClass} />
+              <ClassSessionDetail session={classSession} />
             </TabsContent>
             
             <TabsContent value="materials" className="space-y-4">
