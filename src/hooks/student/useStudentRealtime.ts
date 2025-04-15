@@ -1,166 +1,195 @@
-
 import { useEffect } from "react";
-import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { createRealtimeSubscription } from "@/utils/realtimeSubscription";
-import { dbIdToNumeric } from "@/utils/realtimeUtils";
-import { ClassItem } from "@/types/classTypes";
+import { StudentMessage, StudentUpload } from "@/types/classTypes";
 
-export const useStudentRealtime = (
-  currentStudentName: string,
-  setClasses: React.Dispatch<React.SetStateAction<ClassItem[]>>,
-  setMessages: React.Dispatch<React.SetStateAction<any[]>>,
-  setUploads: React.Dispatch<React.SetStateAction<any[]>>
+const useStudentRealtime = (
+  studentName: string,
+  setClasses: React.Dispatch<React.SetStateAction<any[]>>,
+  setStudentMessages: React.Dispatch<React.SetStateAction<StudentMessage[]>>,
+  setStudentUploads: React.Dispatch<React.SetStateAction<StudentUpload[]>>
 ) => {
-  // Subscribe to real-time updates for classes
+  // Subscribe to real-time updates for class_logs
   useEffect(() => {
-    const classChannel = createRealtimeSubscription({
-      channelName: 'student-class-updates',
+    const channel = createRealtimeSubscription({
+      channelName: 'student-class-changes',
       tableName: 'class_logs',
-      filter: `student_name=eq.${currentStudentName}`,
       onData: (payload) => {
         if (payload.eventType === 'INSERT' && payload.new) {
-          handleClassInserted(payload.new);
+          // Check if this class is for the current student
+          if (payload.new.student_name === studentName) {
+            const newClass = {
+              id: payload.new.id,
+              title: payload.new.title,
+              subject: payload.new.subject,
+              tutorName: payload.new.tutor_name,
+              studentName: payload.new.student_name,
+              date: payload.new.date,
+              startTime: payload.new.start_time.substring(0, 5),
+              endTime: payload.new.end_time.substring(0, 5),
+              status: payload.new.status,
+              attendance: payload.new.attendance,
+              zoomLink: payload.new.zoom_link,
+              notes: payload.new.notes
+            };
+            
+            setClasses(prevClasses => [...prevClasses, newClass]);
+          }
         } else if (payload.eventType === 'UPDATE' && payload.new) {
-          handleClassUpdated(payload.new);
+          // Update class if it's for the current student
+          if (payload.new.student_name === studentName) {
+            const updatedClass = {
+              id: payload.new.id,
+              title: payload.new.title,
+              subject: payload.new.subject,
+              tutorName: payload.new.tutor_name,
+              studentName: payload.new.student_name,
+              date: payload.new.date,
+              startTime: payload.new.start_time.substring(0, 5),
+              endTime: payload.new.end_time.substring(0, 5),
+              status: payload.new.status,
+              attendance: payload.new.attendance,
+              zoomLink: payload.new.zoom_link,
+              notes: payload.new.notes
+            };
+            
+            setClasses(prevClasses => 
+              prevClasses.map(cls => 
+                cls.id === updatedClass.id ? updatedClass : cls
+              )
+            );
+          }
         } else if (payload.eventType === 'DELETE' && payload.old) {
-          handleClassDeleted(payload.old);
-        }
-      }
-    });
-
-    // Subscribe to real-time updates for messages
-    const messageChannel = createRealtimeSubscription({
-      channelName: 'student-message-updates',
-      tableName: 'class_messages',
-      filter: `student_name=eq.${currentStudentName}`,
-      onData: (payload) => {
-        if (payload.eventType === 'INSERT' && payload.new) {
-          handleMessageInserted(payload.new);
-        } else if (payload.eventType === 'UPDATE' && payload.new) {
-          handleMessageUpdated(payload.new);
-        }
-      }
-    });
-
-    // Subscribe to real-time updates for uploads
-    const uploadChannel = createRealtimeSubscription({
-      channelName: 'student-upload-updates',
-      tableName: 'class_uploads',
-      filter: `student_name=eq.${currentStudentName}`,
-      onData: (payload) => {
-        if (payload.eventType === 'INSERT' && payload.new) {
-          handleUploadInserted(payload.new);
+          // Remove class if it was for the current student
+          if (payload.old.student_name === studentName) {
+            setClasses(prevClasses => 
+              prevClasses.filter(cls => cls.id !== payload.old.id)
+            );
+          }
         }
       }
     });
     
+    // Cleanup subscription when component unmounts
     return () => {
-      supabase.removeChannel(classChannel);
-      supabase.removeChannel(messageChannel);
-      supabase.removeChannel(uploadChannel);
+      supabase.removeChannel(channel);
     };
-  }, [currentStudentName]);
+  }, []); // Run once on component mount
 
-  const handleClassInserted = (newClass: any) => {
-    const classItem: ClassItem = {
-      id: newClass.id.toString(),
-      title: newClass.title || `Class with ${newClass.tutor_name}`,
-      subject: newClass.subject,
-      tutorName: newClass.tutor_name,
-      studentName: newClass.student_name,
-      date: newClass.date,
-      startTime: newClass.start_time?.substring(0, 5) || "00:00",
-      endTime: newClass.end_time?.substring(0, 5) || "00:00",
-      status: newClass.status || "upcoming",
-      attendance: newClass.attendance || "pending",
-      zoomLink: newClass.zoom_link || "",
-      notes: newClass.notes || "",
+  // Subscribe to real-time updates for class_messages
+  useEffect(() => {
+    const channel = createRealtimeSubscription({
+      channelName: 'student-message-changes',
+      tableName: 'class_messages',
+      onData: (payload) => {
+        if (payload.eventType === 'INSERT' && payload.new) {
+          // Add new message if it's for the current student
+          if (payload.new.student_name === studentName) {
+            const newMessage: StudentMessage = {
+              id: payload.new.id,
+              classId: payload.new.class_id,
+              studentName: payload.new.student_name,
+              message: payload.new.message,
+              timestamp: payload.new.created_at,
+              isRead: payload.new.is_read || false
+            };
+            
+            setStudentMessages(prevMessages => [...prevMessages, newMessage]);
+          }
+        } else if (payload.eventType === 'UPDATE' && payload.new) {
+          // Update message if it's for the current student
+          if (payload.new.student_name === studentName) {
+            const updatedMessage: StudentMessage = {
+              id: payload.new.id,
+              classId: payload.new.class_id,
+              studentName: payload.new.student_name,
+              message: payload.new.message,
+              timestamp: payload.new.created_at,
+              isRead: payload.new.is_read || false
+            };
+            
+            setStudentMessages(prevMessages => 
+              prevMessages.map(msg => 
+                msg.id === updatedMessage.id ? updatedMessage : msg
+              )
+            );
+          }
+        } else if (payload.eventType === 'DELETE' && payload.old) {
+          // Remove message if it was for the current student
+          if (payload.old.student_name === studentName) {
+            setStudentMessages(prevMessages => 
+              prevMessages.filter(msg => msg.id !== payload.old.id)
+            );
+          }
+        }
+      }
+    });
+    
+    // Cleanup subscription when component unmounts
+    return () => {
+      supabase.removeChannel(channel);
     };
+  }, []); // Run once on component mount
 
-    setClasses(prevClasses => [...prevClasses, classItem]);
-    toast.success(`New class scheduled: ${classItem.title}`);
-  };
-
-  const handleClassUpdated = (updatedClass: any) => {
-    const classItem: ClassItem = {
-      id: updatedClass.id.toString(),
-      title: updatedClass.title || `Class with ${updatedClass.tutor_name}`,
-      subject: updatedClass.subject,
-      tutorName: updatedClass.tutor_name,
-      studentName: updatedClass.student_name,
-      date: updatedClass.date,
-      startTime: updatedClass.start_time?.substring(0, 5) || "00:00",
-      endTime: updatedClass.end_time?.substring(0, 5) || "00:00",
-      status: updatedClass.status || "upcoming",
-      attendance: updatedClass.attendance || "pending",
-      zoomLink: updatedClass.zoom_link || "",
-      notes: updatedClass.notes || "",
+  // Subscribe to real-time updates for class_uploads
+  useEffect(() => {
+    const channel = createRealtimeSubscription({
+      channelName: 'student-upload-changes',
+      tableName: 'class_uploads',
+      onData: (payload) => {
+        if (payload.eventType === 'INSERT' && payload.new) {
+          // Add new upload if it's for the current student
+          if (payload.new.student_name === studentName) {
+            const newUpload: StudentUpload = {
+              id: payload.new.id,
+              classId: payload.new.class_id,
+              studentName: payload.new.student_name,
+              fileName: payload.new.file_name,
+              fileSize: payload.new.file_size,
+              uploadDate: payload.new.upload_date,
+              note: payload.new.note
+            };
+            
+            setStudentUploads(prevUploads => [...prevUploads, newUpload]);
+          }
+        } else if (payload.eventType === 'UPDATE' && payload.new) {
+          // Update upload if it's for the current student
+          if (payload.new.student_name === studentName) {
+            const updatedUpload: StudentUpload = {
+              id: payload.new.id,
+              classId: payload.new.class_id,
+              studentName: payload.new.student_name,
+              fileName: payload.new.file_name,
+              fileSize: payload.new.file_size,
+              uploadDate: payload.new.upload_date,
+              note: payload.new.note
+            };
+            
+            setStudentUploads(prevUploads => 
+              prevUploads.map(upload => 
+                upload.id === updatedUpload.id ? updatedUpload : upload
+              )
+            );
+          }
+        } else if (payload.eventType === 'DELETE' && payload.old) {
+          // Remove upload if it was for the current student
+          if (payload.old.student_name === studentName) {
+            setStudentUploads(prevUploads => 
+              prevUploads.filter(upload => upload.id !== payload.old.id)
+            );
+          }
+        }
+      }
+    });
+    
+    // Cleanup subscription when component unmounts
+    return () => {
+      supabase.removeChannel(channel);
     };
+  }, []); // Run once on component mount
 
-    setClasses(prevClasses => 
-      prevClasses.map(cls => 
-        cls.id === classItem.id ? classItem : cls
-      )
-    );
-    
-    toast.info(`Class updated: ${classItem.title}`);
-  };
-
-  const handleClassDeleted = (deletedClass: any) => {
-    const classId = deletedClass.id.toString();
-    
-    setClasses(prevClasses => 
-      prevClasses.filter(cls => cls.id !== classId)
-    );
-    
-    toast.info(`Class removed: ${deletedClass.title || 'Untitled Class'}`);
-  };
-
-  const handleMessageInserted = (newMessage: any) => {
-    const message = {
-      id: newMessage.id.toString(),
-      classId: newMessage.class_id.toString(),
-      studentName: newMessage.student_name,
-      message: newMessage.message,
-      timestamp: newMessage.timestamp,
-      isRead: newMessage.is_read
-    };
-    
-    setMessages(prevMessages => [...prevMessages, message]);
-    toast.success("New message received!");
-  };
-
-  const handleMessageUpdated = (updatedMessage: any) => {
-    const message = {
-      id: updatedMessage.id.toString(),
-      classId: updatedMessage.class_id.toString(),
-      studentName: updatedMessage.student_name,
-      message: updatedMessage.message,
-      timestamp: updatedMessage.timestamp,
-      isRead: updatedMessage.is_read
-    };
-    
-    setMessages(prevMessages => 
-      prevMessages.map(msg => 
-        msg.id === message.id ? message : msg
-      )
-    );
-  };
-
-  const handleUploadInserted = (newUpload: any) => {
-    const upload = {
-      id: newUpload.id.toString(),
-      classId: newUpload.class_id.toString(),
-      studentName: newUpload.student_name,
-      fileName: newUpload.file_name,
-      fileSize: newUpload.file_size,
-      uploadDate: newUpload.upload_date,
-      note: newUpload.note
-    };
-    
-    setUploads(prevUploads => [...prevUploads, upload]);
-    toast.success("New file uploaded!");
+  return {
+    // Return nothing as this hook just sets up subscriptions
   };
 };
 

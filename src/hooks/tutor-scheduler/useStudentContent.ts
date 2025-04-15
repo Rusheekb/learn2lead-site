@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { ClassEvent } from "@/types/tutorTypes";
-import { StudentMessage, StudentUpload } from "@/components/shared/StudentContent";
+import { StudentMessage, StudentUpload } from "@/types/classTypes";
 import { 
   fetchClassMessages, 
   markMessageAsRead,

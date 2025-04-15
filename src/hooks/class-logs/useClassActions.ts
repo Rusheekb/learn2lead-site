@@ -1,21 +1,32 @@
-
 import { useState } from "react";
 import { toast } from "sonner";
-import { ClassDetailsState, ExportFormat } from "@/types/classTypes";
+import { 
+  deleteClassLog, 
+  updateClassLog  
+} from "@/services/classLogsService";
+import { exportClassLogs } from "@/services/exportService";
+import { ExportFormat } from "@/types/classTypes";
+import { ClassEvent } from "@/types/tutorTypes";
 import { fetchClassMessages, markMessageAsRead } from "@/services/classMessagesService";
 import { fetchClassUploads, downloadClassFile } from "@/services/classUploadsService";
-import { updateClassLog, deleteClassLog } from "@/services/classLogsService";
-import { exportClassLogs } from "@/services/exportService";
-import { ClassEvent } from "@/types/tutorTypes";
+import { StudentMessage, StudentUpload } from "@/types/classTypes";
 
-interface UseClassActionsReturn extends ClassDetailsState {
+export interface UseClassActionsReturn {
+  isDetailsOpen: boolean;
+  setIsDetailsOpen: (open: boolean) => void;
+  selectedClass: any | null;
+  setSelectedClass: (cls: any | null) => void;
+  studentUploads: StudentUpload[];
+  studentMessages: StudentMessage[];
+  activeDetailsTab: string;
+  setActiveDetailsTab: (tab: string) => void;
   isExporting: boolean;
   page: number;
   setPage: (page: number) => void;
   pageSize: number;
-  setPageSize: (pageSize: number) => void;
-  handleClassClick: (cls: ClassEvent) => void;
-  loadClassContent: (classId: string) => void;
+  setPageSize: (size: number) => void;
+  handleClassClick: (cls: any) => void;
+  loadClassContent: (classId: string) => Promise<void>;
   handleMarkMessageRead: (messageId: string) => Promise<void>;
   handleDownloadFile: (uploadId: string) => Promise<void>;
   handleUpdateStatus: (classId: string, status: string) => Promise<boolean>;
@@ -24,20 +35,20 @@ interface UseClassActionsReturn extends ClassDetailsState {
   handleExport: (classes: ClassEvent[], format: ExportFormat) => Promise<boolean>;
   getUnreadMessageCount: (classId: string) => number;
   handlePageChange: (page: number) => void;
-  handlePageSizeChange: (pageSize: number) => void;
+  handlePageSizeChange: (size: number) => void;
 }
 
 const useClassActions = (): UseClassActionsReturn => {
   const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false);
-  const [selectedClass, setSelectedClass] = useState<ClassEvent | null>(null);
+  const [selectedClass, setSelectedClass] = useState<any | null>(null);
+  const [studentUploads, setStudentUploads] = useState<StudentUpload[]>([]);
+  const [studentMessages, setStudentMessages] = useState<StudentMessage[]>([]);
   const [activeDetailsTab, setActiveDetailsTab] = useState<string>("details");
-  const [uploads, setUploads] = useState<any[]>([]);
-  const [messages, setMessages] = useState<any[]>([]);
   const [isExporting, setIsExporting] = useState<boolean>(false);
   const [page, setPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
 
-  const handleClassClick = (cls: ClassEvent) => {
+  const handleClassClick = (cls: any) => {
     setSelectedClass(cls);
     setIsDetailsOpen(true);
     setActiveDetailsTab("details");
@@ -51,8 +62,8 @@ const useClassActions = (): UseClassActionsReturn => {
         fetchClassMessages(classId)
       ]);
       
-      setUploads(uploadsData);
-      setMessages(messagesData);
+      setStudentUploads(uploadsData);
+      setStudentMessages(messagesData);
     } catch (error) {
       console.error("Failed to load class content:", error);
       toast.error("Failed to load class content");
@@ -62,7 +73,7 @@ const useClassActions = (): UseClassActionsReturn => {
   const handleMarkMessageRead = async (messageId: string): Promise<void> => {
     try {
       await markMessageAsRead(messageId);
-      setMessages((prevMessages) =>
+      setStudentMessages((prevMessages) =>
         prevMessages.map((msg) =>
           msg.id === messageId ? { ...msg, isRead: true } : msg
         )
@@ -76,7 +87,7 @@ const useClassActions = (): UseClassActionsReturn => {
 
   const handleDownloadFile = async (uploadId: string): Promise<void> => {
     try {
-      const upload = uploads.find((u) => u.id === uploadId);
+      const upload = studentUploads.find((u) => u.id === uploadId);
       if (!upload) throw new Error("Upload not found");
       
       await downloadClassFile(uploadId);
@@ -138,7 +149,7 @@ const useClassActions = (): UseClassActionsReturn => {
   };
 
   const getUnreadMessageCount = (classId: string): number => {
-    return messages.filter(msg => msg.classId === classId && !msg.isRead).length;
+    return studentMessages.filter(msg => msg.classId === classId && !msg.isRead).length;
   };
 
   const handlePageChange = (newPage: number) => {
@@ -155,10 +166,10 @@ const useClassActions = (): UseClassActionsReturn => {
     setIsDetailsOpen,
     selectedClass,
     setSelectedClass,
+    studentUploads,
+    studentMessages,
     activeDetailsTab,
     setActiveDetailsTab,
-    uploads,
-    messages,
     isExporting,
     page,
     setPage,

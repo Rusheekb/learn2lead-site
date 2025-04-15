@@ -61,7 +61,7 @@ const CalendarWithEvents: React.FC<CalendarWithEventsProps> = ({
         </CardHeader>
         <CardContent>
           {eventsForSelectedDate.length === 0 ? (
-            <EmptyDayPanel onAddClick={onAddEventClick} />
+            <EmptyDayPanel selectedDate={selectedDate} onAddClick={onAddEventClick} />
           ) : (
             <div className="space-y-4">
               {eventsForSelectedDate.map((event) => (
@@ -69,7 +69,7 @@ const CalendarWithEvents: React.FC<CalendarWithEventsProps> = ({
                   key={event.id}
                   event={event}
                   onClick={() => onSelectEvent(event)}
-                  unreadMessagesCount={getUnreadMessageCount(event.id)}
+                  unreadMessageCount={getUnreadMessageCount(event.id)}
                 />
               ))}
             </div>

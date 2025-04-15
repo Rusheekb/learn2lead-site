@@ -1,73 +1,120 @@
 
+import { saveAs } from "file-saver";
+import Papa from "papaparse";
+import { ExportFormat } from "@/types/classTypes";
 import { ClassEvent } from "@/types/tutorTypes";
 import { toast } from "sonner";
-import { ExportFormat } from "@/types/classTypes";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 
-export const exportToCsv = async (classes: ClassEvent[], filename = 'class_logs.csv') => {
+// Helper function to format class data for export
+const prepareClassDataForExport = (classes: ClassEvent[]) => {
+  return classes.map(cls => ({
+    Title: cls.title,
+    Subject: cls.subject,
+    'Tutor Name': cls.tutorName,
+    'Student Name': cls.studentName,
+    Date: cls.date instanceof Date ? cls.date.toISOString().split('T')[0] : cls.date,
+    'Start Time': cls.startTime,
+    'End Time': cls.endTime,
+    Status: cls.status,
+    Attendance: cls.attendance,
+    'Zoom Link': cls.zoomLink,
+    Notes: cls.notes
+  }));
+};
+
+// Export as CSV
+const exportCSV = async (classes: ClassEvent[], filename = 'class-logs'): Promise<boolean> => {
   try {
-    const headers = [
-      "ID", "Title", "Tutor", "Student", "Date", "Start Time", 
-      "End Time", "Subject", "Status", "Attendance", "Notes"
-    ];
+    const data = prepareClassDataForExport(classes);
+    const csv = Papa.unparse(data);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    saveAs(blob, `${filename}.csv`);
+    return true;
+  } catch (error) {
+    console.error("Error exporting CSV:", error);
+    toast.error("Failed to export as CSV");
+    return false;
+  }
+};
+
+// Export as PDF
+const exportPDF = async (classes: ClassEvent[], filename = 'class-logs'): Promise<boolean> => {
+  try {
+    // @ts-ignore - jsPDF types are not perfect with autotable plugin
+    const doc = new jsPDF();
+    const data = prepareClassDataForExport(classes);
     
-    const rows = classes.map(cls => [
-      cls.id,
-      cls.title,
-      cls.tutorName,
-      cls.studentName,
-      cls.date instanceof Date ? cls.date.toISOString().split('T')[0] : cls.date,
-      cls.startTime,
-      cls.endTime,
-      cls.subject,
-      cls.status || "",
-      cls.attendance || "",
-      cls.notes || ""
+    // Convert object to array for jsPDF-AutoTable
+    const tableData = data.map(item => [
+      item.Title,
+      item.Subject,
+      item['Tutor Name'],
+      item['Student Name'],
+      item.Date,
+      item['Start Time'],
+      item['End Time'],
+      item.Status,
+      item.Attendance
     ]);
     
-    const csvContent = 
-      headers.join(',') + '\n' + 
-      rows.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+    const headers = [
+      'Title', 
+      'Subject', 
+      'Tutor', 
+      'Student', 
+      'Date', 
+      'Start', 
+      'End', 
+      'Status', 
+      'Attendance'
+    ];
     
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
+    // @ts-ignore - jsPDF types are not perfect with autotable plugin
+    doc.autoTable({
+      head: [headers],
+      body: tableData,
+      startY: 20,
+      margin: { top: 30 },
+      styles: { overflow: 'linebreak' },
+      headStyles: { fillColor: [41, 128, 185] },
+      didDrawPage: (data) => {
+        // Add title
+        doc.setFontSize(18);
+        doc.text('Class Logs Report', 14, 15);
+        
+        // Add date
+        doc.setFontSize(10);
+        doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 23);
+      }
+    });
     
-    link.setAttribute("href", url);
-    link.setAttribute("download", filename);
-    link.style.visibility = 'hidden';
-    
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    toast.success("CSV export completed");
+    // Save the PDF
+    doc.save(`${filename}.pdf`);
     return true;
   } catch (error) {
-    console.error("CSV export failed:", error);
-    toast.error("Failed to export data");
+    console.error("Error exporting PDF:", error);
+    toast.error("Failed to export as PDF");
     return false;
   }
 };
 
-export const exportToPdf = async (classes: ClassEvent[], filename = 'class_logs.pdf') => {
+// Main export function
+export const exportClassLogs = async (
+  classes: ClassEvent[], 
+  format: ExportFormat = 'csv'
+): Promise<boolean> => {
   try {
-    // This would normally use a library like jsPDF
-    // For now, we'll just show a toast
-    toast.success("PDF export completed");
-    console.log("PDF export would include", classes.length, "classes");
-    return true;
-  } catch (error) {
-    console.error("PDF export failed:", error);
-    toast.error("Failed to export data");
+    if (format === 'csv') {
+      return await exportCSV(classes);
+    } else if (format === 'pdf') {
+      return await exportPDF(classes);
+    }
     return false;
-  }
-};
-
-// Add the exportClassLogs function
-export const exportClassLogs = async (classes: ClassEvent[], format: ExportFormat) => {
-  if (format === 'csv') {
-    return exportToCsv(classes);
-  } else {
-    return exportToPdf(classes);
+  } catch (error) {
+    console.error(`Error exporting as ${format}:`, error);
+    toast.error(`Failed to export as ${format}`);
+    return false;
   }
 };

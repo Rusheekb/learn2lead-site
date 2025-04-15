@@ -1,9 +1,28 @@
 
-import { StudentMessage, StudentUpload } from "../components/shared/StudentContent";
+// Remove the conflicting imports and redefine the types directly
+// import { StudentMessage, StudentUpload } from "../components/shared/StudentContent";
 
-export interface StudentMessage extends StudentMessage {}
+// Use interfaces directly instead of importing conflicting types
+export interface StudentMessage {
+  id: string;
+  classId: string;
+  studentName: string;
+  message: string;
+  timestamp: string;
+  isRead: boolean;
+  sender?: "student" | "tutor";
+  text?: string;
+}
 
-export interface StudentUpload extends StudentUpload {}
+export interface StudentUpload {
+  id: string;
+  classId: string;
+  studentName: string;
+  fileName: string;
+  fileSize: string;
+  uploadDate: string;
+  note: string | null;
+}
 
 export interface ClassTab {
   id: string;
@@ -45,7 +64,7 @@ export interface ClassItem {
 }
 
 export interface ClassSession {
-  id: string;
+  id: string;  // Changed from number to string
   title: string;
   subjectId: string;
   tutorName: string;

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import UpcomingClassesTable from "../student/UpcomingClassesTable";
 import ClassDetailsDialog from "../student/ClassDetailsDialog";
-import { StudentUpload, StudentMessage } from "../shared/StudentContent";
+import { StudentUpload, StudentMessage } from "@/types/classTypes";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchClassLogs } from "@/services/classLogsService";
 import { 
@@ -92,17 +92,15 @@ const ClassStudentActivity: React.FC = () => {
   
   const handleFileUpload = async (classId: string, file: File, note: string) => {
     try {
-      const dbClassId = classId;
-      
       const upload = await uploadClassFile(
-        dbClassId,
+        classId,
         currentStudentName,
         file,
         note
       );
       
       if (upload) {
-        setStudentUploads([...studentUploads, upload]);
+        setStudentUploads(prevUploads => [...prevUploads, upload]);
         toast.success("File uploaded successfully");
       } else {
         toast.error("Failed to upload file");
@@ -115,10 +113,8 @@ const ClassStudentActivity: React.FC = () => {
   
   const handleSendMessage = async (classId: string, messageText: string) => {
     try {
-      const dbClassId = classId;
-      
       const message = await createClassMessage(
-        dbClassId,
+        classId,
         currentStudentName,
         messageText
       );
