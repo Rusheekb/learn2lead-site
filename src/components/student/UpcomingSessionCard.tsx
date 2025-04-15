@@ -4,19 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Video, User, Calendar as CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { formatTime } from "./ClassSessionDetail";
-
-interface ClassSession {
-  id: number;
-  title: string;
-  subjectId: number;
-  tutorName: string;
-  date: Date;
-  startTime: string;
-  endTime: string;
-  zoomLink: string;
-  recurring: boolean;
-  recurringDays?: string[];
-}
+import { ClassSession } from "@/types/classTypes";
 
 interface UpcomingSessionCardProps {
   session: ClassSession;
@@ -39,7 +27,7 @@ const UpcomingSessionCard: React.FC<UpcomingSessionCardProps> = ({ session }) =>
       </div>
       <div className="flex items-center text-sm text-gray-600 mt-2">
         <CalendarIcon className="h-4 w-4 mr-1" />
-        <span>{format(session.date, 'EEE, MMM d')} • {formatTime(session.startTime)}</span>
+        <span>{format(new Date(session.date), 'EEE, MMM d')} • {formatTime(session.startTime)}</span>
       </div>
       <Button 
         variant="link" 

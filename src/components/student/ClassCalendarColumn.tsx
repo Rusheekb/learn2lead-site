@@ -2,19 +2,7 @@
 import React from "react";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
-
-interface ClassSession {
-  id: string;
-  title: string;
-  subjectId: number | string;
-  tutorName: string;
-  date: Date;
-  startTime: string;
-  endTime: string;
-  zoomLink: string;
-  recurring: boolean;
-  recurringDays?: string[];
-}
+import { ClassSession } from "@/types/classTypes";
 
 interface ClassCalendarColumnProps {
   selectedDate: Date;
@@ -35,10 +23,12 @@ const ClassCalendarColumn: React.FC<ClassCalendarColumnProps> = ({
   // Function to get sessions for a specific date
   const getSessionsForDate = (date: Date, sessions: ClassSession[]) => {
     return sessions.filter(session => {
+      const sessionDate = session.date instanceof Date ? session.date : new Date(session.date);
+      
       // Check if it's the exact date
-      if (session.date.getDate() === date.getDate() && 
-          session.date.getMonth() === date.getMonth() && 
-          session.date.getFullYear() === date.getFullYear()) {
+      if (sessionDate.getDate() === date.getDate() && 
+          sessionDate.getMonth() === date.getMonth() && 
+          sessionDate.getFullYear() === date.getFullYear()) {
         return true;
       }
       

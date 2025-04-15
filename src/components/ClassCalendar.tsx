@@ -6,26 +6,14 @@ import ClassCalendarColumn from "./student/ClassCalendarColumn";
 import ClassSessionDetail from "./student/ClassSessionDetail";
 import UpcomingSessionCard from "./student/UpcomingSessionCard";
 import EmptySessionsState from "./student/EmptySessionsState";
+import { ClassSession } from "@/types/classTypes";
 
-// Use a consistent ClassSession interface
-interface ClassSession {
-  id: string;
-  title: string;
-  subjectId: string | number;
-  tutorName: string;
-  date: Date;
-  startTime: string;
-  endTime: string;
-  zoomLink: string;
-  recurring: boolean;
-  recurringDays?: string[];
-}
-
+// Mock sessions using the ClassSession type from types/classTypes.ts
 const mockSessions: ClassSession[] = [
   {
     id: "1",
     title: "Algebra Fundamentals",
-    subjectId: 1,
+    subjectId: "1",
     tutorName: "Ms. Johnson",
     date: new Date(2025, 3, 9), // April 9, 2025
     startTime: "16:00",
@@ -37,7 +25,7 @@ const mockSessions: ClassSession[] = [
   {
     id: "2",
     title: "Chemistry Lab Prep",
-    subjectId: 2,
+    subjectId: "2",
     tutorName: "Mr. Chen",
     date: new Date(2025, 3, 11), // April 11, 2025
     startTime: "15:30",
@@ -49,7 +37,7 @@ const mockSessions: ClassSession[] = [
   {
     id: "3",
     title: "Essay Writing Workshop",
-    subjectId: 3,
+    subjectId: "3",
     tutorName: "Dr. Martinez",
     date: new Date(2025, 3, 10), // April 10, 2025
     startTime: "17:00",
@@ -63,9 +51,11 @@ const mockSessions: ClassSession[] = [
 const getSessionsForDate = (date: Date, sessions: ClassSession[]) => {
   return sessions.filter(session => {
     // Check if it's the exact date
-    if (session.date.getDate() === date.getDate() && 
-        session.date.getMonth() === date.getMonth() && 
-        session.date.getFullYear() === date.getFullYear()) {
+    const sessionDate = session.date instanceof Date ? session.date : new Date(session.date);
+    
+    if (sessionDate.getDate() === date.getDate() && 
+        sessionDate.getMonth() === date.getMonth() && 
+        sessionDate.getFullYear() === date.getFullYear()) {
       return true;
     }
     
@@ -85,10 +75,16 @@ const getUpcomingSessions = (sessions: ClassSession[], daysToShow = 7) => {
   const futureDate = addDays(today, daysToShow);
   
   return sessions.filter(session => {
-    const sessionDate = startOfDay(session.date);
+    const sessionDate = session.date instanceof Date ? 
+      startOfDay(session.date) : startOfDay(new Date(session.date));
+    
     return (isToday(sessionDate) || isBefore(today, sessionDate)) && 
            isBefore(sessionDate, futureDate);
-  }).sort((a, b) => a.date.getTime() - b.date.getTime());
+  }).sort((a, b) => {
+    const dateA = a.date instanceof Date ? a.date.getTime() : new Date(a.date).getTime();
+    const dateB = b.date instanceof Date ? b.date.getTime() : new Date(b.date).getTime();
+    return dateA - dateB;
+  });
 };
 
 // Main Calendar Component
