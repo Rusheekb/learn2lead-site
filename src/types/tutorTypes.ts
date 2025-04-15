@@ -5,13 +5,20 @@ export interface ClassEvent {
   studentName: string;
   date: Date;
   startTime: string;
+  endTime: string;
   duration: number;
   subject: string;
-  content?: string;
-  homework?: string;
-  classCost?: number;
-  tutorCost?: number;
-  notes?: string;
+  content: string;
+  homework: string;
+  status: string;
+  attendance: string;
+  zoomLink: string | null;
+  notes: string | null;
+  classCost: number;
+  tutorCost: number;
+  studentPayment: string;
+  tutorPayment: string;
+  isCodeLog?: boolean;
 }
 
 export interface DbClassLog {

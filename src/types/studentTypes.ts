@@ -15,6 +15,30 @@ export interface Student {
   paymentStatus: PaymentStatus;
 }
 
+export interface StudentMessage {
+  id: number;
+  sender: "student" | "tutor";
+  text: string;
+  timestamp: string;
+}
+
+export interface StudentNote {
+  id: number;
+  title: string;
+  content: string;
+  date: string;
+}
+
+export interface StudentMessages {
+  studentId: number;
+  messages: StudentMessage[];
+}
+
+export interface StudentNotes {
+  studentId: number;
+  notes: StudentNote[];
+}
+
 export function isValidStudentStatus(status: string): status is StudentStatus {
   return ["active", "inactive", "pending"].includes(status);
 }

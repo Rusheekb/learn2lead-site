@@ -41,6 +41,7 @@ const ClassLogs: React.FC = () => {
     setActiveDetailsTab,
     isExporting,
     isLoading,
+    error,
     classes,
     filteredClasses,
     paginatedClasses,
@@ -64,7 +65,7 @@ const ClassLogs: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-      <h2 className="text-2xl font-bold">Class Logs</h2>
+        <h2 className="text-2xl font-bold">Class Logs</h2>
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
@@ -75,8 +76,8 @@ const ClassLogs: React.FC = () => {
             <Upload className="h-4 w-4" />
             Import CSV
           </Button>
-                <Button
-                  variant="outline"
+          <Button
+            variant="outline"
             size="sm"
             onClick={handleRefreshData}
             className="flex items-center gap-2"
@@ -87,10 +88,10 @@ const ClassLogs: React.FC = () => {
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="flex items-center gap-2" disabled={isLoading}>
+              <Button variant="outline" size="sm" className="flex items-center gap-2" disabled={isLoading || Boolean(error)}>
                 <FileDown className="h-4 w-4" />
                 Export
-                </Button>
+              </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuItem onClick={() => handleExport('csv')}>
@@ -104,7 +105,7 @@ const ClassLogs: React.FC = () => {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-          </div>
+      </div>
           
       <ClassFilters
         searchTerm={searchTerm}
@@ -124,8 +125,9 @@ const ClassLogs: React.FC = () => {
         filteredClasses={filteredClasses}
         paginatedClasses={paginatedClasses}
         isLoading={isLoading}
+        error={error}
         handleClassClick={handleClassClick}
-        clearFilters={clearFilters}
+        clearFilters={handleRefreshData}
         getUnreadMessageCount={getUnreadMessageCount}
         formatTime={formatTime}
         page={page}

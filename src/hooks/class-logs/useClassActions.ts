@@ -1,60 +1,102 @@
-
 import { useState } from "react";
 import { toast } from "sonner";
 import { 
   fetchClassMessages, 
   markMessageAsRead 
 } from "@/services/classMessagesService";
-import { fetchClassUploads, getFileDownloadURL } from "@/services/classUploadsService";
+import { fetchClassUploads } from "@/services/classUploadsService";
 import { numericIdToDbId } from "@/utils/realtimeUtils";
+import { 
+  StudentMessage, 
+  StudentUpload,
+  ClassDetailsState, 
+  PaginationState,
+  ExportFormat 
+} from "@/types/classTypes";
+import { ClassEvent } from "@/types/tutorTypes";
+import { StudentMessage as StudentMessageComponent, StudentUpload as StudentUploadComponent } from "@/components/shared/StudentContent";
 
 export const useClassActions = () => {
-  const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false);
-  const [selectedClass, setSelectedClass] = useState<any>(null);
-  const [studentUploads, setStudentUploads] = useState<any[]>([]);
-  const [studentMessages, setStudentMessages] = useState<any[]>([]);
-  const [activeDetailsTab, setActiveDetailsTab] = useState<string>("details");
+  // Class details state
+  const [detailsState, setDetailsState] = useState<ClassDetailsState>({
+    isOpen: false,
+    selectedClass: null,
+    activeTab: "details",
+    uploads: [] as StudentUpload[],
+    messages: [] as StudentMessage[]
+  });
+
+  // Export state
   const [isExporting, setIsExporting] = useState(false);
+
+  // Pagination state
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  const handleClassClick = (cls: any) => {
-    setSelectedClass(cls);
-    setIsDetailsOpen(true);
+  // Class details actions
+  const handleClassClick = (cls: ClassEvent) => {
+    setDetailsState(prev => ({
+      ...prev,
+      isOpen: true,
+      selectedClass: cls
+    }));
   };
 
   const loadClassContent = async (classId: number) => {
     if (!classId) return;
     
     try {
-      // Convert numeric ID to UUID-like string for database query
       const dbClassId = numericIdToDbId(classId);
       
-      // Load messages
-      const messages = await fetchClassMessages(dbClassId);
-      setStudentMessages(messages);
-      
-      // Load uploads
-      const uploads = await fetchClassUploads(dbClassId);
-      setStudentUploads(uploads);
+      // Load messages and uploads in parallel
+      const [messages, uploads] = await Promise.all([
+        fetchClassMessages(dbClassId),
+        fetchClassUploads(dbClassId)
+      ]);
+
+      // Transform messages and uploads to match our types
+      const transformedMessages: StudentMessage[] = messages.map(msg => ({
+        id: Number(msg.id),
+        classId: Number(msg.classId),
+        content: msg.message,
+        isRead: msg.isRead,
+        timestamp: msg.timestamp,
+        studentId: 0 // This needs to be updated with actual student ID
+      }));
+
+      const transformedUploads: StudentUpload[] = uploads.map(upload => ({
+        id: upload.id,
+        classId: upload.classId,
+        studentName: upload.studentName || '',
+        fileName: upload.fileName,
+        fileSize: upload.fileSize || '0 KB',
+        uploadDate: upload.uploadDate,
+        note: upload.note || null
+      }));
+
+      setDetailsState(prev => ({
+        ...prev,
+        messages: transformedMessages,
+        uploads: transformedUploads
+      }));
     } catch (error) {
       console.error("Error loading class content:", error);
+      toast.error("Failed to load class content");
     }
   };
 
   const handleMarkMessageRead = async (messageId: number) => {
     try {
-      // Convert numeric ID to UUID-like string for database query
       const dbMessageId = numericIdToDbId(messageId);
-      
       const success = await markMessageAsRead(dbMessageId);
       
       if (success) {
-        setStudentMessages(messages => 
-          messages.map(message => 
+        setDetailsState(prev => ({
+          ...prev,
+          messages: prev.messages.map(message => 
             message.id === messageId ? { ...message, isRead: true } : message
           )
-        );
+        }));
         toast.success("Message marked as read");
       }
     } catch (error) {
@@ -63,11 +105,11 @@ export const useClassActions = () => {
     }
   };
 
+  // File actions
   const handleDownloadFile = async (uploadId: number) => {
     try {
-      const upload = studentUploads.find(u => u.id === uploadId);
+      const upload = detailsState.uploads.find(u => u.id === uploadId);
       if (upload) {
-        // In a real implementation, we would get the file path and create a download URL
         toast.success(`Downloading ${upload.fileName}`);
       }
     } catch (error) {
@@ -76,12 +118,11 @@ export const useClassActions = () => {
     }
   };
 
-  const handleExport = async (format: 'csv' | 'pdf') => {
+  // Export actions
+  const handleExport = async (format: ExportFormat) => {
     setIsExporting(true);
     try {
-      // Simulate export delay
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
       const fileName = `class-logs-${format === 'csv' ? 'spreadsheet.csv' : 'report.pdf'}`;
       toast.success(`Exported ${fileName} successfully`);
     } catch (error) {
@@ -91,36 +132,42 @@ export const useClassActions = () => {
     }
   };
 
-  const getUnreadMessageCount = (classId: number) => {
-    return studentMessages.filter(m => m.classId === classId && !m.isRead).length;
+  // Utility functions
+  const getUnreadMessageCount = (classId: number): number => {
+    return detailsState.messages.filter(m => m.classId === classId && !m.isRead).length;
   };
 
+  // Pagination actions
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
   };
 
   const handlePageSizeChange = (newPageSize: number) => {
+    setPage(1);
     setPageSize(newPageSize);
-    setPage(1); // Reset to first page when changing page size
   };
 
   return {
-    // State
-    isDetailsOpen,
-    setIsDetailsOpen,
-    selectedClass,
-    setSelectedClass,
-    studentUploads,
-    studentMessages,
-    activeDetailsTab,
-    setActiveDetailsTab,
+    // Details state
+    isDetailsOpen: detailsState.isOpen,
+    setIsDetailsOpen: (isOpen: boolean) => setDetailsState(prev => ({ ...prev, isOpen })),
+    selectedClass: detailsState.selectedClass,
+    setSelectedClass: (cls: ClassEvent | null) => setDetailsState(prev => ({ ...prev, selectedClass: cls })),
+    studentUploads: detailsState.uploads,
+    studentMessages: detailsState.messages,
+    activeDetailsTab: detailsState.activeTab,
+    setActiveDetailsTab: (tab: string) => setDetailsState(prev => ({ ...prev, activeTab: tab })),
+    
+    // Export state
     isExporting,
+    
+    // Pagination state
     page,
     setPage,
     pageSize,
     setPageSize,
     
-    // Methods
+    // Actions
     handleClassClick,
     loadClassContent,
     handleMarkMessageRead,

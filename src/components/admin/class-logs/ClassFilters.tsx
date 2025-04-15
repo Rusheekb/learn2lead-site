@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,6 +7,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon, Search } from "lucide-react";
 import { format } from "date-fns";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 interface ClassFiltersProps {
   searchTerm: string;
@@ -20,6 +21,8 @@ interface ClassFiltersProps {
   setDateFilter: (date: Date | undefined) => void;
   clearFilters: () => void;
   allSubjects: string[];
+  showCodeLogs: boolean;
+  setShowCodeLogs: (show: boolean) => void;
 }
 
 const ClassFilters: React.FC<ClassFiltersProps> = ({
@@ -32,21 +35,33 @@ const ClassFilters: React.FC<ClassFiltersProps> = ({
   dateFilter,
   setDateFilter,
   clearFilters,
-  allSubjects
+  allSubjects,
+  showCodeLogs,
+  setShowCodeLogs
 }) => {
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Filter Classes</CardTitle>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={clearFilters}
-            className="text-sm text-muted-foreground"
-          >
-            Clear Filters
-          </Button>
+          <div className="flex items-center gap-6">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="show-code-logs"
+                checked={showCodeLogs}
+                onCheckedChange={setShowCodeLogs}
+              />
+              <Label htmlFor="show-code-logs">Show Code Logs</Label>
+            </div>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={clearFilters}
+              className="text-sm text-muted-foreground"
+            >
+              Clear Filters
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -77,8 +92,8 @@ const ClassFilters: React.FC<ClassFiltersProps> = ({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Subjects</SelectItem>
-              {allSubjects.map(subject => (
-                <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+              {allSubjects.map((subject, index) => (
+                <SelectItem key={`subject-${subject}-${index}`} value={subject}>{subject}</SelectItem>
               ))}
             </SelectContent>
           </Select>

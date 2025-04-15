@@ -7,26 +7,6 @@ type DbClassLog = Database['public']['Tables']['class_logs']['Row'];
 type InsertDbClassLog = Database['public']['Tables']['class_logs']['Insert'];
 type UpdateDbClassLog = Database['public']['Tables']['class_logs']['Update'];
 
-export interface TransformedClassLog {
-  id: string;
-  classNumber: string;
-  tutorName: string;
-  studentName: string;
-  date: Date;
-  day: string;
-  startTime: string;
-  duration: number;
-  subject: string;
-  content: string;
-  homework: string;
-  classId: string;
-  classCost: number;
-  tutorCost: number;
-  studentPayment: string;
-  tutorPayment: string;
-  additionalInfo: string | null;
-}
-
 // Helper function to parse numeric string to number
 const parseNumericString = (value: string | null): number => {
   if (!value) return 0;
@@ -34,86 +14,154 @@ const parseNumericString = (value: string | null): number => {
   return isNaN(parsed) ? 0 : parsed;
 };
 
+// Helper function to calculate end time
+const calculateEndTime = (startTime: string, durationHrs: number): string => {
+  if (!startTime || !durationHrs) return '';
+  try {
+    const [hours, minutes] = startTime.split(':').map(Number);
+    const totalMinutes = hours * 60 + minutes + durationHrs * 60;
+    const endHours = Math.floor(totalMinutes / 60) % 24;
+    const endMinutes = totalMinutes % 60;
+    return `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
+  } catch (error) {
+    console.error('Error calculating end time:', error);
+    return '';
+  }
+};
+
+// Transform database record to ClassEvent
+const transformDbRecordToClassEvent = (record: DbClassLog, isCodeLog: boolean = false): ClassEvent => {
+  try {
+    // Parse the date string (assuming it's in YYYY-MM-DD format)
+    let dateObj: Date;
+    if (record.date) {
+      try {
+        dateObj = parse(record.date, 'yyyy-MM-dd', new Date());
+      } catch (e) {
+        console.error('Error parsing date:', record.date);
+        dateObj = new Date(); // Fallback to current date
+      }
+    } else {
+      dateObj = new Date(); // Fallback to current date if date is undefined
+    }
+
+    const duration = parseNumericString(record.time_hrs);
+    const startTime = record.time_cst || '';
+    const endTime = calculateEndTime(startTime, duration);
+
+    return {
+      id: record.id,
+      title: record.class_number,
+      tutorName: record.tutor_name,
+      studentName: record.student_name,
+      date: dateObj,
+      startTime: startTime,
+      endTime: endTime,
+      duration: duration,
+      subject: isCodeLog ? 'Coding' : record.subject,
+      content: record.content || '',
+      homework: record.hw || '',
+      status: 'pending',
+      attendance: 'pending',
+      zoomLink: null,
+      notes: record.additional_info,
+      classCost: parseNumericString(record.class_cost),
+      tutorCost: parseNumericString(record.tutor_cost),
+      studentPayment: record.student_payment || 'Pending',
+      tutorPayment: record.tutor_payment || 'Pending',
+      isCodeLog
+    };
+  } catch (error) {
+    console.error(`Error transforming ${isCodeLog ? 'code' : 'class'} log record:`, error, record);
+    return {
+      id: record.id || 'unknown',
+      title: 'Error Loading',
+      tutorName: 'Error Loading',
+      studentName: 'Error Loading',
+      date: new Date(),
+      startTime: '',
+      endTime: '',
+      duration: 0,
+      subject: isCodeLog ? 'Coding' : 'Error Loading',
+      content: 'Error loading content',
+      homework: '',
+      status: 'error',
+      attendance: 'unknown',
+      zoomLink: null,
+      notes: 'Error loading class data',
+      classCost: 0,
+      tutorCost: 0,
+      studentPayment: 'Error',
+      tutorPayment: 'Error',
+      isCodeLog
+    };
+  }
+};
+
 // Fetch all class logs
-export const fetchClassLogs = async (): Promise<TransformedClassLog[]> => {
+export const fetchClassLogs = async (): Promise<ClassEvent[]> => {
   console.log('Fetching class logs from Supabase...');
   try {
-    const { data: classLogs, error } = await supabase
-      .from('class_logs')
-      .select('*');
+    // Fetch both regular class logs and code logs
+    const [classLogsResult, codeLogsResult] = await Promise.all([
+      supabase.from('class_logs').select('*'),
+      supabase.from('code_logs').select('*')
+    ]);
 
-    if (error) {
-      console.error('Error fetching class logs:', error);
-      return [];
-    }
-
-    if (!classLogs || classLogs.length === 0) {
-      console.warn('No class logs found');
-      return [];
-    }
-
-    console.log('Raw class logs:', classLogs);
-
-    return classLogs.map((record: DbClassLog): TransformedClassLog => {
-      try {
-        // Parse the date string (assuming it's in YYYY-MM-DD format)
-        let dateObj: Date;
-        if (record.date) {
-          try {
-            dateObj = parse(record.date, 'yyyy-MM-dd', new Date());
-          } catch (e) {
-            console.error('Error parsing date:', record.date);
-            dateObj = new Date(); // Fallback to current date
-          }
-        } else {
-          dateObj = new Date(); // Fallback to current date if date is undefined
-        }
-
-        // Parse duration from time string
-        const duration = parseNumericString(record.time_hrs);
-
-        return {
-          id: record.id,
-          classNumber: record.class_number,
-          tutorName: record.tutor_name,
-          studentName: record.student_name,
-          date: dateObj,
-          day: record.day || format(dateObj, 'EEEE'),
-          startTime: record.time_cst,
-          duration: duration,
-          subject: record.subject,
-          content: record.content || '',
-          homework: record.hw || '',
-          classId: record.class_id,
-          classCost: parseNumericString(record.class_cost),
-          tutorCost: parseNumericString(record.tutor_cost),
-          studentPayment: record.student_payment || 'Pending',
-          tutorPayment: record.tutor_payment || 'Pending',
-          additionalInfo: record.additional_info
-        };
-      } catch (error) {
-        console.error(`Error transforming class log record:`, error, record);
-        return {
-          id: record.id || 'unknown',
-          classNumber: 'Error',
-          tutorName: 'Error Loading',
-          studentName: 'Error Loading',
-          date: new Date(),
-          day: 'Unknown',
-          startTime: 'Error',
-          duration: 0,
-          subject: 'Error Loading',
-          content: 'Error loading content',
-          homework: '',
-          classId: record.id || 'unknown',
-          classCost: 0,
-          tutorCost: 0,
-          studentPayment: 'Error',
-          tutorPayment: 'Error',
-          additionalInfo: 'Error loading class data'
-        };
-      }
+    // Log the raw results including any errors
+    console.log('Class logs result:', {
+      data: classLogsResult.data,
+      error: classLogsResult.error,
+      status: classLogsResult.status,
+      statusText: classLogsResult.statusText
     });
+    
+    console.log('Code logs result:', {
+      data: codeLogsResult.data,
+      error: codeLogsResult.error,
+      status: codeLogsResult.status,
+      statusText: codeLogsResult.statusText
+    });
+
+    if (classLogsResult.error) {
+      console.error('Error fetching class logs:', classLogsResult.error);
+      return [];
+    }
+
+    if (codeLogsResult.error) {
+      console.error('Error fetching code logs:', codeLogsResult.error);
+      return [];
+    }
+
+    const classLogs = classLogsResult.data || [];
+    const codeLogs = codeLogsResult.data || [];
+
+    // Log the raw data
+    console.log('Raw class logs:', classLogs);
+    console.log('Raw code logs:', codeLogs);
+
+    // Transform and combine both types of logs
+    const transformedClassLogs = classLogs.map(record => {
+      console.log('Transforming class log:', record);
+      return transformDbRecordToClassEvent(record, false);
+    });
+    
+    const transformedCodeLogs = codeLogs.map(record => {
+      console.log('Transforming code log:', record);
+      return transformDbRecordToClassEvent(record, true);
+    });
+
+    // Log the transformed data
+    console.log('Transformed class logs:', transformedClassLogs);
+    console.log('Transformed code logs:', transformedCodeLogs);
+
+    // Combine and sort all logs by date
+    const allLogs = [...transformedClassLogs, ...transformedCodeLogs].sort((a, b) => 
+      b.date.getTime() - a.date.getTime()
+    );
+
+    console.log('Final combined and sorted logs:', allLogs);
+    return allLogs;
   } catch (error) {
     console.error('Unexpected error in fetchClassLogs:', error);
     return [];
@@ -131,93 +179,63 @@ export const createClassLog = async (classEvent: ClassEvent): Promise<ClassEvent
     time_cst: classEvent.startTime,
     time_hrs: classEvent.duration.toString(),
     subject: classEvent.subject,
-    content: classEvent.content || null,
-    hw: classEvent.homework || null,
+    content: classEvent.content,
+    hw: classEvent.homework,
     class_id: classEvent.id,
-    class_cost: classEvent.classCost?.toString() || null,
-    tutor_cost: classEvent.tutorCost?.toString() || null,
-    student_payment: 'Pending',
-    tutor_payment: 'Pending',
-    additional_info: classEvent.notes || null
+    class_cost: classEvent.classCost?.toString(),
+    tutor_cost: classEvent.tutorCost?.toString(),
+    student_payment: classEvent.studentPayment,
+    tutor_payment: classEvent.tutorPayment,
+    additional_info: classEvent.notes
   };
-  
+
   const { data, error } = await supabase
     .from('class_logs')
     .insert(record)
     .select()
     .single();
-  
+
   if (error) {
     console.error("Error creating class log:", error);
     return null;
   }
-  
-  const dbLog = data as DbClassLog;
-  return dbLog ? {
-    id: dbLog.class_id,
-    title: dbLog.class_number,
-    tutorName: dbLog.tutor_name,
-    studentName: dbLog.student_name,
-    date: parse(dbLog.date, 'yyyy-MM-dd', new Date()),
-    startTime: dbLog.time_cst,
-    duration: parseNumericString(dbLog.time_hrs),
-    subject: dbLog.subject,
-    content: dbLog.content || undefined,
-    homework: dbLog.hw || undefined,
-    classCost: parseNumericString(dbLog.class_cost),
-    tutorCost: parseNumericString(dbLog.tutor_cost),
-    notes: dbLog.additional_info || undefined
-  } : null;
+
+  return transformDbRecordToClassEvent(data, classEvent.isCodeLog);
 };
 
-// Update an existing class log
+// Update a class log
 export const updateClassLog = async (id: string, classEvent: Partial<ClassEvent>): Promise<ClassEvent | null> => {
-  const updateData: UpdateDbClassLog = {};
-  
-  if (classEvent.title) updateData.class_number = classEvent.title;
-  if (classEvent.tutorName) updateData.tutor_name = classEvent.tutorName;
-  if (classEvent.studentName) updateData.student_name = classEvent.studentName;
-  if (classEvent.date) {
-    updateData.date = format(classEvent.date, 'yyyy-MM-dd');
-    updateData.day = format(classEvent.date, 'EEEE');
-  }
-  if (classEvent.startTime) updateData.time_cst = classEvent.startTime;
-  if (classEvent.duration) updateData.time_hrs = classEvent.duration.toString();
-  if (classEvent.subject) updateData.subject = classEvent.subject;
-  if (classEvent.content !== undefined) updateData.content = classEvent.content || null;
-  if (classEvent.homework !== undefined) updateData.hw = classEvent.homework || null;
-  if (classEvent.classCost !== undefined) updateData.class_cost = classEvent.classCost?.toString() || null;
-  if (classEvent.tutorCost !== undefined) updateData.tutor_cost = classEvent.tutorCost?.toString() || null;
-  if (classEvent.notes !== undefined) updateData.additional_info = classEvent.notes || null;
-  
+  const record: UpdateDbClassLog = {
+    class_number: classEvent.title,
+    tutor_name: classEvent.tutorName,
+    student_name: classEvent.studentName,
+    date: classEvent.date ? format(classEvent.date, 'yyyy-MM-dd') : undefined,
+    day: classEvent.date ? format(classEvent.date, 'EEEE') : undefined,
+    time_cst: classEvent.startTime,
+    time_hrs: classEvent.duration?.toString(),
+    subject: classEvent.subject,
+    content: classEvent.content || null,
+    hw: classEvent.homework || null,
+    class_cost: classEvent.classCost?.toString(),
+    tutor_cost: classEvent.tutorCost?.toString(),
+    student_payment: classEvent.studentPayment,
+    tutor_payment: classEvent.tutorPayment,
+    additional_info: classEvent.notes
+  };
+
   const { data, error } = await supabase
     .from('class_logs')
-    .update(updateData)
+    .update(record)
     .eq('id', id)
     .select()
     .single();
-  
+
   if (error) {
     console.error("Error updating class log:", error);
     return null;
   }
-  
-  const dbLog = data as DbClassLog;
-  return dbLog ? {
-    id: dbLog.class_id,
-    title: dbLog.class_number,
-    tutorName: dbLog.tutor_name,
-    studentName: dbLog.student_name,
-    date: parse(dbLog.date, 'yyyy-MM-dd', new Date()),
-    startTime: dbLog.time_cst,
-    duration: parseNumericString(dbLog.time_hrs),
-    subject: dbLog.subject,
-    content: dbLog.content || undefined,
-    homework: dbLog.hw || undefined,
-    classCost: parseNumericString(dbLog.class_cost),
-    tutorCost: parseNumericString(dbLog.tutor_cost),
-    notes: dbLog.additional_info || undefined
-  } : null;
+
+  return transformDbRecordToClassEvent(data, classEvent.isCodeLog);
 };
 
 // Delete a class log

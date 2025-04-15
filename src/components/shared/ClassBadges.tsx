@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -13,8 +12,10 @@ export interface AttendanceBadgeProps {
   className?: string;
 }
 
-export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className }) => {
+export const StatusBadge: React.FC<StatusBadgeProps> = ({ status = 'unknown', className }) => {
   const getStatusColor = (status: string) => {
+    if (!status) return "bg-gray-100 text-gray-800";
+    
     switch (status.toLowerCase()) {
       case 'completed':
         return "bg-green-100 text-green-800";
@@ -36,7 +37,7 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({ status, className }) =
                    getStatusColor(status), 
                    className)}
     >
-      {status.charAt(0).toUpperCase() + status.slice(1)}
+      {status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Unknown'}
     </Badge>
   );
 };

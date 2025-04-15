@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import useClassFilters from "./class-logs/useClassFilters";
 import useClassActions from "./class-logs/useClassActions";
@@ -11,6 +10,7 @@ export const useClassLogs = () => {
     statusFilter, setStatusFilter,
     subjectFilter, setSubjectFilter,
     dateFilter, setDateFilter,
+    showCodeLogs, setShowCodeLogs,
     clearFilters,
     applyFilters
   } = useClassFilters();
@@ -35,6 +35,7 @@ export const useClassLogs = () => {
 
   const {
     isLoading,
+    error,
     classes, setClasses,
     allSubjects,
     formatTime,
@@ -65,6 +66,7 @@ export const useClassLogs = () => {
     statusFilter, setStatusFilter,
     subjectFilter, setSubjectFilter,
     dateFilter, setDateFilter,
+    showCodeLogs, setShowCodeLogs,
     isDetailsOpen, setIsDetailsOpen,
     selectedClass,
     studentUploads,
@@ -72,6 +74,7 @@ export const useClassLogs = () => {
     activeDetailsTab, setActiveDetailsTab,
     isExporting,
     isLoading,
+    error,
     classes,
     filteredClasses,
     paginatedClasses,

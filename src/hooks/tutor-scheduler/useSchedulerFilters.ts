@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 
 export const useSchedulerFilters = () => {
@@ -8,13 +7,16 @@ export const useSchedulerFilters = () => {
 
   const applyFilters = (classes: any[]) => {
     return classes.filter(cls => {
-      const matchesSearch = 
-        cls.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        cls.studentName.toLowerCase().includes(searchTerm.toLowerCase());
+      if (cls?.isCodeLog) return false;
+
+      const matchesSearch = searchTerm === "" || (
+        (cls?.title?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+        (cls?.studentName?.toLowerCase() || "").includes(searchTerm.toLowerCase())
+      );
       
-      const matchesSubject = subjectFilter === "all" || cls.subject === subjectFilter;
+      const matchesSubject = subjectFilter === "all" || cls?.subject === subjectFilter;
       
-      const matchesStudent = studentFilter === "all" || cls.studentId.toString() === studentFilter;
+      const matchesStudent = studentFilter === "all" || cls?.studentId?.toString() === studentFilter;
       
       return matchesSearch && matchesSubject && matchesStudent;
     });

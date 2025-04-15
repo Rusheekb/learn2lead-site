@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -42,7 +41,7 @@ const SchedulerFilter: React.FC<SchedulerFilterProps> = ({
           <SelectValue placeholder="Filter by subject" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All Subjects</SelectItem>
+          <SelectItem key="all-subjects" value="all">All Subjects</SelectItem>
           {allSubjects.map(subject => (
             <SelectItem key={subject} value={subject}>{subject}</SelectItem>
           ))}
@@ -53,7 +52,7 @@ const SchedulerFilter: React.FC<SchedulerFilterProps> = ({
           <SelectValue placeholder="Filter by student" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All Students</SelectItem>
+          <SelectItem key="all-students" value="all">All Students</SelectItem>
           {students.map(student => (
             <SelectItem key={student.id} value={student.id.toString()}>{student.name}</SelectItem>
           ))}

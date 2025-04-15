@@ -13,6 +13,7 @@ interface ClassTableProps {
   filteredClasses: ClassEvent[];
   paginatedClasses: ClassEvent[];
   isLoading: boolean;
+  error?: string | null;
   handleClassClick: (cls: ClassEvent) => void;
   clearFilters: () => void;
   getUnreadMessageCount: (classId: string) => number;
@@ -30,6 +31,7 @@ const ClassTable: React.FC<ClassTableProps> = ({
   filteredClasses,
   paginatedClasses,
   isLoading,
+  error,
   handleClassClick,
   clearFilters,
   getUnreadMessageCount,
@@ -67,6 +69,18 @@ const ClassTable: React.FC<ClassTableProps> = ({
         {isLoading ? (
           <div className="flex justify-center items-center py-12">
             <p>Loading class logs...</p>
+          </div>
+        ) : error ? (
+          <div className="text-center py-12 text-red-500">
+            <p>{error}</p>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={clearFilters}
+              className="mt-4"
+            >
+              Retry
+            </Button>
           </div>
         ) : filteredClasses.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
