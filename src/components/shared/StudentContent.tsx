@@ -1,37 +1,16 @@
-import React, { useState } from 'react';
-import { Tabs, TabsList, TabsContent, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent } from '@/components/ui/card';
-import { Upload, MessageSquare, CheckCircle } from 'lucide-react';
 
-// Export these interfaces so they can be imported elsewhere
-export interface StudentMessage {
-  id: string;
-  classId: string;
-  studentName: string;
-  message: string;
-  timestamp: string;
-  isRead: boolean;
-  sender?: "student" | "tutor";
-  text?: string;
-}
-
-export interface StudentUpload {
-  id: string;
-  classId: string;
-  studentName: string;
-  fileName: string;
-  fileSize: string;
-  uploadDate: string;
-  note: string | null;
-}
+import React, { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { FileIcon, Check, Send, Download } from "lucide-react";
+import { StudentMessage, StudentUpload } from "@/types/classTypes";
 
 interface StudentContentProps {
   classId: string;
-  uploads: StudentUpload[];
-  messages: StudentMessage[];
+  uploads?: StudentUpload[];
+  messages?: StudentMessage[];
   onSendMessage?: (message: string) => void;
   onFileUpload?: (file: File, note: string) => void;
   onMarkAsRead?: (messageId: string) => Promise<void>;
@@ -41,169 +20,169 @@ interface StudentContentProps {
 
 export const StudentContent: React.FC<StudentContentProps> = ({
   classId,
-  uploads,
-  messages,
+  uploads = [],
+  messages = [],
   onSendMessage,
   onFileUpload,
   onMarkAsRead,
   onDownload,
-  showUploadControls = false,
+  showUploadControls = false
 }) => {
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState("");
   const [file, setFile] = useState<File | null>(null);
-  const [uploadNote, setUploadNote] = useState('');
-  const [activeTab, setActiveTab] = useState('messages');
-
-  const filteredUploads = uploads.filter(upload => upload.classId === classId);
-  const filteredMessages = messages.filter(msg => msg.classId === classId);
+  const [uploadNote, setUploadNote] = useState("");
+  const [activeTab, setActiveTab] = useState<string>("messages");
 
   const handleSendMessage = () => {
-    if (!message.trim()) return;
-    onSendMessage?.(message);
-    setMessage('');
+    if (message.trim() && onSendMessage) {
+      onSendMessage(message);
+      setMessage("");
+    }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0]);
     }
   };
 
-  const handleUpload = () => {
-    if (!file) return;
-    onFileUpload?.(file, uploadNote);
-    setFile(null);
-    setUploadNote('');
-  };
-
-  const formatDate = (dateString: string) => {
-    try {
-      return new Date(dateString).toLocaleDateString();
-    } catch (e) {
-      return dateString;
-    }
-  };
-
-  const formatDateTime = (dateTimeString: string) => {
-    try {
-      return new Date(dateTimeString).toLocaleString();
-    } catch (e) {
-      return dateTimeString;
+  const handleUploadFile = () => {
+    if (file && onFileUpload) {
+      onFileUpload(file, uploadNote);
+      setFile(null);
+      setUploadNote("");
     }
   };
 
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab}>
-      <TabsList className="grid grid-cols-2 mb-4">
-        <TabsTrigger value="messages">Messages</TabsTrigger>
-        <TabsTrigger value="uploads">Uploads</TabsTrigger>
-      </TabsList>
-
-      <TabsContent value="messages" className="space-y-4">
-        <div className="max-h-80 overflow-y-auto space-y-3">
-          {filteredMessages.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">No messages yet</div>
-          ) : (
-            filteredMessages.map(msg => (
-              <Card key={msg.id} className={`${!msg.isRead ? 'border-tutoring-blue border-2' : ''}`}>
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="font-medium">{msg.studentName}</p>
-                      <p className="text-sm text-gray-500">{formatDateTime(msg.timestamp)}</p>
+    <div>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="messages">Messages</TabsTrigger>
+          <TabsTrigger value="materials">Materials</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="messages" className="space-y-4">
+          <div className="max-h-[240px] overflow-y-auto border rounded-md p-3">
+            {messages.length > 0 ? (
+              <div className="space-y-3">
+                {messages.map((msg) => (
+                  <div 
+                    key={msg.id}
+                    className={`p-2 rounded ${
+                      msg.sender === "tutor" 
+                        ? "bg-tutoring-blue/10 ml-4" 
+                        : "bg-gray-100 mr-4"
+                    }`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <span className="text-xs font-medium">
+                        {msg.sender === "tutor" ? "Tutor" : msg.studentName || "You"}
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        {new Date(msg.timestamp).toLocaleString()}
+                      </span>
                     </div>
-                    {!msg.isRead && onMarkAsRead && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
+                    <p className="mt-1">{msg.text || msg.message}</p>
+                    {msg.sender !== "tutor" && !msg.read && onMarkAsRead && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="mt-1" 
                         onClick={() => onMarkAsRead(msg.id)}
-                        className="flex items-center gap-1"
                       >
-                        <CheckCircle className="h-4 w-4" />
-                        <span>Mark Read</span>
+                        <Check className="h-3 w-3 mr-1" /> Mark as Read
                       </Button>
                     )}
                   </div>
-                  <p className="mt-2">{msg.message}</p>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </div>
-
-        {onSendMessage && (
-          <div className="flex gap-2 mt-4">
-            <Textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Type your message here..."
-              className="flex-grow"
-            />
-            <Button onClick={handleSendMessage} className="self-end">
-              <MessageSquare className="h-4 w-4 mr-2" />
-              Send
-            </Button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-4">No messages yet</p>
+            )}
           </div>
-        )}
-      </TabsContent>
-
-      <TabsContent value="uploads" className="space-y-4">
-        <div className="max-h-80 overflow-y-auto space-y-3">
-          {filteredUploads.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">No uploads yet</div>
-          ) : (
-            filteredUploads.map(upload => (
-              <Card key={upload.id}>
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="font-medium">{upload.fileName}</p>
-                      <p className="text-sm text-gray-500">
-                        {upload.studentName} • {formatDate(upload.uploadDate)} • {upload.fileSize}
-                      </p>
+          
+          {onSendMessage && (
+            <div className="flex items-center gap-2">
+              <Input 
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Type your message..." 
+                className="flex-1"
+              />
+              <Button onClick={handleSendMessage} disabled={!message.trim()}>
+                <Send className="h-4 w-4 mr-1" /> Send
+              </Button>
+            </div>
+          )}
+        </TabsContent>
+        
+        <TabsContent value="materials" className="space-y-4">
+          <div className="max-h-[240px] overflow-y-auto border rounded-md p-3">
+            {uploads.length > 0 ? (
+              <div className="space-y-2">
+                {uploads.map((upload) => (
+                  <div 
+                    key={upload.id}
+                    className="border p-2 rounded flex justify-between items-center"
+                  >
+                    <div className="flex items-center">
+                      <FileIcon className="h-4 w-4 mr-2" />
+                      <div>
+                        <p className="font-medium">{upload.fileName}</p>
+                        <div className="flex text-xs text-gray-500">
+                          <span>{upload.fileSize}</span>
+                          <span className="mx-1">•</span>
+                          <span>{new Date(upload.uploadDate).toLocaleDateString()}</span>
+                        </div>
+                        {upload.note && (
+                          <p className="text-xs mt-1">{upload.note}</p>
+                        )}
+                      </div>
                     </div>
                     {onDownload && (
-                      <Button
-                        variant="outline"
-                        size="sm"
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
                         onClick={() => onDownload(upload.id)}
                       >
-                        Download
+                        <Download className="h-4 w-4" />
                       </Button>
                     )}
                   </div>
-                  {upload.note && <p className="mt-2 text-sm">{upload.note}</p>}
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </div>
-
-        {showUploadControls && onFileUpload && (
-          <div className="space-y-3 mt-4 pt-4 border-t">
-            <h4 className="font-medium">Upload File</h4>
-            <Input
-              type="file"
-              onChange={handleFileChange}
-              className="mb-2"
-            />
-            <Textarea
-              value={uploadNote}
-              onChange={(e) => setUploadNote(e.target.value)}
-              placeholder="Add a note (optional)"
-            />
-            <Button
-              onClick={handleUpload}
-              disabled={!file}
-              className="w-full"
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              Upload
-            </Button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-4">No materials uploaded</p>
+            )}
           </div>
-        )}
-      </TabsContent>
-    </Tabs>
+          
+          {showUploadControls && onFileUpload && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Input 
+                  type="file" 
+                  onChange={handleFileSelect} 
+                  className="flex-1"
+                />
+              </div>
+              {file && (
+                <>
+                  <Textarea
+                    placeholder="Add a note about this file (optional)"
+                    value={uploadNote}
+                    onChange={(e) => setUploadNote(e.target.value)}
+                  />
+                  <Button onClick={handleUploadFile}>
+                    Upload File
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
 

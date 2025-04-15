@@ -7,17 +7,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Trash2 } from "lucide-react";
 
 interface Student {
-  id: number;
+  id: string; // Changed from number to string
   name: string;
   subjects: string[];
 }
 
 interface Material {
-  id: number;
+  id: string; // Changed from number to string
   name: string;
   type: string;
   subject: string;
   dateUploaded: string;
+  size: string; // Required field
   sharedWith: string[];
 }
 

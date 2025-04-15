@@ -9,9 +9,9 @@ import EmptySessionsState from "./student/EmptySessionsState";
 
 // Type definitions
 interface ClassSession {
-  id: number;
+  id: string; // Changed from number to string to match other definitions
   title: string;
-  subjectId: number;
+  subjectId: string | number;
   tutorName: string;
   date: Date;
   startTime: string;
@@ -23,7 +23,7 @@ interface ClassSession {
 
 const mockSessions: ClassSession[] = [
   {
-    id: 1,
+    id: "1", // Changed from 1 to "1"
     title: "Algebra Fundamentals",
     subjectId: 1,
     tutorName: "Ms. Johnson",
@@ -35,7 +35,7 @@ const mockSessions: ClassSession[] = [
     recurringDays: ["Wednesday"]
   },
   {
-    id: 2,
+    id: "2", // Changed from 2 to "2"
     title: "Chemistry Lab Prep",
     subjectId: 2,
     tutorName: "Mr. Chen",
@@ -47,7 +47,7 @@ const mockSessions: ClassSession[] = [
     recurringDays: ["Friday"]
   },
   {
-    id: 3,
+    id: "3", // Changed from 3 to "3"
     title: "Essay Writing Workshop",
     subjectId: 3,
     tutorName: "Dr. Martinez",

@@ -12,6 +12,7 @@ import StudentUploadsTable from "./StudentUploadsTable";
 import UploadMaterialDialog from "./UploadMaterialDialog";
 import ShareMaterialDialog from "./ShareMaterialDialog";
 import { Material, Student } from "./types/studentTypes"; // Import types
+import { mockStudents, mockMaterials } from "./mock-data-students"; // Import mock data
 
 // Define a complete mock data set for uploads
 const mockUploads: StudentUpload[] = [
@@ -43,9 +44,6 @@ const mockUploads: StudentUpload[] = [
     note: "First draft of essay"
   }
 ];
-
-// Import mockMaterials from mock-data-students
-import { mockMaterials } from "./mock-data-students";
 
 const TutorMaterials: React.FC = () => {
   const [isUploadOpen, setIsUploadOpen] = useState<boolean>(false);

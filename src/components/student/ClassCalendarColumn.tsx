@@ -4,9 +4,9 @@ import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 
 interface ClassSession {
-  id: number;
+  id: string; // Changed from number to string
   title: string;
-  subjectId: number;
+  subjectId: number | string;
   tutorName: string;
   date: Date;
   startTime: string;
