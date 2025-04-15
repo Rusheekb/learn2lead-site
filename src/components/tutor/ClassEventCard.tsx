@@ -44,7 +44,7 @@ const ClassEventCard: React.FC<ClassEventCardProps> = ({ event, onClick, unreadM
           {event.recurring ? `Every ${event.recurringDays?.join(', ')}` : 'One-time class'}
         </span>
         <a 
-          href={event.zoomLink}
+          href={event.zoomLink || "#"}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center text-tutoring-blue hover:text-tutoring-teal transition-colors"

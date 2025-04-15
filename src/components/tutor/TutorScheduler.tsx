@@ -48,6 +48,23 @@ const TutorScheduler: React.FC = () => {
     getUnreadMessageCount,
   } = useTutorScheduler();
 
+  // Type adapter functions to handle string/number ID mismatches
+  const adaptedHandleDeleteEvent = (eventId: string, isRecurring?: boolean) => {
+    return handleDeleteEvent(eventId, isRecurring);
+  };
+
+  const adaptedMarkMessageRead = (messageId: string) => {
+    return handleMarkMessageRead(messageId);
+  };
+
+  const adaptedDownloadFile = (uploadId: string) => {
+    return handleDownloadFile(uploadId);
+  };
+
+  const adaptedGetUnreadMessageCount = (classId: string) => {
+    return getUnreadMessageCount(classId);
+  };
+
   return (
     <div className="space-y-6">
       <SchedulerHeader onAddClick={() => setIsAddEventOpen(true)} />
@@ -74,7 +91,7 @@ const TutorScheduler: React.FC = () => {
           scheduledClasses={filteredClasses}
           onSelectEvent={handleSelectEvent}
           onAddEventClick={() => setIsAddEventOpen(true)}
-          getUnreadMessageCount={getUnreadMessageCount}
+          getUnreadMessageCount={adaptedGetUnreadMessageCount}
         />
       )}
       
@@ -96,11 +113,11 @@ const TutorScheduler: React.FC = () => {
         onCreateEvent={handleCreateEvent}
         onEditEvent={handleEditEvent}
         onDuplicateEvent={handleDuplicateEvent}
-        onDeleteEvent={handleDeleteEvent}
+        onDeleteEvent={adaptedHandleDeleteEvent}
         onResetForm={resetNewEventForm}
-        onMarkAsRead={handleMarkMessageRead}
-        onDownloadFile={handleDownloadFile}
-        getUnreadMessageCount={getUnreadMessageCount}
+        onMarkAsRead={adaptedMarkMessageRead}
+        onDownloadFile={adaptedDownloadFile}
+        getUnreadMessageCount={adaptedGetUnreadMessageCount}
       />
     </div>
   );

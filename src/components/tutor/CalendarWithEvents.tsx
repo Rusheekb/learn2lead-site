@@ -66,7 +66,7 @@ const CalendarWithEvents: React.FC<CalendarWithEventsProps> = ({
                 key={event.id}
                 event={event}
                 onClick={() => onSelectEvent(event)}
-                unreadMessageCount={getUnreadMessageCount(event.id)}
+                unreadMessagesCount={getUnreadMessageCount(event.id)}
               />
             ))
           ) : (

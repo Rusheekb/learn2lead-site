@@ -3,6 +3,10 @@ export interface Student {
   id: string;
   name: string;
   subjects: string[];
+  email: string;
+  lastSession: string;
+  nextSession: string;
+  progress: string;
 }
 
 export interface StudentMessage {
@@ -10,11 +14,8 @@ export interface StudentMessage {
   content: string;
   timestamp: string;
   read: boolean;
-}
-
-export interface StudentMessageCollection {
-  studentId: string;
-  messages: StudentMessage[];
+  sender?: "tutor" | "student";
+  text?: string;
 }
 
 export interface StudentNote {
@@ -24,7 +25,23 @@ export interface StudentNote {
   date: string;
 }
 
+export interface StudentMessageCollection {
+  studentId: string;
+  messages: StudentMessage[];
+}
+
 export interface StudentNoteCollection {
   studentId: string;
   notes: StudentNote[];
+}
+
+export interface Material {
+  id: string;
+  name: string;
+  type: string;
+  subject: string;
+  dateUploaded: string;
+  uploadDate?: string;
+  size: string;
+  sharedWith: string[];
 }

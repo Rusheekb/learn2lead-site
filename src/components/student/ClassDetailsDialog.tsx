@@ -4,8 +4,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import ClassSessionDetail from "./ClassSessionDetail";
-import { StudentUpload, StudentMessage, StudentContent } from "../shared/StudentContent";
-import { ClassItem } from "@/types/classTypes";
+import { StudentContent, StudentUpload, StudentMessage } from "../shared/StudentContent";
+import { ClassItem, ClassSession } from "@/types/classTypes";
 
 interface ClassDetailsDialogProps {
   open: boolean;
@@ -28,7 +28,7 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
 }) => {
   if (!selectedClass) return null;
   
-  const classSession = {
+  const classSession: ClassSession = {
     ...selectedClass,
     subjectId: selectedClass.subjectId || selectedClass.subject,
     recurring: selectedClass.recurring || false
@@ -54,7 +54,7 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
             
             <TabsContent value="materials" className="space-y-4">
               <StudentContent
-                classId={selectedClass.id.toString()}
+                classId={selectedClass.id}
                 uploads={studentUploads}
                 messages={studentMessages}
                 onSendMessage={(message) => onSendMessage(selectedClass.id, message)}

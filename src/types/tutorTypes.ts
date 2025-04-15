@@ -7,18 +7,18 @@ export interface ClassEvent {
   date: string | Date;
   startTime: string;
   endTime: string;
-  duration: number;
+  duration?: number;
   subject: string;
-  content: string;
-  homework: string;
-  status: string;
-  attendance: string;
+  content?: string;
+  homework?: string;
+  status?: string;
+  attendance?: string;
   zoomLink: string | null;
   notes: string | null;
-  classCost: number;
-  tutorCost: number;
-  studentPayment: string;
-  tutorPayment: string;
+  classCost?: number;
+  tutorCost?: number;
+  studentPayment?: string;
+  tutorPayment?: string;
   isCodeLog?: boolean;
   
   // Add properties needed by Tutor components
@@ -52,4 +52,8 @@ export interface Student {
   id: string;
   name: string;
   subjects: string[];
+  email?: string;
+  lastSession?: string;
+  nextSession?: string;
+  progress?: string;
 }

@@ -5,8 +5,7 @@ import { Button } from "@/components/ui/button";
 import { FileUp } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { mockStudentUploads } from "../shared/mock-data";
-import { StudentUpload as SharedStudentUpload } from "../shared/StudentContent";
+import { StudentUpload } from "../shared/StudentContent";
 
 // Imported components
 import MaterialsTable from "./MaterialsTable";
@@ -14,9 +13,38 @@ import StudentUploadsTable from "./StudentUploadsTable";
 import UploadMaterialDialog from "./UploadMaterialDialog";
 import ShareMaterialDialog from "./ShareMaterialDialog";
 import { mockMaterials, mockStudents } from "./mock-data-students";
+import { Material } from "./types/studentTypes";
 
-// Define a local interface that's compatible with both the component's needs and shared interface
-interface StudentUpload extends SharedStudentUpload {}
+// Define a complete mock data set for uploads
+const mockUploads: StudentUpload[] = [
+  {
+    id: "1",
+    classId: "101",
+    studentName: "Alex Johnson",
+    fileName: "Homework1.pdf",
+    fileSize: "1.2 MB",
+    uploadDate: "2023-04-10",
+    note: "First homework submission"
+  },
+  {
+    id: "2",
+    classId: "102",
+    studentName: "Jamie Smith",
+    fileName: "ChemistryNotes.docx",
+    fileSize: "842 KB",
+    uploadDate: "2023-04-11",
+    note: "Notes from class"
+  },
+  {
+    id: "3",
+    classId: "103",
+    studentName: "Taylor Brown",
+    fileName: "EssayDraft.docx",
+    fileSize: "1.5 MB", 
+    uploadDate: "2023-04-12",
+    note: "First draft of essay"
+  }
+];
 
 const TutorMaterials: React.FC = () => {
   const [isUploadOpen, setIsUploadOpen] = useState<boolean>(false);
@@ -32,7 +60,7 @@ const TutorMaterials: React.FC = () => {
   });
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   
-  const [studentUploads] = useState<StudentUpload[]>(mockStudentUploads);
+  const [studentUploads] = useState<StudentUpload[]>(mockUploads);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -65,11 +93,11 @@ const TutorMaterials: React.FC = () => {
     setSelectedStudents([]);
   };
 
-  const openShareDialog = (material: any) => {
+  const openShareDialog = (material: Material) => {
     setSelectedMaterial(material);
     setSelectedStudents(material.sharedWith.map((name: string) => {
       const student = mockStudents.find(s => s.name === name);
-      return student ? student.id.toString() : "";
+      return student ? student.id : "";
     }).filter(Boolean));
     setIsShareOpen(true);
   };
