@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -189,7 +190,7 @@ const StudentsManager: React.FC = () => {
                 </div>
                 <div className="grid gap-2">
                   <label htmlFor="grade" className="text-sm font-medium">Grade Level</label>
-                  <Select name="grade" required>
+                  <Select name="grade" required defaultValue="9th Grade">
                     <SelectTrigger>
                       <SelectValue placeholder="Select grade" />
                     </SelectTrigger>

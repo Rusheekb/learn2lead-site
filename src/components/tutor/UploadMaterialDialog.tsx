@@ -81,6 +81,7 @@ const UploadMaterialDialog: React.FC<UploadMaterialDialogProps> = ({
               <div>
                 <Label htmlFor="material-subject">Subject</Label>
                 <Select
+                  value={materialData.subject || "Mathematics"} 
                   onValueChange={(value) => onMaterialDataChange({subject: value})}
                 >
                   <SelectTrigger id="material-subject">
@@ -100,6 +101,7 @@ const UploadMaterialDialog: React.FC<UploadMaterialDialogProps> = ({
               <div>
                 <Label htmlFor="material-type">Type</Label>
                 <Select
+                  value={materialData.type || "worksheet"} 
                   onValueChange={(value) => onMaterialDataChange({type: value})}
                 >
                   <SelectTrigger id="material-type">
