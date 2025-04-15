@@ -18,7 +18,7 @@ import {
 import useStudentRealtime from "@/hooks/student/useStudentRealtime";
 
 interface ClassItem {
-  id: number;
+  id: string;
   title: string;
   subject: string;
   tutorName: string;
@@ -65,7 +65,7 @@ const ClassStudentActivity: React.FC = () => {
           endTime: cl.endTime,
           status: "upcoming",
           attendance: "pending",
-          zoomLink: cl.zoomLink,
+          zoomLink: cl.zoomLink || "",
           notes: cl.notes || "",
           studentName: cl.studentName
         }));
@@ -87,7 +87,7 @@ const ClassStudentActivity: React.FC = () => {
       if (!selectedClass) return;
       
       try {
-        const classId = selectedClass.id.toString().padStart(8, '0') + '-0000-0000-0000-000000000000';
+        const classId = selectedClass.id;
         
         const messages = await fetchClassMessages(classId);
         setStudentMessages(messages);
@@ -104,7 +104,7 @@ const ClassStudentActivity: React.FC = () => {
   
   const handleFileUpload = async (classId: number, file: File, note: string) => {
     try {
-      const dbClassId = classId.toString().padStart(8, '0') + '-0000-0000-0000-000000000000';
+      const dbClassId = classId.toString();
       
       const upload = await uploadClassFile(
         dbClassId,
@@ -127,7 +127,7 @@ const ClassStudentActivity: React.FC = () => {
   
   const handleSendMessage = async (classId: number, messageText: string) => {
     try {
-      const dbClassId = classId.toString().padStart(8, '0') + '-0000-0000-0000-000000000000';
+      const dbClassId = classId.toString();
       
       const message = await createClassMessage(
         dbClassId,
@@ -171,7 +171,7 @@ const ClassStudentActivity: React.FC = () => {
             </div>
           ) : (
             <UpcomingClassesTable 
-              classes={classes} 
+              classes={classes as any} 
               onViewClass={handleViewClass} 
             />
           )}
@@ -181,7 +181,7 @@ const ClassStudentActivity: React.FC = () => {
       <ClassDetailsDialog
         open={isDetailsOpen}
         onOpenChange={setIsDetailsOpen}
-        selectedClass={selectedClass}
+        selectedClass={selectedClass as any}
         studentUploads={studentUploads}
         studentMessages={studentMessages}
         onFileUpload={handleFileUpload}

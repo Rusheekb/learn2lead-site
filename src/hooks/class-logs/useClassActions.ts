@@ -1,173 +1,125 @@
+
 import { useState } from "react";
 import { toast } from "sonner";
-import { 
-  fetchClassMessages, 
-  markMessageAsRead 
-} from "@/services/classMessagesService";
-import { fetchClassUploads } from "@/services/classUploadsService";
-import { numericIdToDbId } from "@/utils/realtimeUtils";
-import { 
-  StudentMessage, 
-  StudentUpload,
-  ClassDetailsState, 
-  PaginationState,
-  ExportFormat 
-} from "@/types/classTypes";
 import { ClassEvent } from "@/types/tutorTypes";
-import { StudentMessage as StudentMessageComponent, StudentUpload as StudentUploadComponent } from "@/components/shared/StudentContent";
+import { fetchClassMessages, markMessageAsRead } from "@/services/classMessagesService";
+import { fetchClassUploads } from "@/services/classUploadsService";
+import { StudentMessage, StudentUpload } from "@/components/shared/StudentContent";
+import { ExportFormat } from "@/types/classTypes";
+import { exportToCsv, exportToPdf } from "@/services/exportService";
 
 export const useClassActions = () => {
-  // Class details state
-  const [detailsState, setDetailsState] = useState<ClassDetailsState>({
-    isOpen: false,
-    selectedClass: null,
-    activeTab: "details",
-    uploads: [] as StudentUpload[],
-    messages: [] as StudentMessage[]
-  });
-
-  // Export state
-  const [isExporting, setIsExporting] = useState(false);
-
+  const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false);
+  const [selectedClass, setSelectedClass] = useState<ClassEvent | null>(null);
+  const [studentUploads, setStudentUploads] = useState<StudentUpload[]>([]);
+  const [studentMessages, setStudentMessages] = useState<StudentMessage[]>([]);
+  const [activeDetailsTab, setActiveDetailsTab] = useState<string>("details");
+  const [isExporting, setIsExporting] = useState<boolean>(false);
+  
   // Pagination state
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [page, setPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
 
-  // Class details actions
-  const handleClassClick = (cls: ClassEvent) => {
-    setDetailsState(prev => ({
-      ...prev,
-      isOpen: true,
-      selectedClass: cls
-    }));
-  };
-
-  const loadClassContent = async (classId: number) => {
-    if (!classId) return;
-    
+  // Load student uploads and messages for a class
+  const loadClassContent = async (classId: string) => {
     try {
-      const dbClassId = numericIdToDbId(classId);
+      const uploads = await fetchClassUploads(classId);
+      setStudentUploads(uploads);
+      console.log('Fetched uploads:', uploads);
       
-      // Load messages and uploads in parallel
-      const [messages, uploads] = await Promise.all([
-        fetchClassMessages(dbClassId),
-        fetchClassUploads(dbClassId)
-      ]);
-
-      // Transform messages and uploads to match our types
-      const transformedMessages: StudentMessage[] = messages.map(msg => ({
-        id: Number(msg.id),
-        classId: Number(msg.classId),
-        content: msg.message,
-        isRead: msg.isRead,
-        timestamp: msg.timestamp,
-        studentId: 0 // This needs to be updated with actual student ID
-      }));
-
-      const transformedUploads: StudentUpload[] = uploads.map(upload => ({
-        id: upload.id,
-        classId: upload.classId,
-        studentName: upload.studentName || '',
-        fileName: upload.fileName,
-        fileSize: upload.fileSize || '0 KB',
-        uploadDate: upload.uploadDate,
-        note: upload.note || null
-      }));
-
-      setDetailsState(prev => ({
-        ...prev,
-        messages: transformedMessages,
-        uploads: transformedUploads
-      }));
+      const messages = await fetchClassMessages(classId);
+      setStudentMessages(messages);
+      console.log('Fetched messages:', messages);
+      
     } catch (error) {
       console.error("Error loading class content:", error);
-      toast.error("Failed to load class content");
     }
   };
 
-  const handleMarkMessageRead = async (messageId: number) => {
+  // Handle click on a class row
+  const handleClassClick = (cls: ClassEvent) => {
+    setSelectedClass(cls);
+    setIsDetailsOpen(true);
+    loadClassContent(cls.id);
+  };
+
+  // Mark message as read
+  const handleMarkMessageRead = async (messageId: string) => {
     try {
-      const dbMessageId = numericIdToDbId(messageId);
-      const success = await markMessageAsRead(dbMessageId);
-      
+      const success = await markMessageAsRead(messageId);
       if (success) {
-        setDetailsState(prev => ({
-          ...prev,
-          messages: prev.messages.map(message => 
-            message.id === messageId ? { ...message, isRead: true } : message
-          )
-        }));
-        toast.success("Message marked as read");
+        setStudentMessages(studentMessages.map(msg => 
+          msg.id === messageId ? { ...msg, isRead: true } : msg
+        ));
+        console.log('Marked message as read:', messageId);
       }
     } catch (error) {
       console.error("Error marking message as read:", error);
-      toast.error("Failed to mark message as read");
     }
   };
 
-  // File actions
-  const handleDownloadFile = async (uploadId: number) => {
-    try {
-      const upload = detailsState.uploads.find(u => u.id === uploadId);
-      if (upload) {
-        toast.success(`Downloading ${upload.fileName}`);
-      }
-    } catch (error) {
-      console.error("Error downloading file:", error);
-      toast.error("Failed to download file");
+  // Handle downloading a file
+  const handleDownloadFile = (uploadId: string) => {
+    // This is just a stub - in a real app, this would trigger a file download
+    const upload = studentUploads.find(u => u.id === uploadId);
+    if (!upload) {
+      toast.error("File not found");
+      return;
     }
+    
+    toast.success(`Downloading ${upload.fileName}...`);
+    console.log("Download file:", upload);
   };
 
-  // Export actions
+  // Handle exporting classes
   const handleExport = async (format: ExportFormat) => {
+    if (!selectedClass) return;
+    
     setIsExporting(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      const fileName = `class-logs-${format === 'csv' ? 'spreadsheet.csv' : 'report.pdf'}`;
-      toast.success(`Exported ${fileName} successfully`);
+      const exportFn = format === 'csv' ? exportToCsv : exportToPdf;
+      await exportFn([selectedClass], format);
+      toast.success(`Class exported as ${format.toUpperCase()}`);
     } catch (error) {
-      toast.error('Failed to export file');
+      toast.error(`Failed to export as ${format.toUpperCase()}`);
+      console.error(`Error exporting as ${format}:`, error);
     } finally {
       setIsExporting(false);
     }
   };
 
-  // Utility functions
-  const getUnreadMessageCount = (classId: number): number => {
-    return detailsState.messages.filter(m => m.classId === classId && !m.isRead).length;
+  // Get unread message count for a class
+  const getUnreadMessageCount = (classId: string): number => {
+    return studentMessages.filter(msg => 
+      msg.classId === classId && !msg.isRead
+    ).length;
   };
 
-  // Pagination actions
+  // Handle page change
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
   };
-
+  
+  // Handle page size change
   const handlePageSizeChange = (newPageSize: number) => {
-    setPage(1);
     setPageSize(newPageSize);
+    setPage(1); // Reset to first page when changing page size
   };
 
   return {
-    // Details state
-    isDetailsOpen: detailsState.isOpen,
-    setIsDetailsOpen: (isOpen: boolean) => setDetailsState(prev => ({ ...prev, isOpen })),
-    selectedClass: detailsState.selectedClass,
-    setSelectedClass: (cls: ClassEvent | null) => setDetailsState(prev => ({ ...prev, selectedClass: cls })),
-    studentUploads: detailsState.uploads,
-    studentMessages: detailsState.messages,
-    activeDetailsTab: detailsState.activeTab,
-    setActiveDetailsTab: (tab: string) => setDetailsState(prev => ({ ...prev, activeTab: tab })),
-    
-    // Export state
+    isDetailsOpen,
+    setIsDetailsOpen,
+    selectedClass,
+    setSelectedClass,
+    studentUploads,
+    studentMessages,
+    activeDetailsTab,
+    setActiveDetailsTab,
     isExporting,
-    
-    // Pagination state
     page,
     setPage,
     pageSize,
     setPageSize,
-    
-    // Actions
     handleClassClick,
     loadClassContent,
     handleMarkMessageRead,
@@ -175,7 +127,7 @@ export const useClassActions = () => {
     handleExport,
     getUnreadMessageCount,
     handlePageChange,
-    handlePageSizeChange,
+    handlePageSizeChange
   };
 };
 

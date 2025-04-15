@@ -1,8 +1,9 @@
+
 import React, { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
-import Papa, { ParseResult } from 'papaparse';
+import Papa from 'papaparse';
 import { supabase } from '@/integrations/supabase/client';
 import { format, parse, set, addHours } from 'date-fns';
 
@@ -25,22 +26,6 @@ interface CsvRecord {
   'Tutor Cost': string;
   'Payment Status': string;
   'Tutor Payment Status': string;
-}
-
-interface ClassLog {
-  title: string;
-  date: string;
-  start_time: string;
-  end_time: string;
-  student_name: string;
-  tutor_name: string;
-  subject: string;
-  notes: string;
-  status: 'completed' | 'pending' | 'cancelled';
-  payment_status: 'completed' | 'pending';
-  tutor_payment_status: 'completed' | 'pending';
-  class_cost: number;
-  tutor_cost: number;
 }
 
 const CsvUploader: React.FC<CsvUploaderProps> = ({ onUploadComplete }) => {
@@ -84,7 +69,7 @@ const CsvUploader: React.FC<CsvUploaderProps> = ({ onUploadComplete }) => {
       Papa.parse<CsvRecord>(text, {
         header: true,
         skipEmptyLines: true,
-        complete: async (results: ParseResult<CsvRecord>) => {
+        complete: async (results) => {
           const records = results.data;
           
           if (results.errors.length > 0) {
@@ -94,65 +79,49 @@ const CsvUploader: React.FC<CsvUploaderProps> = ({ onUploadComplete }) => {
             return;
           }
 
-          const classLogs: ClassLog[] = records.map((record) => {
-            try {
-              // Parse date and time
-              const date = parse(record['Date'], 'MM/dd/yyyy', new Date());
-              if (isNaN(date.getTime())) {
-                throw new Error('Invalid date format');
+          try {
+            // Process each record individually
+            for (const record of records) {
+              // Convert the record to the format expected by Supabase
+              const supabaseRecord = {
+                "Class Number": record["Class Number"] || "",
+                "Student Name": record["Student Name"] || "",
+                "Tutor Name": record["Tutor Name"] || "",
+                "Date": record["Date"] || "",
+                "Day": new Date(record["Date"]).toLocaleDateString('en-US', { weekday: 'long' }),
+                "Time (CST)": record["Time (CST)"] || "",
+                "Time (hrs)": record["Time (hrs)"] || "",
+                "Subject": record["Subject"] || "",
+                "Content": record["Content"] || "",
+                "HW": record["HW"] || "",
+                "Class Cost": record["Class Cost"] || "",
+                "Tutor Cost": record["Tutor Cost"] || "",
+                "Student Payment": record["Payment Status"] || "",
+                "Tutor Payment": record["Tutor Payment Status"] || "",
+                "Additional Info": record["Additional Info"] || ""
+              };
+              
+              // Insert the record into Supabase
+              const { error } = await supabase
+                .from('class_logs')
+                .insert(supabaseRecord);
+                
+              if (error) {
+                console.error('Error inserting record:', error);
+                toast.error(`Error uploading record for ${record["Class Number"]}`);
               }
-
-              const timeCST = record['Time (CST)'];
-              const durationHrs = parseFloat(record['Time (hrs)'] || '1');
-              
-              // Calculate start and end time
-              const [hours, minutes] = timeCST.split(':').map(Number);
-              const startTime = set(date, { hours: hours || 0, minutes: minutes || 0 });
-              const endTime = addHours(startTime, isNaN(durationHrs) ? 1 : durationHrs);
-              
-              // Validate payment statuses
-              const normalizePaymentStatus = (status: string): 'completed' | 'pending' => {
-                return status?.toLowerCase() === 'paid' ? 'completed' : 'pending';
-              };
-
-              return {
-                title: `Class ${record['Class Number']} - ${record['Subject']}: ${record['Content']}`,
-                date: format(date, 'yyyy-MM-dd'),
-                start_time: format(startTime, 'HH:mm:ss'),
-                end_time: format(endTime, 'HH:mm:ss'),
-                student_name: record['Student Name'],
-                tutor_name: record['Tutor Name'],
-                subject: record['Subject'],
-                notes: `Content: ${record['Content']}\nHomework: ${record['HW']}\nAdditional Info: ${record['Additional Info']}`,
-                status: 'completed' as const,
-                payment_status: normalizePaymentStatus(record['Payment Status']),
-                tutor_payment_status: normalizePaymentStatus(record['Tutor Payment Status']),
-                class_cost: parseFloat(record['Class Cost']) || 0,
-                tutor_cost: parseFloat(record['Tutor Cost']) || 0
-              };
-            } catch (error) {
-              console.error('Error processing record:', error);
-              throw new Error(`Error processing record for Class ${record['Class Number']}`);
             }
-          });
-
-          // Upload records to Supabase
-          const { error } = await supabase
-            .from('class_logs')
-            .insert(classLogs);
-
-          if (error) {
-            console.error('Error uploading class logs:', error);
-            toast.error('Error uploading class logs');
+            
+            toast.success('Class logs uploaded successfully');
+            onUploadComplete();
+          } catch (error) {
+            console.error('Error processing records:', error);
+            toast.error('Error processing records');
+          } finally {
             setIsUploading(false);
-            return;
           }
-
-          toast.success('Class logs uploaded successfully');
-          onUploadComplete();
-          setIsUploading(false);
         },
-        error: (error: Error) => {
+        error: (error) => {
           console.error('Error parsing CSV:', error);
           toast.error('Error parsing CSV file');
           setIsUploading(false);
@@ -238,4 +207,4 @@ const CsvUploader: React.FC<CsvUploaderProps> = ({ onUploadComplete }) => {
   );
 };
 
-export default CsvUploader; 
+export default CsvUploader;

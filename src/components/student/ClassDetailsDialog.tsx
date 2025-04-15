@@ -1,12 +1,11 @@
 
 import React from "react";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { formatTime } from "@/utils/dateTimeUtils";
-import StudentContent from "../shared/StudentContent";
-import ClassContentUpload from "../shared/ClassContentUpload";
-import { StudentUpload, StudentMessage } from "../shared/StudentContent";
+import { Button } from "@/components/ui/button";
+import ClassSessionDetail from "./ClassSessionDetail";
+import { StudentUpload, StudentMessage } from "../shared/StudentContent"; 
+import * as StudentContent from "../shared/StudentContent";
 
 interface ClassItem {
   id: number;
@@ -39,89 +38,44 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
   studentUploads,
   studentMessages,
   onFileUpload,
-  onSendMessage,
+  onSendMessage
 }) => {
-  if (!selectedClass) return null;
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{selectedClass.title}</DialogTitle>
+          <DialogTitle>{selectedClass?.title || 'Class Details'}</DialogTitle>
         </DialogHeader>
         
-        <Tabs defaultValue="details">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="details">Class Details</TabsTrigger>
-            <TabsTrigger value="content">Content & Messages</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="details" className="space-y-4 pt-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <h4 className="text-sm font-medium text-gray-500">Subject</h4>
-                <p>{selectedClass.subject}</p>
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-gray-500">Tutor</h4>
-                <p>{selectedClass.tutorName}</p>
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-gray-500">Date</h4>
-                <p>{selectedClass.date}</p>
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-gray-500">Time</h4>
-                <p>{formatTime(selectedClass.startTime)} - {formatTime(selectedClass.endTime)}</p>
-              </div>
-            </div>
+        {selectedClass && (
+          <Tabs defaultValue="details">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="details">Class Details</TabsTrigger>
+              <TabsTrigger value="materials">Materials & Communication</TabsTrigger>
+            </TabsList>
             
-            <div>
-              <h4 className="text-sm font-medium text-gray-500">Zoom Link</h4>
-              <a 
-                href={selectedClass.zoomLink}
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-tutoring-blue hover:underline"
-              >
-                {selectedClass.zoomLink}
-              </a>
-            </div>
+            <TabsContent value="details">
+              <ClassSessionDetail session={selectedClass} />
+            </TabsContent>
             
-            {selectedClass.notes && (
-              <div>
-                <h4 className="text-sm font-medium text-gray-500">Notes</h4>
-                <p>{selectedClass.notes}</p>
-              </div>
-            )}
-            
-            <ClassContentUpload 
-              classId={selectedClass.id}
-              onUpload={(file, note) => onFileUpload(selectedClass.id, file, note)}
-              onMessage={(message) => onSendMessage(selectedClass.id, message)}
-            />
-          </TabsContent>
-          
-          <TabsContent value="content" className="space-y-4 pt-4">
-            <StudentContent 
-              classId={selectedClass.id}
-              uploads={studentUploads}
-              messages={studentMessages}
-            />
-            
-            <div className="pt-4 border-t">
-              <ClassContentUpload 
-                classId={selectedClass.id}
-                onUpload={(file, note) => onFileUpload(selectedClass.id, file, note)}
-                onMessage={(message) => onSendMessage(selectedClass.id, message)}
+            <TabsContent value="materials" className="space-y-4">
+              <StudentContent.default
+                classId={selectedClass.id.toString()}
+                uploads={studentUploads}
+                messages={studentMessages}
+                onSendMessage={(message) => onSendMessage(selectedClass.id, message)}
+                onFileUpload={(file, note) => onFileUpload(selectedClass.id, file, note)}
+                showUploadControls={true}
               />
-            </div>
-          </TabsContent>
-        </Tabs>
+            </TabsContent>
+          </Tabs>
+        )}
         
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
-        </DialogFooter>
+        <div className="flex justify-end mt-4">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Close
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

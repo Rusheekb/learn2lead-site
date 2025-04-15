@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FileDown, Printer, RefreshCw, Download, Upload } from "lucide-react";
@@ -32,6 +33,8 @@ const ClassLogs: React.FC = () => {
     setSubjectFilter,
     dateFilter,
     setDateFilter,
+    showCodeLogs,
+    setShowCodeLogs,
     isDetailsOpen,
     setIsDetailsOpen,
     selectedClass,
@@ -118,6 +121,8 @@ const ClassLogs: React.FC = () => {
         setDateFilter={setDateFilter}
         clearFilters={clearFilters}
         allSubjects={allSubjects}
+        showCodeLogs={showCodeLogs}
+        setShowCodeLogs={setShowCodeLogs}
       />
       
       <ClassTable

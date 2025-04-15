@@ -1,16 +1,23 @@
+
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, Search } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { format } from "date-fns";
+import { CalendarIcon, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
-interface ClassFiltersProps {
+export interface ClassFiltersProps {
   searchTerm: string;
   setSearchTerm: (term: string) => void;
   statusFilter: string;
@@ -40,85 +47,97 @@ const ClassFilters: React.FC<ClassFiltersProps> = ({
   setShowCodeLogs
 }) => {
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Filter Classes</CardTitle>
-          <div className="flex items-center gap-6">
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="show-code-logs"
-                checked={showCodeLogs}
-                onCheckedChange={setShowCodeLogs}
-              />
-              <Label htmlFor="show-code-logs">Show Code Logs</Label>
-            </div>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={clearFilters}
-              className="text-sm text-muted-foreground"
+    <div className="grid gap-4 md:grid-cols-4">
+      <div className="flex items-center gap-2 col-span-4 md:col-span-2">
+        <Input
+          placeholder="Search by title, tutor, or student"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="flex-1"
+        />
+        {searchTerm && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setSearchTerm("")}
+            className="h-10 w-10"
+            title="Clear search"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+      
+      <div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger>
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="completed">Completed</SelectItem>
+            <SelectItem value="upcoming">Upcoming</SelectItem>
+            <SelectItem value="cancelled">Cancelled</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      
+      <div>
+        <Select value={subjectFilter} onValueChange={setSubjectFilter}>
+          <SelectTrigger>
+            <SelectValue placeholder="Subject" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Subjects</SelectItem>
+            {allSubjects.map((subject) => (
+              <SelectItem key={subject} value={subject.toLowerCase()}>
+                {subject}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      
+      <div>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={cn(
+                "w-full justify-start text-left",
+                !dateFilter && "text-muted-foreground"
+              )}
             >
-              Clear Filters
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {dateFilter ? format(dateFilter, "PPP") : "Date"}
             </Button>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="relative">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
-            <Input
-              placeholder="Search by title, tutor or student"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8"
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={dateFilter}
+              onSelect={setDateFilter}
+              initialFocus
             />
-          </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="completed">Completed</SelectItem>
-              <SelectItem value="upcoming">Upcoming</SelectItem>
-              <SelectItem value="cancelled">Cancelled</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={subjectFilter} onValueChange={setSubjectFilter}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filter by subject" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Subjects</SelectItem>
-              {allSubjects.map((subject, index) => (
-                <SelectItem key={`subject-${subject}-${index}`} value={subject}>{subject}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className="w-full justify-start text-left font-normal"
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {dateFilter ? format(dateFilter, "PPP") : "Pick a date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={dateFilter}
-                onSelect={setDateFilter}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
+          </PopoverContent>
+        </Popover>
+      </div>
+      
+      <div className="flex items-center justify-between col-span-4">
+        <div className="flex items-center space-x-2">
+          <Switch 
+            id="code-logs" 
+            checked={showCodeLogs} 
+            onCheckedChange={setShowCodeLogs} 
+          />
+          <Label htmlFor="code-logs">Show code logs</Label>
         </div>
-      </CardContent>
-    </Card>
+        
+        <Button variant="ghost" size="sm" onClick={clearFilters}>
+          Clear Filters
+        </Button>
+      </div>
+    </div>
   );
 };
 

@@ -20,6 +20,12 @@ export interface ClassEvent {
   studentPayment: string;
   tutorPayment: string;
   isCodeLog?: boolean;
+  
+  // Add missing properties needed by Tutor components
+  recurring?: boolean;
+  recurringDays?: string[];
+  studentId?: string;
+  materials?: string[];
 }
 
 export interface DbClassLog {
