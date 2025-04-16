@@ -16,35 +16,13 @@ const simulateApiCall = async (): Promise<void> => {
   return new Promise(resolve => setTimeout(resolve, 500));
 };
 
-interface EventHandlersProps {
-  scheduledClasses: ClassEvent[];
-  setScheduledClasses: React.Dispatch<React.SetStateAction<ClassEvent[]>>;
-  selectedEvent: ClassEvent | null;
-  setSelectedEvent: React.Dispatch<React.SetStateAction<ClassEvent | null>>;
-  isAddEventOpen: boolean;
-  setIsAddEventOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  isViewEventOpen: boolean;
-  setIsViewEventOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  isEditMode: boolean;
-  setIsEditMode: React.Dispatch<React.SetStateAction<boolean>>;
-  newEvent: any;
-  setNewEvent: React.Dispatch<React.SetStateAction<any>>;
-}
-
-export const useEventHandlers = ({
-  scheduledClasses,
-  setScheduledClasses,
-  selectedEvent,
-  setSelectedEvent,
-  isAddEventOpen,
-  setIsAddEventOpen,
-  isViewEventOpen,
-  setIsViewEventOpen,
-  isEditMode,
-  setIsEditMode,
-  newEvent,
-  setNewEvent
-}: EventHandlersProps) => {
+export const useEventHandlers = (
+  scheduledClasses: ClassEvent[],
+  setScheduledClasses: React.Dispatch<React.SetStateAction<ClassEvent[]>>,
+  setIsViewEventOpen: React.Dispatch<React.SetStateAction<boolean>>
+) => {
+  const [isEditMode, setIsEditMode] = useState<boolean>(false);
+  const [selectedEvent, setSelectedEvent] = useState<ClassEvent | null>(null);
   const [activeEventTab, setActiveEventTab] = useState<string>("details");
 
   const handleSelectEvent = (event: ClassEvent) => {
