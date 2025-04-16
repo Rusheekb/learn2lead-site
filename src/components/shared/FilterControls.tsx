@@ -68,7 +68,7 @@ const FilterControls: React.FC<CommonFilterProps> = ({
 }) => {
   // Transform string arrays to option objects if needed
   const normalizedSubjectOptions = subjectOptions.map(opt => 
-    typeof opt === 'string' ? { value: opt.toLowerCase() || `subject-${opt.toLowerCase()}`, label: opt } : opt
+    typeof opt === 'string' ? { value: opt || `subject-${opt.toLowerCase() || "unknown"}`, label: opt || "Unknown Subject" } : opt
   );
   
   return (
@@ -107,7 +107,7 @@ const FilterControls: React.FC<CommonFilterProps> = ({
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
               {statusOptions.map((status) => (
-                <SelectItem key={status.value} value={status.value}>
+                <SelectItem key={status.value} value={status.value || `status-${status.label}`}>
                   {status.label}
                 </SelectItem>
               ))}
@@ -125,14 +125,25 @@ const FilterControls: React.FC<CommonFilterProps> = ({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Subjects</SelectItem>
-              {normalizedSubjectOptions.map((subject) => (
-                <SelectItem 
-                  key={typeof subject === 'string' ? subject : subject.value} 
-                  value={typeof subject === 'string' ? subject : subject.value}
-                >
-                  {typeof subject === 'string' ? subject : subject.label}
-                </SelectItem>
-              ))}
+              {normalizedSubjectOptions.map((subject) => {
+                // Ensure we have a valid, non-empty value
+                const value = typeof subject === 'string' 
+                  ? (subject || `subject-${Date.now()}`) 
+                  : (subject.value || `subject-${subject.label || Date.now()}`);
+                
+                const label = typeof subject === 'string' 
+                  ? (subject || "Unknown") 
+                  : (subject.label || "Unknown");
+                
+                return (
+                  <SelectItem 
+                    key={value} 
+                    value={value}
+                  >
+                    {label}
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         </div>
@@ -147,14 +158,25 @@ const FilterControls: React.FC<CommonFilterProps> = ({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Students</SelectItem>
-              {studentOptions.map((student) => (
-                <SelectItem 
-                  key={typeof student === 'string' ? student : student.value} 
-                  value={typeof student === 'string' ? student : student.value}
-                >
-                  {typeof student === 'string' ? student : student.label}
-                </SelectItem>
-              ))}
+              {studentOptions.map((student) => {
+                // Ensure we have a valid, non-empty value
+                const value = typeof student === 'string' 
+                  ? (student || `student-${Date.now()}`) 
+                  : (student.value || `student-${student.label || Date.now()}`);
+                
+                const label = typeof student === 'string' 
+                  ? (student || "Unknown") 
+                  : (student.label || "Unknown");
+                
+                return (
+                  <SelectItem 
+                    key={value} 
+                    value={value}
+                  >
+                    {label}
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         </div>
