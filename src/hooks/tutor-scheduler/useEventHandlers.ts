@@ -1,22 +1,50 @@
-
 import { useState } from "react";
-import { toast } from "sonner";
+import { v4 as uuidv4 } from "uuid";
 import { ClassEvent } from "@/types/tutorTypes";
+import { addDays, format, isBefore } from "date-fns";
+import { toast } from "sonner";
+import { StudentMessage, StudentUpload } from "@/types/classTypes";
 import { 
   createClassLog, 
   updateClassLog, 
   deleteClassLog 
 } from "@/services/classLogsService";
-import { numericIdToDbId } from "@/utils/realtimeUtils";
-import { mockStudents } from "@/components/tutor/mock-data-students";
+import { mockStudents } from "../../components/tutor/mock-data-students";
 
-export const useEventHandlers = (
-  scheduledClasses: ClassEvent[],
-  setScheduledClasses: React.Dispatch<React.SetStateAction<ClassEvent[]>>,
-  setIsViewEventOpen: React.Dispatch<React.SetStateAction<boolean>>
-) => {
-  const [isEditMode, setIsEditMode] = useState<boolean>(false);
-  const [selectedEvent, setSelectedEvent] = useState<ClassEvent | null>(null);
+// Placeholder function that would be replaced with actual API calls
+const simulateApiCall = async (): Promise<void> => {
+  return new Promise(resolve => setTimeout(resolve, 500));
+};
+
+interface EventHandlersProps {
+  scheduledClasses: ClassEvent[];
+  setScheduledClasses: React.Dispatch<React.SetStateAction<ClassEvent[]>>;
+  selectedEvent: ClassEvent | null;
+  setSelectedEvent: React.Dispatch<React.SetStateAction<ClassEvent | null>>;
+  isAddEventOpen: boolean;
+  setIsAddEventOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  isViewEventOpen: boolean;
+  setIsViewEventOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  isEditMode: boolean;
+  setIsEditMode: React.Dispatch<React.SetStateAction<boolean>>;
+  newEvent: any;
+  setNewEvent: React.Dispatch<React.SetStateAction<any>>;
+}
+
+export const useEventHandlers = ({
+  scheduledClasses,
+  setScheduledClasses,
+  selectedEvent,
+  setSelectedEvent,
+  isAddEventOpen,
+  setIsAddEventOpen,
+  isViewEventOpen,
+  setIsViewEventOpen,
+  isEditMode,
+  setIsEditMode,
+  newEvent,
+  setNewEvent
+}: EventHandlersProps) => {
   const [activeEventTab, setActiveEventTab] = useState<string>("details");
 
   const handleSelectEvent = (event: ClassEvent) => {

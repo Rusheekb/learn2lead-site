@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { ClassEvent } from "@/types/tutorTypes";
 import { Student } from "@/types/sharedTypes";
-import { transformDbRecordToClassEvent } from "./classLogsService";
+import { transformDbRecordToClassEvent } from "./utils/classEventMapper";
 
 // Fetch unique tutors from class logs
 export const fetchTutors = async () => {
