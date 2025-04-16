@@ -1,8 +1,8 @@
 
 import React from "react";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search } from "lucide-react";
+import FilterSelect from "@/components/shared/filters/FilterSelect";
 
 interface StudentFiltersProps {
   searchTerm: string;
@@ -25,6 +25,18 @@ const StudentFilters: React.FC<StudentFiltersProps> = ({
     setSearchTerm(event.target.value);
   };
 
+  const statusOptions = [
+    { value: "active", label: "Active" },
+    { value: "inactive", label: "Inactive" },
+    { value: "pending", label: "Pending" }
+  ];
+
+  const paymentOptions = [
+    { value: "paid", label: "Paid" },
+    { value: "unpaid", label: "Unpaid" },
+    { value: "overdue", label: "Overdue" }
+  ];
+
   return (
     <div className="flex flex-col sm:flex-row gap-4 mt-4">
       <div className="relative flex-1">
@@ -36,28 +48,22 @@ const StudentFilters: React.FC<StudentFiltersProps> = ({
           className="pl-10"
         />
       </div>
-      <Select onValueChange={setStatusFilter} defaultValue={statusFilter}>
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Filter by status" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Status</SelectItem>
-          <SelectItem value="active">Active</SelectItem>
-          <SelectItem value="inactive">Inactive</SelectItem>
-          <SelectItem value="pending">Pending</SelectItem>
-        </SelectContent>
-      </Select>
-      <Select onValueChange={setPaymentFilter} defaultValue={paymentFilter}>
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Filter by payment" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">All Payments</SelectItem>
-          <SelectItem value="paid">Paid</SelectItem>
-          <SelectItem value="unpaid">Unpaid</SelectItem>
-          <SelectItem value="overdue">Overdue</SelectItem>
-        </SelectContent>
-      </Select>
+      <FilterSelect
+        value={statusFilter}
+        onValueChange={setStatusFilter}
+        options={statusOptions}
+        placeholder="Filter by status"
+        allOptionLabel="All Status"
+        className="w-[180px]"
+      />
+      <FilterSelect
+        value={paymentFilter}
+        onValueChange={setPaymentFilter}
+        options={paymentOptions}
+        placeholder="Filter by payment"
+        allOptionLabel="All Payments"
+        className="w-[180px]"
+      />
     </div>
   );
 };

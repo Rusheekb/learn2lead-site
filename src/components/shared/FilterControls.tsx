@@ -1,21 +1,10 @@
 
 import React from "react";
-import { Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CalendarIcon, X } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { cn } from "@/lib/utils";
-import { format } from "date-fns";
-
-interface FilterOption {
-  value: string;
-  label: string;
-}
+import SearchInput from "./filters/SearchInput";
+import FilterSelect, { FilterOption } from "./filters/FilterSelect";
+import DateFilter from "./filters/DateFilter";
+import ToggleSwitch from "./filters/ToggleSwitch";
+import ClearFiltersButton from "./filters/ClearFiltersButton";
 
 export interface CommonFilterProps {
   searchTerm: string;
@@ -42,14 +31,6 @@ export interface CommonFilterProps {
   clearFilters: () => void;
 }
 
-// Helper function to ensure we never have empty values in SelectItems
-const ensureValidValue = (value: string | undefined, prefix: string): string => {
-  if (!value || value.trim() === '') {
-    return `${prefix}-${Date.now()}`;
-  }
-  return value;
-};
-
 const FilterControls: React.FC<CommonFilterProps> = ({
   searchTerm,
   setSearchTerm,
@@ -74,166 +55,72 @@ const FilterControls: React.FC<CommonFilterProps> = ({
   setShowCodeLogs,
   clearFilters
 }) => {
-  // Transform string arrays to option objects if needed
-  const normalizedSubjectOptions = subjectOptions.map(opt => {
-    if (typeof opt === 'string') {
-      const value = ensureValidValue(opt, 'subject');
-      return { value, label: opt || "Unknown Subject" };
-    }
-    return {
-      value: ensureValidValue(opt.value, 'subject'),
-      label: opt.label || "Unknown Subject"
-    };
-  });
-  
   return (
     <div className="grid gap-4 md:grid-cols-4">
       {/* Search Box */}
-      <div className={`flex items-center gap-2 ${showDateFilter || showStatusFilter || showSubjectFilter ? "col-span-4 md:col-span-2" : "col-span-4"}`}>
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          <Input
-            placeholder={searchPlaceholder}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        {searchTerm && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setSearchTerm("")}
-            className="h-10 w-10"
-            title="Clear search"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        )}
-      </div>
+      <SearchInput 
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        placeholder={searchPlaceholder}
+        className={`${showDateFilter || showStatusFilter || showSubjectFilter ? "col-span-4 md:col-span-2" : "col-span-4"}`}
+      />
       
       {/* Status Filter */}
       {showStatusFilter && setStatusFilter && (
-        <div>
-          <Select value={statusFilter || "all"} onValueChange={setStatusFilter}>
-            <SelectTrigger>
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              {statusOptions.map((status) => {
-                const value = ensureValidValue(status.value, 'status');
-                return (
-                  <SelectItem key={value} value={value}>
-                    {status.label || "Unknown Status"}
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
-        </div>
+        <FilterSelect
+          value={statusFilter}
+          onValueChange={setStatusFilter}
+          options={statusOptions}
+          placeholder="Status"
+          allOptionLabel="All Statuses"
+        />
       )}
       
       {/* Subject Filter */}
       {showSubjectFilter && setSubjectFilter && (
-        <div>
-          <Select value={subjectFilter || "all"} onValueChange={setSubjectFilter}>
-            <SelectTrigger>
-              <SelectValue placeholder="Subject" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Subjects</SelectItem>
-              {normalizedSubjectOptions.map((subject) => (
-                <SelectItem 
-                  key={subject.value} 
-                  value={subject.value}
-                >
-                  {subject.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <FilterSelect
+          value={subjectFilter}
+          onValueChange={setSubjectFilter}
+          options={subjectOptions}
+          placeholder="Subject"
+          allOptionLabel="All Subjects"
+        />
       )}
       
       {/* Student Filter */}
       {showStudentFilter && setStudentFilter && (
-        <div>
-          <Select value={studentFilter || "all"} onValueChange={setStudentFilter}>
-            <SelectTrigger>
-              <SelectValue placeholder="Student" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Students</SelectItem>
-              {studentOptions.map((student) => {
-                // Handle both string and object cases
-                let value: string;
-                let label: string;
-                
-                if (typeof student === 'string') {
-                  value = ensureValidValue(student, 'student');
-                  label = student || "Unknown Student";
-                } else {
-                  value = ensureValidValue(student.value, 'student');
-                  label = student.label || "Unknown Student";
-                }
-                
-                return (
-                  <SelectItem key={value} value={value}>
-                    {label}
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
-        </div>
+        <FilterSelect
+          value={studentFilter}
+          onValueChange={setStudentFilter}
+          options={studentOptions}
+          placeholder="Student"
+          allOptionLabel="All Students"
+        />
       )}
       
       {/* Date Filter */}
       {showDateFilter && dateFilter !== undefined && setDateFilter && (
-        <div>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left",
-                  !dateFilter && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {dateFilter ? format(dateFilter, "PPP") : "Date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                mode="single"
-                selected={dateFilter}
-                onSelect={setDateFilter}
-                initialFocus
-                className="pointer-events-auto"
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
+        <DateFilter
+          date={dateFilter}
+          setDate={setDateFilter}
+        />
       )}
       
       {/* Code Logs Switch and Clear Filters */}
       <div className="flex items-center justify-between col-span-4">
         {showCodeLogsSwitch && setShowCodeLogs && (
-          <div className="flex items-center space-x-2">
-            <Switch 
-              id="code-logs" 
-              checked={showCodeLogs} 
-              onCheckedChange={setShowCodeLogs} 
-            />
-            <Label htmlFor="code-logs">Show code logs</Label>
-          </div>
+          <ToggleSwitch
+            id="code-logs"
+            checked={showCodeLogs}
+            onCheckedChange={setShowCodeLogs}
+            label="Show code logs"
+          />
         )}
         
-        <Button variant="ghost" size="sm" onClick={clearFilters} className="ml-auto">
-          Clear Filters
-        </Button>
+        <ClearFiltersButton 
+          onClick={clearFilters} 
+          className="ml-auto"
+        />
       </div>
     </div>
   );

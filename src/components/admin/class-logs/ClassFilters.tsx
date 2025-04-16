@@ -40,8 +40,7 @@ const ClassFilters: React.FC<ClassFiltersProps> = ({
 
   // Filter out empty subjects and ensure all have valid values
   const validSubjects = allSubjects
-    .filter(subject => subject && subject.trim() !== '')
-    .map(subject => subject || `Subject-${Date.now()}`);
+    .filter(subject => subject && subject.trim() !== '');
 
   return (
     <FilterControls

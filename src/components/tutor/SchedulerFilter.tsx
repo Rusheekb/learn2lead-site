@@ -32,8 +32,7 @@ const SchedulerFilter: React.FC<SchedulerFilterProps> = ({
 
   // Ensure allSubjects doesn't contain empty strings
   const validSubjects = allSubjects
-    .filter(subject => subject && subject.trim() !== '')
-    .map(subject => subject || `Subject-${Date.now()}`);
+    .filter(subject => subject && subject.trim() !== '');
 
   const clearFilters = () => {
     setSearchTerm("");
