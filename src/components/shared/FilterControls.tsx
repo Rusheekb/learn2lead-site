@@ -42,6 +42,14 @@ export interface CommonFilterProps {
   clearFilters: () => void;
 }
 
+// Helper function to ensure we never have empty values in SelectItems
+const ensureValidValue = (value: string | undefined, prefix: string): string => {
+  if (!value || value.trim() === '') {
+    return `${prefix}-${Date.now()}`;
+  }
+  return value;
+};
+
 const FilterControls: React.FC<CommonFilterProps> = ({
   searchTerm,
   setSearchTerm,
@@ -67,9 +75,16 @@ const FilterControls: React.FC<CommonFilterProps> = ({
   clearFilters
 }) => {
   // Transform string arrays to option objects if needed
-  const normalizedSubjectOptions = subjectOptions.map(opt => 
-    typeof opt === 'string' ? { value: opt || `subject-${opt.toLowerCase() || "unknown"}`, label: opt || "Unknown Subject" } : opt
-  );
+  const normalizedSubjectOptions = subjectOptions.map(opt => {
+    if (typeof opt === 'string') {
+      const value = ensureValidValue(opt, 'subject');
+      return { value, label: opt || "Unknown Subject" };
+    }
+    return {
+      value: ensureValidValue(opt.value, 'subject'),
+      label: opt.label || "Unknown Subject"
+    };
+  });
   
   return (
     <div className="grid gap-4 md:grid-cols-4">
@@ -106,11 +121,14 @@ const FilterControls: React.FC<CommonFilterProps> = ({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
-              {statusOptions.map((status) => (
-                <SelectItem key={status.value} value={status.value || `status-${status.label}`}>
-                  {status.label}
-                </SelectItem>
-              ))}
+              {statusOptions.map((status) => {
+                const value = ensureValidValue(status.value, 'status');
+                return (
+                  <SelectItem key={value} value={value}>
+                    {status.label || "Unknown Status"}
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         </div>
@@ -125,25 +143,14 @@ const FilterControls: React.FC<CommonFilterProps> = ({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Subjects</SelectItem>
-              {normalizedSubjectOptions.map((subject) => {
-                // Ensure we have a valid, non-empty value
-                const value = typeof subject === 'string' 
-                  ? (subject || `subject-${Date.now()}`) 
-                  : (subject.value || `subject-${subject.label || Date.now()}`);
-                
-                const label = typeof subject === 'string' 
-                  ? (subject || "Unknown") 
-                  : (subject.label || "Unknown");
-                
-                return (
-                  <SelectItem 
-                    key={value} 
-                    value={value}
-                  >
-                    {label}
-                  </SelectItem>
-                );
-              })}
+              {normalizedSubjectOptions.map((subject) => (
+                <SelectItem 
+                  key={subject.value} 
+                  value={subject.value}
+                >
+                  {subject.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -159,20 +166,20 @@ const FilterControls: React.FC<CommonFilterProps> = ({
             <SelectContent>
               <SelectItem value="all">All Students</SelectItem>
               {studentOptions.map((student) => {
-                // Ensure we have a valid, non-empty value
-                const value = typeof student === 'string' 
-                  ? (student || `student-${Date.now()}`) 
-                  : (student.value || `student-${student.label || Date.now()}`);
+                // Handle both string and object cases
+                let value: string;
+                let label: string;
                 
-                const label = typeof student === 'string' 
-                  ? (student || "Unknown") 
-                  : (student.label || "Unknown");
+                if (typeof student === 'string') {
+                  value = ensureValidValue(student, 'student');
+                  label = student || "Unknown Student";
+                } else {
+                  value = ensureValidValue(student.value, 'student');
+                  label = student.label || "Unknown Student";
+                }
                 
                 return (
-                  <SelectItem 
-                    key={value} 
-                    value={value}
-                  >
+                  <SelectItem key={value} value={value}>
                     {label}
                   </SelectItem>
                 );

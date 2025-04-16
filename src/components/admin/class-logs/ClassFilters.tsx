@@ -31,12 +31,17 @@ const ClassFilters: React.FC<ClassFiltersProps> = ({
   showCodeLogs,
   setShowCodeLogs
 }) => {
-  // Common status options
+  // Common status options with guaranteed non-empty values
   const statusOptions = [
     { value: "completed", label: "Completed" },
     { value: "upcoming", label: "Upcoming" },
     { value: "cancelled", label: "Cancelled" }
   ];
+
+  // Filter out empty subjects and ensure all have valid values
+  const validSubjects = allSubjects
+    .filter(subject => subject && subject.trim() !== '')
+    .map(subject => subject || `Subject-${Date.now()}`);
 
   return (
     <FilterControls
@@ -50,7 +55,7 @@ const ClassFilters: React.FC<ClassFiltersProps> = ({
       showSubjectFilter={true}
       subjectFilter={subjectFilter}
       setSubjectFilter={setSubjectFilter}
-      subjectOptions={allSubjects}
+      subjectOptions={validSubjects}
       showDateFilter={true}
       dateFilter={dateFilter}
       setDateFilter={setDateFilter}

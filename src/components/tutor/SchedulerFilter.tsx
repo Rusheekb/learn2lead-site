@@ -24,10 +24,16 @@ const SchedulerFilter: React.FC<SchedulerFilterProps> = ({
   allSubjects,
   students,
 }) => {
+  // Create student options ensuring all have valid values
   const studentOptions = students.map(student => ({
-    value: student.id.toString(),
-    label: student.name
+    value: student.id.toString() || `student-${Date.now()}`,
+    label: student.name || `Student ${student.id}`
   }));
+
+  // Ensure allSubjects doesn't contain empty strings
+  const validSubjects = allSubjects
+    .filter(subject => subject && subject.trim() !== '')
+    .map(subject => subject || `Subject-${Date.now()}`);
 
   const clearFilters = () => {
     setSearchTerm("");
@@ -43,7 +49,7 @@ const SchedulerFilter: React.FC<SchedulerFilterProps> = ({
       showSubjectFilter={true}
       subjectFilter={subjectFilter}
       setSubjectFilter={setSubjectFilter}
-      subjectOptions={allSubjects}
+      subjectOptions={validSubjects}
       showStudentFilter={true}
       studentFilter={studentFilter}
       setStudentFilter={setStudentFilter}

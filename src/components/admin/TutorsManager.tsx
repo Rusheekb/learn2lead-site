@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -21,6 +20,10 @@ interface Tutor {
   hourlyRate: number;
 }
 
+const ensureValidSubject = (subject: string): string => {
+  return subject && subject.trim() !== '' ? subject : `subject-${Date.now()}`;
+};
+
 const TutorsManager: React.FC = () => {
   const [tutors, setTutors] = useState<Tutor[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -35,18 +38,13 @@ const TutorsManager: React.FC = () => {
       try {
         const tutorData = await fetchTutors();
         
-        // Enhance tutor data with information from classes
         const enhancedTutors = tutorData.map(tutor => {
-          // Find classes taught by this tutor
           const tutorClasses = classes.filter(cls => cls.tutorName === tutor.name);
           
-          // Extract unique subjects
           const subjects = Array.from(new Set(tutorClasses.map(cls => cls.subject))).filter(Boolean);
           
-          // Calculate total classes
           const classesCount = tutorClasses.length;
           
-          // Calculate average hourly rate based on tutor cost
           const totalCost = tutorClasses.reduce((sum, cls) => sum + (cls.tutorCost || 0), 0);
           const totalHours = tutorClasses.reduce((sum, cls) => sum + (cls.duration || 0), 0);
           const hourlyRate = totalHours > 0 ? Math.round(totalCost / totalHours) : 0;
@@ -56,7 +54,7 @@ const TutorsManager: React.FC = () => {
             subjects,
             classes: classesCount,
             hourlyRate,
-            rating: Math.floor(Math.random() * 2) + 4 // Random rating between 4 and 5 as placeholder
+            rating: Math.floor(Math.random() * 2) + 4
           };
         });
         
@@ -100,6 +98,8 @@ const TutorsManager: React.FC = () => {
     const matchesSubject = subjectFilter === "all" || tutor.subjects.includes(subjectFilter);
     return matchesSearch && matchesSubject;
   });
+
+  const validSubjects = allSubjects.map(subject => ensureValidSubject(subject));
 
   return (
     <div className="space-y-6">
@@ -180,8 +180,8 @@ const TutorsManager: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Subjects</SelectItem>
-                {allSubjects.map((subject) => (
-                  <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+                {validSubjects.map((subject) => (
+                  <SelectItem key={subject} value={subject}>{subject || "Unknown Subject"}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -217,7 +217,7 @@ const TutorsManager: React.FC = () => {
                         <div className="text-sm text-muted-foreground">{tutor.email}</div>
                       </div>
                     </TableCell>
-                    <TableCell>{tutor.subjects.join(", ")}</TableCell>
+                    <TableCell>{tutor.subjects.join(", ") || "None"}</TableCell>
                     <TableCell>{tutor.rating}/5</TableCell>
                     <TableCell>{tutor.classes}</TableCell>
                     <TableCell>${tutor.hourlyRate}/hr</TableCell>
