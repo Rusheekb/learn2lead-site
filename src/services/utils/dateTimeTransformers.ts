@@ -1,52 +1,86 @@
 
-import { format, parse } from "date-fns";
+import { parse, format, addMinutes } from "date-fns";
 
 /**
- * Parses a numeric string to a number, returning 0 if invalid
+ * Parse a string that should be a number
  */
-export const parseNumericString = (value: string | null): number => {
+export const parseNumericString = (value: string | number | undefined): number => {
+  if (typeof value === "number") return value;
   if (!value) return 0;
+  
+  // Try to parse as float first
   const parsed = parseFloat(value);
-  return isNaN(parsed) ? 0 : parsed;
+  if (!isNaN(parsed)) {
+    return parsed;
+  }
+  
+  // If not a valid number, return 0
+  return 0;
 };
 
 /**
- * Calculates end time based on start time and duration in hours
+ * Calculate end time based on start time and duration
  */
-export const calculateEndTime = (startTime: string, durationHrs: number): string => {
-  if (!startTime || !durationHrs) return '';
+export const calculateEndTime = (startTime: string, durationHours: number): string => {
+  // Default return if inputs are invalid
+  if (!startTime || !durationHours) return "";
+  
   try {
+    // Parse time in 24-hour format (e.g., "14:30")
     const [hours, minutes] = startTime.split(':').map(Number);
-    const totalMinutes = hours * 60 + minutes + durationHrs * 60;
-    const endHours = Math.floor(totalMinutes / 60) % 24;
-    const endMinutes = totalMinutes % 60;
-    return `${endHours.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`;
-  } catch (error) {
-    console.error('Error calculating end time:', error);
-    return '';
+    
+    // Invalid time parts
+    if (isNaN(hours) || isNaN(minutes)) return "";
+    
+    // Create a date object for calculations (using today's date with the given time)
+    const today = new Date();
+    const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), hours, minutes);
+    
+    // Calculate end time by adding duration in hours
+    const durationMinutes = durationHours * 60;
+    const endDate = addMinutes(startDate, durationMinutes);
+    
+    // Format as HH:MM
+    return format(endDate, 'HH:mm');
+  } catch (e) {
+    console.error("Error calculating end time:", e);
+    return "";
   }
 };
 
 /**
- * Parse date string using multiple possible formats
+ * Try parsing date using various formats
  */
 export const parseDateWithFormats = (dateStr: string): Date => {
-  if (!dateStr) return new Date();
-  
-  // Try multiple date formats to handle different possible formats
-  const formats = ['yyyy-MM-dd', 'MM/dd/yyyy', 'M/d/yyyy'];
-  
-  for (const format of formats) {
+  // Array of common date formats to try
+  const formats = [
+    'yyyy-MM-dd',
+    'MM/dd/yyyy',
+    'dd/MM/yyyy',
+    'yyyy/MM/dd',
+    'dd-MMM-yyyy',
+    'MMM dd, yyyy'
+  ];
+
+  for (const formatStr of formats) {
     try {
-      const dateObj = parse(dateStr, format, new Date());
-      if (!isNaN(dateObj.getTime())) {
-        return dateObj;
+      const parsed = parse(dateStr, formatStr, new Date());
+      // If valid date, return it
+      if (!isNaN(parsed.getTime())) {
+        return parsed;
       }
     } catch (e) {
-      // Continue trying other formats
+      // Try next format
+      continue;
     }
   }
-  
-  console.error('Failed to parse date with any format:', dateStr);
-  return new Date(); // Fallback to current date
+
+  // If all formats fail, try JavaScript's built-in Date parsing
+  const fallbackDate = new Date(dateStr);
+  if (!isNaN(fallbackDate.getTime())) {
+    return fallbackDate;
+  }
+
+  // If everything fails, throw an error
+  throw new Error(`Cannot parse date string: ${dateStr}`);
 };
