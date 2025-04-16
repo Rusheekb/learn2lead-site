@@ -9,63 +9,130 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Plus, Edit2, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-import { Student, validateStudent } from "@/types/studentTypes";
-import { supabase } from "@/lib/supabase";
+import { fetchStudents } from "@/services/dataService";
+import { useClassLogs } from "@/hooks/useClassLogs";
+import { format } from "date-fns";
 
-const mockStudents: Student[] = [
-  {
-    id: 1,
-    name: "John Doe",
-    email: "john@example.com",
-    grade: "10th",
-    subjects: ["Math", "Physics"],
-    status: "active" as const,
-    enrollDate: "2023-01-15",
-    lastSession: "2023-03-20",
-    paymentStatus: "paid" as const,
-  },
-  {
-    id: 2,
-    name: "Noah Martinez",
-    email: "noah@example.com",
-    grade: "10th Grade",
-    subjects: ["Chemistry", "Biology"],
-    status: "active",
-    enrollDate: "2023-10-15",
-    lastSession: "2025-04-08",
-    paymentStatus: "unpaid"
-  },
-  {
-    id: 3,
-    name: "Olivia Johnson",
-    email: "olivia@example.com",
-    grade: "12th Grade",
-    subjects: ["English Literature", "History"],
-    status: "inactive",
-    enrollDate: "2023-08-20",
-    lastSession: "2025-03-15",
-    paymentStatus: "overdue"
-  },
-  {
-    id: 4,
-    name: "Liam Williams",
-    email: "liam@example.com",
-    grade: "9th Grade",
-    subjects: ["Algebra", "Spanish"],
-    status: "pending",
-    enrollDate: "2025-04-05",
-    lastSession: "N/A",
-    paymentStatus: "paid"
-  },
-] as const;
+interface Student {
+  id: string;
+  name: string;
+  email: string;
+  grade: string;
+  subjects: string[];
+  status: "active" | "inactive" | "pending";
+  enrollDate: string;
+  lastSession: string;
+  paymentStatus: "paid" | "unpaid" | "overdue";
+}
 
 const StudentsManager: React.FC = () => {
-  const [students, setStudents] = useState<Student[]>(mockStudents);
+  const [students, setStudents] = useState<Student[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [paymentFilter, setPaymentFilter] = useState<string>("all");
   const { toast } = useToast();
-  const [isAddStudentOpen, setIsAddStudentOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const { classes } = useClassLogs();
+
+  // Function to format date for display
+  const formatDate = (dateString: string | undefined) => {
+    if (!dateString) return 'N/A';
+    try {
+      return format(new Date(dateString), 'MMM d, yyyy');
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return dateString;
+    }
+  };
+
+  useEffect(() => {
+    const loadStudents = async () => {
+      setIsLoading(true);
+      try {
+        const studentData = await fetchStudents();
+        
+        // Enhance student data
+        const enhancedStudents = studentData.map(student => {
+          // Get all classes for this student
+          const studentClasses = classes.filter(cls => cls.studentName === student.name);
+          
+          // Determine status based on recent activity (last 3 months = active)
+          let status: "active" | "inactive" | "pending" = "inactive";
+          if (student.lastSession) {
+            const lastSessionDate = new Date(student.lastSession);
+            const threeMonthsAgo = new Date();
+            threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+            
+            if (lastSessionDate >= threeMonthsAgo) {
+              status = "active";
+            }
+          }
+          
+          // Determine payment status based on class payments
+          let paymentStatus: "paid" | "unpaid" | "overdue" = "paid";
+          const unpaidClasses = studentClasses.filter(cls => 
+            cls.studentPayment && cls.studentPayment.toLowerCase() !== "paid"
+          );
+          
+          if (unpaidClasses.length > 0) {
+            // Check if any unpaid classes are older than 30 days (overdue)
+            const overdueClasses = unpaidClasses.filter(cls => {
+              if (!cls.date) return false;
+              const classDate = new Date(cls.date);
+              const thirtyDaysAgo = new Date();
+              thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+              return classDate < thirtyDaysAgo;
+            });
+            
+            paymentStatus = overdueClasses.length > 0 ? "overdue" : "unpaid";
+          }
+          
+          // Find enrollment date (earliest class date)
+          let enrollDate = student.lastSession;
+          studentClasses.forEach(cls => {
+            if (cls.date) {
+              const classDate = new Date(cls.date);
+              if (!enrollDate || classDate < new Date(enrollDate)) {
+                enrollDate = cls.date instanceof Date ? 
+                  cls.date.toISOString().split('T')[0] : 
+                  String(cls.date);
+              }
+            }
+          });
+          
+          // Estimate grade level (placeholder)
+          const grade = Math.floor(Math.random() * 4) + 9; // Random grade between 9-12
+          
+          return {
+            id: student.id,
+            name: student.name,
+            email: student.email || `${student.name.toLowerCase().replace(/\s+/g, '.')}@example.com`,
+            grade: `${grade}th Grade`,
+            subjects: student.subjects,
+            status,
+            enrollDate: enrollDate || new Date().toISOString().split('T')[0],
+            lastSession: student.lastSession || 'N/A',
+            paymentStatus
+          };
+        });
+        
+        setStudents(enhancedStudents);
+      } catch (error) {
+        console.error("Error loading students:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load student data",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (classes.length > 0) {
+      loadStudents();
+    }
+  }, [classes]);
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
@@ -105,7 +172,7 @@ const StudentsManager: React.FC = () => {
     setPaymentFilter(value);
   };
 
-  const handleDeleteStudent = (studentId: number) => {
+  const handleDeleteStudent = (studentId: string) => {
     setStudents(students.filter(student => student.id !== studentId));
     toast({
       title: "Student Deleted",
@@ -121,26 +188,6 @@ const StudentsManager: React.FC = () => {
     const matchesPayment = paymentFilter === "all" || student.paymentStatus === paymentFilter;
     return matchesSearch && matchesStatus && matchesPayment;
   });
-
-  useEffect(() => {
-    const fetchStudents = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("class_logs")
-          .select("*");
-        
-        if (error) throw error;
-        
-        // Validate and transform the data
-        const validatedStudents = data.map(validateStudent);
-        setStudents(validatedStudents);
-      } catch (error) {
-        console.error("Error fetching students:", error);
-      }
-    };
-
-    fetchStudents();
-  }, []);
 
   return (
     <div className="space-y-6">
@@ -161,7 +208,7 @@ const StudentsManager: React.FC = () => {
               e.preventDefault();
               const formData = new FormData(e.currentTarget);
               const newStudent = {
-                id: students.length + 1,
+                id: Date.now().toString(),
                 name: formData.get('name') as string,
                 email: formData.get('email') as string,
                 grade: formData.get('grade') as string,
@@ -177,7 +224,6 @@ const StudentsManager: React.FC = () => {
                 description: "New student has been successfully added to the system.",
               });
               (e.target as HTMLFormElement).reset();
-              setIsAddStudentOpen(false);
             }}>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
@@ -208,9 +254,6 @@ const StudentsManager: React.FC = () => {
                 </div>
               </div>
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsAddStudentOpen(false)}>
-                  Cancel
-                </Button>
                 <Button type="submit">Add Student</Button>
               </DialogFooter>
             </form>
@@ -256,58 +299,68 @@ const StudentsManager: React.FC = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Student</TableHead>
-                <TableHead>Grade</TableHead>
-                <TableHead>Subjects</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Payment</TableHead>
-                <TableHead>Last Session</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredStudents.map((student) => (
-                <TableRow key={student.id}>
-                  <TableCell>
-                    <div className="flex flex-col">
-                      <div className="font-medium">{student.name}</div>
-                      <div className="text-sm text-muted-foreground">{student.email}</div>
-                    </div>
-                  </TableCell>
-                  <TableCell>{student.grade}</TableCell>
-                  <TableCell>{student.subjects.join(", ")}</TableCell>
-                  <TableCell>
-                    <Badge variant={getStatusBadgeVariant(student.status)}>
-                      {student.status.charAt(0).toUpperCase() + student.status.slice(1)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={getPaymentBadgeVariant(student.paymentStatus)}>
-                      {student.paymentStatus.charAt(0).toUpperCase() + student.paymentStatus.slice(1)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{student.lastSession === "N/A" ? "N/A" : new Date(student.lastSession).toLocaleDateString()}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="icon">
-                        <Edit2 className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        onClick={() => handleDeleteStudent(student.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
-                    </div>
-                  </TableCell>
+          {isLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <p>Loading students...</p>
+            </div>
+          ) : filteredStudents.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              <p>No students found matching your criteria.</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Student</TableHead>
+                  <TableHead>Grade</TableHead>
+                  <TableHead>Subjects</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Payment</TableHead>
+                  <TableHead>Last Session</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredStudents.map((student) => (
+                  <TableRow key={student.id}>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <div className="font-medium">{student.name}</div>
+                        <div className="text-sm text-muted-foreground">{student.email}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell>{student.grade}</TableCell>
+                    <TableCell>{student.subjects.join(", ")}</TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusBadgeVariant(student.status)}>
+                        {student.status.charAt(0).toUpperCase() + student.status.slice(1)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getPaymentBadgeVariant(student.paymentStatus)}>
+                        {student.paymentStatus.charAt(0).toUpperCase() + student.paymentStatus.slice(1)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{student.lastSession === "N/A" ? "N/A" : formatDate(student.lastSession)}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="icon">
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => handleDeleteStudent(student.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>

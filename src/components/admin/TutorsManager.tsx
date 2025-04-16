@@ -1,83 +1,82 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { BadgeCheck, Mail, Phone, Search, Plus, Edit2, Trash2, Star } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Search, Plus, Edit2, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { fetchTutors } from "@/services/dataService";
+import { useClassLogs } from "@/hooks/useClassLogs";
 
 interface Tutor {
-  id: number;
+  id: string;
   name: string;
   email: string;
-  phone: string;
   subjects: string[];
-  verified: boolean;
   rating: number;
-  studentsCount: number;
-  nextSession: string;
+  classes: number;
+  hourlyRate: number;
 }
 
-const mockTutors: Tutor[] = [
-  {
-    id: 1,
-    name: "Dr. Sarah Johnson",
-    email: "sarah.johnson@learn2lead.com",
-    phone: "(555) 123-4567",
-    subjects: ["Mathematics", "Physics"],
-    verified: true,
-    rating: 4.9,
-    studentsCount: 18,
-    nextSession: "2025-04-12T14:00:00"
-  },
-  {
-    id: 2,
-    name: "Prof. Michael Chen",
-    email: "michael.chen@learn2lead.com",
-    phone: "(555) 234-5678",
-    subjects: ["Chemistry", "Biology"],
-    verified: true,
-    rating: 4.7,
-    studentsCount: 15,
-    nextSession: "2025-04-10T10:30:00"
-  },
-  {
-    id: 3,
-    name: "Lisa Rodriguez",
-    email: "lisa.rodriguez@learn2lead.com",
-    phone: "(555) 345-6789",
-    subjects: ["English Literature", "Writing"],
-    verified: false,
-    rating: 4.5,
-    studentsCount: 12,
-    nextSession: "2025-04-11T16:15:00"
-  },
-  {
-    id: 4,
-    name: "James Wilson",
-    email: "james.wilson@learn2lead.com",
-    phone: "(555) 456-7890",
-    subjects: ["History", "Social Studies"],
-    verified: true,
-    rating: 4.8,
-    studentsCount: 14,
-    nextSession: "2025-04-13T13:00:00"
-  },
-];
-
 const TutorsManager: React.FC = () => {
-  const [tutors, setTutors] = useState<Tutor[]>(mockTutors);
+  const [tutors, setTutors] = useState<Tutor[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [subjectFilter, setSubjectFilter] = useState<string>("all");
-  const [verificationFilter, setVerificationFilter] = useState<string>("all");
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-  const [isAddTutorOpen, setIsAddTutorOpen] = useState(false);
+  const { classes, allSubjects } = useClassLogs();
 
-  const allSubjects = Array.from(
-    new Set(tutors.flatMap(tutor => tutor.subjects))
-  ).sort();
+  useEffect(() => {
+    const loadTutors = async () => {
+      setIsLoading(true);
+      try {
+        const tutorData = await fetchTutors();
+        
+        // Enhance tutor data with information from classes
+        const enhancedTutors = tutorData.map(tutor => {
+          // Find classes taught by this tutor
+          const tutorClasses = classes.filter(cls => cls.tutorName === tutor.name);
+          
+          // Extract unique subjects
+          const subjects = Array.from(new Set(tutorClasses.map(cls => cls.subject))).filter(Boolean);
+          
+          // Calculate total classes
+          const classesCount = tutorClasses.length;
+          
+          // Calculate average hourly rate based on tutor cost
+          const totalCost = tutorClasses.reduce((sum, cls) => sum + (cls.tutorCost || 0), 0);
+          const totalHours = tutorClasses.reduce((sum, cls) => sum + (cls.duration || 0), 0);
+          const hourlyRate = totalHours > 0 ? Math.round(totalCost / totalHours) : 0;
+          
+          return {
+            ...tutor,
+            subjects,
+            classes: classesCount,
+            hourlyRate,
+            rating: Math.floor(Math.random() * 2) + 4 // Random rating between 4 and 5 as placeholder
+          };
+        });
+        
+        setTutors(enhancedTutors);
+      } catch (error) {
+        console.error("Error loading tutors:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load tutor data",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (classes.length > 0) {
+      loadTutors();
+    }
+  }, [classes]);
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
@@ -87,39 +86,19 @@ const TutorsManager: React.FC = () => {
     setSubjectFilter(value);
   };
 
-  const handleVerificationFilter = (value: string) => {
-    setVerificationFilter(value);
-  };
-
-  const handleDeleteTutor = (tutorId: number) => {
+  const handleDeleteTutor = (tutorId: string) => {
     setTutors(tutors.filter(tutor => tutor.id !== tutorId));
     toast({
-      title: "Tutor Removed",
-      description: "The tutor has been successfully removed from the system.",
-      variant: "default",
-    });
-  };
-
-  const handleVerifyTutor = (tutorId: number) => {
-    setTutors(tutors.map(tutor => 
-      tutor.id === tutorId ? { ...tutor, verified: true } : tutor
-    ));
-    toast({
-      title: "Tutor Verified",
-      description: "The tutor has been successfully verified.",
-      variant: "default",
+      title: "Tutor Deleted",
+      description: "The tutor has been successfully removed.",
     });
   };
 
   const filteredTutors = tutors.filter(tutor => {
-    const matchesSearch = 
-      tutor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tutor.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tutor.phone.includes(searchTerm);
+    const matchesSearch = tutor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         tutor.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesSubject = subjectFilter === "all" || tutor.subjects.includes(subjectFilter);
-    const matchesVerification = verificationFilter === "all" || 
-      (verificationFilter === "verified" ? tutor.verified : !tutor.verified);
-    return matchesSearch && matchesSubject && matchesVerification;
+    return matchesSearch && matchesSubject;
   });
 
   return (
@@ -141,15 +120,13 @@ const TutorsManager: React.FC = () => {
               e.preventDefault();
               const formData = new FormData(e.currentTarget);
               const newTutor = {
-                id: tutors.length + 1,
+                id: Date.now().toString(),
                 name: formData.get('name') as string,
                 email: formData.get('email') as string,
-                phone: formData.get('phone') as string,
                 subjects: (formData.get('subjects') as string).split(',').map(s => s.trim()),
-                verified: false,
-                rating: 0,
-                studentsCount: 0,
-                nextSession: new Date().toISOString()
+                rating: 5,
+                classes: 0,
+                hourlyRate: parseInt(formData.get('hourlyRate') as string || '0')
               };
               setTutors([...tutors, newTutor]);
               toast({
@@ -157,30 +134,26 @@ const TutorsManager: React.FC = () => {
                 description: "New tutor has been successfully added to the system.",
               });
               (e.target as HTMLFormElement).reset();
-              setIsAddTutorOpen(false);
             }}>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
                   <label htmlFor="name" className="text-sm font-medium">Full Name</label>
-                  <Input id="name" name="name" required placeholder="Dr. John Smith" />
+                  <Input id="name" name="name" required placeholder="John Smith" />
                 </div>
                 <div className="grid gap-2">
                   <label htmlFor="email" className="text-sm font-medium">Email</label>
-                  <Input id="email" name="email" type="email" required placeholder="john.smith@learn2lead.com" />
-                </div>
-                <div className="grid gap-2">
-                  <label htmlFor="phone" className="text-sm font-medium">Phone</label>
-                  <Input id="phone" name="phone" required placeholder="(555) 123-4567" />
+                  <Input id="email" name="email" type="email" required placeholder="john.smith@example.com" />
                 </div>
                 <div className="grid gap-2">
                   <label htmlFor="subjects" className="text-sm font-medium">Subjects (comma-separated)</label>
                   <Input id="subjects" name="subjects" required placeholder="Mathematics, Physics, Chemistry" />
                 </div>
+                <div className="grid gap-2">
+                  <label htmlFor="hourlyRate" className="text-sm font-medium">Hourly Rate ($)</label>
+                  <Input id="hourlyRate" name="hourlyRate" type="number" min="0" required placeholder="50" />
+                </div>
               </div>
               <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsAddTutorOpen(false)}>
-                  Cancel
-                </Button>
                 <Button type="submit">Add Tutor</Button>
               </DialogFooter>
             </form>
@@ -207,93 +180,66 @@ const TutorsManager: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Subjects</SelectItem>
-                {allSubjects.map(subject => (
+                {allSubjects.map((subject) => (
                   <SelectItem key={subject} value={subject}>{subject}</SelectItem>
                 ))}
-              </SelectContent>
-            </Select>
-            <Select onValueChange={handleVerificationFilter} defaultValue="all">
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by verification" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="verified">Verified</SelectItem>
-                <SelectItem value="unverified">Unverified</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Subjects</TableHead>
-                <TableHead>Rating</TableHead>
-                <TableHead>Students</TableHead>
-                <TableHead>Next Session</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredTutors.map((tutor) => (
-                <TableRow key={tutor.id}>
-                  <TableCell>
-                    <div className="flex flex-col">
-                      <div className="font-medium flex items-center gap-1">
-                        {tutor.name}
-                        {tutor.verified && <BadgeCheck className="h-4 w-4 text-green-500" />}
+          {isLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <p>Loading tutors...</p>
+            </div>
+          ) : filteredTutors.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              <p>No tutors found matching your criteria.</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Tutor</TableHead>
+                  <TableHead>Subjects</TableHead>
+                  <TableHead>Rating</TableHead>
+                  <TableHead>Classes</TableHead>
+                  <TableHead>Hourly Rate</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredTutors.map((tutor) => (
+                  <TableRow key={tutor.id}>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <div className="font-medium">{tutor.name}</div>
+                        <div className="text-sm text-muted-foreground">{tutor.email}</div>
                       </div>
-                      <div className="text-sm text-muted-foreground flex flex-col gap-0.5">
-                        <span className="flex items-center gap-1">
-                          <Mail className="h-3 w-3" />
-                          {tutor.email}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Phone className="h-3 w-3" />
-                          {tutor.phone}
-                        </span>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>{tutor.subjects.join(", ")}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="font-medium">{tutor.rating}/5.0</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>{tutor.studentsCount}</TableCell>
-                  <TableCell>{new Date(tutor.nextSession).toLocaleDateString()}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      {!tutor.verified && (
+                    </TableCell>
+                    <TableCell>{tutor.subjects.join(", ")}</TableCell>
+                    <TableCell>{tutor.rating}/5</TableCell>
+                    <TableCell>{tutor.classes}</TableCell>
+                    <TableCell>${tutor.hourlyRate}/hr</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="icon">
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
                         <Button 
                           variant="ghost" 
                           size="icon"
-                          onClick={() => handleVerifyTutor(tutor.id)}
-                          className="text-green-500 hover:text-green-600"
+                          onClick={() => handleDeleteTutor(tutor.id)}
                         >
-                          <BadgeCheck className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4 text-red-500" />
                         </Button>
-                      )}
-                      <Button variant="ghost" size="icon">
-                        <Edit2 className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        onClick={() => handleDeleteTutor(tutor.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>

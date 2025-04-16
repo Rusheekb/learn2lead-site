@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { 
   calculateTutorAnalytics, 
@@ -22,6 +23,8 @@ export const useAnalytics = (classes: ClassEvent[]) => {
     }
 
     try {
+      console.log("Calculating analytics from", classes.length, "classes");
+      
       // Calculate business analytics
       const business = calculateBusinessAnalytics(classes);
       setBusinessAnalytics(business);
@@ -29,7 +32,9 @@ export const useAnalytics = (classes: ClassEvent[]) => {
       // Calculate analytics for each tutor
       const tutors = new Set(classes.map(cls => cls.tutorName));
       const tutorStats = Array.from(tutors).reduce((acc, tutor) => {
-        acc[tutor] = calculateTutorAnalytics(classes, tutor);
+        if (tutor) {
+          acc[tutor] = calculateTutorAnalytics(classes, tutor);
+        }
         return acc;
       }, {} as Record<string, TutorAnalytics>);
       setTutorAnalytics(tutorStats);
@@ -37,7 +42,9 @@ export const useAnalytics = (classes: ClassEvent[]) => {
       // Calculate analytics for each student
       const students = new Set(classes.map(cls => cls.studentName));
       const studentStats = Array.from(students).reduce((acc, student) => {
-        acc[student] = calculateStudentAnalytics(classes, student);
+        if (student) {
+          acc[student] = calculateStudentAnalytics(classes, student);
+        }
         return acc;
       }, {} as Record<string, StudentAnalytics>);
       setStudentAnalytics(studentStats);
@@ -80,4 +87,4 @@ export const useAnalytics = (classes: ClassEvent[]) => {
     getRevenueByMonth,
     getSubjectPopularity
   };
-}; 
+};

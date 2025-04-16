@@ -1,394 +1,302 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Check, Clock, DollarSign, Download, Eye, Search, X } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Search, RefreshCw, FileDown } from "lucide-react";
+import { format } from "date-fns";
+import { fetchPaymentsData } from "@/services/dataService";
+import { useClassLogs } from "@/hooks/useClassLogs";
 
-// Mock payment data
-const mockTutorPayments = [
-  {
-    id: 1,
-    tutorName: "Ms. Johnson",
-    amount: 450,
-    classCount: 15,
-    period: "April 1-15, 2025",
-    status: "pending",
-    processDate: "2025-04-16"
-  },
-  {
-    id: 2,
-    tutorName: "Mr. Chen",
-    amount: 360,
-    classCount: 12,
-    period: "April 1-15, 2025",
-    status: "pending",
-    processDate: "2025-04-16"
-  },
-  {
-    id: 3,
-    tutorName: "Dr. Martinez",
-    amount: 525,
-    classCount: 7,
-    period: "April 1-15, 2025",
-    status: "processed",
-    processDate: "2025-04-02"
-  },
-  {
-    id: 4,
-    tutorName: "Prof. Wilson",
-    amount: 300,
-    classCount: 10,
-    period: "April 1-15, 2025",
-    status: "processed",
-    processDate: "2025-04-02"
-  }
-];
-
-const mockStudentPayments = [
-  {
-    id: 1,
-    studentName: "Alex Johnson",
-    amount: 299,
-    plan: "Monthly - Mathematics Focus",
-    status: "paid",
-    date: "2025-04-01",
-    nextBilling: "2025-05-01"
-  },
-  {
-    id: 2,
-    studentName: "Jamie Smith",
-    amount: 499,
-    plan: "Monthly - Science Bundle",
-    status: "paid",
-    date: "2025-04-03",
-    nextBilling: "2025-05-03"
-  },
-  {
-    id: 3,
-    studentName: "Taylor Brown",
-    amount: 249,
-    plan: "Monthly - English & History",
-    status: "overdue",
-    date: "2025-03-15",
-    nextBilling: "2025-04-15"
-  },
-  {
-    id: 4,
-    studentName: "Casey Wilson",
-    amount: 149,
-    plan: "Monthly - Single Subject",
-    status: "pending",
-    date: "2025-04-10",
-    nextBilling: "2025-05-10"
-  }
-];
-
-// Status badges
-const paymentStatusBadge = (status: string) => {
-  switch (status) {
-    case 'processed':
-    case 'paid':
-      return <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Paid</span>;
-    case 'pending':
-      return <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">Pending</span>;
-    case 'overdue':
-      return <span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-800">Overdue</span>;
-    default:
-      return <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">{status}</span>;
-  }
-};
+interface Payment {
+  id: string;
+  date: string;
+  tutorName: string;
+  studentName: string;
+  classCost: number;
+  tutorCost: number;
+  studentPaymentStatus: string;
+  tutorPaymentStatus: string;
+}
 
 const PaymentsManager: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false);
-  const [selectedPayment, setSelectedPayment] = useState<any>(null);
-  
-  // Filter payments based on search term
-  const filteredTutorPayments = mockTutorPayments.filter(payment => 
-    payment.tutorName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-  
-  const filteredStudentPayments = mockStudentPayments.filter(payment => 
-    payment.studentName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-  
-  // Handle viewing payment details
-  const handleViewPayment = (payment: any, type: 'tutor' | 'student') => {
-    setSelectedPayment({ ...payment, type });
-    setIsDetailsOpen(true);
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [filteredPayments, setFilteredPayments] = useState<Payment[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [isLoading, setIsLoading] = useState(true);
+  const { classes } = useClassLogs();
+
+  useEffect(() => {
+    const loadPayments = async () => {
+      setIsLoading(true);
+      try {
+        const data = await fetchPaymentsData();
+        setPayments(data);
+        setFilteredPayments(data);
+      } catch (error) {
+        console.error("Error loading payments:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (classes.length > 0) {
+      loadPayments();
+    }
+  }, [classes]);
+
+  useEffect(() => {
+    // Apply filters whenever search term or status filter changes
+    const filtered = payments.filter(payment => {
+      const matchesSearch = 
+        payment.tutorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        payment.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        payment.id.toLowerCase().includes(searchTerm.toLowerCase());
+        
+      const matchesStatus = 
+        statusFilter === "all" || 
+        payment.studentPaymentStatus.toLowerCase() === statusFilter.toLowerCase() ||
+        payment.tutorPaymentStatus.toLowerCase() === statusFilter.toLowerCase();
+        
+      return matchesSearch && matchesStatus;
+    });
+    
+    setFilteredPayments(filtered);
+  }, [searchTerm, statusFilter, payments]);
+
+  const formatDate = (dateStr: string) => {
+    try {
+      return dateStr ? format(new Date(dateStr), "MMM d, yyyy") : "N/A";
+    } catch (e) {
+      console.error("Error formatting date:", e, dateStr);
+      return String(dateStr || "N/A");
+    }
   };
-  
-  // Format currency
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
+
+  const getStatusBadge = (status: string) => {
+    const statusLower = status.toLowerCase();
+    
+    if (statusLower === "paid") {
+      return <Badge variant="default">Paid</Badge>;
+    } else if (statusLower === "pending") {
+      return <Badge variant="outline">Pending</Badge>;
+    } else if (statusLower.includes("overdue") || statusLower === "late") {
+      return <Badge variant="destructive">Overdue</Badge>;
+    } else {
+      return <Badge variant="secondary">{status}</Badge>;
+    }
   };
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handleStatusFilter = (value: string) => {
+    setStatusFilter(value);
+  };
+
+  const handleRefresh = async () => {
+    setIsLoading(true);
+    try {
+      const data = await fetchPaymentsData();
+      setPayments(data);
+      setFilteredPayments(data);
+    } catch (error) {
+      console.error("Error refreshing payments:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleExport = () => {
+    // Create CSV content
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "Class ID,Date,Tutor,Student,Class Cost,Tutor Cost,Student Payment,Tutor Payment\n";
+    
+    filteredPayments.forEach(payment => {
+      csvContent += `${payment.id},${payment.date},${payment.tutorName},${payment.studentName},${payment.classCost},${payment.tutorCost},${payment.studentPaymentStatus},${payment.tutorPaymentStatus}\n`;
+    });
+    
+    // Create download link
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `payments_export_${format(new Date(), "yyyy-MM-dd")}.csv`);
+    document.body.appendChild(link);
+    
+    // Download file
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const calculateTotals = () => {
+    const total = filteredPayments.reduce(
+      (acc, payment) => {
+        acc.classCost += payment.classCost;
+        acc.tutorCost += payment.tutorCost;
+        acc.profit += payment.classCost - payment.tutorCost;
+        
+        if (payment.studentPaymentStatus.toLowerCase() === "paid") {
+          acc.collected += payment.classCost;
+        } else {
+          acc.pending += payment.classCost;
+        }
+        
+        return acc;
+      },
+      { classCost: 0, tutorCost: 0, profit: 0, collected: 0, pending: 0 }
+    );
+    
+    return total;
+  };
+
+  const totals = calculateTotals();
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Payment Management</h2>
-      
-      <Card className="mb-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold">Payment Management</h2>
+        <div className="flex space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
+            onClick={handleRefresh}
+          >
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex items-center gap-2"
+            onClick={handleExport}
+          >
+            <FileDown className="h-4 w-4" />
+            Export
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-500">
+              Total Revenue
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">${totals.classCost.toFixed(2)}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-500">
+              Tutor Payments
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">${totals.tutorCost.toFixed(2)}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-500">
+              Net Profit
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">${totals.profit.toFixed(2)}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-500">
+              Pending Collections
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">${totals.pending.toFixed(2)}</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
         <CardHeader>
-          <CardTitle>Payment Summary</CardTitle>
+          <CardTitle>Payment Records</CardTitle>
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search payments..."
+                value={searchTerm}
+                onChange={handleSearch}
+                className="pl-10"
+              />
+            </div>
+            <Select defaultValue="all" onValueChange={handleStatusFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="paid">Paid</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="overdue">Overdue</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-green-50 p-4 rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-green-800">Revenue (April)</h3>
-                <DollarSign className="h-5 w-5 text-green-600" />
-              </div>
-              <p className="text-2xl font-bold text-green-900">$4,982.00</p>
-              <p className="text-xs text-green-700 mt-1">+8% from last month</p>
+          {isLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <p>Loading payment data...</p>
             </div>
-            
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-blue-800">Pending Payments</h3>
-                <Clock className="h-5 w-5 text-blue-600" />
-              </div>
-              <p className="text-2xl font-bold text-blue-900">$959.00</p>
-              <p className="text-xs text-blue-700 mt-1">3 payments pending</p>
+          ) : filteredPayments.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              <p>No payment records found.</p>
             </div>
-            
-            <div className="bg-red-50 p-4 rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium text-red-800">Overdue Payments</h3>
-                <X className="h-5 w-5 text-red-600" />
-              </div>
-              <p className="text-2xl font-bold text-red-900">$249.00</p>
-              <p className="text-xs text-red-700 mt-1">1 payment overdue</p>
-            </div>
-          </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Class ID</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Tutor</TableHead>
+                  <TableHead>Student</TableHead>
+                  <TableHead>Amount</TableHead>
+                  <TableHead>Student Payment</TableHead>
+                  <TableHead>Tutor Payment</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredPayments.map((payment) => (
+                  <TableRow key={payment.id}>
+                    <TableCell>{payment.id}</TableCell>
+                    <TableCell>{formatDate(payment.date)}</TableCell>
+                    <TableCell>{payment.tutorName}</TableCell>
+                    <TableCell>{payment.studentName}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <div>${payment.classCost.toFixed(2)}</div>
+                        <div className="text-sm text-muted-foreground">
+                          Tutor: ${payment.tutorCost.toFixed(2)}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>{getStatusBadge(payment.studentPaymentStatus)}</TableCell>
+                    <TableCell>{getStatusBadge(payment.tutorPaymentStatus)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
-      
-      <div className="relative mb-4">
-        <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
-        <Input
-          placeholder="Search by name..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-8"
-        />
-      </div>
-      
-      <Tabs defaultValue="tutors">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="tutors">Tutor Payments</TabsTrigger>
-          <TabsTrigger value="students">Student Payments</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="tutors" className="pt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Tutor Payments</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Tutor Name</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Classes</TableHead>
-                    <TableHead>Period</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Process Date</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredTutorPayments.length > 0 ? (
-                    filteredTutorPayments.map((payment) => (
-                      <TableRow key={payment.id}>
-                        <TableCell className="font-medium">{payment.tutorName}</TableCell>
-                        <TableCell>{formatCurrency(payment.amount)}</TableCell>
-                        <TableCell>{payment.classCount}</TableCell>
-                        <TableCell>{payment.period}</TableCell>
-                        <TableCell>{paymentStatusBadge(payment.status)}</TableCell>
-                        <TableCell>{new Date(payment.processDate).toLocaleDateString()}</TableCell>
-                        <TableCell>
-                          <div className="flex space-x-2">
-                            <Button 
-                              variant="outline" 
-                              size="icon"
-                              onClick={() => handleViewPayment(payment, 'tutor')}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            {payment.status === 'pending' && (
-                              <Button variant="outline" size="icon" className="text-green-600">
-                                <Check className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                        No tutor payments found
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="students" className="pt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Student Payments</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Student Name</TableHead>
-                    <TableHead>Plan</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Next Billing</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredStudentPayments.length > 0 ? (
-                    filteredStudentPayments.map((payment) => (
-                      <TableRow key={payment.id}>
-                        <TableCell className="font-medium">{payment.studentName}</TableCell>
-                        <TableCell>{payment.plan}</TableCell>
-                        <TableCell>{formatCurrency(payment.amount)}</TableCell>
-                        <TableCell>{paymentStatusBadge(payment.status)}</TableCell>
-                        <TableCell>{new Date(payment.date).toLocaleDateString()}</TableCell>
-                        <TableCell>{new Date(payment.nextBilling).toLocaleDateString()}</TableCell>
-                        <TableCell>
-                          <div className="flex space-x-2">
-                            <Button 
-                              variant="outline" 
-                              size="icon"
-                              onClick={() => handleViewPayment(payment, 'student')}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                            {payment.status === 'overdue' && (
-                              <Button variant="outline" size="icon" className="text-blue-600">
-                                <DollarSign className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                        No student payments found
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-      
-      {/* Payment Details Dialog */}
-      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              {selectedPayment?.type === 'tutor' ? 'Tutor Payment Details' : 'Student Payment Details'}
-            </DialogTitle>
-          </DialogHeader>
-          
-          {selectedPayment && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h4 className="text-sm font-medium text-gray-500">
-                    {selectedPayment.type === 'tutor' ? 'Tutor Name' : 'Student Name'}
-                  </h4>
-                  <p>{selectedPayment.type === 'tutor' ? selectedPayment.tutorName : selectedPayment.studentName}</p>
-                </div>
-                <div>
-                  <h4 className="text-sm font-medium text-gray-500">Amount</h4>
-                  <p className="font-bold">{formatCurrency(selectedPayment.amount)}</p>
-                </div>
-                <div>
-                  <h4 className="text-sm font-medium text-gray-500">Status</h4>
-                  <div>{paymentStatusBadge(selectedPayment.status)}</div>
-                </div>
-                {selectedPayment.type === 'tutor' ? (
-                  <>
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-500">Class Count</h4>
-                      <p>{selectedPayment.classCount} classes</p>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-500">Period</h4>
-                      <p>{selectedPayment.period}</p>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-500">Process Date</h4>
-                      <p>{new Date(selectedPayment.processDate).toLocaleDateString()}</p>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-500">Plan</h4>
-                      <p>{selectedPayment.plan}</p>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-500">Payment Date</h4>
-                      <p>{new Date(selectedPayment.date).toLocaleDateString()}</p>
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-500">Next Billing</h4>
-                      <p>{new Date(selectedPayment.nextBilling).toLocaleDateString()}</p>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
-          
-          <DialogFooter>
-            <div className="flex gap-2 w-full justify-end">
-              <Button variant="outline" onClick={() => setIsDetailsOpen(false)}>Close</Button>
-              <Button variant="outline" className="flex items-center gap-1">
-                <Download className="h-4 w-4" />
-                <span>Export</span>
-              </Button>
-              {(selectedPayment?.status === 'pending' && selectedPayment?.type === 'tutor') && (
-                <Button className="flex items-center gap-1">
-                  <Check className="h-4 w-4" />
-                  <span>Mark as Paid</span>
-                </Button>
-              )}
-              {(selectedPayment?.status === 'overdue' && selectedPayment?.type === 'student') && (
-                <Button className="flex items-center gap-1">
-                  <DollarSign className="h-4 w-4" />
-                  <span>Request Payment</span>
-                </Button>
-              )}
-            </div>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
