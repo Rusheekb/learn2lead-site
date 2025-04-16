@@ -54,27 +54,31 @@ export const fetchStudents = async (): Promise<Student[]> => {
     const name = record['Student Name'];
     if (!name) return;
     
+    // Safely access properties
+    const subject = record['Subject'] || '';
+    const date = record['Date'] || '';
+    
     if (!studentMap.has(name)) {
       studentMap.set(name, {
         id: name.toLowerCase().replace(/\s+/g, '-'),
         name,
         email: `${name.toLowerCase().replace(/\s+/g, '.')}@example.com`,
         subjects: new Set(),
-        lastSession: record.Date,
+        lastSession: date,
         nextSession: "",
         progress: ""
       });
     } else {
       const student = studentMap.get(name);
       
-      // Add subject if not already in the set
-      if (record.Subject) {
-        student.subjects.add(record.Subject);
+      // Add subject if not already in the set and it exists
+      if (subject) {
+        student.subjects.add(subject);
       }
       
       // Update last session if this one is more recent
-      if (record.Date && (!student.lastSession || new Date(record.Date) > new Date(student.lastSession))) {
-        student.lastSession = record.Date;
+      if (date && (!student.lastSession || new Date(date) > new Date(student.lastSession))) {
+        student.lastSession = date;
       }
     }
   });
@@ -109,7 +113,7 @@ export const fetchPaymentsData = async () => {
   
   return data.map(record => ({
     id: `${record['Class Number'] || ''}`,
-    date: record.Date,
+    date: record['Date'] || '',
     tutorName: record['Tutor Name'] || '',
     studentName: record['Student Name'] || '',
     classCost: parseFloat(record['Class Cost'] || '0'),

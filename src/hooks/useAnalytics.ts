@@ -55,17 +55,31 @@ export const useAnalytics = (classes: ClassEvent[]) => {
     }
   }, [classes]);
 
+  // Ensure this returns number only for value, not objects
   const getTopPerformingTutors = (metric: keyof TutorAnalytics = 'totalClasses', limit: number = 5) => {
     return Object.entries(tutorAnalytics)
-      .map(([name, stats]) => ({ name, value: stats[metric] }))
-      .sort((a, b) => Number(b.value) - Number(a.value))
+      .map(([name, stats]) => {
+        const value = stats[metric];
+        return { 
+          name, 
+          value: typeof value === 'number' ? value : 0 
+        };
+      })
+      .sort((a, b) => b.value - a.value)
       .slice(0, limit);
   };
 
+  // Ensure this returns number only for value, not objects
   const getTopPerformingStudents = (metric: keyof StudentAnalytics = 'totalClasses', limit: number = 5) => {
     return Object.entries(studentAnalytics)
-      .map(([name, stats]) => ({ name, value: stats[metric] }))
-      .sort((a, b) => Number(b.value) - Number(a.value))
+      .map(([name, stats]) => {
+        const value = stats[metric];
+        return { 
+          name, 
+          value: typeof value === 'number' ? value : 0 
+        };
+      })
+      .sort((a, b) => b.value - a.value)
       .slice(0, limit);
   };
 

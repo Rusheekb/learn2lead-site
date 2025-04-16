@@ -1,7 +1,7 @@
 
 import React from "react";
 import { useTutorScheduler } from "@/hooks/useTutorScheduler";
-import { mockStudents } from "@/hooks/mockStudents";
+import { mockStudents } from "./mock-data-students";
 import SchedulerHeader from "./SchedulerHeader";
 import SchedulerFilter from "./SchedulerFilter";
 import CalendarWithEvents from "./CalendarWithEvents";

@@ -8,7 +8,7 @@ import {
   deleteClassLog 
 } from "@/services/classLogsService";
 import { numericIdToDbId } from "@/utils/realtimeUtils";
-import { mockStudents } from "../mockStudents";
+import { mockStudents } from "@/components/tutor/mock-data-students";
 
 export const useEventHandlers = (
   scheduledClasses: ClassEvent[],

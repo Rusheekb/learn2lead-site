@@ -25,8 +25,8 @@ const calculateEndTime = (startTime: string, durationHrs: number): string => {
   }
 };
 
-// Transform database record to ClassEvent
-const transformDbRecordToClassEvent = (record: any): ClassEvent => {
+// Transform database record to ClassEvent - export this function
+export const transformDbRecordToClassEvent = (record: any): ClassEvent => {
   try {
     // Parse the date string from the database 'Date' field
     let dateObj: Date;

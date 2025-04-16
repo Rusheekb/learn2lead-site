@@ -6,6 +6,7 @@ import AnalyticsMetricsGrid from "./analytics/AnalyticsMetricsGrid";
 import TopPerformersGrid from "./analytics/TopPerformersGrid"; 
 import PopularSubjectsTable from "./analytics/PopularSubjectsTable";
 import MonthlyDistributionTable from "./analytics/MonthlyDistributionTable";
+import { TopPerformer } from "@/types/sharedTypes";
 
 const ClassAnalytics: React.FC = () => {
   const { classes, isLoading: isLoadingClasses } = useClassLogs();
@@ -20,8 +21,9 @@ const ClassAnalytics: React.FC = () => {
 
   const isLoading = isLoadingClasses || isLoadingAnalytics;
   
-  const topTutors = getTopPerformingTutors('totalClasses');
-  const topStudents = getTopPerformingStudents('totalClasses');
+  // Explicitly cast to TopPerformer[] to ensure type safety
+  const topTutors: TopPerformer[] = getTopPerformingTutors('totalClasses');
+  const topStudents: TopPerformer[] = getTopPerformingStudents('totalClasses');
   const monthlyClasses = getRevenueByMonth();
   const popularSubjects = getSubjectPopularity();
 
