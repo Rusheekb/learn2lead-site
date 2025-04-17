@@ -1,12 +1,29 @@
-
 import React, { useEffect, useState } from "react";
+import { Navigate, useLocation, useNavigate, Link, Outlet } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import TutorScheduler from "@/components/tutor/TutorScheduler";
 import TutorStudents from "@/components/tutor/TutorStudents";
 import TutorMaterials from "@/components/tutor/TutorMaterials";
+import ProfilePage from "@/components/shared/ProfilePage";
+import { useAuth } from "@/contexts/AuthContext";
 
 const TutorDashboard: React.FC = () => {
   const [activeSection, setActiveSection] = useState<string>("");
+  const location = useLocation();
+  const { userRole } = useAuth();
+  const navigate = useNavigate();
+  
+  // Redirect if not a tutor
+  if (userRole && userRole !== 'tutor') {
+    switch (userRole) {
+      case 'student':
+        return <Navigate to="/dashboard" replace />;
+      case 'admin':
+        return <Navigate to="/admin-dashboard" replace />;
+      default:
+        return null;
+    }
+  }
   
   // Listen for hash changes in URL and update on component mount
   useEffect(() => {
@@ -45,8 +62,16 @@ const TutorDashboard: React.FC = () => {
     console.log("Current active section:", activeSection);
   }, [activeSection]);
 
+  // Check if we're on the profile page
+  const isProfilePage = location.pathname === '/tutor-profile';
+
   // Render appropriate section based on the active section
   const renderSection = () => {
+    // If we're on the profile route, render the Outlet
+    if (isProfilePage) {
+      return <Outlet />;
+    }
+
     switch (activeSection) {
       case "schedule":
         return <TutorScheduler />;
@@ -54,6 +79,8 @@ const TutorDashboard: React.FC = () => {
         return <TutorStudents />;
       case "materials":
         return <TutorMaterials />;
+      case "profile":
+        return <ProfilePage />;
       default:
         // Default to overview on the main dashboard page
         return (
