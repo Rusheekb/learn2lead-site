@@ -5,29 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { FileIcon, Check, Send, Download } from "lucide-react";
-
-// Export these interfaces so they can be imported elsewhere
-export interface StudentMessage {
-  id: string;
-  classId: string;
-  studentName: string;
-  message: string;
-  timestamp: string;
-  isRead: boolean;
-  sender?: "student" | "tutor";
-  text?: string;
-  read?: boolean; // Add read property to fix compatibility issues
-}
-
-export interface StudentUpload {
-  id: string;
-  classId: string;
-  studentName: string;
-  fileName: string;
-  fileSize: string;
-  uploadDate: string;
-  note: string | null;
-}
+import { StudentMessage, StudentUpload } from "@/types/classTypes";
 
 interface StudentContentProps {
   classId: string;
@@ -105,8 +83,8 @@ export const StudentContent: React.FC<StudentContentProps> = ({
                         {new Date(msg.timestamp).toLocaleString()}
                       </span>
                     </div>
-                    <p className="mt-1">{msg.text || msg.message}</p>
-                    {msg.sender !== "tutor" && !msg.isRead && !msg.read && onMarkAsRead && (
+                    <p className="mt-1">{msg.text || msg.message || msg.content}</p>
+                    {msg.sender !== "tutor" && !(msg.isRead || msg.read) && onMarkAsRead && (
                       <Button 
                         variant="ghost" 
                         size="sm" 

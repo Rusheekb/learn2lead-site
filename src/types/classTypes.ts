@@ -10,6 +10,7 @@ export interface ClassSession {
   zoomLink: string;
   recurring: boolean;
   recurringDays?: string[];
+  studentName?: string;
 }
 
 export interface StudentMessage {
@@ -18,7 +19,11 @@ export interface StudentMessage {
   timestamp: string;
   read: boolean;
   sender: "student" | "tutor";
-  text: string;
+  text?: string;
+  classId?: string;
+  studentName?: string;
+  message?: string;
+  isRead?: boolean;
 }
 
 export interface StudentUpload {
@@ -26,5 +31,27 @@ export interface StudentUpload {
   fileName: string;
   uploadDate: string;
   fileSize: string;
-  uploadPath: string;
+  uploadPath?: string;
+  classId?: string;
+  studentName?: string;
+  note?: string | null;
 }
+
+export interface ClassItem {
+  id: string;
+  title: string;
+  subject: string;
+  subjectId?: string;
+  tutorName: string;
+  studentName?: string;
+  date: string | Date;
+  startTime: string;
+  endTime: string;
+  status: string;
+  attendance?: string;
+  zoomLink: string;
+  notes?: string;
+  recurring?: boolean;
+}
+
+export type ExportFormat = 'csv' | 'pdf';

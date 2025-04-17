@@ -25,6 +25,7 @@ export interface ClassEvent {
   recurring?: boolean;
   recurringDays?: string[];
   studentId?: string;
+  tutorId?: string;
   materials?: string[];
   paymentStatus?: string;
   tutorPaymentStatus?: string;

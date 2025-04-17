@@ -18,29 +18,29 @@ import { mockStudents, mockMaterials } from "./mock-data-students";
 const mockUploads: StudentUpload[] = [
   {
     id: "1",
-    classId: "101",
-    studentName: "Alex Johnson",
     fileName: "Homework1.pdf",
     fileSize: "1.2 MB",
     uploadDate: "2023-04-10",
+    classId: "101",
+    studentName: "Alex Johnson",
     note: "First homework submission"
   },
   {
     id: "2",
-    classId: "102",
-    studentName: "Jamie Smith",
     fileName: "ChemistryNotes.docx",
     fileSize: "842 KB",
     uploadDate: "2023-04-11",
+    classId: "102", 
+    studentName: "Jamie Smith",
     note: "Notes from class"
   },
   {
     id: "3",
-    classId: "103",
-    studentName: "Taylor Brown",
     fileName: "EssayDraft.docx",
     fileSize: "1.5 MB", 
     uploadDate: "2023-04-12",
+    classId: "103",
+    studentName: "Taylor Brown",
     note: "First draft of essay"
   }
 ];

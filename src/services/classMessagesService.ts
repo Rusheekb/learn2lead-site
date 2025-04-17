@@ -1,10 +1,31 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { StudentMessage } from "@/components/shared/StudentContent";
-import { 
-  ClassMessageRecord, 
-  mapToStudentMessage 
-} from "./utils/classMappers";
+import { StudentMessage } from "@/types/classTypes";
+
+// Define types for Supabase records
+export interface ClassMessageRecord {
+  id: string;
+  class_id: string;
+  student_name: string;
+  message: string;
+  timestamp: string;
+  is_read: boolean;
+  created_at?: string;
+}
+
+// Map database record to application type
+export const mapToStudentMessage = (record: ClassMessageRecord): StudentMessage => ({
+  id: record.id,
+  classId: record.class_id,
+  studentName: record.student_name,
+  message: record.message,
+  content: record.message, // Map for compatibility
+  text: record.message, // Map for compatibility
+  timestamp: record.created_at || record.timestamp,
+  isRead: record.is_read,
+  read: record.is_read, // Map for compatibility
+  sender: "student" // Default sender
+});
 
 // Fetch messages for a class
 export const fetchClassMessages = async (classId: string): Promise<StudentMessage[]> => {
