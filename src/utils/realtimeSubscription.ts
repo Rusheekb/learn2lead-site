@@ -1,78 +1,42 @@
 
 import { RealtimeChannel } from "@supabase/supabase-js";
-import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
-export interface RealtimeSubscriptionConfig<T> {
+interface RealtimeSubscriptionOptions {
   channelName: string;
   tableName: string;
-  event?: "INSERT" | "UPDATE" | "DELETE" | "*";
+  filter?: string;
+  onData: (payload: any) => void;
   schema?: string;
-  onData: (payload: { new: T; old: T | null; eventType: string }) => void;
 }
 
-/**
- * Creates and returns a Supabase realtime subscription
- * @param config Configuration for the realtime subscription
- * @returns The Supabase channel for cleanup
- */
-export const createRealtimeSubscription = <T>(
-  config: RealtimeSubscriptionConfig<T>
-): RealtimeChannel => {
-  const { channelName, tableName, event = "*", schema = "public", onData } = config;
+export const createRealtimeSubscription = (options: RealtimeSubscriptionOptions): RealtimeChannel => {
+  const {
+    channelName,
+    tableName,
+    filter,
+    onData,
+    schema = 'public'
+  } = options;
 
-  console.log(`Setting up realtime subscription for ${tableName} on ${channelName}`);
-
-  // Define the proper PostgresChangesPayload type to match Supabase's structure
-  interface PostgresChangesPayload {
-    new: T;
-    old: T | null;
-    eventType: string;
-    [key: string]: any;
+  let changeConfig: any = {
+    event: '*', // Listen to all events by default
+    schema: schema,
+    table: tableName
+  };
+  
+  // Add filter if provided
+  if (filter) {
+    changeConfig.filter = filter;
   }
 
-  const channel = supabase
-    .channel(channelName)
-    .on(
-      'postgres_changes' as any,
-      {
-        event,
-        schema,
-        table: tableName,
-      },
-      (payload: PostgresChangesPayload) => {
-        console.log(`Realtime update for ${tableName}:`, payload);
-        onData({
-          new: payload.new as T,
-          old: payload.old as T | null,
-          eventType: payload.eventType,
-        });
-      }
-    )
-    .subscribe((status) => {
-      if (status === "SUBSCRIBED") {
-        console.log(`Successfully subscribed to ${tableName} changes`);
-      } else if (status === "CHANNEL_ERROR") {
-        console.error(`Error subscribing to ${tableName} changes`);
-        toast.error(`Failed to establish realtime connection for ${tableName}`);
-      }
-    });
-
-  return channel;
-};
-
-/**
- * Hook to use Supabase realtime subscription
- * @param config Configuration for the realtime subscription
- * @returns Cleanup function to unsubscribe
- */
-export const useRealtimeSubscription = <T>(
-  config: RealtimeSubscriptionConfig<T>
-): (() => void) => {
-  const channel = createRealtimeSubscription<T>(config);
-
-  return () => {
-    console.log(`Cleaning up realtime subscription for ${config.tableName}`);
-    supabase.removeChannel(channel);
-  };
+  return supabase.channel(channelName)
+    .on('postgres_changes', changeConfig, payload => {
+      onData({
+        eventType: payload.eventType,
+        new: payload.new,
+        old: payload.old
+      });
+    })
+    .subscribe();
 };

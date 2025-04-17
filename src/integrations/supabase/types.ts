@@ -148,9 +148,271 @@ export type Database = {
           },
         ]
       }
+      scheduled_classes: {
+        Row: {
+          attendance: string | null
+          created_at: string
+          date: string
+          end_time: string
+          id: string
+          notes: string | null
+          start_time: string
+          status: string
+          student_id: string
+          subject: string
+          title: string
+          tutor_id: string
+          updated_at: string
+          zoom_link: string | null
+        }
+        Insert: {
+          attendance?: string | null
+          created_at?: string
+          date: string
+          end_time: string
+          id?: string
+          notes?: string | null
+          start_time: string
+          status?: string
+          student_id: string
+          subject: string
+          title: string
+          tutor_id: string
+          updated_at?: string
+          zoom_link?: string | null
+        }
+        Update: {
+          attendance?: string | null
+          created_at?: string
+          date?: string
+          end_time?: string
+          id?: string
+          notes?: string | null
+          start_time?: string
+          status?: string
+          student_id?: string
+          subject?: string
+          title?: string
+          tutor_id?: string
+          updated_at?: string
+          zoom_link?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_classes_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "student_classes"
+            referencedColumns: ["student_id"]
+          },
+          {
+            foreignKeyName: "scheduled_classes_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scheduled_classes_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "tutor_students"
+            referencedColumns: ["student_id"]
+          },
+          {
+            foreignKeyName: "scheduled_classes_tutor_id_fkey"
+            columns: ["tutor_id"]
+            isOneToOne: false
+            referencedRelation: "student_classes"
+            referencedColumns: ["tutor_id"]
+          },
+          {
+            foreignKeyName: "scheduled_classes_tutor_id_fkey"
+            columns: ["tutor_id"]
+            isOneToOne: false
+            referencedRelation: "tutor_students"
+            referencedColumns: ["tutor_id"]
+          },
+          {
+            foreignKeyName: "scheduled_classes_tutor_id_fkey"
+            columns: ["tutor_id"]
+            isOneToOne: false
+            referencedRelation: "tutors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      students: {
+        Row: {
+          active: boolean
+          created_at: string
+          email: string
+          enrollment_date: string
+          grade: string | null
+          id: string
+          name: string
+          payment_status: string
+          subjects: string[]
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          email: string
+          enrollment_date?: string
+          grade?: string | null
+          id?: string
+          name: string
+          payment_status?: string
+          subjects?: string[]
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          email?: string
+          enrollment_date?: string
+          grade?: string | null
+          id?: string
+          name?: string
+          payment_status?: string
+          subjects?: string[]
+        }
+        Relationships: []
+      }
+      tutor_student_relationships: {
+        Row: {
+          active: boolean
+          assigned_at: string
+          assigned_by: string | null
+          id: string
+          student_id: string
+          tutor_id: string
+        }
+        Insert: {
+          active?: boolean
+          assigned_at?: string
+          assigned_by?: string | null
+          id?: string
+          student_id: string
+          tutor_id: string
+        }
+        Update: {
+          active?: boolean
+          assigned_at?: string
+          assigned_by?: string | null
+          id?: string
+          student_id?: string
+          tutor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tutor_student_relationships_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "student_classes"
+            referencedColumns: ["student_id"]
+          },
+          {
+            foreignKeyName: "tutor_student_relationships_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tutor_student_relationships_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "tutor_students"
+            referencedColumns: ["student_id"]
+          },
+          {
+            foreignKeyName: "tutor_student_relationships_tutor_id_fkey"
+            columns: ["tutor_id"]
+            isOneToOne: false
+            referencedRelation: "student_classes"
+            referencedColumns: ["tutor_id"]
+          },
+          {
+            foreignKeyName: "tutor_student_relationships_tutor_id_fkey"
+            columns: ["tutor_id"]
+            isOneToOne: false
+            referencedRelation: "tutor_students"
+            referencedColumns: ["tutor_id"]
+          },
+          {
+            foreignKeyName: "tutor_student_relationships_tutor_id_fkey"
+            columns: ["tutor_id"]
+            isOneToOne: false
+            referencedRelation: "tutors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tutors: {
+        Row: {
+          active: boolean
+          created_at: string
+          email: string
+          hourly_rate: number | null
+          id: string
+          name: string
+          subjects: string[]
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          email: string
+          hourly_rate?: number | null
+          id?: string
+          name: string
+          subjects?: string[]
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          email?: string
+          hourly_rate?: number | null
+          id?: string
+          name?: string
+          subjects?: string[]
+        }
+        Relationships: []
+      }
     }
     Views: {
-      [_ in never]: never
+      student_classes: {
+        Row: {
+          attendance: string | null
+          date: string | null
+          end_time: string | null
+          id: string | null
+          notes: string | null
+          start_time: string | null
+          status: string | null
+          student_id: string | null
+          student_name: string | null
+          subject: string | null
+          title: string | null
+          tutor_id: string | null
+          tutor_name: string | null
+          zoom_link: string | null
+        }
+        Relationships: []
+      }
+      tutor_students: {
+        Row: {
+          active: boolean | null
+          assigned_at: string | null
+          grade: string | null
+          payment_status: string | null
+          student_id: string | null
+          student_name: string | null
+          subjects: string[] | null
+          tutor_id: string | null
+          tutor_name: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never

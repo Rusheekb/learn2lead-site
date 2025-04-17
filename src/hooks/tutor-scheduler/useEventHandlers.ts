@@ -1,20 +1,9 @@
-import { useState } from "react";
-import { v4 as uuidv4 } from "uuid";
-import { ClassEvent } from "@/types/tutorTypes";
-import { addDays, format, isBefore } from "date-fns";
-import { toast } from "sonner";
-import { StudentMessage, StudentUpload } from "@/types/classTypes";
-import { 
-  createClassLog, 
-  updateClassLog, 
-  deleteClassLog 
-} from "@/services/classLogsService";
-import { mockStudents } from "../../components/tutor/mock-data-students";
 
-// Placeholder function that would be replaced with actual API calls
-const simulateApiCall = async (): Promise<void> => {
-  return new Promise(resolve => setTimeout(resolve, 500));
-};
+import { useState } from "react";
+import { format } from "date-fns";
+import { toast } from "sonner";
+import { ClassEvent } from "@/types/tutorTypes";
+import { createScheduledClass, updateScheduledClass, deleteScheduledClass } from "@/services/classService";
 
 export const useEventHandlers = (
   scheduledClasses: ClassEvent[],
@@ -28,140 +17,146 @@ export const useEventHandlers = (
   const handleSelectEvent = (event: ClassEvent) => {
     setSelectedEvent(event);
     setIsViewEventOpen(true);
+    setActiveEventTab("details");
     setIsEditMode(false);
   };
 
   const handleCreateEvent = async (newEvent: any) => {
     try {
-      const newClassEvent: ClassEvent = {
-        id: String(scheduledClasses.length + 1),
-        title: newEvent.title,
-        date: newEvent.date,
-        startTime: newEvent.startTime,
-        endTime: newEvent.endTime,
-        studentId: newEvent.studentId,
-        studentName: mockStudents.find(s => s.id === newEvent.studentId)?.name || "",
-        subject: newEvent.subject,
-        zoomLink: newEvent.zoomLink,
-        notes: newEvent.notes,
-        recurring: newEvent.recurring,
-        recurringDays: newEvent.recurringDays,
-        materials: [],
-        tutorName: "Current Tutor" // Default value
-      };
-
-      const createdEvent = await createClassLog(newClassEvent);
-      
-      if (createdEvent) {
-        setScheduledClasses([...scheduledClasses, createdEvent]);
-        toast.success("Class scheduled successfully!");
-        return true;
-      } else {
-        toast.error("Failed to schedule class");
+      if (!newEvent.title || !newEvent.studentId || !newEvent.subject) {
+        toast.error("Please fill in all required fields");
         return false;
       }
+
+      const scheduledClass = {
+        title: newEvent.title,
+        tutor_id: newEvent.tutorId,
+        student_id: newEvent.studentId,
+        date: format(newEvent.date, 'yyyy-MM-dd'),
+        start_time: newEvent.startTime,
+        end_time: newEvent.endTime,
+        subject: newEvent.subject,
+        zoom_link: newEvent.zoomLink || null,
+        notes: newEvent.notes || null
+      };
+
+      const newClassId = await createScheduledClass(scheduledClass);
+      
+      if (newClassId) {
+        const createdClass: ClassEvent = {
+          id: newClassId,
+          title: newEvent.title,
+          tutorId: newEvent.tutorId,
+          tutorName: "Current Tutor", // Will be updated by realtime events
+          studentId: newEvent.studentId,
+          studentName: "Student", // Will be updated by realtime events
+          date: newEvent.date,
+          startTime: newEvent.startTime,
+          endTime: newEvent.endTime,
+          subject: newEvent.subject,
+          zoomLink: newEvent.zoomLink || null,
+          notes: newEvent.notes || null
+        };
+        
+        setScheduledClasses([...scheduledClasses, createdClass]);
+        return true;
+      }
+      
+      return false;
     } catch (error) {
-      console.error("Error creating class:", error);
-      toast.error("Failed to schedule class");
+      console.error("Error creating class event:", error);
+      toast.error("Failed to create new class");
       return false;
     }
   };
 
   const handleEditEvent = async () => {
-    if (!selectedEvent) return false;
-    
     try {
-      // Convert numeric ID to UUID-like string for database query
-      const classId = selectedEvent.id;
+      if (!selectedEvent) return false;
+
+      const scheduledClass = {
+        title: selectedEvent.title,
+        date: typeof selectedEvent.date === 'string' 
+          ? selectedEvent.date 
+          : format(selectedEvent.date, 'yyyy-MM-dd'),
+        start_time: selectedEvent.startTime,
+        end_time: selectedEvent.endTime,
+        subject: selectedEvent.subject,
+        zoom_link: selectedEvent.zoomLink,
+        notes: selectedEvent.notes
+      };
+
+      const success = await updateScheduledClass(selectedEvent.id, scheduledClass);
       
-      const updatedEvent = await updateClassLog(classId, selectedEvent);
-      
-      if (updatedEvent) {
-        setScheduledClasses(classes =>
-          classes.map(cls =>
-            cls.id === selectedEvent.id
-              ? updatedEvent
-              : cls
+      if (success) {
+        setScheduledClasses(
+          scheduledClasses.map((event) =>
+            event.id === selectedEvent.id ? selectedEvent : event
           )
         );
-        
         setIsEditMode(false);
-        toast.success("Class updated successfully!");
         return true;
-      } else {
-        toast.error("Failed to update class");
-        return false;
       }
+      
+      return false;
     } catch (error) {
-      console.error("Error updating class:", error);
+      console.error("Error updating class event:", error);
       toast.error("Failed to update class");
       return false;
     }
   };
 
-  const handleDeleteEvent = async (eventId: string, isRecurring: boolean = false) => {
+  const handleDeleteEvent = async (eventId: string) => {
     try {
-      const classId = eventId;
+      const success = await deleteScheduledClass(eventId);
       
-      if (isRecurring) {
-        // In a real app, this would delete all recurring instances
-        // For now, we'll just delete this one instance
-        const success = await deleteClassLog(classId);
-        
-        if (success) {
-          setScheduledClasses(classes =>
-            classes.filter(cls => cls.id !== eventId)
-          );
-          toast.success("All recurring classes deleted successfully!");
-          return true;
-        } else {
-          toast.error("Failed to delete recurring classes");
-          return false;
-        }
-      } else {
-        const success = await deleteClassLog(classId);
-        
-        if (success) {
-          setScheduledClasses(classes =>
-            classes.filter(cls => cls.id !== eventId)
-          );
-          toast.success("Class deleted successfully!");
-          setIsViewEventOpen(false);
-          return true;
-        } else {
-          toast.error("Failed to delete class");
-          return false;
-        }
+      if (success) {
+        setScheduledClasses(scheduledClasses.filter((event) => event.id !== eventId));
+        setIsViewEventOpen(false);
+        return true;
       }
+      
+      return false;
     } catch (error) {
-      console.error("Error deleting class:", error);
+      console.error("Error deleting class event:", error);
       toast.error("Failed to delete class");
       return false;
     }
   };
 
-  const handleDuplicateEvent = async (event: ClassEvent) => {
+  const handleDuplicateEvent = (event: ClassEvent) => {
     try {
-      const duplicatedEvent: ClassEvent = {
+      const duplicatedEvent = {
         ...event,
-        id: String(scheduledClasses.length + 1),
-        date: new Date(event.date),
-        recurring: false,
-        recurringDays: []
+        title: `Copy of ${event.title}`,
+        id: "", // Will be assigned by the backend
+      };
+
+      setSelectedEvent(null);
+      setIsViewEventOpen(false);
+      
+      // Remove ID and use create function
+      const { id, ...newEvent } = duplicatedEvent;
+      
+      // Create a newEvent object compatible with our form
+      const formattedEvent = {
+        title: newEvent.title,
+        date: new Date(typeof newEvent.date === 'string' ? newEvent.date : newEvent.date),
+        startTime: newEvent.startTime,
+        endTime: newEvent.endTime,
+        studentId: newEvent.studentId || "",
+        subject: newEvent.subject,
+        zoomLink: newEvent.zoomLink || "",
+        notes: newEvent.notes || "",
+        tutorId: newEvent.tutorId || ""
       };
       
-      const createdEvent = await createClassLog(duplicatedEvent);
+      // Use createEvent to create a new class from the duplicate
+      handleCreateEvent(formattedEvent);
       
-      if (createdEvent) {
-        setScheduledClasses([...scheduledClasses, createdEvent]);
-        toast.success("Class duplicated successfully!");
-        return true;
-      } else {
-        toast.error("Failed to duplicate class");
-        return false;
-      }
+      return true;
     } catch (error) {
-      console.error("Error duplicating class:", error);
+      console.error("Error duplicating class event:", error);
       toast.error("Failed to duplicate class");
       return false;
     }

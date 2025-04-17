@@ -11,7 +11,6 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { Student } from "@/types/tutorTypes";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon, Clock } from "lucide-react";
@@ -28,17 +27,18 @@ interface NewClassEventFormProps {
     subject: string;
     zoomLink: string;
     notes: string;
-    recurring: boolean;
-    recurringDays: string[];
+    tutorId: string;
   };
   setNewEvent: React.Dispatch<React.SetStateAction<any>>;
-  students: Student[];
+  students: { id: string; name: string; }[];
+  subjects?: string[];
 }
 
 const NewClassEventForm: React.FC<NewClassEventFormProps> = ({ 
   newEvent, 
   setNewEvent,
-  students 
+  students,
+  subjects = ["Mathematics", "Science", "English", "History", "Languages"]
 }) => {
   return (
     <div className="grid gap-6 py-4">
@@ -64,11 +64,17 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
               <SelectValue placeholder="Select student" />
             </SelectTrigger>
             <SelectContent>
-              {students.map(student => (
-                <SelectItem key={student.id} value={student.id.toString()}>
-                  {student.name}
+              {students.length > 0 ? (
+                students.map(student => (
+                  <SelectItem key={student.id} value={student.id}>
+                    {student.name}
+                  </SelectItem>
+                ))
+              ) : (
+                <SelectItem value="no-students" disabled>
+                  No students assigned
                 </SelectItem>
-              ))}
+              )}
             </SelectContent>
           </Select>
         </div>
@@ -83,11 +89,11 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
               <SelectValue placeholder="Select subject" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Mathematics">Mathematics</SelectItem>
-              <SelectItem value="Science">Science</SelectItem>
-              <SelectItem value="English">English</SelectItem>
-              <SelectItem value="History">History</SelectItem>
-              <SelectItem value="Languages">Languages</SelectItem>
+              {subjects.map((subject) => (
+                <SelectItem key={subject} value={subject}>
+                  {subject}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>

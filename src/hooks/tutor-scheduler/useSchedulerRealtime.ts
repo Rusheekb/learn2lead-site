@@ -3,8 +3,6 @@ import { useEffect } from "react";
 import { toast } from "sonner";
 import { ClassEvent } from "@/types/tutorTypes";
 import { supabase } from "@/integrations/supabase/client";
-import { createRealtimeSubscription } from "@/utils/realtimeSubscription";
-import { dbIdToNumeric } from "@/utils/realtimeUtils";
 
 export const useSchedulerRealtime = (
   scheduledClasses: ClassEvent[], 
@@ -15,19 +13,41 @@ export const useSchedulerRealtime = (
 ) => {
   // Subscribe to real-time updates
   useEffect(() => {
-    const channel = createRealtimeSubscription({
-      channelName: 'tutor-class-updates',
-      tableName: 'class_logs',
-      onData: (payload) => {
-        if (payload.eventType === 'INSERT' && payload.new) {
+    const channel = supabase.channel('tutor-classes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'student_classes'
+        },
+        (payload) => {
           handleClassInserted(payload.new);
-        } else if (payload.eventType === 'UPDATE' && payload.new) {
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'student_classes'
+        },
+        (payload) => {
           handleClassUpdated(payload.new);
-        } else if (payload.eventType === 'DELETE' && payload.old) {
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'student_classes'
+        },
+        (payload) => {
           handleClassDeleted(payload.old);
         }
-      }
-    });
+      )
+      .subscribe();
     
     // Cleanup subscription when component unmounts
     return () => {
@@ -36,20 +56,24 @@ export const useSchedulerRealtime = (
   }, [scheduledClasses]); // Depend on scheduledClasses to ensure we have the latest reference when handling events
 
   const handleClassInserted = (newClass: any) => {
+    // Make sure we don't already have this class
+    if (scheduledClasses.some(cls => cls.id === newClass.id)) {
+      return;
+    }
+    
     const classEvent: ClassEvent = {
-      id: String(newClass.id),
+      id: newClass.id,
       title: newClass.title,
       date: new Date(newClass.date),
-      startTime: newClass.start_time.substring(0, 5),
-      endTime: newClass.end_time.substring(0, 5),
-      studentId: String(newClass.id), // Placeholder 
-      studentName: newClass.student_name,
-      subject: newClass.subject,
+      startTime: newClass.start_time?.substring(0, 5) || "00:00",
+      endTime: newClass.end_time?.substring(0, 5) || "00:00",
+      studentId: newClass.student_id,
+      studentName: newClass.student_name || "Student",
+      subject: newClass.subject || "",
       zoomLink: newClass.zoom_link || "",
       notes: newClass.notes || "",
-      recurring: false, // Default to false
-      materials: [],
-      tutorName: "Current Tutor" // Default value
+      tutorId: newClass.tutor_id,
+      tutorName: newClass.tutor_name || "Tutor"
     };
 
     setScheduledClasses(prevClasses => [...prevClasses, classEvent]);
@@ -58,19 +82,18 @@ export const useSchedulerRealtime = (
 
   const handleClassUpdated = (updatedClass: any) => {
     const classEvent: ClassEvent = {
-      id: String(updatedClass.id),
+      id: updatedClass.id,
       title: updatedClass.title,
       date: new Date(updatedClass.date),
-      startTime: updatedClass.start_time.substring(0, 5),
-      endTime: updatedClass.end_time.substring(0, 5),
-      studentId: String(updatedClass.id), // Placeholder
-      studentName: updatedClass.student_name,
-      subject: updatedClass.subject,
+      startTime: updatedClass.start_time?.substring(0, 5) || "00:00",
+      endTime: updatedClass.end_time?.substring(0, 5) || "00:00",
+      studentId: updatedClass.student_id,
+      studentName: updatedClass.student_name || "Student",
+      subject: updatedClass.subject || "",
       zoomLink: updatedClass.zoom_link || "",
       notes: updatedClass.notes || "",
-      recurring: false, // Default to false
-      materials: [],
-      tutorName: "Current Tutor" // Default value
+      tutorId: updatedClass.tutor_id,
+      tutorName: updatedClass.tutor_name || "Tutor"
     };
 
     setScheduledClasses(prevClasses => 
@@ -88,7 +111,7 @@ export const useSchedulerRealtime = (
   };
 
   const handleClassDeleted = (deletedClass: any) => {
-    const classId = String(deletedClass.id);
+    const classId = deletedClass.id;
     
     setScheduledClasses(prevClasses => 
       prevClasses.filter(cls => cls.id !== classId)
@@ -100,7 +123,7 @@ export const useSchedulerRealtime = (
       setSelectedEvent(null);
     }
 
-    toast.info(`Class removed: ${deletedClass.title}`);
+    toast.info(`Class removed: ${deletedClass.title || 'Untitled class'}`);
   };
 
   return {

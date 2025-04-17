@@ -1,30 +1,51 @@
 
-export const formatTime = (timeString: string) => {
-  const [hourStr, minuteStr] = timeString.split(':');
-  const hour = parseInt(hourStr);
-  const minute = parseInt(minuteStr);
-  
-  const period = hour >= 12 ? 'PM' : 'AM';
-  const hour12 = hour % 12 || 12;
-  
-  return `${hour12}:${minute.toString().padStart(2, '0')} ${period}`;
+import { format } from "date-fns";
+
+export const formatTime = (time: string): string => {
+  try {
+    // Handle empty or invalid time
+    if (!time) return "";
+    
+    // Format 24-hour time (HH:MM) to 12-hour time (h:MM AM/PM)
+    const [hours, minutes] = time.split(':').map(Number);
+    const date = new Date();
+    date.setHours(hours);
+    date.setMinutes(minutes);
+    
+    return format(date, 'h:mm a');
+  } catch (error) {
+    console.error('Error formatting time:', error);
+    return time; // Return original time if formatting fails
+  }
 };
 
-export const hasEventsOnDate = (date: Date, events: any[]) => {
-  return getEventsForDate(date, events).length > 0;
+export const parseTime24to12 = (time24: string): string => {
+  try {
+    // Handle empty or invalid time
+    if (!time24) return "";
+    
+    // Format 24-hour time (HH:MM) to 12-hour time (h:MM AM/PM)
+    const [hours, minutes] = time24.split(':').map(Number);
+    const date = new Date();
+    date.setHours(hours);
+    date.setMinutes(minutes);
+    
+    return format(date, 'h:mm a');
+  } catch (error) {
+    console.error('Error parsing time:', error);
+    return time24; // Return original time if parsing fails
+  }
 };
 
-export const getEventsForDate = (date: Date, events: any[]) => {
-  return events.filter(event => {
-    const sameDay = event.date.getDate() === date.getDate() && 
-                   event.date.getMonth() === date.getMonth() && 
-                   event.date.getFullYear() === date.getFullYear();
+export const formatDate = (dateString: string | Date): string => {
+  try {
+    // Handle empty date
+    if (!dateString) return "";
     
-    if (event.recurring && event.recurringDays) {
-      const dayOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][date.getDay()];
-      return sameDay || event.recurringDays.includes(dayOfWeek);
-    }
-    
-    return sameDay;
-  });
+    const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+    return format(date, 'MMMM d, yyyy');
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return String(dateString); // Return original date if formatting fails
+  }
 };
