@@ -4,12 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { AppRole } from '@/hooks/useProfile';
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
-  userRole: AppRole | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
@@ -22,59 +20,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [userRole, setUserRole] = useState<AppRole | null>(null);
   const navigate = useNavigate();
 
-  // Fetch user role from profiles table
-  const fetchUserRole = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', userId)
-        .maybeSingle();
-        
-      if (error) {
-        console.error('Error fetching user role:', error);
-        setUserRole(null);
-        return;
-      }
-
-      if (data?.role) {
-        console.log('User role fetched:', data.role);
-        setUserRole(data.role as AppRole);
-      }
-    } catch (error) {
-      console.error('Error in fetchUserRole:', error);
-      setUserRole(null);
-    }
-  };
-
   useEffect(() => {
-    // Set up auth state listener
+    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
+      (event, currentSession) => {
         console.log('Auth event:', event);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
-        
-        if (currentSession?.user) {
-          await fetchUserRole(currentSession.user.id);
-        } else {
-          setUserRole(null);
-        }
+        setIsLoading(false);
       }
     );
 
-    // Check for existing session
+    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
-      
-      if (currentSession?.user) {
-        fetchUserRole(currentSession.user.id);
-      }
-      
       setIsLoading(false);
     });
 
@@ -94,6 +56,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       toast.success('Signed in successfully!');
+      navigate('/dashboard');
     } catch (error) {
       console.error('Error signing in:', error);
       throw error;
@@ -133,7 +96,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value = {
     user,
     session,
-    userRole,
     isLoading,
     signIn,
     signUp,

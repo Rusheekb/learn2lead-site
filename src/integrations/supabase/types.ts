@@ -148,78 +148,6 @@ export type Database = {
           },
         ]
       }
-      content_shares: {
-        Row: {
-          content_type: string | null
-          description: string | null
-          file_path: string | null
-          id: string
-          receiver_id: string
-          sender_id: string
-          shared_at: string
-          title: string
-          viewed_at: string | null
-        }
-        Insert: {
-          content_type?: string | null
-          description?: string | null
-          file_path?: string | null
-          id?: string
-          receiver_id: string
-          sender_id: string
-          shared_at?: string
-          title: string
-          viewed_at?: string | null
-        }
-        Update: {
-          content_type?: string | null
-          description?: string | null
-          file_path?: string | null
-          id?: string
-          receiver_id?: string
-          sender_id?: string
-          shared_at?: string
-          title?: string
-          viewed_at?: string | null
-        }
-        Relationships: []
-      }
-      profiles: {
-        Row: {
-          avatar_url: string | null
-          bio: string | null
-          created_at: string
-          email: string
-          first_name: string | null
-          id: string
-          last_name: string | null
-          role: Database["public"]["Enums"]["app_role"]
-          updated_at: string
-        }
-        Insert: {
-          avatar_url?: string | null
-          bio?: string | null
-          created_at?: string
-          email: string
-          first_name?: string | null
-          id: string
-          last_name?: string | null
-          role?: Database["public"]["Enums"]["app_role"]
-          updated_at?: string
-        }
-        Update: {
-          avatar_url?: string | null
-          bio?: string | null
-          created_at?: string
-          email?: string
-          first_name?: string | null
-          id?: string
-          last_name?: string | null
-          role?: Database["public"]["Enums"]["app_role"]
-          updated_at?: string
-        }
-        Relationships: []
-      }
       scheduled_classes: {
         Row: {
           attendance: string | null
@@ -428,7 +356,7 @@ export type Database = {
           hourly_rate: number | null
           id: string
           name: string
-          subjects: string[] | null
+          subjects: string[]
         }
         Insert: {
           active?: boolean
@@ -437,7 +365,7 @@ export type Database = {
           hourly_rate?: number | null
           id?: string
           name: string
-          subjects?: string[] | null
+          subjects?: string[]
         }
         Update: {
           active?: boolean
@@ -446,7 +374,7 @@ export type Database = {
           hourly_rate?: number | null
           id?: string
           name?: string
-          subjects?: string[] | null
+          subjects?: string[]
         }
         Relationships: []
       }
@@ -490,7 +418,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      app_role: "student" | "tutor" | "admin"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -605,8 +533,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      app_role: ["student", "tutor", "admin"],
-    },
+    Enums: {},
   },
 } as const

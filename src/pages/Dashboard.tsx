@@ -1,15 +1,14 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Book, BookOpen, Calendar, GraduationCap, Calculator, Beaker, Globe, Home, User } from "lucide-react";
+import { Book, BookOpen, Calendar, GraduationCap, Calculator, Beaker, Globe } from "lucide-react";
 import ClassCalendar from "@/components/ClassCalendar";
 import StudentMenubar from "@/components/student/StudentMenubar";
-import { useLocation, useNavigate, Link, Navigate, Routes, Route, Outlet } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { fetchScheduledClasses } from "@/services/classService";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { useAuth } from "@/contexts/AuthContext";
-import ProfilePage from "@/components/shared/ProfilePage";
 
 const Dashboard = () => {
   const [selectedSubject, setSelectedSubject] = useState<number | null>(null);
@@ -17,30 +16,20 @@ const Dashboard = () => {
   const [studentId, setStudentId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const location = useLocation();
-  const navigate = useNavigate();
-  const { userRole } = useAuth();
-  
-  if (userRole && userRole !== 'student') {
-    switch (userRole) {
-      case 'tutor':
-        return <Navigate to="/tutor-dashboard" replace />;
-      case 'admin':
-        return <Navigate to="/admin-dashboard" replace />;
-      default:
-        return null;
-    }
-  }
   
   useEffect(() => {
+    // Check URL hash for navigation
     const hash = location.hash.replace('#', '');
     setActiveSection(hash);
   }, [location.hash]);
   
+  // Get current user and fetch their student profile
   useEffect(() => {
     const fetchCurrentUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (user) {
+        // Check if user is a student
         const { data, error } = await supabase
           .from('students')
           .select('id')
@@ -64,6 +53,7 @@ const Dashboard = () => {
     setSelectedSubject(subjectId === selectedSubject ? null : subjectId);
   };
   
+  // Get subjects from database instead of hardcoding
   const [subjects, setSubjects] = useState([
     {
       id: 1,
@@ -109,13 +99,7 @@ const Dashboard = () => {
     }
   ]);
 
-  const isProfilePage = location.pathname === '/profile';
-
-  const renderDashboardContent = () => {
-    if (isProfilePage) {
-      return <Outlet />;
-    }
-
+  const renderSection = () => {
     switch (activeSection) {
       case "schedule":
         return <ClassCalendar studentId={studentId} />;
@@ -134,8 +118,14 @@ const Dashboard = () => {
           </div>
         );
       case "profile":
-        return <ProfilePage />;
+        return (
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold">Student Profile</h2>
+            <p>Your profile information will be displayed here.</p>
+          </div>
+        );
       default:
+        // Default to overview on the main dashboard page
         return (
           <>
             <h2 className="text-2xl font-bold mb-6">My Learning Portal</h2>
@@ -193,9 +183,9 @@ const Dashboard = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center">
-              <Link to="/" className="text-2xl font-bold text-tutoring-blue">
+              <h1 className="text-2xl font-bold text-tutoring-blue">
                 Learn<span className="text-tutoring-teal">2</span>Lead
-              </Link>
+              </h1>
               <span className="ml-2 text-gray-500">Dashboard</span>
             </div>
             <div className="flex items-center gap-4">
@@ -218,16 +208,9 @@ const Dashboard = () => {
             </div>
           </div>
           
-          <div className="py-2 flex items-center justify-between">
+          {/* Add Menu bar */}
+          <div className="py-2">
             <StudentMenubar />
-            <Button 
-              variant="ghost" 
-              className="flex items-center gap-1 text-tutoring-blue"
-              onClick={() => navigate('/profile')}
-            >
-              <User className="h-4 w-4" />
-              <span>Profile</span>
-            </Button>
           </div>
         </div>
       </header>
@@ -238,7 +221,7 @@ const Dashboard = () => {
             <p>Loading...</p>
           </div>
         ) : (
-          renderDashboardContent()
+          renderSection()
         )}
       </main>
     </div>

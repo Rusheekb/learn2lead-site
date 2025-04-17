@@ -28,8 +28,6 @@ interface NewClassEventFormProps {
     zoomLink: string;
     notes: string;
     tutorId: string;
-    recurring?: boolean;  // Add optional recurring property
-    recurringDays?: string[];  // Add optional recurringDays property
   };
   setNewEvent: React.Dispatch<React.SetStateAction<any>>;
   students: { id: string; name: string; }[];

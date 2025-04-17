@@ -1,10 +1,8 @@
 
 import React, { ReactNode, useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Calendar, User, Users, FileText, DollarSign, BarChart, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/contexts/AuthContext";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -15,8 +13,6 @@ interface DashboardLayoutProps {
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title, role }) => {
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
   const [currentHash, setCurrentHash] = useState(window.location.hash);
-  const navigate = useNavigate();
-  const { signOut } = useAuth();
 
   // Update current path and hash when they change
   useEffect(() => {
@@ -50,7 +46,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title, role
           { name: "My Schedule", href: "/tutor-dashboard#schedule", icon: <Calendar className="h-5 w-5" /> },
           { name: "My Students", href: "/tutor-dashboard#students", icon: <Users className="h-5 w-5" /> },
           { name: "Class Materials", href: "/tutor-dashboard#materials", icon: <FileText className="h-5 w-5" /> },
-          { name: "Profile", href: "/tutor-profile", icon: <User className="h-5 w-5" /> },
         ];
       case "admin":
         return [
@@ -67,10 +62,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title, role
 
   const navItems = getNavItems();
 
-  const handleLogout = async () => {
-    await signOut();
-  };
-
   // For debugging
   useEffect(() => {
     console.log("Current hash:", currentHash);
@@ -83,7 +74,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title, role
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center">
-              <Link to={role === 'student' ? '/dashboard' : role === 'tutor' ? '/tutor-dashboard' : '/admin-dashboard'} className="text-2xl font-bold text-tutoring-blue">
+              <Link to="/" className="text-2xl font-bold text-tutoring-blue">
                 Learn<span className="text-tutoring-teal">2</span>Lead
               </Link>
               <span className="ml-2 text-gray-500">{title}</span>
@@ -97,10 +88,10 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title, role
                   day: 'numeric'
                 })}
               </span>
-              <Button variant="ghost" className="flex items-center gap-1 text-gray-600 hover:text-gray-900" onClick={handleLogout}>
+              <Link to="/login" className="inline-flex items-center gap-1 text-gray-600 hover:text-gray-900">
                 <LogOut className="h-4 w-4" />
                 <span>Logout</span>
-              </Button>
+              </Link>
             </div>
           </div>
         </div>

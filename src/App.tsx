@@ -13,7 +13,6 @@ import TutorDashboard from "./pages/TutorDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import { AuthProvider } from "./contexts/AuthContext";
 import PrivateRoute from "./components/PrivateRoute";
-import ProfilePage from "./components/shared/ProfilePage";
 
 // Create a new QueryClient instance
 const queryClient = new QueryClient();
@@ -31,24 +30,10 @@ const App = () => {
               <Route path="/login" element={<Login />} />
               <Route path="/pricing" element={<Pricing />} />
               
-              {/* Student Routes */}
-              <Route element={<PrivateRoute allowedRoles={['student']} />}>
+              {/* Protected Routes */}
+              <Route element={<PrivateRoute />}>
                 <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/profile" element={<Dashboard />}>
-                  <Route index element={<ProfilePage />} />
-                </Route>
-              </Route>
-              
-              {/* Tutor Routes */}
-              <Route element={<PrivateRoute allowedRoles={['tutor']} />}>
                 <Route path="/tutor-dashboard" element={<TutorDashboard />} />
-                <Route path="/tutor-profile" element={<TutorDashboard />}>
-                  <Route index element={<ProfilePage />} />
-                </Route>
-              </Route>
-              
-              {/* Admin Routes */}
-              <Route element={<PrivateRoute allowedRoles={['admin']} />}>
                 <Route path="/admin-dashboard" element={<AdminDashboard />} />
               </Route>
               
