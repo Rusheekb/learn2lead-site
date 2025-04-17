@@ -25,24 +25,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userRole, setUserRole] = useState<AppRole | null>(null);
   const navigate = useNavigate();
 
+  // Fetch user role from profiles table
+  const fetchUserRole = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .maybeSingle();
+        
+      if (error) {
+        console.error('Error fetching user role:', error);
+        setUserRole(null);
+        return;
+      }
+
+      if (data?.role) {
+        console.log('User role fetched:', data.role);
+        setUserRole(data.role as AppRole);
+      }
+    } catch (error) {
+      console.error('Error in fetchUserRole:', error);
+      setUserRole(null);
+    }
+  };
+
   useEffect(() => {
-    // Set up auth state listener FIRST
+    // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
+      async (event, currentSession) => {
         console.log('Auth event:', event);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
-        // We need to fetch the user's role separately because it's not in the session
         if (currentSession?.user) {
-          fetchUserRole(currentSession.user.id);
+          await fetchUserRole(currentSession.user.id);
         } else {
           setUserRole(null);
         }
       }
     );
 
-    // THEN check for existing session
+    // Check for existing session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
@@ -56,27 +80,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => subscription.unsubscribe();
   }, []);
-  
-  // Fetch user role from profiles table
-  const fetchUserRole = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', userId)
-        .single();
-        
-      if (error) {
-        console.error('Error fetching user role:', error);
-        setUserRole(null);
-      } else {
-        setUserRole(data.role as AppRole);
-      }
-    } catch (error) {
-      console.error('Error in fetchUserRole:', error);
-      setUserRole(null);
-    }
-  };
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -91,8 +94,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       toast.success('Signed in successfully!');
-      
-      // Let the redirect happen after the role is fetched in the auth state change event
     } catch (error) {
       console.error('Error signing in:', error);
       throw error;
