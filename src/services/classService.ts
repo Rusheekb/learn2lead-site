@@ -84,9 +84,24 @@ export const createScheduledClass = async (classData: Record<string, any>): Prom
       }
     }
     
+    // Create a properly typed object for insertion
+    const insertData = {
+      title: classData.title,
+      tutor_id: classData.tutor_id,
+      student_id: classData.student_id,
+      date: classData.date,
+      start_time: classData.start_time,
+      end_time: classData.end_time,
+      subject: classData.subject,
+      zoom_link: classData.zoom_link || null,
+      notes: classData.notes || null,
+      status: classData.status || 'scheduled',
+      attendance: classData.attendance || null
+    };
+    
     const { data, error } = await supabase
       .from('scheduled_classes')
-      .insert(classData)
+      .insert(insertData)
       .select('id')
       .single();
     

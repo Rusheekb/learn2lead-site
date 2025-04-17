@@ -33,7 +33,8 @@ const EditClassForm: React.FC<EditClassFormProps> = ({
           subject: selectedEvent.subject,
           zoomLink: selectedEvent.zoomLink || '',
           notes: selectedEvent.notes || '',
-          recurring: selectedEvent.recurring || false,
+          tutorId: selectedEvent.tutorId,
+          recurring: selectedEvent.recurring,
           recurringDays: selectedEvent.recurringDays || []
         }}
         setNewEvent={(event) => setNewEvent({ ...selectedEvent, ...event })}

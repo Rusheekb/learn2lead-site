@@ -30,7 +30,7 @@ export const useClassRealtime = (
 ) => {
   // Subscribe to real-time updates
   useEffect(() => {
-    const channel = createRealtimeSubscription<ClassLogRecord>({
+    const channel = createRealtimeSubscription({
       channelName: 'class-logs-changes',
       tableName: 'class_logs',
       onData: (payload) => {

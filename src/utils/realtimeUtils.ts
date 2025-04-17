@@ -1,7 +1,7 @@
 
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { createRealtimeSubscription as createRealtimeSubscriptionNew, RealtimeSubscriptionConfig } from "./realtimeSubscription";
+import { createRealtimeSubscription as createRealtimeSubscriptionNew } from "./realtimeSubscription";
 
 export interface RealtimeConfig {
   channelName: string;

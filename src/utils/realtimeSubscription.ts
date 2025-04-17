@@ -2,7 +2,7 @@
 import { RealtimeChannel } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
-interface RealtimeSubscriptionOptions {
+export interface RealtimeSubscriptionOptions<T = any> {
   channelName: string;
   tableName: string;
   filter?: string;
@@ -10,7 +10,7 @@ interface RealtimeSubscriptionOptions {
   schema?: string;
 }
 
-export const createRealtimeSubscription = (options: RealtimeSubscriptionOptions): RealtimeChannel => {
+export const createRealtimeSubscription = <T = any>(options: RealtimeSubscriptionOptions<T>): RealtimeChannel => {
   const {
     channelName,
     tableName,

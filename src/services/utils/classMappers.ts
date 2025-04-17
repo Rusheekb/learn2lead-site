@@ -31,8 +31,11 @@ export const mapToStudentMessage = (record: ClassMessageRecord): StudentMessage 
     classId: record.class_id,
     studentName: record.student_name,
     message: record.message,
+    content: record.message,
     timestamp: record.timestamp || record.created_at || new Date().toISOString(),
-    isRead: record.is_read
+    isRead: record.is_read,
+    read: record.is_read,
+    sender: "student" // Default sender
   };
 };
 
