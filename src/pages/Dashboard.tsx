@@ -193,7 +193,7 @@ const Dashboard = () => {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <div className="flex items-center">
-              <Link to="/dashboard" className="text-2xl font-bold text-tutoring-blue">
+              <Link to="/" className="text-2xl font-bold text-tutoring-blue">
                 Learn<span className="text-tutoring-teal">2</span>Lead
               </Link>
               <span className="ml-2 text-gray-500">Dashboard</span>
