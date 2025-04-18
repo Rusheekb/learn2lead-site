@@ -1,11 +1,11 @@
 
 import React, { useState, useEffect } from "react";
 import { Navigate, Routes, Route, useLocation } from "react-router-dom";
-import ClassCalendar from "@/components/ClassCalendar";
 import { useAuth } from "@/contexts/AuthContext";
 import ProfilePage from "@/components/shared/ProfilePage";
 import DashboardNav from "@/components/student/DashboardNav";
-import SubjectCards from "@/components/student/SubjectCards";
+import LoadingSpinner from "@/components/shared/LoadingSpinner";
+import DashboardContent from "@/components/student/DashboardContent";
 import { subjects } from "@/constants/subjectsData";
 
 const Dashboard = () => {
@@ -41,19 +41,13 @@ const Dashboard = () => {
       <DashboardNav />
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {isLoading ? (
-          <div className="flex items-center justify-center h-64">
-            <p>Loading...</p>
-          </div>
+          <LoadingSpinner />
         ) : (
-          <>
-            <h2 className="text-2xl font-bold mb-6">My Learning Portal</h2>
-            <SubjectCards 
-              subjects={subjects}
-              selectedSubject={selectedSubject}
-              onSubjectClick={handleSubjectClick}
-            />
-            <ClassCalendar studentId={studentId} />
-          </>
+          <DashboardContent 
+            studentId={studentId}
+            selectedSubject={selectedSubject}
+            onSubjectClick={handleSubjectClick}
+          />
         )}
       </main>
     </div>
