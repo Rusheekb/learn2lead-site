@@ -2,7 +2,12 @@
 import { useState, useEffect } from 'react';
 import { useClassLogs } from '@/hooks/useClassLogs';
 import { useAnalytics } from '@/hooks/useAnalytics';
-import { TopPerformer } from '@/types/sharedTypes';
+import { TopPerformer, PopularSubject } from '@/types/sharedTypes';
+
+interface MonthlyClass {
+  month: string;
+  count: number;
+}
 
 export const useDashboardData = () => {
   const { classes, isLoading: isLoadingClasses } = useClassLogs();
@@ -18,8 +23,8 @@ export const useDashboardData = () => {
   const [cachedData, setCachedData] = useState({
     topTutors: [] as TopPerformer[],
     topStudents: [] as TopPerformer[],
-    monthlyClasses: [] as any[],
-    popularSubjects: [] as any[]
+    monthlyClasses: [] as MonthlyClass[],
+    popularSubjects: [] as PopularSubject[]
   });
 
   const isLoading = isLoadingClasses || isLoadingAnalytics;
@@ -27,6 +32,8 @@ export const useDashboardData = () => {
   // Cache calculated values when data is loaded to prevent recalculations
   useEffect(() => {
     if (!isLoading && classes.length > 0) {
+      const revenueByMonth = getRevenueByMonth();
+      
       setCachedData({
         topTutors: getTopPerformingTutors('totalClasses').map(item => ({
           name: item.name,
@@ -36,7 +43,10 @@ export const useDashboardData = () => {
           name: item.name,
           value: typeof item.value === 'number' ? item.value : 0
         })),
-        monthlyClasses: getRevenueByMonth(),
+        monthlyClasses: Object.entries(revenueByMonth).map(([month, count]) => ({
+          month,
+          count: count as number
+        })),
         popularSubjects: getSubjectPopularity()
       });
     }

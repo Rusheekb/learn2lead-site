@@ -35,13 +35,13 @@ const formatDate = (dateString: string | undefined) => {
 };
 
 // Map status and payment status to badge variants
-const statusBadgeVariants: Record<string, string> = {
+const statusBadgeVariants: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
   "active": "default",
   "inactive": "secondary",
   "pending": "outline"
 };
 
-const paymentBadgeVariants: Record<string, string> = {
+const paymentBadgeVariants: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
   "paid": "default",
   "unpaid": "outline",
   "overdue": "destructive"
