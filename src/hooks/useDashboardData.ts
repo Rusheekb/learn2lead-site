@@ -1,8 +1,13 @@
 
+import { useState, useEffect, useMemo } from 'react';
 import { useClassLogs } from '@/hooks/useClassLogs';
 import { useAnalytics } from '@/hooks/useAnalytics';
-import { TopPerformer } from '@/types/sharedTypes';
-import { BusinessAnalytics } from '@/services/analyticsService';
+import { TopPerformer, PopularSubject } from '@/types/sharedTypes';
+
+interface MonthlyClass {
+  month: string;
+  count: number;
+}
 
 export const useDashboardData = () => {
   const { classes, isLoading: isLoadingClasses } = useClassLogs();
@@ -15,28 +20,44 @@ export const useDashboardData = () => {
     getSubjectPopularity,
   } = useAnalytics(classes);
 
+  const [cachedData, setCachedData] = useState({
+    topTutors: [] as TopPerformer[],
+    topStudents: [] as TopPerformer[],
+    monthlyClasses: [] as MonthlyClass[],
+    popularSubjects: [] as PopularSubject[]
+  });
+
   const isLoading = isLoadingClasses || isLoadingAnalytics;
   
-  // Ensure we're converting the returned values to match our TopPerformer type
-  const topTutors = getTopPerformingTutors('totalClasses').map(item => ({
-    name: item.name,
-    value: typeof item.value === 'number' ? item.value : 0
-  }));
-  
-  const topStudents = getTopPerformingStudents('totalClasses').map(item => ({
-    name: item.name,
-    value: typeof item.value === 'number' ? item.value : 0
-  }));
-  
-  const monthlyClasses = getRevenueByMonth();
-  const popularSubjects = getSubjectPopularity();
+  // Cache calculated values when data is loaded to prevent recalculations
+  useEffect(() => {
+    if (!isLoading && classes.length > 0) {
+      const revenueByMonth = getRevenueByMonth();
+      
+      setCachedData({
+        topTutors: getTopPerformingTutors('totalClasses').map(item => ({
+          name: item.name,
+          value: typeof item.value === 'number' ? item.value : 0
+        })),
+        topStudents: getTopPerformingStudents('totalClasses').map(item => ({
+          name: item.name,
+          value: typeof item.value === 'number' ? item.value : 0
+        })),
+        monthlyClasses: Object.entries(revenueByMonth).map(([month, count]) => ({
+          month,
+          count: count as number
+        })),
+        popularSubjects: getSubjectPopularity()
+      });
+    }
+  }, [isLoading, classes.length, getTopPerformingTutors, getTopPerformingStudents, getRevenueByMonth, getSubjectPopularity]);
 
   return {
     isLoading,
     businessAnalytics,
-    topTutors,
-    topStudents,
-    monthlyClasses,
-    popularSubjects,
+    topTutors: cachedData.topTutors,
+    topStudents: cachedData.topStudents,
+    monthlyClasses: cachedData.monthlyClasses,
+    popularSubjects: cachedData.popularSubjects,
   };
 };

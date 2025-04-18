@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -21,40 +21,57 @@ export interface Profile {
 export const useProfile = () => {
   const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  
+  // Create a cache for profiles to avoid redundant fetches
+  const profileCache = new Map<string, Profile>();
+
+  const fetchProfile = useCallback(async (userId: string) => {
+    // Check cache first
+    if (profileCache.has(userId)) {
+      const cachedProfile = profileCache.get(userId);
+      if (cachedProfile) {
+        setProfile(cachedProfile);
+        return cachedProfile;
+      }
+    }
+    
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error("Error fetching profile:", error);
+        toast.error("Failed to load profile");
+        setIsLoading(false);
+        return null;
+      } 
+      
+      // Add to cache
+      profileCache.set(userId, data);
+      setProfile(data);
+      setIsLoading(false);
+      return data;
+    } catch (error) {
+      console.error("Error in profile fetch:", error);
+      toast.error("Failed to load profile");
+      setIsLoading(false);
+      return null;
+    }
+  }, []);
 
   useEffect(() => {
     if (!user) {
       setProfile(null);
-      setIsLoading(false);
       return;
     }
 
-    const fetchProfile = async () => {
-      setIsLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-
-        if (error) {
-          console.error("Error fetching profile:", error);
-          toast.error("Failed to load profile");
-        } else {
-          setProfile(data);
-        }
-      } catch (error) {
-        console.error("Error in profile fetch:", error);
-        toast.error("Failed to load profile");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchProfile();
-  }, [user]);
+    fetchProfile(user.id);
+  }, [user?.id, fetchProfile]);
 
   const updateProfile = async (updates: Partial<Profile>) => {
     if (!user) return null;
@@ -73,6 +90,8 @@ export const useProfile = () => {
         return null;
       }
 
+      // Update cache
+      profileCache.set(user.id, data);
       setProfile(data);
       toast.success("Profile updated successfully");
       return data;
@@ -84,23 +103,7 @@ export const useProfile = () => {
   };
 
   const fetchProfileById = async (profileId: string): Promise<Profile | null> => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', profileId)
-        .single();
-
-      if (error) {
-        console.error("Error fetching profile by ID:", error);
-        return null;
-      }
-
-      return data;
-    } catch (error) {
-      console.error("Error in profile fetch by ID:", error);
-      return null;
-    }
+    return fetchProfile(profileId);
   };
 
   return {

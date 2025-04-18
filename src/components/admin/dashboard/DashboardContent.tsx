@@ -7,7 +7,7 @@ import PopularSubjectsTable from '../analytics/PopularSubjectsTable';
 import MonthlyDistributionTable from '../analytics/MonthlyDistributionTable';
 import { BusinessAnalytics } from '@/services/analyticsService';
 
-interface DashboardContentProps {
+export interface DashboardContentProps {
   isLoading: boolean;
   businessAnalytics: BusinessAnalytics | null;
   topTutors: TopPerformer[];

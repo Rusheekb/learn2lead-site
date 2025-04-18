@@ -1,11 +1,12 @@
 
-import React from "react";
+import React, { memo } from "react";
 import StatsCard from "./StatsCard";
 import { statsData } from "./mock-data";
 
-const StatsGrid: React.FC = () => {
+// Memoize the StatsGrid component to prevent unnecessary re-renders
+const StatsGrid: React.FC = memo(() => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {statsData.map((stat, index) => (
         <StatsCard
           key={index}
@@ -18,6 +19,8 @@ const StatsGrid: React.FC = () => {
       ))}
     </div>
   );
-};
+});
+
+StatsGrid.displayName = 'StatsGrid';
 
 export default StatsGrid;
