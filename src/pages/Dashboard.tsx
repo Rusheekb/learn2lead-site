@@ -6,10 +6,12 @@ import ProfilePage from "@/components/shared/ProfilePage";
 import DashboardNav from "@/components/student/DashboardNav";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import DashboardContent from "@/components/student/DashboardContent";
+import StudentContent from "@/components/shared/StudentContent";
 
 const Dashboard = () => {
   const [selectedSubject, setSelectedSubject] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [activeSection, setActiveSection] = useState<string>("");
   const location = useLocation();
   const { userRole, user } = useAuth();
   
@@ -25,6 +27,22 @@ const Dashboard = () => {
     }
   }
 
+  // Listen for hash changes in URL and update on component mount
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.substring(1);
+      if (hash) {
+        setActiveSection(hash);
+      } else {
+        setActiveSection("");
+      }
+    };
+    
+    handleHashChange();
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
   useEffect(() => {
     // Set loading to false after a short delay to allow auth state to resolve
     const timer = setTimeout(() => {
@@ -38,11 +56,47 @@ const Dashboard = () => {
     setSelectedSubject(subjectId === selectedSubject ? null : subjectId);
   };
 
+  // Check if we're on the profile page
   const isProfilePage = location.pathname === '/profile';
 
   if (isProfilePage) {
     return <ProfilePage />;
   }
+
+  // Render appropriate section based on the active section
+  const renderSection = () => {
+    switch (activeSection) {
+      case "schedule":
+        return <div className="py-4">
+          <h2 className="text-2xl font-bold mb-6">My Schedule</h2>
+          <ClassCalendarView studentId={user?.id || null} />
+        </div>;
+      case "resources":
+        return <div className="py-4">
+          <h2 className="text-2xl font-bold mb-6">Learning Resources</h2>
+          <StudentContent studentId={user?.id || null} />
+        </div>;
+      case "messages":
+        return <div className="py-4">
+          <h2 className="text-2xl font-bold mb-6">Messages</h2>
+          <p>Here you can view and manage your messages with tutors.</p>
+          {/* This would be replaced with a proper messaging component */}
+          <div className="mt-4 p-6 bg-gray-50 rounded-lg border text-center">
+            <p className="text-gray-500">You have no new messages</p>
+          </div>
+        </div>;
+      case "profile":
+        return <ProfilePage />;
+      default:
+        return (
+          <DashboardContent 
+            studentId={user?.id || null}
+            selectedSubject={selectedSubject}
+            onSubjectClick={handleSubjectClick}
+          />
+        );
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -51,14 +105,21 @@ const Dashboard = () => {
         {isLoading ? (
           <LoadingSpinner />
         ) : (
-          <DashboardContent 
-            studentId={user?.id || null}
-            selectedSubject={selectedSubject}
-            onSubjectClick={handleSubjectClick}
-          />
+          renderSection()
         )}
       </main>
     </div>
+  );
+};
+
+// Simple wrapper component for the calendar to avoid importing it directly in this file
+const ClassCalendarView = ({ studentId }: { studentId: string | null }) => {
+  const ClassCalendar = React.lazy(() => import('@/components/ClassCalendar'));
+  
+  return (
+    <React.Suspense fallback={<div>Loading calendar...</div>}>
+      <ClassCalendar studentId={studentId} />
+    </React.Suspense>
   );
 };
 
