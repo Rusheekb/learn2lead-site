@@ -2,6 +2,7 @@
 import React from 'react';
 import SubjectCards from './SubjectCards';
 import ClassCalendar from '@/components/ClassCalendar';
+import { subjects } from '@/constants/subjectsData';
 
 interface DashboardContentProps {
   studentId: string | null;
