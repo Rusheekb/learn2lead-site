@@ -74,7 +74,12 @@ const Dashboard = () => {
       case "resources":
         return <div className="py-4">
           <h2 className="text-2xl font-bold mb-6">Learning Resources</h2>
-          <StudentContent studentId={user?.id || null} />
+          <StudentContent 
+            classId={user?.id || ""} 
+            showUploadControls={false}
+            uploads={[]}
+            messages={[]}
+          />
         </div>;
       case "messages":
         return <div className="py-4">
