@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import SubjectCards from './SubjectCards';
 import ClassCalendar from '@/components/ClassCalendar';
 import { subjects } from '@/constants/subjectsData';
@@ -10,7 +10,7 @@ interface DashboardContentProps {
   onSubjectClick: (subjectId: number) => void;
 }
 
-const DashboardContent: React.FC<DashboardContentProps> = ({
+const DashboardContent: React.FC<DashboardContentProps> = memo(({
   studentId,
   selectedSubject,
   onSubjectClick
@@ -26,6 +26,8 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
       <ClassCalendar studentId={studentId} />
     </>
   );
-};
+});
+
+DashboardContent.displayName = 'DashboardContent';
 
 export default DashboardContent;

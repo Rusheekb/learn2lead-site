@@ -1,9 +1,9 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import DashboardContent from './dashboard/DashboardContent';
 
-const Dashboard: React.FC = () => {
+const Dashboard: React.FC = memo(() => {
   const dashboardData = useDashboardData();
   
   return <DashboardContent 
@@ -16,6 +16,8 @@ const Dashboard: React.FC = () => {
     )}
     popularSubjects={dashboardData.popularSubjects}
   />;
-};
+});
+
+Dashboard.displayName = 'AdminDashboard';
 
 export default Dashboard;
