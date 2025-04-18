@@ -21,16 +21,18 @@ export interface Profile {
 export const useProfile = () => {
   const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
     if (!user) {
       setProfile(null);
-      setIsLoading(false);
       return;
     }
 
     const fetchProfile = async () => {
+      // Don't refetch if we already have the profile for this user
+      if (profile && profile.id === user.id) return;
+      
       setIsLoading(true);
       try {
         const { data, error } = await supabase
@@ -54,7 +56,7 @@ export const useProfile = () => {
     };
 
     fetchProfile();
-  }, [user]);
+  }, [user?.id]);
 
   const updateProfile = async (updates: Partial<Profile>) => {
     if (!user) return null;
@@ -85,6 +87,9 @@ export const useProfile = () => {
 
   const fetchProfileById = async (profileId: string): Promise<Profile | null> => {
     try {
+      // Use a cached result if we're requesting the current user's profile
+      if (profile && profile.id === profileId) return profile;
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')

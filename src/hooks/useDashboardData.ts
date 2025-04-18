@@ -1,8 +1,8 @@
 
+import { useState, useEffect } from 'react';
 import { useClassLogs } from '@/hooks/useClassLogs';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { TopPerformer } from '@/types/sharedTypes';
-import { BusinessAnalytics } from '@/services/analyticsService';
 
 export const useDashboardData = () => {
   const { classes, isLoading: isLoadingClasses } = useClassLogs();
@@ -15,28 +15,39 @@ export const useDashboardData = () => {
     getSubjectPopularity,
   } = useAnalytics(classes);
 
+  const [cachedData, setCachedData] = useState({
+    topTutors: [] as TopPerformer[],
+    topStudents: [] as TopPerformer[],
+    monthlyClasses: [] as any[],
+    popularSubjects: [] as any[]
+  });
+
   const isLoading = isLoadingClasses || isLoadingAnalytics;
   
-  // Ensure we're converting the returned values to match our TopPerformer type
-  const topTutors = getTopPerformingTutors('totalClasses').map(item => ({
-    name: item.name,
-    value: typeof item.value === 'number' ? item.value : 0
-  }));
-  
-  const topStudents = getTopPerformingStudents('totalClasses').map(item => ({
-    name: item.name,
-    value: typeof item.value === 'number' ? item.value : 0
-  }));
-  
-  const monthlyClasses = getRevenueByMonth();
-  const popularSubjects = getSubjectPopularity();
+  // Cache calculated values when data is loaded to prevent recalculations
+  useEffect(() => {
+    if (!isLoading && classes.length > 0) {
+      setCachedData({
+        topTutors: getTopPerformingTutors('totalClasses').map(item => ({
+          name: item.name,
+          value: typeof item.value === 'number' ? item.value : 0
+        })),
+        topStudents: getTopPerformingStudents('totalClasses').map(item => ({
+          name: item.name,
+          value: typeof item.value === 'number' ? item.value : 0
+        })),
+        monthlyClasses: getRevenueByMonth(),
+        popularSubjects: getSubjectPopularity()
+      });
+    }
+  }, [isLoading, classes.length]);
 
   return {
     isLoading,
     businessAnalytics,
-    topTutors,
-    topStudents,
-    monthlyClasses,
-    popularSubjects,
+    topTutors: cachedData.topTutors,
+    topStudents: cachedData.topStudents,
+    monthlyClasses: cachedData.monthlyClasses,
+    popularSubjects: cachedData.popularSubjects,
   };
 };

@@ -13,16 +13,17 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, allowedRoles }) =
   const navigate = useNavigate();
 
   useEffect(() => {
-    // When user role becomes available, redirect if needed
-    if (user && userRole && allowedRoles && !allowedRoles.includes(userRole)) {
+    // Only run redirection if we have both user and role information
+    if (!isLoading && user && userRole && allowedRoles && !allowedRoles.includes(userRole)) {
       redirectBasedOnRole(userRole, navigate);
     }
-  }, [user, userRole, allowedRoles, navigate]);
+  }, [user, userRole, allowedRoles, isLoading, navigate]);
 
+  // Show a simpler loading indicator to reduce render complexity
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-tutoring-blue"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-tutoring-blue"></div>
       </div>
     );
   }
@@ -41,19 +42,13 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, allowedRoles }) =
 
 // Helper function to handle role-based redirection
 const redirectBasedOnRole = (role: AppRole, navigateFunc?: ReturnType<typeof useNavigate>) => {
-  let path = '/login'; // Default fallback
+  const redirectPaths = {
+    'student': '/dashboard',
+    'tutor': '/tutor-dashboard',
+    'admin': '/admin-dashboard'
+  };
   
-  switch (role) {
-    case 'student':
-      path = '/dashboard';
-      break;
-    case 'tutor':
-      path = '/tutor-dashboard';
-      break;
-    case 'admin':
-      path = '/admin-dashboard';
-      break;
-  }
+  const path = redirectPaths[role] || '/login';
   
   // If navigate function is provided, use it (for useEffect)
   if (navigateFunc) {
