@@ -1,5 +1,6 @@
-import React, { useEffect } from 'react';
-import { Navigate, Outlet, useNavigate } from 'react-router-dom';
+
+import React from 'react';
+import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { AppRole } from '@/hooks/useProfile';
 
@@ -10,14 +11,6 @@ interface PrivateRouteProps {
 
 const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, allowedRoles }) => {
   const { user, userRole, isLoading } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    // Only run redirection if we have both user and role information
-    if (!isLoading && user && userRole && allowedRoles && !allowedRoles.includes(userRole)) {
-      redirectBasedOnRole(userRole, navigate);
-    }
-  }, [user, userRole, allowedRoles, isLoading, navigate]);
 
   // Show a simpler loading indicator to reduce render complexity
   if (isLoading) {
@@ -32,32 +25,18 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, allowedRoles }) =
     return <Navigate to="/login" replace />;
   }
   
-  // Role-based access control
+  // Role-based access control - simplified for better performance
   if (allowedRoles && userRole && !allowedRoles.includes(userRole)) {
-    return redirectBasedOnRole(userRole);
+    const redirectPaths = {
+      'student': '/dashboard',
+      'tutor': '/tutor-dashboard',
+      'admin': '/admin-dashboard'
+    };
+    
+    return <Navigate to={redirectPaths[userRole] || '/login'} replace />;
   }
 
   return children ? <>{children}</> : <Outlet />;
-};
-
-// Helper function to handle role-based redirection
-const redirectBasedOnRole = (role: AppRole, navigateFunc?: ReturnType<typeof useNavigate>) => {
-  const redirectPaths = {
-    'student': '/dashboard',
-    'tutor': '/tutor-dashboard',
-    'admin': '/admin-dashboard'
-  };
-  
-  const path = redirectPaths[role] || '/login';
-  
-  // If navigate function is provided, use it (for useEffect)
-  if (navigateFunc) {
-    navigateFunc(path);
-    return null;
-  }
-  
-  // Otherwise return Navigate component (for direct returns)
-  return <Navigate to={path} replace />;
 };
 
 export default PrivateRoute;

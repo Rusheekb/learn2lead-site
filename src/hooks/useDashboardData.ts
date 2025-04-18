@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useClassLogs } from '@/hooks/useClassLogs';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { TopPerformer, PopularSubject } from '@/types/sharedTypes';
@@ -50,7 +50,7 @@ export const useDashboardData = () => {
         popularSubjects: getSubjectPopularity()
       });
     }
-  }, [isLoading, classes.length]);
+  }, [isLoading, classes.length, getTopPerformingTutors, getTopPerformingStudents, getRevenueByMonth, getSubjectPopularity]);
 
   return {
     isLoading,

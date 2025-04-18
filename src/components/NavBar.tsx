@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Menu, X, LogIn, LogOut, User } from "lucide-react";
@@ -15,7 +16,7 @@ const NavBar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, signOut } = useAuth();
+  const { user, userRole, signOut } = useAuth();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -27,6 +28,25 @@ const NavBar = () => {
 
   const handleLogout = async () => {
     await signOut();
+  };
+  
+  const handleDashboard = () => {
+    if (!userRole) return;
+    
+    // Navigate based on user role
+    switch (userRole) {
+      case 'student':
+        navigate('/dashboard');
+        break;
+      case 'tutor':
+        navigate('/tutor-dashboard');
+        break;
+      case 'admin':
+        navigate('/admin-dashboard');
+        break;
+      default:
+        navigate('/dashboard');
+    }
   };
 
   const handleNavigation = (sectionId: string) => {
@@ -102,7 +122,7 @@ const NavBar = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => navigate('/dashboard')}>
+                  <DropdownMenuItem onClick={handleDashboard}>
                     Dashboard
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleLogout}>
@@ -179,9 +199,13 @@ const NavBar = () => {
           </button>
           {user ? (
             <>
-              <Link to="/dashboard" className="block px-3 py-2 text-base font-medium text-gray-600 hover:text-tutoring-blue">
+              <Button
+                onClick={handleDashboard}
+                variant="ghost"
+                className="w-full justify-start px-3 py-2 text-base font-medium text-gray-600 hover:text-tutoring-blue"
+              >
                 Dashboard
-              </Link>
+              </Button>
               <Button 
                 onClick={handleLogout}
                 variant="ghost"

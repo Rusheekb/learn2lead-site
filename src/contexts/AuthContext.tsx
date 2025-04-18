@@ -37,29 +37,57 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) {
         console.error('Error fetching user role:', error);
         setUserRole(null);
-        return;
+        return null;
       }
 
       if (data?.role) {
-        console.log('User role fetched:', data.role);
         setUserRole(data.role as AppRole);
+        return data.role as AppRole;
       }
+      
+      return null;
     } catch (error) {
       console.error('Error in fetchUserRole:', error);
       setUserRole(null);
+      return null;
+    }
+  };
+
+  // Route user to the appropriate dashboard based on their role
+  const routeUserByRole = (role: AppRole | null) => {
+    if (!role) return;
+    
+    switch (role) {
+      case 'student':
+        navigate('/dashboard');
+        break;
+      case 'tutor':
+        navigate('/tutor-dashboard');
+        break;
+      case 'admin':
+        navigate('/admin-dashboard');
+        break;
+      default:
+        navigate('/');
     }
   };
 
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
-        console.log('Auth event:', event);
+      (event, currentSession) => {
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
         if (currentSession?.user) {
-          await fetchUserRole(currentSession.user.id);
+          // Use setTimeout to avoid recursive calls with Supabase client
+          setTimeout(async () => {
+            const role = await fetchUserRole(currentSession.user.id);
+            
+            if (event === 'SIGNED_IN') {
+              routeUserByRole(role);
+            }
+          }, 0);
         } else {
           setUserRole(null);
         }
@@ -121,9 +149,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
-      await supabase.auth.signOut();
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        console.error('Error signing out:', error);
+        toast.error('Failed to sign out');
+        return;
+      }
+      
+      setUser(null);
+      setSession(null);
+      setUserRole(null);
       toast.success('Signed out successfully');
-      navigate('/login');
+      
+      // Navigate after state updates to avoid conflicts
+      setTimeout(() => {
+        navigate('/login');
+      }, 0);
     } catch (error) {
       console.error('Error signing out:', error);
       toast.error('Failed to sign out');

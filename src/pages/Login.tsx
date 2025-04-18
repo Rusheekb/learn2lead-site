@@ -49,7 +49,7 @@ const Login = () => {
     
     try {
       await signIn(email, password);
-      // Redirect will happen in the useEffect above once user and role are set
+      // Redirect will happen in the AuthContext based on email domain and role
     } catch (error) {
       console.error("Login error:", error);
     } finally {
@@ -75,6 +75,8 @@ const Login = () => {
     try {
       await signUp(email, password);
       toast.success("Account created! Please check your email for verification.");
+      
+      // If it's a learn2lead.com email, we'll redirect automatically in AuthContext
     } catch (error) {
       console.error("Registration error:", error);
     } finally {
