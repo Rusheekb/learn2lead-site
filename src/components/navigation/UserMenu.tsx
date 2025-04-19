@@ -9,10 +9,11 @@ import {
 import { useNavigate } from 'react-router-dom';
 import UserAccountButton from './UserAccountButton';
 import UserDropdownContent from './UserDropdownContent';
+import { AppRole } from '@/hooks/useProfile';
 
 interface UserMenuProps {
   user: any;
-  userRole: string | null;
+  userRole: AppRole | null;
 }
 
 const UserMenu: React.FC<UserMenuProps> = ({ user, userRole }) => {
