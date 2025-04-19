@@ -8,19 +8,25 @@ interface UserAccountButtonProps {
   onClick: () => void;
 }
 
-const UserAccountButton: React.FC<UserAccountButtonProps> = ({ email, onClick }) => {
+const UserAccountButton = React.forwardRef<
+  HTMLButtonElement,
+  UserAccountButtonProps
+>(({ email, onClick }, ref) => {
   const displayName = email?.split('@')[0] || 'Account';
 
   return (
     <Button 
       variant="ghost" 
       onClick={onClick} 
+      ref={ref}
       className="flex items-center space-x-2 text-tutoring-blue hover:bg-tutoring-blue/10"
     >
       <User className="h-4 w-4" />
       <span>{displayName}</span>
     </Button>
   );
-};
+});
+
+UserAccountButton.displayName = "UserAccountButton";
 
 export default UserAccountButton;

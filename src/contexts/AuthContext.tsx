@@ -59,28 +59,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     switch (role) {
       case 'student':
-        navigate('/dashboard');
+        navigate('/dashboard', { replace: true });
         break;
       case 'tutor':
-        navigate('/tutor-dashboard');
+        navigate('/tutor-dashboard', { replace: true });
         break;
       case 'admin':
-        navigate('/admin-dashboard');
+        navigate('/admin-dashboard', { replace: true });
         break;
       default:
-        navigate('/');
+        navigate('/', { replace: true });
     }
   };
 
   useEffect(() => {
-    // Set up auth state listener
+    // Set up auth state listener first to avoid missing events
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
+      (event, currentSession) => {
+        // Update state synchronously
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         
+        // Use setTimeout to avoid recursive calls with Supabase client
         if (currentSession?.user) {
-          // Use setTimeout to avoid recursive calls with Supabase client
           setTimeout(async () => {
             const role = await fetchUserRole(currentSession.user.id);
             
@@ -94,13 +95,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     );
 
-    // Check for existing session
+    // Then check for existing session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       
       if (currentSession?.user) {
+        // Check and set user role
         fetchUserRole(currentSession.user.id).then(role => {
+          // If we already have a session and role, route user appropriately
           if (role) {
             routeUserByRole(role);
           }
@@ -126,6 +129,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       toast.success('Signed in successfully!');
+      // No need to redirect here, the auth state change will trigger it
     } catch (error) {
       console.error('Error signing in:', error);
       throw error;
@@ -168,7 +172,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Navigate after state updates to avoid conflicts
       setTimeout(() => {
-        navigate('/login');
+        navigate('/login', { replace: true });
       }, 0);
     } catch (error) {
       console.error('Error signing out:', error);

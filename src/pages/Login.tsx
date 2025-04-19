@@ -48,10 +48,9 @@ const Login = () => {
     try {
       if (isSignUp) {
         await signUp(email, password);
-        toast.success("Account created! Please check your email for verification.");
       } else {
         await signIn(email, password);
-        // No need to redirect here - AuthContext will handle it
+        // No need to navigate - AuthContext handles redirection
       }
     } catch (error) {
       console.error(isSignUp ? "Registration error:" : "Login error:", error);
