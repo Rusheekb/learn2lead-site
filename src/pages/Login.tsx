@@ -26,7 +26,7 @@ const Login = () => {
         'admin': "/admin-dashboard"
       }[userRole] || "/";
       
-      navigate(redirectPath);
+      navigate(redirectPath, { replace: true });
     }
   }, [user, userRole, navigate]);
 
@@ -51,6 +51,7 @@ const Login = () => {
         toast.success("Account created! Please check your email for verification.");
       } else {
         await signIn(email, password);
+        // No need to redirect here - AuthContext will handle it
       }
     } catch (error) {
       console.error(isSignUp ? "Registration error:" : "Login error:", error);

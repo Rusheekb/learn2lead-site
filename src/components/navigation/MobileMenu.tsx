@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { LogIn, LogOut } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { AppRole } from '@/hooks/useProfile';
 
 interface MobileMenuProps {
   user: any;
-  userRole: string | null;
+  userRole: AppRole | null;
   onNavItemClick: (sectionId: string) => void;
 }
 
