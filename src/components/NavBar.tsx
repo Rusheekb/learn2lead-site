@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import NavMenu from '@/components/navigation/NavMenu';
 import UserMenu from '@/components/navigation/UserMenu';
@@ -11,6 +11,7 @@ import DesktopBookButton from '@/components/navigation/DesktopBookButton';
 
 const NavBar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
   const location = useLocation();
   const { user, userRole } = useAuth();
 
