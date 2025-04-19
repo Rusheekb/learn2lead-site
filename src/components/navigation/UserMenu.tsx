@@ -1,15 +1,14 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { User, LogIn, LogOut } from 'lucide-react';
+import { LogIn } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { 
   DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import UserAccountButton from './UserAccountButton';
+import UserDropdownContent from './UserDropdownContent';
 
 interface UserMenuProps {
   user: any;
@@ -18,52 +17,21 @@ interface UserMenuProps {
 
 const UserMenu: React.FC<UserMenuProps> = ({ user, userRole }) => {
   const navigate = useNavigate();
-  const { signOut } = useAuth();
 
   const handleLogin = () => {
     navigate('/login');
   };
-
-  const handleLogout = async () => {
-    await signOut();
-  };
   
-  const handleDashboard = () => {
-    if (!userRole) return;
-    
-    switch (userRole) {
-      case 'student':
-        navigate('/dashboard');
-        break;
-      case 'tutor':
-        navigate('/tutor-dashboard');
-        break;
-      case 'admin':
-        navigate('/admin-dashboard');
-        break;
-      default:
-        navigate('/dashboard');
-    }
-  };
-
   if (user) {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="flex items-center space-x-2 text-tutoring-blue hover:bg-tutoring-blue/10">
-            <User className="h-4 w-4" />
-            <span>{user.email?.split('@')[0] || 'Account'}</span>
-          </Button>
+          <UserAccountButton 
+            email={user.email} 
+            onClick={() => {}} // Trigger dropdown 
+          />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={handleDashboard}>
-            Dashboard
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleLogout}>
-            <LogOut className="h-4 w-4 mr-2" />
-            <span>Logout</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
+        <UserDropdownContent userRole={userRole} />
       </DropdownMenu>
     );
   }
