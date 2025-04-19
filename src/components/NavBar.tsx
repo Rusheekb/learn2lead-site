@@ -1,17 +1,16 @@
 
 import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Menu, X, LogIn, LogOut, User } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import NavMenu from '@/components/navigation/NavMenu';
 import UserMenu from '@/components/navigation/UserMenu';
 import MobileMenu from '@/components/navigation/MobileMenu';
+import Logo from '@/components/navigation/Logo';
+import MobileMenuButton from '@/components/navigation/MobileMenuButton';
+import DesktopBookButton from '@/components/navigation/DesktopBookButton';
 
 const NavBar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const navigate = useNavigate();
   const location = useLocation();
   const { user, userRole } = useAuth();
 
@@ -39,9 +38,7 @@ const NavBar = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">
-            <Link to="/" className="text-2xl font-bold text-tutoring-blue">
-              Learn<span className="text-tutoring-teal">2</span>Lead
-            </Link>
+            <Logo />
           </div>
 
           {/* Desktop Navigation */}
@@ -52,22 +49,12 @@ const NavBar = () => {
           {/* CTA and Login/User Buttons */}
           <div className="hidden md:flex items-center space-x-4">
             <UserMenu user={user} userRole={userRole} />
-            <Button 
-              onClick={() => navigate('/book')}
-              className="bg-tutoring-blue hover:bg-blue-700 text-white"
-            >
-              Book a Session
-            </Button>
+            <DesktopBookButton />
           </div>
 
           {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center">
-            <button
-              onClick={toggleMenu}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-tutoring-blue focus:outline-none"
-            >
-              {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
+            <MobileMenuButton isOpen={isMenuOpen} onClick={toggleMenu} />
           </div>
         </div>
       </div>
