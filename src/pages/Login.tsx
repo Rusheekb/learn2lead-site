@@ -20,24 +20,17 @@ const Login = () => {
   // Redirect if already logged in
   useEffect(() => {
     if (user && userRole) {
-      // Direct to appropriate dashboard based on role
-      switch (userRole) {
-        case 'student':
-          navigate("/dashboard");
-          break;
-        case 'tutor':
-          navigate("/tutor-dashboard");
-          break;
-        case 'admin':
-          navigate("/admin-dashboard");
-          break;
-        default:
-          navigate("/");
-      }
+      const redirectPath = {
+        'student': "/dashboard",
+        'tutor': "/tutor-dashboard",
+        'admin': "/admin-dashboard"
+      }[userRole] || "/";
+      
+      navigate(redirectPath);
     }
   }, [user, userRole, navigate]);
 
-  const handleSignIn = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent, isSignUp: boolean) => {
     e.preventDefault();
     
     if (!email || !password) {
@@ -45,27 +38,7 @@ const Login = () => {
       return;
     }
     
-    setIsLoading(true);
-    
-    try {
-      await signIn(email, password);
-      // Redirect will happen in the AuthContext based on email domain and role
-    } catch (error) {
-      console.error("Login error:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!email || !password) {
-      toast.error("Please enter your email and password.");
-      return;
-    }
-    
-    if (password.length < 6) {
+    if (isSignUp && password.length < 6) {
       toast.error("Password must be at least 6 characters long.");
       return;
     }
@@ -73,12 +46,14 @@ const Login = () => {
     setIsLoading(true);
     
     try {
-      await signUp(email, password);
-      toast.success("Account created! Please check your email for verification.");
-      
-      // If it's a learn2lead.com email, we'll redirect automatically in AuthContext
+      if (isSignUp) {
+        await signUp(email, password);
+        toast.success("Account created! Please check your email for verification.");
+      } else {
+        await signIn(email, password);
+      }
     } catch (error) {
-      console.error("Registration error:", error);
+      console.error(isSignUp ? "Registration error:" : "Login error:", error);
     } finally {
       setIsLoading(false);
     }
@@ -106,7 +81,7 @@ const Login = () => {
                 </TabsList>
                 
                 <TabsContent value="signin">
-                  <form onSubmit={handleSignIn} className="space-y-4">
+                  <form onSubmit={(e) => handleSubmit(e, false)} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="email-signin">Email</Label>
                       <Input 
@@ -140,7 +115,7 @@ const Login = () => {
                 </TabsContent>
                 
                 <TabsContent value="signup">
-                  <form onSubmit={handleSignUp} className="space-y-4">
+                  <form onSubmit={(e) => handleSubmit(e, true)} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="email-signup">Email</Label>
                       <Input 

@@ -7,6 +7,7 @@ import DashboardNav from "@/components/student/DashboardNav";
 import LoadingSpinner from "@/components/shared/LoadingSpinner";
 import DashboardContent from "@/components/student/DashboardContent";
 import StudentContent from "@/components/shared/StudentContent";
+import ClassCalendar from "@/components/ClassCalendar";
 
 const Dashboard = () => {
   const [selectedSubject, setSelectedSubject] = useState<number | null>(null);
@@ -44,10 +45,10 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
-    // Set loading to false after a short delay to allow auth state to resolve
+    // Set loading to false after a shorter delay
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 500);
+    }, 300);
     
     return () => clearTimeout(timer);
   }, [user]);
@@ -69,7 +70,7 @@ const Dashboard = () => {
       case "schedule":
         return <div className="py-4">
           <h2 className="text-2xl font-bold mb-6">My Schedule</h2>
-          <ClassCalendarView studentId={user?.id || null} />
+          <ClassCalendar studentId={user?.id || null} />
         </div>;
       case "resources":
         return <div className="py-4">
@@ -85,7 +86,6 @@ const Dashboard = () => {
         return <div className="py-4">
           <h2 className="text-2xl font-bold mb-6">Messages</h2>
           <p>Here you can view and manage your messages with tutors.</p>
-          {/* This would be replaced with a proper messaging component */}
           <div className="mt-4 p-6 bg-gray-50 rounded-lg border text-center">
             <p className="text-gray-500">You have no new messages</p>
           </div>
@@ -107,24 +107,9 @@ const Dashboard = () => {
     <div className="min-h-screen bg-gray-50">
       <DashboardNav />
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {isLoading ? (
-          <LoadingSpinner />
-        ) : (
-          renderSection()
-        )}
+        {isLoading ? <LoadingSpinner /> : renderSection()}
       </main>
     </div>
-  );
-};
-
-// Simple wrapper component for the calendar to avoid importing it directly in this file
-const ClassCalendarView = ({ studentId }: { studentId: string | null }) => {
-  const ClassCalendar = React.lazy(() => import('@/components/ClassCalendar'));
-  
-  return (
-    <React.Suspense fallback={<div>Loading calendar...</div>}>
-      <ClassCalendar studentId={studentId} />
-    </React.Suspense>
   );
 };
 
