@@ -1,10 +1,9 @@
 
-import { useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { StudentMessage, StudentUpload, ClassItem } from '@/types/classTypes';
-import { useClassSubscription } from './useClassSubscription';
-import { useMessageSubscription } from './useMessageSubscription';
-import { useUploadSubscription } from './useUploadSubscription';
+import { ClassItem, StudentMessage, StudentUpload } from '@/types/classTypes';
+import { useClassSubscription } from './subscriptions/useClassSubscription';
+import { useMessageSubscription } from './subscriptions/useMessageSubscription';
+import { useUploadSubscription } from './subscriptions/useUploadSubscription';
+import { useRealtimeCleanup } from './useRealtimeCleanup';
 
 const useStudentRealtime = (
   currentStudentName: string,
@@ -17,14 +16,9 @@ const useStudentRealtime = (
   const messagesChannel = useMessageSubscription(currentStudentName, setStudentMessages);
   const uploadsChannel = useUploadSubscription(currentStudentName, setStudentUploads);
   
-  // Cleanup subscriptions when component unmounts
-  useEffect(() => {
-    return () => {
-      supabase.removeChannel(classesChannel);
-      supabase.removeChannel(messagesChannel);
-      supabase.removeChannel(uploadsChannel);
-    };
-  }, [classesChannel, messagesChannel, uploadsChannel]);
+  // Use cleanup hook for all channels
+  useRealtimeCleanup([classesChannel, messagesChannel, uploadsChannel]);
 };
 
 export default useStudentRealtime;
+
