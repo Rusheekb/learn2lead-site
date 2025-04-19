@@ -1,10 +1,11 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut } from 'lucide-react';
+import { LogOut, LayoutDashboard } from 'lucide-react';
 import { 
   DropdownMenuContent, 
-  DropdownMenuItem 
+  DropdownMenuItem,
+  DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 import { AppRole } from '@/hooks/useProfile';
 import { useAuth } from '@/contexts/AuthContext';
@@ -22,16 +23,16 @@ const UserDropdownContent: React.FC<UserDropdownContentProps> = ({ userRole }) =
     
     switch (userRole) {
       case 'student':
-        navigate('/dashboard');
+        navigate('/dashboard', { replace: true });
         break;
       case 'tutor':
-        navigate('/tutor-dashboard');
+        navigate('/tutor-dashboard', { replace: true });
         break;
       case 'admin':
-        navigate('/admin-dashboard');
+        navigate('/admin-dashboard', { replace: true });
         break;
       default:
-        navigate('/dashboard');
+        navigate('/dashboard', { replace: true });
     }
   };
 
@@ -40,11 +41,13 @@ const UserDropdownContent: React.FC<UserDropdownContentProps> = ({ userRole }) =
   };
 
   return (
-    <DropdownMenuContent align="end">
-      <DropdownMenuItem onClick={handleDashboard}>
-        Dashboard
+    <DropdownMenuContent align="end" className="w-56 bg-white z-50">
+      <DropdownMenuItem onClick={handleDashboard} className="cursor-pointer hover:bg-gray-100">
+        <LayoutDashboard className="h-4 w-4 mr-2" />
+        <span>Dashboard</span>
       </DropdownMenuItem>
-      <DropdownMenuItem onClick={handleLogout}>
+      <DropdownMenuSeparator />
+      <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-500 hover:bg-red-50 hover:text-red-600">
         <LogOut className="h-4 w-4 mr-2" />
         <span>Logout</span>
       </DropdownMenuItem>
