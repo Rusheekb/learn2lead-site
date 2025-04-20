@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { AppRole } from '@/hooks/useProfile';
 import { useAuth } from '@/contexts/AuthContext';
+import { getDashboardPath } from '@/utils/authNavigation';
 
 interface UserDropdownContentProps {
   userRole: AppRole | null;
@@ -21,19 +22,8 @@ const UserDropdownContent: React.FC<UserDropdownContentProps> = ({ userRole }) =
   const handleDashboard = () => {
     if (!userRole) return;
     
-    switch (userRole) {
-      case 'student':
-        navigate('/dashboard', { replace: true });
-        break;
-      case 'tutor':
-        navigate('/tutor-dashboard', { replace: true });
-        break;
-      case 'admin':
-        navigate('/admin-dashboard', { replace: true });
-        break;
-      default:
-        navigate('/dashboard', { replace: true });
-    }
+    const dashboardPath = getDashboardPath(userRole);
+    navigate(dashboardPath, { replace: true });
   };
 
   const handleLogout = async () => {
@@ -41,7 +31,10 @@ const UserDropdownContent: React.FC<UserDropdownContentProps> = ({ userRole }) =
   };
 
   return (
-    <DropdownMenuContent align="end" className="w-56 bg-white z-50">
+    <DropdownMenuContent 
+      align="end" 
+      className="w-56 bg-white z-50 border border-gray-200 shadow-lg"
+    >
       <DropdownMenuItem onClick={handleDashboard} className="cursor-pointer hover:bg-gray-100">
         <LayoutDashboard className="h-4 w-4 mr-2" />
         <span>Dashboard</span>

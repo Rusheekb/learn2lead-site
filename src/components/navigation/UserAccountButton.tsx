@@ -4,8 +4,8 @@ import { User } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 
 interface UserAccountButtonProps {
-  email: string;
-  onClick: () => void;
+  email: string | undefined;
+  onClick?: () => void;
 }
 
 const UserAccountButton = React.forwardRef<

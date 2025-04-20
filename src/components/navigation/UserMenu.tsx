@@ -27,10 +27,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ user, userRole }) => {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <UserAccountButton 
-            email={user.email} 
-            onClick={() => {}} // Trigger handled by DropdownMenuTrigger 
-          />
+          <UserAccountButton email={user.email} />
         </DropdownMenuTrigger>
         <UserDropdownContent userRole={userRole} />
       </DropdownMenu>

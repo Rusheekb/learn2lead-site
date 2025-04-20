@@ -1,10 +1,11 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { LogIn, LogOut } from "lucide-react";
+import { LogIn, LogOut, LayoutDashboard } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { AppRole } from '@/hooks/useProfile';
+import { getDashboardPath } from '@/utils/authNavigation';
 
 interface MobileMenuProps {
   user: any;
@@ -34,20 +35,8 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ user, userRole, onNavItemClick 
   
   const handleDashboard = () => {
     if (!userRole) return;
-    
-    switch (userRole) {
-      case 'student':
-        navigate('/dashboard');
-        break;
-      case 'tutor':
-        navigate('/tutor-dashboard');
-        break;
-      case 'admin':
-        navigate('/admin-dashboard');
-        break;
-      default:
-        navigate('/dashboard');
-    }
+    const dashboardPath = getDashboardPath(userRole);
+    navigate(dashboardPath, { replace: true });
   };
 
   return (
@@ -67,14 +56,15 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ user, userRole, onNavItemClick 
           <Button
             onClick={handleDashboard}
             variant="ghost"
-            className="w-full justify-start px-3 py-2 text-base font-medium text-gray-600 hover:text-tutoring-blue"
+            className="w-full justify-start px-3 py-2 text-base font-medium flex items-center gap-2"
           >
-            Dashboard
+            <LayoutDashboard className="h-4 w-4" />
+            <span>Dashboard</span>
           </Button>
           <Button 
             onClick={handleLogout}
             variant="ghost"
-            className="w-full mt-2 flex items-center justify-center space-x-2 text-tutoring-blue hover:bg-tutoring-blue/10"
+            className="w-full mt-2 flex items-center justify-start gap-2 text-red-500"
           >
             <LogOut className="h-4 w-4" />
             <span>Logout</span>
@@ -84,7 +74,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ user, userRole, onNavItemClick 
         <Button 
           onClick={handleLogin}
           variant="ghost"
-          className="w-full mt-2 flex items-center justify-center space-x-2 text-tutoring-blue hover:bg-tutoring-blue/10"
+          className="w-full mt-2 flex items-center justify-start gap-2 text-tutoring-blue"
         >
           <LogIn className="h-4 w-4" />
           <span>Login</span>

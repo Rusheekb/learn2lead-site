@@ -20,13 +20,14 @@ const Login = () => {
   // Redirect if already logged in
   useEffect(() => {
     if (user && userRole) {
-      const redirectPath = {
+      const redirectPaths = {
         'student': "/dashboard",
         'tutor': "/tutor-dashboard",
         'admin': "/admin-dashboard"
-      }[userRole] || "/";
+      };
       
-      navigate(redirectPath, { replace: true });
+      const path = redirectPaths[userRole] || "/";
+      navigate(path, { replace: true });
     }
   }, [user, userRole, navigate]);
 
@@ -48,9 +49,10 @@ const Login = () => {
     try {
       if (isSignUp) {
         await signUp(email, password);
+        toast.success("Account created! Please check your email for verification.");
       } else {
         await signIn(email, password);
-        // No need to navigate - AuthContext handles redirection
+        // Navigation is handled by AuthContext
       }
     } catch (error) {
       console.error(isSignUp ? "Registration error:" : "Login error:", error);
