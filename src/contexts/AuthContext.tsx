@@ -42,7 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             
             if (event === 'SIGNED_IN') {
               const dashboardPath = getDashboardPath(role);
-              navigate(dashboardPath, { replace: true });
+              navigate(dashboardPath);
             }
           }, 0);
         } else {
@@ -52,41 +52,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
 
     // Then check for existing session
-    supabase.auth.getSession().then(async ({ data: { session: currentSession } }) => {
+    const checkSession = async () => {
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       
       if (currentSession?.user) {
         const role = await fetchUserRole(currentSession.user.id);
         setUserRole(role);
-        // Navigate to dashboard if session exists and we're not already on dashboard
-        if (role && window.location.pathname === '/') {
-          navigate(getDashboardPath(role), { replace: true });
-        }
       }
       
       setIsLoading(false);
-    });
+    };
+
+    checkSession();
 
     return () => subscription.unsubscribe();
   }, [navigate]);
 
   const handleSignIn = async (email: string, password: string) => {
-    await signInWithEmail(email, password);
-    // Navigation will be handled by the auth state change listener
+    try {
+      await signInWithEmail(email, password);
+    } catch (error) {
+      console.error("Login error:", error);
+    }
   };
 
   const handleSignUp = async (email: string, password: string) => {
-    await signUpWithEmail(email, password);
-    // For sign up, navigation is handled after email verification
+    try {
+      await signUpWithEmail(email, password);
+    } catch (error) {
+      console.error("Signup error:", error);
+    }
   };
 
   const handleSignOut = async () => {
-    if (await signOut()) {
+    try {
+      await signOut();
       setUser(null);
       setSession(null);
       setUserRole(null);
-      navigate('/login', { replace: true });
+      navigate('/login');
+    } catch (error) {
+      console.error("Logout error:", error);
     }
   };
 

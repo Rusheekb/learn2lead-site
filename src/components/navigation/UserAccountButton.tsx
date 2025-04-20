@@ -20,6 +20,7 @@ const UserAccountButton = React.forwardRef<
       onClick={onClick} 
       ref={ref}
       className="flex items-center space-x-2 text-tutoring-blue hover:bg-tutoring-blue/10"
+      type="button"
     >
       <User className="h-4 w-4" />
       <span>{displayName}</span>

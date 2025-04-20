@@ -20,10 +20,8 @@ const UserDropdownContent: React.FC<UserDropdownContentProps> = ({ userRole }) =
   const { signOut } = useAuth();
 
   const handleDashboard = () => {
-    if (!userRole) return;
-    
     const dashboardPath = getDashboardPath(userRole);
-    navigate(dashboardPath, { replace: true });
+    navigate(dashboardPath);
   };
 
   const handleLogout = async () => {
@@ -33,7 +31,7 @@ const UserDropdownContent: React.FC<UserDropdownContentProps> = ({ userRole }) =
   return (
     <DropdownMenuContent 
       align="end" 
-      className="w-56 bg-white z-50 border border-gray-200 shadow-lg"
+      className="w-56 bg-white z-[100] border border-gray-200 shadow-lg"
     >
       <DropdownMenuItem onClick={handleDashboard} className="cursor-pointer hover:bg-gray-100">
         <LayoutDashboard className="h-4 w-4 mr-2" />

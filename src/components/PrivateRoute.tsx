@@ -1,9 +1,8 @@
 
 import React from 'react';
-import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { AppRole } from '@/hooks/useProfile';
-import { getDashboardPath } from '@/utils/authNavigation';
 
 interface PrivateRouteProps {
   children?: React.ReactNode;
@@ -12,9 +11,8 @@ interface PrivateRouteProps {
 
 const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, allowedRoles }) => {
   const { user, userRole, isLoading } = useAuth();
-  const location = useLocation();
 
-  // Show a simpler loading indicator to reduce render complexity
+  // Show a simple loading indicator
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -23,15 +21,26 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, allowedRoles }) =
     );
   }
 
+  // If not authenticated, redirect to login
   if (!user) {
-    // Redirect to login and remember where they were trying to go
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to="/login" replace />;
   }
   
-  // Role-based access control
-  if (allowedRoles && userRole && !allowedRoles.includes(userRole)) {
-    // Redirect to appropriate dashboard based on role
-    return <Navigate to={getDashboardPath(userRole)} replace />;
+  // Role-based access - only enforce if allowedRoles is provided and not empty
+  if (allowedRoles && allowedRoles.length > 0 && userRole) {
+    if (!allowedRoles.includes(userRole)) {
+      // Redirect to the appropriate dashboard based on role
+      switch (userRole) {
+        case 'student':
+          return <Navigate to="/dashboard" replace />;
+        case 'tutor':
+          return <Navigate to="/tutor-dashboard" replace />;
+        case 'admin':
+          return <Navigate to="/admin-dashboard" replace />;
+        default:
+          return <Navigate to="/login" replace />;
+      }
+    }
   }
 
   return children ? <>{children}</> : <Outlet />;

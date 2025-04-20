@@ -1,13 +1,7 @@
 
 import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { 
-  Menubar,
-  MenubarContent,
-  MenubarItem, 
-  MenubarMenu, 
-  MenubarTrigger 
-} from "@/components/ui/menubar";
+import { Button } from "@/components/ui/button";
 import { LayoutDashboard, Calendar, Book, MessageSquare, User } from "lucide-react";
 
 const StudentMenubar: React.FC = () => {
@@ -48,28 +42,20 @@ const StudentMenubar: React.FC = () => {
   };
   
   return (
-    <Menubar className="border-none bg-transparent space-x-2">
+    <div className="flex flex-wrap gap-2">
       {menuItems.map((item) => (
-        <MenubarMenu key={item.label}>
-          <MenubarTrigger 
-            className={`flex items-center px-4 py-2 rounded-md cursor-pointer ${
-              currentHash === item.hash ? "bg-tutoring-blue/10 text-tutoring-blue" : ""
-            }`}
-            onClick={() => handleNavigation(item.hash)}
-          >
-            {item.icon} {item.label}
-          </MenubarTrigger>
-          <MenubarContent>
-            <MenubarItem
-              onClick={() => handleNavigation(item.hash)}
-              className="cursor-pointer"
-            >
-              Go to {item.label}
-            </MenubarItem>
-          </MenubarContent>
-        </MenubarMenu>
+        <Button
+          key={item.label}
+          variant={currentHash === item.hash ? "default" : "ghost"}
+          className={`flex items-center ${
+            currentHash === item.hash ? "bg-tutoring-blue text-white" : ""
+          }`}
+          onClick={() => handleNavigation(item.hash)}
+        >
+          {item.icon} {item.label}
+        </Button>
       ))}
-    </Menubar>
+    </div>
   );
 };
 

@@ -23,26 +23,26 @@ const UserMenu: React.FC<UserMenuProps> = ({ user, userRole }) => {
     navigate('/login');
   };
   
-  if (user) {
+  if (!user) {
     return (
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <UserAccountButton email={user.email} />
-        </DropdownMenuTrigger>
-        <UserDropdownContent userRole={userRole} />
-      </DropdownMenu>
+      <Button 
+        variant="ghost"
+        onClick={handleLogin}
+        className="flex items-center space-x-2 text-tutoring-blue hover:bg-tutoring-blue/10"
+      >
+        <LogIn className="h-4 w-4" />
+        <span>Login</span>
+      </Button>
     );
   }
   
   return (
-    <Button 
-      variant="ghost"
-      onClick={handleLogin}
-      className="flex items-center space-x-2 text-tutoring-blue hover:bg-tutoring-blue/10"
-    >
-      <LogIn className="h-4 w-4" />
-      <span>Login</span>
-    </Button>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <UserAccountButton email={user.email} />
+      </DropdownMenuTrigger>
+      <UserDropdownContent userRole={userRole} />
+    </DropdownMenu>
   );
 };
 
