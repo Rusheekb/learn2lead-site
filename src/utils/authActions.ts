@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -23,14 +22,36 @@ export const signInWithEmail = async (email: string, password: string) => {
 
 export const signUpWithEmail = async (email: string, password: string) => {
   try {
-    const { error } = await supabase.auth.signUp({
+    // 1) Sign up the user
+    const { data: signupData, error: signupError } = await supabase.auth.signUp({
       email,
-      password
+      password,
     });
     
-    if (error) {
-      toast.error(error.message);
-      throw error;
+    if (signupError) {
+      toast.error(signupError.message);
+      throw signupError;
+    }
+    
+    // 2) Insert profile row with role based on email domain
+    const user = signupData.user;
+    if (user && user.email) {
+      const role = user.email.endsWith('@learn2lead.com') ? 'tutor' : 'student';
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert([
+          {
+            id: user.id,
+            email: user.email,
+            role,
+          }
+        ]);
+      
+      if (profileError) {
+        toast.error('Failed to create user profile.');
+        console.error('Profile insert error:', profileError);
+        throw profileError;
+      }
     }
     
     toast.success('Signed up successfully! Please check your email for verification.');
