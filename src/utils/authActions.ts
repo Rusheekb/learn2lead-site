@@ -1,18 +1,20 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+/**
+ * Signs in a user using Supabase email/password authentication.
+ */
 export const signInWithEmail = async (email: string, password: string) => {
   try {
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password
     });
-    
     if (error) {
       toast.error(error.message);
       throw error;
     }
-    
     toast.success('Signed in successfully!');
   } catch (error) {
     console.error('Error signing in:', error);
@@ -20,40 +22,45 @@ export const signInWithEmail = async (email: string, password: string) => {
   }
 };
 
+/**
+ * Signs up a user and ensures a profile row exists in the `profiles` table.
+ */
 export const signUpWithEmail = async (email: string, password: string) => {
   try {
-    // 1) Sign up the user
     const { data: signupData, error: signupError } = await supabase.auth.signUp({
       email,
-      password,
+      password
     });
-    
     if (signupError) {
       toast.error(signupError.message);
       throw signupError;
     }
-    
-    // 2) Insert profile row with role based on email domain
+
+    // Guarantee a profile row exists immediately after signup
     const user = signupData.user;
     if (user && user.email) {
-      const role = user.email.endsWith('@learn2lead.com') ? 'tutor' : 'student';
-      const { error: profileError } = await supabase
+      // See if profile exists
+      const { data: existingProfile, error: fetchError } = await supabase
         .from('profiles')
-        .insert([
-          {
-            id: user.id,
-            email: user.email,
-            role,
-          }
-        ]);
-      
-      if (profileError) {
-        toast.error('Failed to create user profile.');
-        console.error('Profile insert error:', profileError);
-        throw profileError;
+        .select('id')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (!existingProfile) {
+        // Insert profile for this user
+        const role = user.email.endsWith('@learn2lead.com') ? 'tutor' : 'student';
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert([
+            { id: user.id, email: user.email, role }
+          ]);
+        if (insertError) {
+          toast.error('Failed to create user profile.');
+          throw insertError;
+        }
       }
     }
-    
+
     toast.success('Signed up successfully! Please check your email for verification.');
   } catch (error) {
     console.error('Error signing up:', error);
@@ -61,20 +68,19 @@ export const signUpWithEmail = async (email: string, password: string) => {
   }
 };
 
+/**
+ * Signs out the current user.
+ */
 export const signOut = async () => {
   try {
     const { error } = await supabase.auth.signOut();
-    
     if (error) {
-      console.error('Error signing out:', error);
       toast.error('Failed to sign out');
       return false;
     }
-    
     toast.success('Signed out successfully');
     return true;
   } catch (error) {
-    console.error('Error signing out:', error);
     toast.error('Failed to sign out');
     return false;
   }

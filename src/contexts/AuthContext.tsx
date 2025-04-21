@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Session } from '@supabase/supabase-js';
@@ -27,50 +28,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userRole, setUserRole] = useState<AppRole | null>(null);
 
   useEffect(() => {
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
+    // Set up auth state listener (DO NOT use async in the callback!)
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, currentSession) => {
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
 
-        if (event === 'SIGNED_IN' && currentSession?.user) {
-          const u = currentSession.user;
-          // 1) Ensure a profile row exists
-          const { data: existingProfile, error: fetchError } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('id', u.id)
-            .single();
-
-          if (fetchError && fetchError.code !== 'PGRST116') {
-            console.error('Error checking profile:', fetchError);
-          }
-
-          if (!existingProfile) {
-            const role: AppRole = u.email?.endsWith('@learn2lead.com') ? 'tutor' : 'student';
-            const { error: insertError } = await supabase
+      if (event === 'SIGNED_IN' && currentSession?.user) {
+        const u = currentSession.user;
+        // Use setTimeout to avoid deadlock, then fetch profile/role.
+        setTimeout(async () => {
+          try {
+            // 1. Check for existing profile row, create if missing
+            const { data: existingProfile, error: fetchError } = await supabase
               .from('profiles')
-              .insert({ id: u.id, email: u.email!, role });
-            if (insertError) {
-              console.error('Error creating profile:', insertError);
+              .select('id')
+              .eq('id', u.id)
+              .maybeSingle();
+            if (!existingProfile) {
+              const role: AppRole = u.email?.endsWith('@learn2lead.com') ? 'tutor' : 'student';
+              await supabase
+                .from('profiles')
+                .insert({ id: u.id, email: u.email!, role });
             }
+            // 2. Fetch user role immediately and update
+            const role = await fetchUserRole(u.id);
+            setUserRole(role);
+            // 3. Navigate to dashboard for this role
+            navigate(getDashboardPath(role), { replace: true });
+          } catch (err) {
+            console.error('Error processing post-login actions:', err);
+            setUserRole(null);
+            navigate('/login', { replace: true });
           }
-
-          // 2) Fetch the user role and redirect
-          const role = await fetchUserRole(u.id);
-          setUserRole(role);
-          const path = getDashboardPath(role);
-          navigate(path, { replace: true });
-        }
-
-        if (event === 'SIGNED_OUT') {
-          setUserRole(null);
-          navigate('/login', { replace: true });
-        }
+        }, 0);
       }
-    );
 
-    // Initialize on load
+      if (event === 'SIGNED_OUT') {
+        setUserRole(null);
+        setUser(null);
+        setSession(null);
+        navigate('/login', { replace: true });
+      }
+    });
+
+    // Init session on mount
     (async () => {
       const { data: { session: s } } = await supabase.auth.getSession();
       setSession(s);
@@ -86,32 +89,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  // Auth action wrappers
   const handleSignIn = async (email: string, password: string) => {
-    try {
-      await signInWithEmail(email, password);
-    } catch (error) {
-      console.error('Login error:', error);
-    }
+    await signInWithEmail(email, password);
   };
 
   const handleSignUp = async (email: string, password: string) => {
-    try {
-      await signUpWithEmail(email, password);
-    } catch (error) {
-      console.error('Signup error:', error);
-    }
+    await signUpWithEmail(email, password);
   };
 
   const handleSignOut = async () => {
-    try {
-      await signOut();
-      setUser(null);
-      setSession(null);
-      setUserRole(null);
-      navigate('/login');
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
+    await signOut();
+    setUser(null);
+    setSession(null);
+    setUserRole(null);
+    navigate('/login');
   };
 
   const value = {
