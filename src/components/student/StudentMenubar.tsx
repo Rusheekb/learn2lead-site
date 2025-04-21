@@ -1,75 +1,52 @@
 
 import React from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { 
-  Menubar,
-  MenubarContent,
-  MenubarItem, 
-  MenubarMenu, 
-  MenubarTrigger 
-} from "@/components/ui/menubar";
-import { LayoutDashboard, Calendar, Book, MessageSquare, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { LayoutDashboard, Calendar, Book, User } from "lucide-react";
 
-const StudentMenubar: React.FC = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const currentHash = location.hash;
-  
+interface StudentMenubarProps {
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+}
+
+const StudentMenubar: React.FC<StudentMenubarProps> = ({ activeTab, setActiveTab }) => {
   const menuItems = [
     { 
       label: "Dashboard", 
-      hash: "", 
+      value: "dashboard", 
       icon: <LayoutDashboard className="w-4 h-4 mr-2" /> 
     },
     { 
       label: "My Schedule", 
-      hash: "#schedule", 
+      value: "schedule", 
       icon: <Calendar className="w-4 h-4 mr-2" /> 
     },
     { 
       label: "Resources", 
-      hash: "#resources", 
+      value: "resources", 
       icon: <Book className="w-4 h-4 mr-2" /> 
     },
     { 
-      label: "Messages", 
-      hash: "#messages", 
-      icon: <MessageSquare className="w-4 h-4 mr-2" /> 
-    },
-    { 
       label: "Profile", 
-      hash: "#profile", 
+      value: "profile", 
       icon: <User className="w-4 h-4 mr-2" /> 
     }
   ];
   
-  const handleNavigation = (hash: string) => {
-    navigate(`/dashboard${hash}`);
-  };
-  
   return (
-    <Menubar className="border-none bg-transparent space-x-2">
+    <div className="flex flex-wrap gap-2">
       {menuItems.map((item) => (
-        <MenubarMenu key={item.label}>
-          <MenubarTrigger 
-            className={`flex items-center px-4 py-2 rounded-md cursor-pointer ${
-              currentHash === item.hash ? "bg-tutoring-blue/10 text-tutoring-blue" : ""
-            }`}
-            onClick={() => handleNavigation(item.hash)}
-          >
-            {item.icon} {item.label}
-          </MenubarTrigger>
-          <MenubarContent>
-            <MenubarItem
-              onClick={() => handleNavigation(item.hash)}
-              className="cursor-pointer"
-            >
-              Go to {item.label}
-            </MenubarItem>
-          </MenubarContent>
-        </MenubarMenu>
+        <Button
+          key={item.label}
+          variant={activeTab === item.value ? "default" : "ghost"}
+          className={`flex items-center ${
+            activeTab === item.value ? "bg-tutoring-blue text-white" : ""
+          }`}
+          onClick={() => setActiveTab(item.value)}
+        >
+          {item.icon} {item.label}
+        </Button>
       ))}
-    </Menubar>
+    </div>
   );
 };
 

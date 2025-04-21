@@ -4,11 +4,6 @@ import { useClassLogs } from '@/hooks/useClassLogs';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import { TopPerformer, PopularSubject } from '@/types/sharedTypes';
 
-interface MonthlyClass {
-  month: string;
-  count: number;
-}
-
 export const useDashboardData = () => {
   const { classes, isLoading: isLoadingClasses } = useClassLogs();
   const {
@@ -23,7 +18,7 @@ export const useDashboardData = () => {
   const [cachedData, setCachedData] = useState({
     topTutors: [] as TopPerformer[],
     topStudents: [] as TopPerformer[],
-    monthlyClasses: [] as MonthlyClass[],
+    monthlyClasses: {} as Record<string, number>,
     popularSubjects: [] as PopularSubject[]
   });
 
@@ -43,10 +38,8 @@ export const useDashboardData = () => {
           name: item.name,
           value: typeof item.value === 'number' ? item.value : 0
         })),
-        monthlyClasses: Object.entries(revenueByMonth).map(([month, count]) => ({
-          month,
-          count: count as number
-        })),
+        // Store as Record<string, number> directly rather than an array of objects
+        monthlyClasses: revenueByMonth,
         popularSubjects: getSubjectPopularity()
       });
     }

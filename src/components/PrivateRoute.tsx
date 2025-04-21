@@ -12,7 +12,7 @@ interface PrivateRouteProps {
 const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, allowedRoles }) => {
   const { user, userRole, isLoading } = useAuth();
 
-  // Show a simpler loading indicator to reduce render complexity
+  // Show a simple loading indicator
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -21,19 +21,26 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children, allowedRoles }) =
     );
   }
 
+  // If not authenticated, redirect to login
   if (!user) {
     return <Navigate to="/login" replace />;
   }
   
-  // Role-based access control - simplified for better performance
-  if (allowedRoles && userRole && !allowedRoles.includes(userRole)) {
-    const redirectPaths = {
-      'student': '/dashboard',
-      'tutor': '/tutor-dashboard',
-      'admin': '/admin-dashboard'
-    };
-    
-    return <Navigate to={redirectPaths[userRole] || '/login'} replace />;
+  // Role-based access - only enforce if allowedRoles is provided and not empty
+  if (allowedRoles && allowedRoles.length > 0 && userRole) {
+    if (!allowedRoles.includes(userRole)) {
+      // Redirect to the appropriate dashboard based on role
+      switch (userRole) {
+        case 'student':
+          return <Navigate to="/dashboard" replace />;
+        case 'tutor':
+          return <Navigate to="/tutor-dashboard" replace />;
+        case 'admin':
+          return <Navigate to="/admin-dashboard" replace />;
+        default:
+          return <Navigate to="/login" replace />;
+      }
+    }
   }
 
   return children ? <>{children}</> : <Outlet />;

@@ -18,5 +18,7 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080
-  }
+  },
+  envPrefix: ['VITE_']
 }))
+

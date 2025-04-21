@@ -1,9 +1,11 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Session, User } from '@supabase/supabase-js';
+import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { signInWithEmail, signUpWithEmail, signOut } from '@/utils/authActions';
+import { fetchUserRole } from '@/hooks/useUserRole';
+import { getDashboardPath } from '@/utils/authNavigation';
 import { AppRole } from '@/hooks/useProfile';
 
 interface AuthContextType {
@@ -19,157 +21,89 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [userRole, setUserRole] = useState<AppRole | null>(null);
-  const navigate = useNavigate();
-
-  // Fetch user role from profiles table
-  const fetchUserRole = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', userId)
-        .maybeSingle();
-        
-      if (error) {
-        console.error('Error fetching user role:', error);
-        setUserRole(null);
-        return null;
-      }
-
-      if (data?.role) {
-        setUserRole(data.role as AppRole);
-        return data.role as AppRole;
-      }
-      
-      return null;
-    } catch (error) {
-      console.error('Error in fetchUserRole:', error);
-      setUserRole(null);
-      return null;
-    }
-  };
-
-  // Route user to the appropriate dashboard based on their role
-  const routeUserByRole = (role: AppRole | null) => {
-    if (!role) return;
-    
-    switch (role) {
-      case 'student':
-        navigate('/dashboard');
-        break;
-      case 'tutor':
-        navigate('/tutor-dashboard');
-        break;
-      case 'admin':
-        navigate('/admin-dashboard');
-        break;
-      default:
-        navigate('/');
-    }
-  };
 
   useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
-        
-        if (currentSession?.user) {
-          // Use setTimeout to avoid recursive calls with Supabase client
-          setTimeout(async () => {
-            const role = await fetchUserRole(currentSession.user.id);
-            
-            if (event === 'SIGNED_IN') {
-              routeUserByRole(role);
-            }
-          }, 0);
-        } else {
-          setUserRole(null);
-        }
-      }
-    );
-
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+    // Set up auth state listener (DO NOT use async in the callback!)
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, currentSession) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
-      
-      if (currentSession?.user) {
-        fetchUserRole(currentSession.user.id);
+
+      if (event === 'SIGNED_IN' && currentSession?.user) {
+        const u = currentSession.user;
+        // Use setTimeout to avoid deadlock, then fetch profile/role.
+        setTimeout(async () => {
+          try {
+            // 1. Check for existing profile row, create if missing (always role='student')
+            const { data: existingProfile, error: fetchError } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('id', u.id)
+              .maybeSingle();
+            if (!existingProfile) {
+              // Always default to 'student'
+              await supabase
+                .from('profiles')
+                .insert({ id: u.id, email: u.email!, role: 'student' });
+            }
+            // 2. Fetch user role from profile (never use email for role anymore)
+            const role = await fetchUserRole(u.id);
+            setUserRole(role);
+            // 3. Navigate to dashboard for this role
+            navigate(getDashboardPath(role), { replace: true });
+          } catch (err) {
+            console.error('Error processing post-login actions:', err);
+            setUserRole(null);
+            navigate('/login', { replace: true });
+          }
+        }, 0);
       }
-      
-      setIsLoading(false);
+
+      if (event === 'SIGNED_OUT') {
+        setUserRole(null);
+        setUser(null);
+        setSession(null);
+        navigate('/login', { replace: true });
+      }
     });
 
+    // Init session on mount
+    (async () => {
+      const { data: { session: s } } = await supabase.auth.getSession();
+      setSession(s);
+      setUser(s?.user ?? null);
+
+      if (s?.user) {
+        const role = await fetchUserRole(s.user.id);
+        setUserRole(role);
+      }
+      setIsLoading(false);
+    })();
+
     return () => subscription.unsubscribe();
-  }, []);
+  }, [navigate]);
 
-  const signIn = async (email: string, password: string) => {
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-      
-      if (error) {
-        toast.error(error.message);
-        throw error;
-      }
-      
-      toast.success('Signed in successfully!');
-    } catch (error) {
-      console.error('Error signing in:', error);
-      throw error;
-    }
+  // Auth action wrappers
+  const handleSignIn = async (email: string, password: string) => {
+    await signInWithEmail(email, password);
   };
 
-  const signUp = async (email: string, password: string) => {
-    try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password
-      });
-      
-      if (error) {
-        toast.error(error.message);
-        throw error;
-      }
-      
-      toast.success('Signed up successfully! Please check your email for verification.');
-    } catch (error) {
-      console.error('Error signing up:', error);
-      throw error;
-    }
+  const handleSignUp = async (email: string, password: string) => {
+    await signUpWithEmail(email, password);
   };
 
-  const signOut = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        console.error('Error signing out:', error);
-        toast.error('Failed to sign out');
-        return;
-      }
-      
-      setUser(null);
-      setSession(null);
-      setUserRole(null);
-      toast.success('Signed out successfully');
-      
-      // Navigate after state updates to avoid conflicts
-      setTimeout(() => {
-        navigate('/login');
-      }, 0);
-    } catch (error) {
-      console.error('Error signing out:', error);
-      toast.error('Failed to sign out');
-    }
+  const handleSignOut = async () => {
+    await signOut();
+    setUser(null);
+    setSession(null);
+    setUserRole(null);
+    navigate('/login');
   };
 
   const value = {
@@ -177,9 +111,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     session,
     userRole,
     isLoading,
-    signIn,
-    signUp,
-    signOut
+    signIn: handleSignIn,
+    signUp: handleSignUp,
+    signOut: handleSignOut
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -192,3 +126,4 @@ export const useAuth = () => {
   }
   return context;
 };
+

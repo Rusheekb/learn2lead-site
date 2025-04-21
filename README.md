@@ -1,73 +1,35 @@
-# Welcome to your Lovable project
 
-## Project info
+# Learn2Lead Application
 
-**URL**: https://lovable.dev/projects/da5bcf86-ba6c-40ab-b4d5-ead6515518da
+## Environment Variables
 
-## How can I edit this code?
+This project uses environment variables for configuration. Since we cannot modify the `.gitignore` file, please manually ensure that the following files are not committed to version control:
 
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/da5bcf86-ba6c-40ab-b4d5-ead6515518da) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```
+.env.local
+.env.*.local
 ```
 
-**Edit a file directly in GitHub**
+## Development Setup
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+1. Copy the `.env.local` file template:
+   ```bash
+   cp .env .env.local
+   ```
 
-**Use GitHub Codespaces**
+2. Update any sensitive values in your `.env.local` file
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+3. Run the development server:
+   ```bash
+   npm run dev
+   ```
 
-## What technologies are used for this project?
+## Building for Production
 
-This project is built with .
+```bash
+npm run build
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Additional Configuration
 
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/da5bcf86-ba6c-40ab-b4d5-ead6515518da) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes it is!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+For more information about Vite environment variables, see [Vite's documentation](https://vitejs.dev/guide/env-and-mode.html).

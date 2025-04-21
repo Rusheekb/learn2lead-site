@@ -1,6 +1,6 @@
 
 import React, { ReactNode, useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Calendar, User, Users, FileText, DollarSign, BarChart, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -13,36 +13,27 @@ interface DashboardLayoutProps {
 }
 
 const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title, role }) => {
-  const [currentPath, setCurrentPath] = useState(window.location.pathname);
-  const [currentHash, setCurrentHash] = useState(window.location.hash);
-  const navigate = useNavigate();
+  const location = useLocation();
+  const [currentPath, setCurrentPath] = useState(location.pathname);
+  const [currentHash, setCurrentHash] = useState(location.hash);
   const { signOut } = useAuth();
 
-  // Update current path and hash when they change
+  // Update current path and hash when location changes
   useEffect(() => {
-    const handleRouteChange = () => {
-      setCurrentPath(window.location.pathname);
-      setCurrentHash(window.location.hash);
-      console.log("Hash changed to:", window.location.hash);
-    };
+    setCurrentPath(location.pathname);
+    setCurrentHash(location.hash);
+  }, [location]);
 
-    // Set initial values
-    handleRouteChange();
-    
-    // Listen for hash changes
-    window.addEventListener('hashchange', handleRouteChange);
-    
-    return () => {
-      window.removeEventListener('hashchange', handleRouteChange);
-    };
-  }, []);
-
-  const getNavItems = () => {
+  // Create navigation items based on role
+  const navItems = React.useMemo(() => {
     switch (role) {
       case "student":
         return [
           { name: "Learning Portal", href: "/dashboard", icon: <FileText className="h-5 w-5" /> },
-          { name: "Class Schedule", href: "#classes", icon: <Calendar className="h-5 w-5" /> },
+          { name: "Class Schedule", href: "/dashboard#schedule", icon: <Calendar className="h-5 w-5" /> },
+          { name: "Resources", href: "/dashboard#resources", icon: <FileText className="h-5 w-5" /> },
+          { name: "Messages", href: "/dashboard#messages", icon: <User className="h-5 w-5" /> },
+          { name: "Profile", href: "/profile", icon: <User className="h-5 w-5" /> },
         ];
       case "tutor":
         return [
@@ -54,7 +45,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title, role
         ];
       case "admin":
         return [
-          { name: "Dashboard", href: "/admin-dashboard#analytics", icon: <BarChart className="h-5 w-5" /> },
+          { name: "Dashboard", href: "/admin-dashboard", icon: <BarChart className="h-5 w-5" /> },
           { name: "Class Schedule", href: "/admin-dashboard#schedule", icon: <Calendar className="h-5 w-5" /> },
           { name: "Tutors", href: "/admin-dashboard#tutors", icon: <User className="h-5 w-5" /> },
           { name: "Students", href: "/admin-dashboard#students", icon: <Users className="h-5 w-5" /> },
@@ -63,19 +54,17 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title, role
       default:
         return [];
     }
+  }, [role]);
+
+  // Check if a nav item is active based on both path and hash
+  const isNavItemActive = (item: { href: string }) => {
+    const [path, hash] = item.href.split('#');
+    return currentPath === path && (hash ? currentHash === `#${hash}` : !currentHash);
   };
 
-  const navItems = getNavItems();
-
-  const handleLogout = async () => {
-    await signOut();
+  const handleLogout = () => {
+    signOut();
   };
-
-  // For debugging
-  useEffect(() => {
-    console.log("Current hash:", currentHash);
-    console.log("Current path:", currentPath);
-  }, [currentHash, currentPath]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -89,7 +78,6 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title, role
               <span className="ml-2 text-gray-500">{title}</span>
             </div>
             <div className="flex items-center gap-4">
-              <Calendar className="h-5 w-5 text-gray-500" />
               <span className="text-sm font-medium text-gray-700">
                 {new Date().toLocaleDateString('en-US', { 
                   weekday: 'short', 
@@ -97,7 +85,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title, role
                   day: 'numeric'
                 })}
               </span>
-              <Button variant="ghost" className="flex items-center gap-1 text-gray-600 hover:text-gray-900" onClick={handleLogout}>
+              <Button 
+                variant="ghost" 
+                className="flex items-center gap-1 text-gray-600 hover:text-gray-900" 
+                onClick={handleLogout}
+              >
                 <LogOut className="h-4 w-4" />
                 <span>Logout</span>
               </Button>
@@ -110,43 +102,20 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title, role
         <div className="flex flex-col md:flex-row gap-8">
           <aside className="md:w-64 flex-shrink-0">
             <nav className="space-y-1">
-              {navItems.map((item) => {
-                // Improved logic for determining active state
-                const isActive = 
-                  currentPath === item.href.split('#')[0] && 
-                  (item.href.includes('#') ? 
-                    currentHash === '#' + item.href.split('#')[1] || 
-                    (currentHash === '' && item.href.includes('#analytics')) : 
-                    true);
-                
-                return (
-                  <Link
-                    key={item.name}
-                    to={item.href}
-                    className={cn(
-                      "flex items-center px-4 py-3 text-sm font-medium rounded-md",
-                      "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
-                      isActive ? "bg-tutoring-blue/10 text-tutoring-blue" : ""
-                    )}
-                    onClick={() => {
-                      // Force update path and hash immediately on click
-                      const newPath = item.href.split('#')[0];
-                      const newHash = item.href.includes('#') ? '#' + item.href.split('#')[1] : '';
-                      
-                      setCurrentPath(newPath);
-                      setCurrentHash(newHash);
-                      
-                      // This is crucial - manually trigger hashchange event for immediate update
-                      if (window.location.hash !== newHash) {
-                        window.location.hash = newHash.replace('#', '');
-                      }
-                    }}
-                  >
-                    {item.icon}
-                    <span className="ml-3">{item.name}</span>
-                  </Link>
-                );
-              })}
+              {navItems.map((item) => (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className={cn(
+                    "flex items-center px-4 py-3 text-sm font-medium rounded-md",
+                    "text-gray-600 hover:bg-gray-100 hover:text-gray-900",
+                    isNavItemActive(item) ? "bg-tutoring-blue/10 text-tutoring-blue" : ""
+                  )}
+                >
+                  {item.icon}
+                  <span className="ml-3">{item.name}</span>
+                </Link>
+              ))}
             </nav>
           </aside>
 
