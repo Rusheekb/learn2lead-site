@@ -18,16 +18,10 @@ const AdminDashboard: React.FC = () => {
       const hash = window.location.hash.substring(1);
       
       if (hash) {
-        console.log("Setting active section to:", hash);
         setActiveSection(hash);
       } else {
         // Default to analytics if no hash is present
-        console.log("No hash found, defaulting to analytics");
         setActiveSection("analytics");
-        // Set default hash if none exists
-        if (window.location.pathname === "/admin-dashboard" && !window.location.hash) {
-          window.location.hash = "analytics";
-        }
       }
     };
     
@@ -42,11 +36,6 @@ const AdminDashboard: React.FC = () => {
       window.removeEventListener('hashchange', handleHashChange);
     };
   }, []);
-
-  // For debugging
-  useEffect(() => {
-    console.log("Current active section:", activeSection);
-  }, [activeSection]);
 
   // Render appropriate section based on the active section
   const renderSection = () => {

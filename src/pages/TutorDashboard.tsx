@@ -34,9 +34,6 @@ const TutorDashboard: React.FC = () => {
         setActiveSection(hash);
       } else {
         setActiveSection("");
-        if (window.location.pathname === "/tutor-dashboard" && !window.location.hash) {
-          window.location.hash = "";
-        }
       }
     };
     
@@ -61,8 +58,6 @@ const TutorDashboard: React.FC = () => {
         return <TutorStudents />;
       case "materials":
         return <TutorMaterials />;
-      case "profile":
-        return <ProfilePage />;
       default:
         return <TutorOverviewSection />;
     }

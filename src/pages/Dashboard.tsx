@@ -57,13 +57,6 @@ const Dashboard = () => {
     setSelectedSubject(subjectId === selectedSubject ? null : subjectId);
   };
 
-  // Check if we're on the profile page
-  const isProfilePage = location.pathname === '/profile';
-
-  if (isProfilePage) {
-    return <ProfilePage />;
-  }
-
   // Render appropriate section based on the active section
   const renderSection = () => {
     switch (activeSection) {

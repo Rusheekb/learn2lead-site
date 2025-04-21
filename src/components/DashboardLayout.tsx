@@ -56,7 +56,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, title, role
     }
   }, [role]);
 
-  // Check if a nav item is active
+  // Check if a nav item is active based on both path and hash
   const isNavItemActive = (item: { href: string }) => {
     const [path, hash] = item.href.split('#');
     return currentPath === path && (hash ? currentHash === `#${hash}` : !currentHash);

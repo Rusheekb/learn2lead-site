@@ -29,11 +29,6 @@ const StudentMenubar: React.FC = () => {
       label: "Messages", 
       hash: "#messages", 
       icon: <MessageSquare className="w-4 h-4 mr-2" /> 
-    },
-    { 
-      label: "Profile", 
-      hash: "#profile", 
-      icon: <User className="w-4 h-4 mr-2" /> 
     }
   ];
   
