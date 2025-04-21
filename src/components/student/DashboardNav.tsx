@@ -1,12 +1,17 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, User } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import StudentMenubar from './StudentMenubar';
 
-const DashboardNav = () => {
+interface DashboardNavProps {
+  activeTab?: string;
+  setActiveTab?: (tab: string) => void;
+}
+
+const DashboardNav: React.FC<DashboardNavProps> = ({ activeTab = "dashboard", setActiveTab = () => {} }) => {
   return (
     <header className="bg-white shadow-sm">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -40,15 +45,7 @@ const DashboardNav = () => {
         </div>
         
         <div className="py-2 flex items-center justify-between">
-          <StudentMenubar />
-          <Button 
-            variant="ghost" 
-            className="flex items-center gap-1 text-tutoring-blue"
-            onClick={() => window.location.href = '/profile'}
-          >
-            <User className="h-4 w-4" />
-            <span>Profile</span>
-          </Button>
+          <StudentMenubar activeTab={activeTab} setActiveTab={setActiveTab} />
         </div>
       </div>
     </header>
