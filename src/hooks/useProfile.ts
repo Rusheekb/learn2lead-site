@@ -22,7 +22,7 @@ export const useProfile = () => {
   const { user } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  
+
   // Create a cache for profiles to avoid redundant fetches
   const profileCache = new Map<string, Profile>();
 
@@ -35,7 +35,7 @@ export const useProfile = () => {
         return cachedProfile;
       }
     }
-    
+
     setIsLoading(true);
     try {
       const { data, error } = await supabase
@@ -49,8 +49,8 @@ export const useProfile = () => {
         toast.error("Failed to load profile");
         setIsLoading(false);
         return null;
-      } 
-      
+      }
+
       // Add to cache
       profileCache.set(userId, data);
       setProfile(data);
@@ -75,7 +75,7 @@ export const useProfile = () => {
 
   const updateProfile = async (updates: Partial<Profile>) => {
     if (!user) return null;
-    
+
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -113,3 +113,4 @@ export const useProfile = () => {
     fetchProfileById
   };
 };
+

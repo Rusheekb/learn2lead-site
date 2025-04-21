@@ -40,19 +40,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Use setTimeout to avoid deadlock, then fetch profile/role.
         setTimeout(async () => {
           try {
-            // 1. Check for existing profile row, create if missing
+            // 1. Check for existing profile row, create if missing (always role='student')
             const { data: existingProfile, error: fetchError } = await supabase
               .from('profiles')
               .select('id')
               .eq('id', u.id)
               .maybeSingle();
             if (!existingProfile) {
-              const role: AppRole = u.email?.endsWith('@learn2lead.com') ? 'tutor' : 'student';
+              // Always default to 'student'
               await supabase
                 .from('profiles')
-                .insert({ id: u.id, email: u.email!, role });
+                .insert({ id: u.id, email: u.email!, role: 'student' });
             }
-            // 2. Fetch user role immediately and update
+            // 2. Fetch user role from profile (never use email for role anymore)
             const role = await fetchUserRole(u.id);
             setUserRole(role);
             // 3. Navigate to dashboard for this role
@@ -126,3 +126,4 @@ export const useAuth = () => {
   }
   return context;
 };
+

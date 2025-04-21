@@ -23,7 +23,8 @@ export const signInWithEmail = async (email: string, password: string) => {
 };
 
 /**
- * Signs up a user and ensures a profile row exists in the `profiles` table.
+ * Signs up a user and ensures a profile row exists in the `profiles` table,
+ * with default role 'student'.
  */
 export const signUpWithEmail = async (email: string, password: string) => {
   try {
@@ -47,8 +48,8 @@ export const signUpWithEmail = async (email: string, password: string) => {
         .maybeSingle();
 
       if (!existingProfile) {
-        // Insert profile for this user
-        const role = user.email.endsWith('@learn2lead.com') ? 'tutor' : 'student';
+        // Insert profile for this user, always default to 'student'
+        const role = 'student';
         const { error: insertError } = await supabase
           .from('profiles')
           .insert([
@@ -85,3 +86,4 @@ export const signOut = async () => {
     return false;
   }
 };
+
