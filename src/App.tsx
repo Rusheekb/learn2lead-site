@@ -1,18 +1,21 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { HelmetProvider } from 'react-helmet-async';
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Suspense } from "react-router-dom";
+import React from 'react';
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
 import Pricing from "./pages/Pricing";
-import TutorDashboard from "./pages/TutorDashboard";
-import AdminDashboard from "./pages/AdminDashboard";
 import { AuthProvider } from "./contexts/AuthContext";
 import PrivateRoute from "./components/PrivateRoute";
+
+const Dashboard = React.lazy(() => import('./pages/Dashboard'));
+const TutorDashboard = React.lazy(() => import('./pages/TutorDashboard'));
+const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
 
 const queryClient = new QueryClient();
 
@@ -31,17 +34,37 @@ const App = () => {
                 <Route path="/pricing" element={<Pricing />} />
                 
                 <Route element={<PrivateRoute allowedRoles={['student']} />}>
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/profile" element={<Dashboard />} />
+                  <Route path="/dashboard" element={
+                    <Suspense fallback={<div>Loading...</div>}>
+                      <Dashboard />
+                    </Suspense>
+                  } />
+                  <Route path="/profile" element={
+                    <Suspense fallback={<div>Loading...</div>}>
+                      <Dashboard />
+                    </Suspense>
+                  } />
                 </Route>
                 
                 <Route element={<PrivateRoute allowedRoles={['tutor']} />}>
-                  <Route path="/tutor-dashboard" element={<TutorDashboard />} />
-                  <Route path="/tutor-profile" element={<TutorDashboard />} />
+                  <Route path="/tutor-dashboard" element={
+                    <Suspense fallback={<div>Loading...</div>}>
+                      <TutorDashboard />
+                    </Suspense>
+                  } />
+                  <Route path="/tutor-profile" element={
+                    <Suspense fallback={<div>Loading...</div>}>
+                      <TutorDashboard />
+                    </Suspense>
+                  } />
                 </Route>
                 
                 <Route element={<PrivateRoute allowedRoles={['admin']} />}>
-                  <Route path="/admin-dashboard" element={<AdminDashboard />} />
+                  <Route path="/admin-dashboard" element={
+                    <Suspense fallback={<div>Loading...</div>}>
+                      <AdminDashboard />
+                    </Suspense>
+                  } />
                 </Route>
                 
                 <Route path="*" element={<NotFound />} />
