@@ -1,72 +1,43 @@
 
-import React, { useEffect, useState } from "react";
-import { Navigate, useLocation } from "react-router-dom";
-import DashboardLayout from "@/components/DashboardLayout";
-import TutorScheduler from "@/components/tutor/TutorScheduler";
-import TutorStudents from "@/components/tutor/TutorStudents";
-import TutorMaterials from "@/components/tutor/TutorMaterials";
-import ProfilePage from "@/components/shared/ProfilePage";
-import TutorOverviewSection from "@/components/tutor/dashboard/TutorOverviewSection";
-import { useAuth } from "@/contexts/AuthContext";
+import React, { useState } from "react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+
+// Placeholder components for demonstration
+const MyStudents: React.FC = () => <div>Your students will appear here.</div>;
+const ClassMaterials: React.FC = () => <div>Your class materials will appear here.</div>;
+const ScheduleSession: React.FC = () => <div>Session scheduling UI goes here.</div>;
+const ProfileSettings: React.FC = () => <div>Your profile & settings here.</div>;
 
 const TutorDashboard: React.FC = () => {
-  const [activeSection, setActiveSection] = useState<string>("");
-  const location = useLocation();
-  const { userRole } = useAuth();
-  
-  // Redirect if not a tutor
-  if (userRole && userRole !== 'tutor') {
-    switch (userRole) {
-      case 'student':
-        return <Navigate to="/dashboard" replace />;
-      case 'admin':
-        return <Navigate to="/admin-dashboard" replace />;
-      default:
-        return null;
-    }
-  }
-  
-  // Listen for hash changes in URL and update on component mount
-  useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash.substring(1);
-      if (hash) {
-        setActiveSection(hash);
-      } else {
-        setActiveSection("");
-      }
-    };
-    
-    handleHashChange();
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
-
-  // Check if we're on the profile page
-  const isProfilePage = location.pathname === '/tutor-profile';
-
-  // Render appropriate section based on the active section
-  const renderSection = () => {
-    if (isProfilePage) {
-      return <ProfilePage />;
-    }
-
-    switch (activeSection) {
-      case "schedule":
-        return <TutorScheduler />;
-      case "students":
-        return <TutorStudents />;
-      case "materials":
-        return <TutorMaterials />;
-      default:
-        return <TutorOverviewSection />;
-    }
-  };
+  const [tab, setTab] = useState<"students" | "materials" | "schedule" | "settings">("students");
 
   return (
-    <DashboardLayout title="Tutor Portal" role="tutor">
-      {renderSection()}
-    </DashboardLayout>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <h1 className="text-2xl font-bold mb-8 text-tutoring-blue">Tutor Dashboard</h1>
+        <Tabs value={tab} onValueChange={value => setTab(value as typeof tab)}>
+          <TabsList className="mb-4">
+            <TabsTrigger value="students">Students</TabsTrigger>
+            <TabsTrigger value="materials">Materials</TabsTrigger>
+            <TabsTrigger value="schedule">Schedule</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="students">
+            <MyStudents />
+          </TabsContent>
+          <TabsContent value="materials">
+            <ClassMaterials />
+          </TabsContent>
+          <TabsContent value="schedule">
+            <ScheduleSession />
+          </TabsContent>
+          <TabsContent value="settings">
+            <ProfileSettings />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
   );
 };
 
