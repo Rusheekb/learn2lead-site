@@ -18,17 +18,17 @@ export const useClassRealtime = (
   const handleClassInserted = useCallback((newClass: ClassLogRecord) => {
     const transformedClass = {
       id: dbIdToNumeric(newClass.id),
-      title: newClass.title,
-      subject: newClass.subject,
-      tutorName: newClass.tutor_name,
-      studentName: newClass.student_name,
-      date: newClass.date,
-      startTime: newClass.start_time.substring(0, 5),
-      endTime: newClass.end_time.substring(0, 5),
-      status: newClass.status,
-      attendance: newClass.attendance,
-      zoomLink: newClass.zoom_link,
-      notes: newClass.notes
+      title: newClass["Class Number"] || '',
+      subject: newClass["Subject"] || '',
+      tutorName: newClass["Tutor Name"] || '',
+      studentName: newClass["Student Name"] || '',
+      date: newClass["Date"] || '',
+      startTime: newClass["Time (CST)"] ? newClass["Time (CST)"].substring(0, 5) : '',
+      endTime: newClass["Time (CST)"] ? newClass["Time (CST)"].substring(0, 5) : '', // Using same time for now
+      status: "completed", // Default status since it's not in the DB
+      attendance: "present", // Default attendance since it's not in the DB
+      zoomLink: "", // Default empty since it's not in the DB
+      notes: newClass["Additional Info"] || ''
     };
 
     setClasses(prevClasses => [...prevClasses, transformedClass]);
@@ -37,17 +37,17 @@ export const useClassRealtime = (
   const handleClassUpdated = useCallback((updatedClass: ClassLogRecord) => {
     const transformedClass = {
       id: dbIdToNumeric(updatedClass.id),
-      title: updatedClass.title,
-      subject: updatedClass.subject,
-      tutorName: updatedClass.tutor_name,
-      studentName: updatedClass.student_name,
-      date: updatedClass.date,
-      startTime: updatedClass.start_time.substring(0, 5),
-      endTime: updatedClass.end_time.substring(0, 5),
-      status: updatedClass.status,
-      attendance: updatedClass.attendance,
-      zoomLink: updatedClass.zoom_link,
-      notes: updatedClass.notes
+      title: updatedClass["Class Number"] || '',
+      subject: updatedClass["Subject"] || '',
+      tutorName: updatedClass["Tutor Name"] || '',
+      studentName: updatedClass["Student Name"] || '',
+      date: updatedClass["Date"] || '',
+      startTime: updatedClass["Time (CST)"] ? updatedClass["Time (CST)"].substring(0, 5) : '',
+      endTime: updatedClass["Time (CST)"] ? updatedClass["Time (CST)"].substring(0, 5) : '', // Using same time for now
+      status: "completed", // Default status since it's not in the DB
+      attendance: "present", // Default attendance since it's not in the DB
+      zoomLink: "", // Default empty since it's not in the DB
+      notes: updatedClass["Additional Info"] || ''
     };
 
     setClasses(prevClasses => 
@@ -92,7 +92,7 @@ export const useClassRealtime = (
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [classes, handleClassInserted, handleClassUpdated, handleClassDeleted]);
+  }, [handleClassInserted, handleClassUpdated, handleClassDeleted]);
 
   return {
     handleClassInserted,
