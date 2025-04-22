@@ -1,4 +1,12 @@
-import { ClassEvent } from '@/types/tutorTypes';
+import {
+  ClassEvent,
+  ClassStatus,
+  AttendanceStatus,
+  PaymentStatus,
+  isValidClassStatus,
+  isValidAttendanceStatus,
+  isValidPaymentStatus,
+} from '@/types/tutorTypes';
 import {
   parseNumericString,
   calculateEndTime,
@@ -42,6 +50,10 @@ export const transformDbRecordToClassEvent = (record: DbRecord): ClassEvent => {
     const startTime = record['Time (CST)'] || '';
     const endTime = calculateEndTime(startTime, duration);
 
+    // Cast payment statuses using the validators
+    const studentPayment = record['Student Payment'] || 'pending';
+    const tutorPayment = record['Tutor Payment'] || 'pending';
+
     return {
       id: record.id,
       title: record['Class Number'] || '',
@@ -54,14 +66,18 @@ export const transformDbRecordToClassEvent = (record: DbRecord): ClassEvent => {
       subject: record.Subject || '',
       content: record.Content || '',
       homework: record.HW || '',
-      status: 'completed' as const,
-      attendance: 'present' as const,
+      status: 'completed' as ClassStatus,
+      attendance: 'present' as AttendanceStatus,
       zoomLink: '',
       notes: record['Additional Info'] || '',
       classCost: parseNumericString(record['Class Cost']),
       tutorCost: parseNumericString(record['Tutor Cost']),
-      studentPayment: record['Student Payment'] || 'Pending',
-      tutorPayment: record['Tutor Payment'] || 'Pending',
+      studentPayment: isValidPaymentStatus(studentPayment)
+        ? studentPayment
+        : 'pending',
+      tutorPayment: isValidPaymentStatus(tutorPayment)
+        ? tutorPayment
+        : 'pending',
       recurring: false,
       materials: [],
     };
@@ -79,14 +95,14 @@ export const transformDbRecordToClassEvent = (record: DbRecord): ClassEvent => {
       subject: 'Error Loading',
       content: 'Error loading content',
       homework: '',
-      status: 'error' as const,
-      attendance: 'unknown' as const,
+      status: 'pending' as ClassStatus, // Changed from "error" to a valid ClassStatus
+      attendance: 'pending' as AttendanceStatus, // Changed from "unknown" to a valid AttendanceStatus
       zoomLink: '',
       notes: 'Error loading class data',
       classCost: 0,
       tutorCost: 0,
-      studentPayment: 'Error',
-      tutorPayment: 'Error',
+      studentPayment: 'pending' as PaymentStatus, // Changed from "Error" to a valid PaymentStatus
+      tutorPayment: 'pending' as PaymentStatus, // Changed from "Error" to a valid PaymentStatus
       recurring: false,
       materials: [],
     };
