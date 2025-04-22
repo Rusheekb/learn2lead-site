@@ -22,93 +22,83 @@ const StudentsManager: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
-    if (classes.length > 0) {
-      loadStudents();
-    }
-  }, [classes, toast]);
-
-  const loadStudents = async () => {
-    setIsLoading(true);
-    try {
-      const studentData = await fetchStudents();
-      
-      // Enhance student data
-      const enhancedStudents = studentData.map(student => {
-        // Get all classes for this student
-        const studentClasses = classes.filter(cls => cls.studentName === student.name);
-        
-        // Determine status based on recent activity (last 3 months = active)
-        let status: "active" | "inactive" | "pending" = "inactive";
-        if (student.lastSession) {
-          const lastSessionDate = new Date(student.lastSession);
-          const threeMonthsAgo = new Date();
-          threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-          
-          if (lastSessionDate >= threeMonthsAgo) {
-            status = "active";
+    if (classes.length === 0) return;
+  
+    const fetchStudentsData = async () => {
+      setIsLoading(true);
+      try {
+        const studentData = await fetchStudents();
+  
+        // Enhance student data
+        const enhancedStudents = studentData.map(student => {
+          const studentClasses = classes.filter(cls => cls.studentName === student.name);
+  
+          let status: "active" | "inactive" | "pending" = "inactive";
+          if (student.lastSession) {
+            const lastSessionDate = new Date(student.lastSession);
+            const threeMonthsAgo = new Date();
+            threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+            if (lastSessionDate >= threeMonthsAgo) status = "active";
           }
-        }
-        
-        // Determine payment status based on class payments
-        let paymentStatus: "paid" | "unpaid" | "overdue" = "paid";
-        const unpaidClasses = studentClasses.filter(cls => 
-          cls.studentPayment && cls.studentPayment.toLowerCase() !== "paid"
-        );
-        
-        if (unpaidClasses.length > 0) {
-          // Check if any unpaid classes are older than 30 days (overdue)
-          const overdueClasses = unpaidClasses.filter(cls => {
-            if (!cls.date) return false;
-            const classDate = new Date(cls.date);
+  
+          let paymentStatus: "paid" | "unpaid" | "overdue" = "paid";
+          const unpaidClasses = studentClasses.filter(
+            cls => cls.studentPayment?.toLowerCase() !== "paid"
+          );
+          if (unpaidClasses.length > 0) {
             const thirtyDaysAgo = new Date();
             thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-            return classDate < thirtyDaysAgo;
-          });
-          
-          paymentStatus = overdueClasses.length > 0 ? "overdue" : "unpaid";
-        }
-        
-        // Find enrollment date (earliest class date)
-        let enrollDate = student.lastSession;
-        studentClasses.forEach(cls => {
-          if (cls.date) {
-            const classDate = new Date(cls.date);
-            if (!enrollDate || classDate < new Date(enrollDate)) {
-              enrollDate = cls.date instanceof Date ? 
-                cls.date.toISOString().split('T')[0] : 
-                String(cls.date);
-            }
+            const overdue = unpaidClasses.some(cls => {
+              const classDate = new Date(cls.date || "");
+              return classDate < thirtyDaysAgo;
+            });
+            paymentStatus = overdue ? "overdue" : "unpaid";
           }
+  
+          let enrollDate = student.lastSession;
+          studentClasses.forEach(cls => {
+            if (cls.date) {
+              const d = new Date(cls.date);
+              const iso = d.toISOString().split("T")[0];
+              if (!enrollDate || d < new Date(enrollDate)) {
+                enrollDate = iso;
+              }
+            }
+          });
+  
+          const grade = Math.floor(Math.random() * 4) + 9;
+  
+          return {
+            id: student.id,
+            name: student.name,
+            email:
+              student.email ||
+              student.name.toLowerCase().replace(/\s+/g, ".") + "@example.com",
+            grade: `${grade}th Grade`,
+            subjects: student.subjects,
+            status,
+            enrollDate: enrollDate || new Date().toISOString().split("T")[0],
+            lastSession: student.lastSession || "N/A",
+            paymentStatus,
+          };
         });
-        
-        // Estimate grade level (placeholder)
-        const grade = Math.floor(Math.random() * 4) + 9; // Random grade between 9-12
-        
-        return {
-          id: student.id,
-          name: student.name,
-          email: student.email || `${student.name.toLowerCase().replace(/\s+/g, '.')}@example.com`,
-          grade: `${grade}th Grade`,
-          subjects: student.subjects,
-          status,
-          enrollDate: enrollDate || new Date().toISOString().split('T')[0],
-          lastSession: student.lastSession || 'N/A',
-          paymentStatus
-        };
-      });
-      
-      setStudents(enhancedStudents);
-    } catch (error) {
-      console.error("Error loading students:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load student data",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  
+        setStudents(enhancedStudents);
+      } catch (error) {
+        console.error("Error loading students:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load student data",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+  
+    fetchStudentsData();
+  }, [classes]);
+  
 
   const handleDeleteStudent = (studentId: string) => {
     setStudents(students.filter(student => student.id !== studentId));

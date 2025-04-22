@@ -32,12 +32,6 @@ const TutorsManager: React.FC = () => {
   const { toast } = useToast();
   const { classes, allSubjects } = useClassLogs();
 
-  useEffect(() => {
-    if (classes.length > 0) {
-      loadTutors();
-    }
-  }, [classes, toast]);
-
   const loadTutors = async () => {
     setIsLoading(true);
     try {
@@ -75,6 +69,12 @@ const TutorsManager: React.FC = () => {
       setIsLoading(false);
     }
   };
+  
+  useEffect(() => {
+    if (classes.length > 0) {
+      loadTutors();
+    }
+  }, [classes, loadTutors]);
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
