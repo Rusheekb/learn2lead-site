@@ -1,4 +1,3 @@
-
 export interface ClassEvent {
   id: string;
   title: string;
@@ -68,4 +67,14 @@ export interface Material {
   uploadDate?: string;
   size: string;
   sharedWith: string[];
+}
+
+export interface Tutor {
+  id: string;
+  name: string;
+  email: string;
+  subjects: string[];
+  rating: number;
+  classes: number;
+  hourlyRate: number;
 }
