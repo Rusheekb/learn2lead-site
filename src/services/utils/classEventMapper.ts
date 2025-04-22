@@ -2,23 +2,37 @@
 import { ClassEvent } from "@/types/tutorTypes";
 import { parseNumericString, calculateEndTime, parseDateWithFormats } from "./dateTimeTransformers";
 
-/**
- * Transforms a database record to a ClassEvent object
- */
-export const transformDbRecordToClassEvent = (record: any): ClassEvent => {
+interface DbRecord {
+  id: string;
+  'Class Number'?: string;
+  'Tutor Name'?: string;
+  'Student Name'?: string;
+  Date?: string;
+  'Time (CST)'?: string;
+  'Time (hrs)'?: string | number;
+  Subject?: string;
+  Content?: string;
+  HW?: string;
+  'Class Cost'?: string | number;
+  'Tutor Cost'?: string | number;
+  'Student Payment'?: string;
+  'Tutor Payment'?: string;
+  'Additional Info'?: string;
+}
+
+export const transformDbRecordToClassEvent = (record: DbRecord): ClassEvent => {
   try {
-    // Parse date
     let dateObj: Date;
     
     if (record.Date) {
       try {
         dateObj = parseDateWithFormats(record.Date);
-      } catch (e) {
+      } catch (e: any) {
         console.error('Error parsing date:', record.Date, e);
-        dateObj = new Date(); // Fallback to current date
+        dateObj = new Date();
       }
     } else {
-      dateObj = new Date(); // Fallback to current date
+      dateObj = new Date();
     }
 
     const duration = parseNumericString(record['Time (hrs)']);
@@ -31,14 +45,14 @@ export const transformDbRecordToClassEvent = (record: any): ClassEvent => {
       tutorName: record['Tutor Name'] || '',
       studentName: record['Student Name'] || '',
       date: dateObj,
-      startTime: startTime,
-      endTime: endTime,
-      duration: duration,
+      startTime,
+      endTime,
+      duration,
       subject: record.Subject || '',
       content: record.Content || '',
       homework: record.HW || '',
-      status: 'completed', // Default status for existing logs
-      attendance: 'present', // Default attendance for existing logs
+      status: 'completed' as const,
+      attendance: 'present' as const,
       zoomLink: "",
       notes: record['Additional Info'] || '',
       classCost: parseNumericString(record['Class Cost']),
@@ -48,7 +62,7 @@ export const transformDbRecordToClassEvent = (record: any): ClassEvent => {
       recurring: false,
       materials: []
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error transforming record:', error, record);
     return {
       id: record.id || 'unknown',
@@ -62,8 +76,8 @@ export const transformDbRecordToClassEvent = (record: any): ClassEvent => {
       subject: 'Error Loading',
       content: 'Error loading content',
       homework: '',
-      status: 'error',
-      attendance: 'unknown',
+      status: 'error' as const,
+      attendance: 'unknown' as const,
       zoomLink: "",
       notes: 'Error loading class data',
       classCost: 0,

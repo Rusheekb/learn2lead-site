@@ -6,13 +6,23 @@ import { ClassEvent } from "@/types/tutorTypes";
 import { supabase } from "@/integrations/supabase/client";
 import { formatTime } from "@/utils/timeUtils";
 
-export const useClassData = () => {
-  const [isLoading, setIsLoading] = useState(true);
+export const useClassData = (): {
+  isLoading: boolean;
+  error: string | null;
+  classes: ClassEvent[];
+  setClasses: React.Dispatch<React.SetStateAction<ClassEvent[]>>;
+  allSubjects: string[];
+  formatTime: (time: string) => string;
+  handleRefreshData: () => Promise<void>;
+} => {
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [classes, setClasses] = useState<ClassEvent[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  // Test Supabase connection
-  const testConnection = async () => {
+  // Get unique subjects from classes
+  const allSubjects = Array.from(new Set(classes.map(cls => cls.subject || '')));
+
+  const testConnection = async (): Promise<boolean> => {
     try {
       const { data, error } = await supabase.from('class_logs').select('count');
       if (error) {
@@ -22,25 +32,14 @@ export const useClassData = () => {
       }
       console.log('Supabase connection test successful:', data);
       return true;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Supabase connection test error:', error);
       setError('Database connection error');
       return false;
     }
   };
 
-  // Load classes on mount
-  useEffect(() => {
-    const init = async () => {
-      const isConnected = await testConnection();
-      if (isConnected) {
-        loadClasses();
-      }
-    };
-    init();
-  }, []);
-
-  const loadClasses = async () => {
+  const loadClasses = async (): Promise<void> => {
     setIsLoading(true);
     setError(null);
     try {
@@ -54,18 +53,14 @@ export const useClassData = () => {
         return;
       }
 
-      // Ensure dates are properly converted to Date objects
-      const processedLogs = classLogs.map(log => {
-        console.log('Processing log:', log);
-        return {
-          ...log,
-          date: log.date instanceof Date ? log.date : new Date(log.date)
-        };
-      });
+      const processedLogs = classLogs.map((log: ClassEvent) => ({
+        ...log,
+        date: log.date instanceof Date ? log.date : new Date(log.date)
+      }));
       
       console.log('Processed logs:', processedLogs);
       setClasses(processedLogs);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error loading classes:", error);
       setError(error instanceof Error ? error.message : 'Failed to load class logs');
       toast.error("Failed to load class logs");
@@ -74,23 +69,20 @@ export const useClassData = () => {
     }
   };
 
-  const handleRefreshData = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      await loadClasses();
-      toast.success('Data refreshed successfully');
-    } catch (error) {
-      console.error("Error refreshing data:", error);
-      setError(error instanceof Error ? error.message : 'Failed to refresh data');
-      toast.error("Failed to refresh data");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Load classes on mount
+  useEffect(() => {
+    const init = async (): Promise<void> => {
+      const isConnected = await testConnection();
+      if (isConnected) {
+        await loadClasses();
+      }
+    };
+    init();
+  }, []);
 
-  // Extract unique subjects for filter
-  const allSubjects = Array.from(new Set(classes.map(cls => cls.subject))).sort();
+  const handleRefreshData = async (): Promise<void> => {
+    await loadClasses();
+  };
 
   return {
     isLoading,
@@ -99,7 +91,6 @@ export const useClassData = () => {
     setClasses,
     allSubjects,
     formatTime,
-    loadClasses,
     handleRefreshData
   };
 };
