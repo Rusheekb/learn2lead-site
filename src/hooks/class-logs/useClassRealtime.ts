@@ -1,25 +1,7 @@
-
 import { useEffect, useCallback } from "react";
-import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { createRealtimeSubscription } from "@/utils/realtimeSubscription";
 import { dbIdToNumeric } from "@/utils/realtimeUtils";
-
-// Define types for database record
-interface ClassLogRecord {
-  id: string;
-  title: string;
-  subject: string;
-  tutor_name: string;
-  student_name: string;
-  date: string;
-  start_time: string;
-  end_time: string;
-  status: string;
-  attendance: string;
-  zoom_link: string | null;
-  notes: string | null;
-}
 
 export const useClassRealtime = (
   classes: any[],
@@ -28,7 +10,6 @@ export const useClassRealtime = (
   setSelectedClass: React.Dispatch<React.SetStateAction<any | null>>,
   setIsDetailsOpen: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
-  // Define handler functions before they're referenced in the useEffect dependency array
   const handleClassInserted = useCallback((newClass: ClassLogRecord) => {
     const transformedClass = {
       id: dbIdToNumeric(newClass.id),
@@ -46,8 +27,7 @@ export const useClassRealtime = (
     };
 
     setClasses(prevClasses => [...prevClasses, transformedClass]);
-    toast.success(`New class added: ${transformedClass.title}`);
-  }, [setClasses, toast]);
+  }, [setClasses]);
 
   const handleClassUpdated = useCallback((updatedClass: ClassLogRecord) => {
     const transformedClass = {
@@ -74,9 +54,7 @@ export const useClassRealtime = (
     if (selectedClass && selectedClass.id === transformedClass.id) {
       setSelectedClass(transformedClass);
     }
-
-    toast.info(`Class updated: ${transformedClass.title}`);
-  }, [setClasses, selectedClass, setSelectedClass, toast]);
+  }, [setClasses, selectedClass, setSelectedClass]);
 
   const handleClassDeleted = useCallback((deletedClass: ClassLogRecord) => {
     const classId = dbIdToNumeric(deletedClass.id);
@@ -89,9 +67,7 @@ export const useClassRealtime = (
       setIsDetailsOpen(false);
       setSelectedClass(null);
     }
-
-    toast.info(`Class removed: ${deletedClass.title}`);
-  }, [setClasses, selectedClass, setSelectedClass, setIsDetailsOpen, toast]);
+  }, [setClasses, selectedClass, setSelectedClass, setIsDetailsOpen]);
 
   useEffect(() => {
     const channel = createRealtimeSubscription({

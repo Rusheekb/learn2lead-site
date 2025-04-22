@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -82,7 +83,7 @@ const ContentShare: React.FC<ContentShareProps> = ({ role, fetchUsers }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [user, toast]);
+  }, [user]);
 
   const loadUsers = useCallback(async () => {
     try {
@@ -92,7 +93,7 @@ const ContentShare: React.FC<ContentShareProps> = ({ role, fetchUsers }) => {
       console.error("Error loading users:", error);
       toast.error("Failed to load users");
     }
-  }, [fetchUsers, user, toast]);
+  }, [fetchUsers, user]);
 
   useEffect(() => {
     if (user) {

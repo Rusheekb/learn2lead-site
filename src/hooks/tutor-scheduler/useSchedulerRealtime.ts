@@ -1,7 +1,4 @@
-
 import { useEffect, useCallback } from "react";
-import { toast } from "sonner";
-import { ClassEvent } from "@/types/tutorTypes";
 import { supabase } from "@/integrations/supabase/client";
 
 export const useSchedulerRealtime = (
@@ -11,7 +8,6 @@ export const useSchedulerRealtime = (
   setSelectedEvent: React.Dispatch<React.SetStateAction<ClassEvent | null>>,
   setIsViewEventOpen: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
-  // Define handler functions before they're used in the dependency array
   const handleClassInserted = useCallback((newClass: any) => {
     if (scheduledClasses.some(cls => cls.id === newClass.id)) {
       return;
@@ -33,8 +29,7 @@ export const useSchedulerRealtime = (
     };
 
     setScheduledClasses(prevClasses => [...prevClasses, classEvent]);
-    toast.success(`New class scheduled: ${classEvent.title}`);
-  }, [scheduledClasses, setScheduledClasses, toast]);
+  }, [scheduledClasses, setScheduledClasses]);
 
   const handleClassUpdated = useCallback((updatedClass: any) => {
     const classEvent: ClassEvent = {
@@ -61,9 +56,7 @@ export const useSchedulerRealtime = (
     if (selectedEvent && selectedEvent.id === classEvent.id) {
       setSelectedEvent(classEvent);
     }
-
-    toast.info(`Class updated: ${classEvent.title}`);
-  }, [setScheduledClasses, selectedEvent, setSelectedEvent, toast]);
+  }, [setScheduledClasses, selectedEvent, setSelectedEvent]);
 
   const handleClassDeleted = useCallback((deletedClass: any) => {
     const classId = deletedClass.id;
@@ -76,9 +69,7 @@ export const useSchedulerRealtime = (
       setIsViewEventOpen(false);
       setSelectedEvent(null);
     }
-
-    toast.info(`Class removed: ${deletedClass.title || 'Untitled class'}`);
-  }, [setScheduledClasses, selectedEvent, setSelectedEvent, setIsViewEventOpen, toast]);
+  }, [setScheduledClasses, selectedEvent, setSelectedEvent, setIsViewEventOpen]);
 
   useEffect(() => {
     const channel = supabase.channel('tutor-classes')
