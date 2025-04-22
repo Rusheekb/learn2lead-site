@@ -1,4 +1,4 @@
-import { ClassEvent } from '@/types/tutorTypes';
+import { ClassEvent, PaymentStatus } from '@/types/tutorTypes';
 
 export interface TutorAnalytics {
   totalClasses: number;
@@ -63,7 +63,7 @@ export const calculateTutorAnalytics = (
   const uniqueStudents = new Set(tutorClasses.map((cls) => cls.studentName))
     .size;
   const paidClasses = tutorClasses.filter(
-    (cls) => cls.tutorPayment === 'Paid'
+    (cls) => cls.tutorPayment === 'paid'
   ).length;
 
   return {

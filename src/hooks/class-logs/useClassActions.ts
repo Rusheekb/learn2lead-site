@@ -1,9 +1,10 @@
+
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { deleteClassLog, updateClassLog } from '@/services/classLogsService';
 import { exportClassLogs } from '@/services/exportService';
 import { ExportFormat } from '@/types/classTypes';
-import { ClassEvent } from '@/types/tutorTypes';
+import { ClassEvent, ClassStatus, AttendanceStatus, isValidClassStatus, isValidAttendanceStatus } from '@/types/tutorTypes';
 import {
   fetchClassMessages,
   markMessageAsRead,
@@ -112,6 +113,11 @@ const useClassActions = (): UseClassActionsReturn => {
     status: string
   ): Promise<boolean> => {
     try {
+      // Ensure the status is valid before updating
+      if (!isValidClassStatus(status)) {
+        throw new Error(`Invalid class status: ${status}`);
+      }
+      
       await updateClassLog(classId, { status });
       toast.success('Class status updated');
       return true;
@@ -127,6 +133,11 @@ const useClassActions = (): UseClassActionsReturn => {
     attendance: string
   ): Promise<boolean> => {
     try {
+      // Ensure the attendance status is valid before updating
+      if (!isValidAttendanceStatus(attendance)) {
+        throw new Error(`Invalid attendance status: ${attendance}`);
+      }
+      
       await updateClassLog(classId, { attendance });
       toast.success('Attendance updated');
       return true;
