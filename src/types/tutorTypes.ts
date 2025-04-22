@@ -1,35 +1,43 @@
-export interface ClassEvent {
+
+// Common status and payment types
+export type ClassStatus = 'scheduled' | 'completed' | 'cancelled' | 'pending';
+export type AttendanceStatus = 'present' | 'absent' | 'late' | 'excused' | 'pending';
+export type PaymentStatus = 'paid' | 'unpaid' | 'pending' | 'overdue';
+
+// Base interface for shared properties
+interface BaseEvent {
   id: string;
   title: string;
+  date: string | Date;
+  notes: string | null;
+}
+
+// Class event interface
+export interface ClassEvent extends BaseEvent {
   tutorName: string;
   studentName: string;
-  date: string | Date;
   startTime: string;
   endTime: string;
   duration?: number;
   subject: string;
   content?: string;
   homework?: string;
-  status?: string;
-  attendance?: string;
+  status?: ClassStatus;
+  attendance?: AttendanceStatus;
   zoomLink: string | null;
-  notes: string | null;
   classCost?: number;
   tutorCost?: number;
-  studentPayment?: string;
-  tutorPayment?: string;
+  studentPayment?: PaymentStatus;
+  tutorPayment?: PaymentStatus;
   isCodeLog?: boolean;
-
-  // Add properties needed by Tutor components
   recurring?: boolean;
   recurringDays?: string[];
   studentId?: string;
   tutorId?: string;
   materials?: string[];
-  paymentStatus?: string;
-  tutorPaymentStatus?: string;
 }
 
+// Database class log record
 export interface DbClassLog {
   id: string;
   class_number: string;
@@ -48,16 +56,22 @@ export interface DbClassLog {
   additional_info?: string;
 }
 
+// Student interface
 export interface Student {
   id: string;
   name: string;
-  subjects: string[];
   email?: string;
+  subjects: string[];
   lastSession?: string;
   nextSession?: string;
   progress?: string;
+  grade?: string;
+  active?: boolean;
+  enrollmentDate?: string;
+  paymentStatus?: PaymentStatus;
 }
 
+// Material interface
 export interface Material {
   id: string;
   name: string;
@@ -69,6 +83,7 @@ export interface Material {
   sharedWith: string[];
 }
 
+// Tutor interface
 export interface Tutor {
   id: string;
   name: string;
@@ -77,8 +92,10 @@ export interface Tutor {
   rating: number;
   classes: number;
   hourlyRate: number;
+  active?: boolean;
 }
 
+// Content sharing interface
 export interface ContentShareItem {
   id: string;
   sender_id: string;
@@ -90,3 +107,17 @@ export interface ContentShareItem {
   shared_at: string;
   viewed_at?: string | null;
 }
+
+// Type guards
+export const isValidClassStatus = (status: string): status is ClassStatus => {
+  return ['scheduled', 'completed', 'cancelled', 'pending'].includes(status);
+};
+
+export const isValidAttendanceStatus = (status: string): status is AttendanceStatus => {
+  return ['present', 'absent', 'late', 'excused', 'pending'].includes(status);
+};
+
+export const isValidPaymentStatus = (status: string): status is PaymentStatus => {
+  return ['paid', 'unpaid', 'pending', 'overdue'].includes(status);
+};
+
