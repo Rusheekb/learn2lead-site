@@ -1,5 +1,5 @@
 
-import { useEffect } from "react";
+import { useEffect, Dispatch, SetStateAction } from "react";
 import useClassFilters from "./class-logs/useClassFilters";
 import useClassActions from "./class-logs/useClassActions";
 import useClassData from "./class-logs/useClassData";
@@ -44,7 +44,15 @@ export const useClassLogs = () => {
   } = useClassData();
 
   // Create realtime subscription
-  useClassRealtime(classes, setClasses, selectedClass, setSelectedClass, (open: boolean) => setIsDetailsOpen(open));
+  // Fix: Cast the function to the expected type
+  useClassRealtime(
+    classes, 
+    setClasses, 
+    selectedClass, 
+    setSelectedClass, 
+    // Use the correct dispatch type
+    ((open: boolean) => setIsDetailsOpen(open)) as Dispatch<SetStateAction<boolean>>
+  );
 
   // Load class content when a class is selected
   useEffect(() => {
