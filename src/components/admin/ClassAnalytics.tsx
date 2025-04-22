@@ -1,12 +1,11 @@
-
-import React from "react";
+import React from 'react';
 import { useClassLogs } from '@/hooks/useClassLogs';
 import { useAnalytics } from '@/hooks/useAnalytics';
-import AnalyticsMetricsGrid from "./analytics/AnalyticsMetricsGrid";
-import TopPerformersGrid from "./analytics/TopPerformersGrid"; 
-import PopularSubjectsTable from "./analytics/PopularSubjectsTable";
-import MonthlyDistributionTable from "./analytics/MonthlyDistributionTable";
-import { TopPerformer } from "@/types/sharedTypes";
+import AnalyticsMetricsGrid from './analytics/AnalyticsMetricsGrid';
+import TopPerformersGrid from './analytics/TopPerformersGrid';
+import PopularSubjectsTable from './analytics/PopularSubjectsTable';
+import MonthlyDistributionTable from './analytics/MonthlyDistributionTable';
+import { TopPerformer } from '@/types/sharedTypes';
 
 const ClassAnalytics: React.FC = () => {
   const { classes, isLoading: isLoadingClasses } = useClassLogs();
@@ -16,11 +15,11 @@ const ClassAnalytics: React.FC = () => {
     getTopPerformingTutors,
     getTopPerformingStudents,
     getRevenueByMonth,
-    getSubjectPopularity
+    getSubjectPopularity,
   } = useAnalytics(classes);
 
   const isLoading = isLoadingClasses || isLoadingAnalytics;
-  
+
   // Explicitly cast to TopPerformer[] to ensure type safety
   const topTutors: TopPerformer[] = getTopPerformingTutors('totalClasses');
   const topStudents: TopPerformer[] = getTopPerformingStudents('totalClasses');
@@ -37,22 +36,19 @@ const ClassAnalytics: React.FC = () => {
       </div>
     );
   }
-  
+
   return (
     <div className="space-y-8">
       <h2 className="text-2xl font-bold">Learning Analytics</h2>
-      
-      <AnalyticsMetricsGrid 
+
+      <AnalyticsMetricsGrid
         isLoading={isLoading}
-        businessAnalytics={businessAnalytics} 
+        businessAnalytics={businessAnalytics}
       />
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <TopPerformersGrid 
-          topTutors={topTutors} 
-          topStudents={topStudents}
-        />
-        
+        <TopPerformersGrid topTutors={topTutors} topStudents={topStudents} />
+
         <div className="grid gap-6">
           <PopularSubjectsTable popularSubjects={popularSubjects} />
           <MonthlyDistributionTable monthlyClasses={monthlyClasses} />

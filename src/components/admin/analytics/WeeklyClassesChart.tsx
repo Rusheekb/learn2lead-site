@@ -1,8 +1,14 @@
-
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
-import { LineChart, Line, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from "recharts";
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ChartContainer, ChartTooltip } from '@/components/ui/chart';
+import {
+  LineChart,
+  Line,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  ResponsiveContainer,
+} from 'recharts';
 
 interface WeeklyClass {
   name: string;
@@ -22,7 +28,7 @@ const WeeklyClassesChart: React.FC<WeeklyClassesChartProps> = ({ data }) => {
       <CardContent className="pt-0">
         <ChartContainer
           config={{
-            classes: { color: "#3B82F6" },
+            classes: { color: '#3B82F6' },
           }}
         >
           <ResponsiveContainer width="100%" height={300}>
@@ -34,10 +40,10 @@ const WeeklyClassesChart: React.FC<WeeklyClassesChartProps> = ({ data }) => {
               <XAxis dataKey="name" />
               <YAxis />
               <ChartTooltip />
-              <Line 
-                type="monotone" 
-                dataKey="classes" 
-                stroke="var(--color-classes)" 
+              <Line
+                type="monotone"
+                dataKey="classes"
+                stroke="var(--color-classes)"
                 activeDot={{ r: 8 }}
               />
             </LineChart>

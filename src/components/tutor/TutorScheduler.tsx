@@ -1,11 +1,10 @@
-
-import React from "react";
-import { useTutorScheduler } from "@/hooks/useTutorScheduler";
-import { mockStudents } from "./mock-data-students";
-import SchedulerHeader from "./SchedulerHeader";
-import SchedulerFilter from "./SchedulerFilter";
-import CalendarWithEvents from "./CalendarWithEvents";
-import ClassDialogs from "./ClassDialogs";
+import React from 'react';
+import { useTutorScheduler } from '@/hooks/useTutorScheduler';
+import { mockStudents } from './mock-data-students';
+import SchedulerHeader from './SchedulerHeader';
+import SchedulerFilter from './SchedulerFilter';
+import CalendarWithEvents from './CalendarWithEvents';
+import ClassDialogs from './ClassDialogs';
 
 const TutorScheduler: React.FC = () => {
   const {
@@ -14,7 +13,7 @@ const TutorScheduler: React.FC = () => {
     setSelectedDate,
     isAddEventOpen,
     setIsAddEventOpen,
-    isViewEventOpen, 
+    isViewEventOpen,
     setIsViewEventOpen,
     selectedEvent,
     setSelectedEvent,
@@ -52,7 +51,7 @@ const TutorScheduler: React.FC = () => {
     <div className="space-y-6">
       <SchedulerHeader onAddClick={() => setIsAddEventOpen(true)} />
 
-      <SchedulerFilter 
+      <SchedulerFilter
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         subjectFilter={subjectFilter}
@@ -62,13 +61,13 @@ const TutorScheduler: React.FC = () => {
         allSubjects={allSubjects}
         students={mockStudents}
       />
-      
+
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
           <p>Loading classes...</p>
         </div>
       ) : (
-        <CalendarWithEvents 
+        <CalendarWithEvents
           selectedDate={selectedDate}
           setSelectedDate={setSelectedDate}
           scheduledClasses={filteredClasses}
@@ -77,8 +76,8 @@ const TutorScheduler: React.FC = () => {
           getUnreadMessageCount={getUnreadMessageCount}
         />
       )}
-      
-      <ClassDialogs 
+
+      <ClassDialogs
         isViewEventOpen={isViewEventOpen}
         setIsViewEventOpen={setIsViewEventOpen}
         isAddEventOpen={isAddEventOpen}

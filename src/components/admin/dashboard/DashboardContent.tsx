@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { TopPerformer } from '@/types/sharedTypes';
 import AnalyticsMetricsGrid from '../analytics/AnalyticsMetricsGrid';
@@ -27,26 +26,19 @@ const DashboardContent: React.FC<DashboardContentProps> = ({
   return (
     <div className="space-y-4">
       {/* Key Metrics */}
-      <AnalyticsMetricsGrid 
-        isLoading={isLoading} 
-        businessAnalytics={businessAnalytics} 
+      <AnalyticsMetricsGrid
+        isLoading={isLoading}
+        businessAnalytics={businessAnalytics}
       />
 
       {/* Top Performers */}
-      <TopPerformersGrid 
-        topTutors={topTutors} 
-        topStudents={topStudents} 
-      />
+      <TopPerformersGrid topTutors={topTutors} topStudents={topStudents} />
 
       {/* Popular Subjects */}
-      <PopularSubjectsTable 
-        popularSubjects={popularSubjects} 
-      />
+      <PopularSubjectsTable popularSubjects={popularSubjects} />
 
       {/* Monthly Distribution */}
-      <MonthlyDistributionTable 
-        monthlyClasses={monthlyClasses} 
-      />
+      <MonthlyDistributionTable monthlyClasses={monthlyClasses} />
     </div>
   );
 };

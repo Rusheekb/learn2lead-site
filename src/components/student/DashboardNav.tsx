@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar } from 'lucide-react';
@@ -11,7 +10,10 @@ interface DashboardNavProps {
   setActiveTab?: (tab: string) => void;
 }
 
-const DashboardNav: React.FC<DashboardNavProps> = ({ activeTab = "dashboard", setActiveTab = () => {} }) => {
+const DashboardNav: React.FC<DashboardNavProps> = ({
+  activeTab = 'dashboard',
+  setActiveTab = () => {},
+}) => {
   return (
     <header className="bg-white shadow-sm">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -25,14 +27,14 @@ const DashboardNav: React.FC<DashboardNavProps> = ({ activeTab = "dashboard", se
           <div className="flex items-center gap-4">
             <Calendar className="h-5 w-5 text-gray-500" />
             <span className="text-sm font-medium text-gray-700">
-              {new Date().toLocaleDateString('en-US', { 
-                weekday: 'short', 
-                month: 'short', 
-                day: 'numeric'
+              {new Date().toLocaleDateString('en-US', {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric',
               })}
             </span>
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               className="ml-2"
               onClick={async () => {
                 await supabase.auth.signOut();
@@ -43,7 +45,7 @@ const DashboardNav: React.FC<DashboardNavProps> = ({ activeTab = "dashboard", se
             </Button>
           </div>
         </div>
-        
+
         <div className="py-2 flex items-center justify-between">
           <StudentMenubar activeTab={activeTab} setActiveTab={setActiveTab} />
         </div>

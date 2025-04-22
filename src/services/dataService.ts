@@ -1,31 +1,30 @@
-
-import { supabase } from "@/integrations/supabase/client";
-import { ClassEvent } from "@/types/tutorTypes";
-import { Student } from "@/types/sharedTypes";
-import { transformDbRecordToClassEvent } from "./utils/classEventMapper";
+import { supabase } from '@/integrations/supabase/client';
+import { ClassEvent } from '@/types/tutorTypes';
+import { Student } from '@/types/sharedTypes';
+import { transformDbRecordToClassEvent } from './utils/classEventMapper';
 
 // Define types for database records to improve type safety
 interface TutorRecord {
-  "Tutor Name"?: string;
+  'Tutor Name'?: string;
   [key: string]: any;
 }
 
 interface StudentRecord {
-  "Student Name"?: string; 
-  "Subject"?: string;
-  "Date"?: string;
+  'Student Name'?: string;
+  Subject?: string;
+  Date?: string;
   [key: string]: any;
 }
 
 interface PaymentRecord {
-  "Class Number"?: string;
-  "Tutor Name"?: string;
-  "Student Name"?: string;
-  "Date"?: string;
-  "Class Cost"?: string;
-  "Tutor Cost"?: string;
-  "Student Payment"?: string;
-  "Tutor Payment"?: string;
+  'Class Number'?: string;
+  'Tutor Name'?: string;
+  'Student Name'?: string;
+  Date?: string;
+  'Class Cost'?: string;
+  'Tutor Cost'?: string;
+  'Student Payment'?: string;
+  'Tutor Payment'?: string;
   [key: string]: any;
 }
 
@@ -36,26 +35,28 @@ export const fetchTutors = async () => {
     .select('Tutor Name')
     .order('Tutor Name')
     .not('Tutor Name', 'is', null);
-  
+
   if (error) {
-    console.error("Error fetching tutors:", error);
+    console.error('Error fetching tutors:', error);
     return [];
   }
-  
+
   // Extract unique tutor names with proper typing
-  const uniqueTutors = Array.from(new Set(data.map((record: TutorRecord) => record["Tutor Name"] || "")))
+  const uniqueTutors = Array.from(
+    new Set(data.map((record: TutorRecord) => record['Tutor Name'] || ''))
+  )
     .filter(Boolean)
     .sort();
-  
+
   // Transform to tutor objects
-  return uniqueTutors.map(name => ({
+  return uniqueTutors.map((name) => ({
     id: name.toLowerCase().replace(/\s+/g, '-'),
     name,
     email: `${name.toLowerCase().replace(/\s+/g, '.')}@example.com`, // Generate placeholder email
     subjects: [], // Will be populated from class logs
     rating: 0,
     classes: 0,
-    hourlyRate: 0
+    hourlyRate: 0,
   }));
 };
 
@@ -66,23 +67,23 @@ export const fetchStudents = async (): Promise<Student[]> => {
     .select('Student Name, Subject, Date')
     .order('Student Name')
     .not('Student Name', 'is', null);
-  
+
   if (error) {
-    console.error("Error fetching students:", error);
+    console.error('Error fetching students:', error);
     return [];
   }
-  
+
   // Group by student name to collect all subjects and find last session
   const studentMap = new Map();
-  
+
   data.forEach((record: StudentRecord) => {
-    const name = record["Student Name"];
+    const name = record['Student Name'];
     if (!name) return;
-    
+
     // Safely access properties
-    const subject = record["Subject"] || '';
-    const date = record["Date"] || '';
-    
+    const subject = record['Subject'] || '';
+    const date = record['Date'] || '';
+
     if (!studentMap.has(name)) {
       studentMap.set(name, {
         id: name.toLowerCase().replace(/\s+/g, '-'),
@@ -90,28 +91,31 @@ export const fetchStudents = async (): Promise<Student[]> => {
         email: `${name.toLowerCase().replace(/\s+/g, '.')}@example.com`,
         subjects: new Set(),
         lastSession: date,
-        nextSession: "",
-        progress: ""
+        nextSession: '',
+        progress: '',
       });
     } else {
       const student = studentMap.get(name);
-      
+
       // Add subject if not already in the set and it exists
       if (subject) {
         student.subjects.add(subject);
       }
-      
+
       // Update last session if this one is more recent
-      if (date && (!student.lastSession || new Date(date) > new Date(student.lastSession))) {
+      if (
+        date &&
+        (!student.lastSession || new Date(date) > new Date(student.lastSession))
+      ) {
         student.lastSession = date;
       }
     }
   });
-  
+
   // Convert the map to an array and prepare for return
-  return Array.from(studentMap.values()).map(student => ({
+  return Array.from(studentMap.values()).map((student) => ({
     ...student,
-    subjects: Array.from(student.subjects)
+    subjects: Array.from(student.subjects),
   }));
 };
 
@@ -119,7 +123,8 @@ export const fetchStudents = async (): Promise<Student[]> => {
 export const fetchPaymentsData = async () => {
   const { data, error } = await supabase
     .from('class_logs')
-    .select(`
+    .select(
+      `
       "Class Number",
       "Tutor Name", 
       "Student Name", 
@@ -128,48 +133,58 @@ export const fetchPaymentsData = async () => {
       "Tutor Cost", 
       "Student Payment", 
       "Tutor Payment"
-    `)
+    `
+    )
     .order('Date', { ascending: false });
-  
+
   if (error) {
-    console.error("Error fetching payments data:", error);
+    console.error('Error fetching payments data:', error);
     return [];
   }
-  
+
   return data.map((record: PaymentRecord) => ({
-    id: `${record["Class Number"] || ''}`,
-    date: record["Date"] || '',
-    tutorName: record["Tutor Name"] || '',
-    studentName: record["Student Name"] || '',
-    classCost: parseFloat(record["Class Cost"] || '0'),
-    tutorCost: parseFloat(record["Tutor Cost"] || '0'),
-    studentPaymentStatus: record["Student Payment"] || 'Pending',
-    tutorPaymentStatus: record["Tutor Payment"] || 'Pending'
+    id: `${record['Class Number'] || ''}`,
+    date: record['Date'] || '',
+    tutorName: record['Tutor Name'] || '',
+    studentName: record['Student Name'] || '',
+    classCost: parseFloat(record['Class Cost'] || '0'),
+    tutorCost: parseFloat(record['Tutor Cost'] || '0'),
+    studentPaymentStatus: record['Student Payment'] || 'Pending',
+    tutorPaymentStatus: record['Tutor Payment'] || 'Pending',
   }));
 };
 
 // Calculate various metrics for dashboard widgets
 export const calculateMetrics = (classes: ClassEvent[]) => {
   const totalClasses = classes.length;
-  const uniqueStudents = new Set(classes.map(cls => cls.studentName)).size;
-  const uniqueTutors = new Set(classes.map(cls => cls.tutorName)).size;
-  
+  const uniqueStudents = new Set(classes.map((cls) => cls.studentName)).size;
+  const uniqueTutors = new Set(classes.map((cls) => cls.tutorName)).size;
+
   // Calculate total revenue and costs
-  const totalRevenue = classes.reduce((sum, cls) => sum + (cls.classCost || 0), 0);
-  const totalCosts = classes.reduce((sum, cls) => sum + (cls.tutorCost || 0), 0);
-  
+  const totalRevenue = classes.reduce(
+    (sum, cls) => sum + (cls.classCost || 0),
+    0
+  );
+  const totalCosts = classes.reduce(
+    (sum, cls) => sum + (cls.tutorCost || 0),
+    0
+  );
+
   // Calculate subject popularity
-  const subjectCounts = classes.reduce((acc, cls) => {
-    if (cls.subject) {
-      acc[cls.subject] = (acc[cls.subject] || 0) + 1;
-    }
-    return acc;
-  }, {} as Record<string, number>);
-  
+  const subjectCounts = classes.reduce(
+    (acc, cls) => {
+      if (cls.subject) {
+        acc[cls.subject] = (acc[cls.subject] || 0) + 1;
+      }
+      return acc;
+    },
+    {} as Record<string, number>
+  );
+
   const popularSubjects = Object.entries(subjectCounts)
     .map(([subject, count]) => ({ subject, count }))
     .sort((a, b) => b.count - a.count);
-  
+
   return {
     totalClasses,
     uniqueStudents,
@@ -177,6 +192,6 @@ export const calculateMetrics = (classes: ClassEvent[]) => {
     totalRevenue,
     totalCosts,
     netIncome: totalRevenue - totalCosts,
-    popularSubjects
+    popularSubjects,
   };
 };

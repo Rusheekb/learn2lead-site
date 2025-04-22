@@ -1,7 +1,6 @@
-
-import React from "react";
-import FilterControls from "@/components/shared/FilterControls";
-import { Student } from "@/types/sharedTypes";
+import React from 'react';
+import FilterControls from '@/components/shared/FilterControls';
+import { Student } from '@/types/sharedTypes';
 
 interface SchedulerFilterProps {
   searchTerm: string;
@@ -25,19 +24,20 @@ const SchedulerFilter: React.FC<SchedulerFilterProps> = ({
   students,
 }) => {
   // Create student options ensuring all have valid values
-  const studentOptions = students.map(student => ({
+  const studentOptions = students.map((student) => ({
     value: student.id.toString() || `student-${Date.now()}`,
-    label: student.name || `Student ${student.id}`
+    label: student.name || `Student ${student.id}`,
   }));
 
   // Ensure allSubjects doesn't contain empty strings
-  const validSubjects = allSubjects
-    .filter(subject => subject && subject.trim() !== '');
+  const validSubjects = allSubjects.filter(
+    (subject) => subject && subject.trim() !== ''
+  );
 
   const clearFilters = () => {
-    setSearchTerm("");
-    setSubjectFilter("all");
-    setStudentFilter("all");
+    setSearchTerm('');
+    setSubjectFilter('all');
+    setStudentFilter('all');
   };
 
   return (

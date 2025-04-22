@@ -1,10 +1,9 @@
-
-import React from "react";
-import SearchInput from "./filters/SearchInput";
-import FilterSelect, { FilterOption } from "./filters/FilterSelect";
-import DateFilter from "./filters/DateFilter";
-import ToggleSwitch from "./filters/ToggleSwitch";
-import ClearFiltersButton from "./filters/ClearFiltersButton";
+import React from 'react';
+import SearchInput from './filters/SearchInput';
+import FilterSelect, { FilterOption } from './filters/FilterSelect';
+import DateFilter from './filters/DateFilter';
+import ToggleSwitch from './filters/ToggleSwitch';
+import ClearFiltersButton from './filters/ClearFiltersButton';
 
 export interface CommonFilterProps {
   searchTerm: string;
@@ -34,37 +33,37 @@ export interface CommonFilterProps {
 const FilterControls: React.FC<CommonFilterProps> = ({
   searchTerm,
   setSearchTerm,
-  searchPlaceholder = "Search...",
+  searchPlaceholder = 'Search...',
   showDateFilter = false,
   dateFilter,
   setDateFilter,
   showSubjectFilter = false,
-  subjectFilter = "all",
+  subjectFilter = 'all',
   setSubjectFilter,
   subjectOptions = [],
   showStatusFilter = false,
-  statusFilter = "all",
+  statusFilter = 'all',
   setStatusFilter,
   statusOptions = [],
   showStudentFilter = false,
-  studentFilter = "all",
+  studentFilter = 'all',
   setStudentFilter,
   studentOptions = [],
   showCodeLogsSwitch = false,
   showCodeLogs = false,
   setShowCodeLogs,
-  clearFilters
+  clearFilters,
 }) => {
   return (
     <div className="grid gap-4 md:grid-cols-4">
       {/* Search Box */}
-      <SearchInput 
+      <SearchInput
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         placeholder={searchPlaceholder}
-        className={`${showDateFilter || showStatusFilter || showSubjectFilter ? "col-span-4 md:col-span-2" : "col-span-4"}`}
+        className={`${showDateFilter || showStatusFilter || showSubjectFilter ? 'col-span-4 md:col-span-2' : 'col-span-4'}`}
       />
-      
+
       {/* Status Filter */}
       {showStatusFilter && setStatusFilter && (
         <FilterSelect
@@ -75,7 +74,7 @@ const FilterControls: React.FC<CommonFilterProps> = ({
           allOptionLabel="All Statuses"
         />
       )}
-      
+
       {/* Subject Filter */}
       {showSubjectFilter && setSubjectFilter && (
         <FilterSelect
@@ -86,7 +85,7 @@ const FilterControls: React.FC<CommonFilterProps> = ({
           allOptionLabel="All Subjects"
         />
       )}
-      
+
       {/* Student Filter */}
       {showStudentFilter && setStudentFilter && (
         <FilterSelect
@@ -97,15 +96,12 @@ const FilterControls: React.FC<CommonFilterProps> = ({
           allOptionLabel="All Students"
         />
       )}
-      
+
       {/* Date Filter */}
       {showDateFilter && dateFilter !== undefined && setDateFilter && (
-        <DateFilter
-          date={dateFilter}
-          setDate={setDateFilter}
-        />
+        <DateFilter date={dateFilter} setDate={setDateFilter} />
       )}
-      
+
       {/* Code Logs Switch and Clear Filters */}
       <div className="flex items-center justify-between col-span-4">
         {showCodeLogsSwitch && setShowCodeLogs && (
@@ -116,11 +112,8 @@ const FilterControls: React.FC<CommonFilterProps> = ({
             label="Show code logs"
           />
         )}
-        
-        <ClearFiltersButton 
-          onClick={clearFilters} 
-          className="ml-auto"
-        />
+
+        <ClearFiltersButton onClick={clearFilters} className="ml-auto" />
       </div>
     </div>
   );

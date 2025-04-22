@@ -1,11 +1,10 @@
-
-import React, { useEffect, useState } from "react";
-import { Calendar } from "@/components/ui/calendar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { format, isSameDay, parseISO } from "date-fns";
-import { ClassEvent } from "@/types/tutorTypes";
-import ClassEventCard from "./ClassEventCard";
-import EmptyDayPanel from "./EmptyDayPanel";
+import React, { useEffect, useState } from 'react';
+import { Calendar } from '@/components/ui/calendar';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { format, isSameDay, parseISO } from 'date-fns';
+import { ClassEvent } from '@/types/tutorTypes';
+import ClassEventCard from './ClassEventCard';
+import EmptyDayPanel from './EmptyDayPanel';
 
 interface CalendarWithEventsProps {
   selectedDate: Date;
@@ -22,21 +21,24 @@ const CalendarWithEvents: React.FC<CalendarWithEventsProps> = ({
   scheduledClasses,
   onSelectEvent,
   onAddEventClick,
-  getUnreadMessageCount
+  getUnreadMessageCount,
 }) => {
-  const [eventsForSelectedDate, setEventsForSelectedDate] = useState<ClassEvent[]>([]);
+  const [eventsForSelectedDate, setEventsForSelectedDate] = useState<
+    ClassEvent[]
+  >([]);
 
   useEffect(() => {
     // Find events for the selected date
-    const events = scheduledClasses.filter(event => {
+    const events = scheduledClasses.filter((event) => {
       // Handle both Date objects and string dates
-      const eventDate = event.date instanceof Date ? 
-        event.date : 
-        parseISO(event.date as string);
-      
+      const eventDate =
+        event.date instanceof Date
+          ? event.date
+          : parseISO(event.date as string);
+
       return isSameDay(selectedDate, eventDate);
     });
-    
+
     setEventsForSelectedDate(events);
   }, [selectedDate, scheduledClasses]);
 
@@ -57,11 +59,14 @@ const CalendarWithEvents: React.FC<CalendarWithEventsProps> = ({
       </Card>
       <Card className="md:col-span-2">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>{format(selectedDate, "MMMM d, yyyy")}</CardTitle>
+          <CardTitle>{format(selectedDate, 'MMMM d, yyyy')}</CardTitle>
         </CardHeader>
         <CardContent>
           {eventsForSelectedDate.length === 0 ? (
-            <EmptyDayPanel selectedDate={selectedDate} onAddClick={onAddEventClick} />
+            <EmptyDayPanel
+              selectedDate={selectedDate}
+              onAddClick={onAddEventClick}
+            />
           ) : (
             <div className="space-y-4">
               {eventsForSelectedDate.map((event) => (

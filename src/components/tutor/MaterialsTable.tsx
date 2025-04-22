@@ -1,8 +1,14 @@
-
-import React from "react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { FileText, Download, Plus, Trash2 } from "lucide-react";
+import React from 'react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { FileText, Download, Plus, Trash2 } from 'lucide-react';
 
 interface Material {
   id: string; // Consistent string type for id
@@ -20,7 +26,10 @@ interface MaterialsTableProps {
   onShareMaterial: (material: Material) => void;
 }
 
-const MaterialsTable: React.FC<MaterialsTableProps> = ({ materials, onShareMaterial }) => {
+const MaterialsTable: React.FC<MaterialsTableProps> = ({
+  materials,
+  onShareMaterial,
+}) => {
   return (
     <Table>
       <TableHeader>
@@ -46,7 +55,9 @@ const MaterialsTable: React.FC<MaterialsTableProps> = ({ materials, onShareMater
               <span className="capitalize">{material.type}</span>
             </TableCell>
             <TableCell>{material.subject}</TableCell>
-            <TableCell>{new Date(material.dateUploaded).toLocaleDateString()}</TableCell>
+            <TableCell>
+              {new Date(material.dateUploaded).toLocaleDateString()}
+            </TableCell>
             <TableCell>
               {material.sharedWith.length > 0 ? (
                 <span>{material.sharedWith.length} students</span>
@@ -59,9 +70,9 @@ const MaterialsTable: React.FC<MaterialsTableProps> = ({ materials, onShareMater
                 <Button variant="outline" size="icon" title="Download">
                   <Download className="h-4 w-4" />
                 </Button>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
+                <Button
+                  variant="outline"
+                  size="icon"
                   onClick={() => onShareMaterial(material)}
                   title="Share with students"
                 >

@@ -1,27 +1,26 @@
-
-import React, { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useProfile } from "@/hooks/useProfile";
-import ProfileEditor from "./ProfileEditor";
-import ProfileView from "./ProfileView";
-import ContentShare from "./ContentShare";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import React, { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useProfile } from '@/hooks/useProfile';
+import ProfileEditor from './ProfileEditor';
+import ProfileView from './ProfileView';
+import ContentShare from './ContentShare';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const ProfilePage: React.FC = () => {
   const { profile, isLoading, updateProfile } = useProfile();
-  const [activeTab, setActiveTab] = useState("profile");
+  const [activeTab, setActiveTab] = useState('profile');
   const [isEditMode, setIsEditMode] = useState(false);
   const [loadingUsers, setLoadingUsers] = useState<boolean>(false);
 
   // Function to fetch users for content sharing - fetches tutors for students and vice versa
   const fetchRelevantUsers = async () => {
     if (!profile) return [];
-    
+
     setLoadingUsers(true);
     try {
       let query = supabase.from('profiles').select('*');
-      
+
       // Filter users based on role
       if (profile.role === 'student') {
         // Students see tutors
@@ -30,18 +29,18 @@ const ProfilePage: React.FC = () => {
         // Tutors see students
         query = query.eq('role', 'student');
       }
-      
+
       const { data, error } = await query;
-      
+
       if (error) {
-        toast.error("Failed to load users");
-        console.error("Error loading users:", error);
+        toast.error('Failed to load users');
+        console.error('Error loading users:', error);
         return [];
       }
-      
+
       return data || [];
     } catch (error) {
-      console.error("Error in fetchRelevantUsers:", error);
+      console.error('Error in fetchRelevantUsers:', error);
       return [];
     } finally {
       setLoadingUsers(false);
@@ -60,7 +59,9 @@ const ProfilePage: React.FC = () => {
     return (
       <div className="text-center py-8 border rounded-md">
         <p className="text-lg font-medium text-gray-600">Profile not found</p>
-        <p className="text-sm text-gray-500 mt-2">Please sign in to view your profile</p>
+        <p className="text-sm text-gray-500 mt-2">
+          Please sign in to view your profile
+        </p>
       </div>
     );
   }
@@ -74,11 +75,11 @@ const ProfilePage: React.FC = () => {
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="shared">Shared Content</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="profile" className="pt-6">
           {isEditMode ? (
-            <ProfileEditor 
-              profile={profile} 
+            <ProfileEditor
+              profile={profile}
               onSave={async (updates) => {
                 const result = await updateProfile(updates);
                 if (result) setIsEditMode(false);
@@ -90,7 +91,7 @@ const ProfilePage: React.FC = () => {
             <div className="space-y-4">
               <ProfileView profile={profile} />
               <div className="flex justify-end">
-                <button 
+                <button
                   onClick={() => setIsEditMode(true)}
                   className="text-tutoring-blue hover:text-tutoring-blue/80"
                 >
@@ -100,12 +101,9 @@ const ProfilePage: React.FC = () => {
             </div>
           )}
         </TabsContent>
-        
+
         <TabsContent value="shared" className="pt-6">
-          <ContentShare 
-            role={profile.role}
-            fetchUsers={fetchRelevantUsers}
-          />
+          <ContentShare role={profile.role} fetchUsers={fetchRelevantUsers} />
         </TabsContent>
       </Tabs>
     </div>

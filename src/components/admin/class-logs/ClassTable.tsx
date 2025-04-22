@@ -1,13 +1,19 @@
-
-import React, { memo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
-import { StatusBadge, AttendanceBadge } from "./BadgeComponents";
-import { CircleMessageBadge } from "@/components/shared/ClassBadges";
-import TablePagination from "./TablePagination";
-import { ClassEvent } from "@/types/tutorTypes";
+import React, { memo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { format } from 'date-fns';
+import { StatusBadge, AttendanceBadge } from './BadgeComponents';
+import { CircleMessageBadge } from '@/components/shared/ClassBadges';
+import TablePagination from './TablePagination';
+import { ClassEvent } from '@/types/tutorTypes';
 
 interface ClassTableProps {
   classes: ClassEvent[];
@@ -31,67 +37,75 @@ interface ClassTableProps {
 const formatDate = (date: Date | string) => {
   try {
     if (!date) return 'Date not available';
-    
+
     const dateObj = date instanceof Date ? date : new Date(date);
-    
+
     if (isNaN(dateObj.getTime())) {
       return 'Invalid date';
     }
-    
-    return format(dateObj, "MMM d, yyyy");
+
+    return format(dateObj, 'MMM d, yyyy');
   } catch (e) {
     return String(date);
   }
 };
 
 // Memoize the ClassRow component to prevent unnecessary re-renders
-const ClassRow = memo(({ 
-  cls, 
-  formatTime, 
-  getUnreadMessageCount, 
-  handleClassClick 
-}: { 
-  cls: ClassEvent, 
-  formatTime: (time: string) => string, 
-  getUnreadMessageCount: (classId: string) => number,
-  handleClassClick: (cls: ClassEvent) => void 
-}) => {
-  return (
-    <TableRow key={cls.id} className="cursor-pointer hover:bg-muted/50" onClick={() => handleClassClick(cls)}>
-      <TableCell>
-        <div className="space-y-1">
-          <div className="font-medium">{cls.title}</div>
-          <div className="text-sm text-muted-foreground">
-            <div>Tutor: {cls.tutorName}</div>
-            <div>Student: {cls.studentName}</div>
+const ClassRow = memo(
+  ({
+    cls,
+    formatTime,
+    getUnreadMessageCount,
+    handleClassClick,
+  }: {
+    cls: ClassEvent;
+    formatTime: (time: string) => string;
+    getUnreadMessageCount: (classId: string) => number;
+    handleClassClick: (cls: ClassEvent) => void;
+  }) => {
+    return (
+      <TableRow
+        key={cls.id}
+        className="cursor-pointer hover:bg-muted/50"
+        onClick={() => handleClassClick(cls)}
+      >
+        <TableCell>
+          <div className="space-y-1">
+            <div className="font-medium">{cls.title}</div>
+            <div className="text-sm text-muted-foreground">
+              <div>Tutor: {cls.tutorName}</div>
+              <div>Student: {cls.studentName}</div>
+            </div>
           </div>
-        </div>
-      </TableCell>
-      <TableCell>
-        <div className="space-y-1">
-          <div>{formatDate(cls.date)}</div>
-          <div className="text-sm text-muted-foreground">
-            {cls.startTime && cls.endTime ? (
-              `${formatTime(cls.startTime)} - ${formatTime(cls.endTime)}`
-            ) : (
-              'Time not set'
-            )}
+        </TableCell>
+        <TableCell>
+          <div className="space-y-1">
+            <div>{formatDate(cls.date)}</div>
+            <div className="text-sm text-muted-foreground">
+              {cls.startTime && cls.endTime
+                ? `${formatTime(cls.startTime)} - ${formatTime(cls.endTime)}`
+                : 'Time not set'}
+            </div>
           </div>
-        </div>
-      </TableCell>
-      <TableCell><StatusBadge status={cls.status || 'unknown'} /></TableCell>
-      <TableCell><AttendanceBadge attendance={cls.attendance || 'pending'} /></TableCell>
-      <TableCell>
-        <CircleMessageBadge count={getUnreadMessageCount(cls.id)} />
-      </TableCell>
-      <TableCell>
-        <Button variant="ghost" size="sm" className="hover:bg-muted">
-          View Details
-        </Button>
-      </TableCell>
-    </TableRow>
-  );
-});
+        </TableCell>
+        <TableCell>
+          <StatusBadge status={cls.status || 'unknown'} />
+        </TableCell>
+        <TableCell>
+          <AttendanceBadge attendance={cls.attendance || 'pending'} />
+        </TableCell>
+        <TableCell>
+          <CircleMessageBadge count={getUnreadMessageCount(cls.id)} />
+        </TableCell>
+        <TableCell>
+          <Button variant="ghost" size="sm" className="hover:bg-muted">
+            View Details
+          </Button>
+        </TableCell>
+      </TableRow>
+    );
+  }
+);
 
 ClassRow.displayName = 'ClassRow';
 
@@ -110,7 +124,7 @@ const ClassTable: React.FC<ClassTableProps> = ({
   totalPages,
   totalItems,
   onPageChange,
-  onPageSizeChange
+  onPageSizeChange,
 }) => {
   return (
     <Card className="overflow-hidden">
@@ -130,9 +144,9 @@ const ClassTable: React.FC<ClassTableProps> = ({
         ) : error ? (
           <div className="text-center py-12 text-red-500">
             <p>{error}</p>
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               onClick={clearFilters}
               className="mt-4"
             >
@@ -142,9 +156,9 @@ const ClassTable: React.FC<ClassTableProps> = ({
         ) : filteredClasses.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
             <p>No class logs found matching your filters</p>
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               onClick={clearFilters}
               className="mt-4"
             >
@@ -178,7 +192,7 @@ const ClassTable: React.FC<ClassTableProps> = ({
                 </TableBody>
               </Table>
             </div>
-            
+
             {filteredClasses.length > 0 && (
               <TablePagination
                 currentPage={page}

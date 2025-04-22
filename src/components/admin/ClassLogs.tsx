@@ -1,27 +1,26 @@
-
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { FileDown, Printer, RefreshCw, Download, Upload } from "lucide-react";
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { FileDown, Printer, RefreshCw, Download, Upload } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 
 // Import refactored components
-import ClassFilters from "./class-logs/ClassFilters";
-import ClassTable from "./class-logs/ClassTable";
-import ClassDetailsDialog from "./class-logs/ClassDetailsDialog";
-import CsvUploader from "./class-logs/CsvUploader";
-import useClassLogs from "@/hooks/useClassLogs";
-import { ExportFormat } from "@/types/classTypes";
+import ClassFilters from './class-logs/ClassFilters';
+import ClassTable from './class-logs/ClassTable';
+import ClassDetailsDialog from './class-logs/ClassDetailsDialog';
+import CsvUploader from './class-logs/CsvUploader';
+import useClassLogs from '@/hooks/useClassLogs';
+import { ExportFormat } from '@/types/classTypes';
 
 const ClassLogs: React.FC = () => {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
@@ -63,7 +62,7 @@ const ClassLogs: React.FC = () => {
     handleExport,
     handleRefreshData,
     handlePageChange,
-    handlePageSizeChange
+    handlePageSizeChange,
   } = useClassLogs();
 
   // Function to handle export with proper arguments
@@ -93,11 +92,16 @@ const ClassLogs: React.FC = () => {
             disabled={isLoading}
           >
             <RefreshCw className="h-4 w-4" />
-            {isLoading ? "Refreshing..." : "Refresh"}
+            {isLoading ? 'Refreshing...' : 'Refresh'}
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="flex items-center gap-2" disabled={isLoading || Boolean(error)}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+                disabled={isLoading || Boolean(error)}
+              >
                 <FileDown className="h-4 w-4" />
                 Export
               </Button>
@@ -115,7 +119,7 @@ const ClassLogs: React.FC = () => {
           </DropdownMenu>
         </div>
       </div>
-          
+
       <ClassFilters
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
@@ -130,7 +134,7 @@ const ClassLogs: React.FC = () => {
         showCodeLogs={showCodeLogs}
         setShowCodeLogs={setShowCodeLogs}
       />
-      
+
       <ClassTable
         classes={classes}
         filteredClasses={filteredClasses}
@@ -148,7 +152,7 @@ const ClassLogs: React.FC = () => {
         onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}
       />
-      
+
       <ClassDetailsDialog
         isDetailsOpen={isDetailsOpen}
         setIsDetailsOpen={setIsDetailsOpen}
@@ -168,11 +172,11 @@ const ClassLogs: React.FC = () => {
           <DialogHeader>
             <DialogTitle>Import Class Logs</DialogTitle>
           </DialogHeader>
-          <CsvUploader 
+          <CsvUploader
             onUploadComplete={() => {
               setIsUploadOpen(false);
               handleRefreshData();
-            }} 
+            }}
           />
         </DialogContent>
       </Dialog>

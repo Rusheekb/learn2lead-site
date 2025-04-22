@@ -1,21 +1,23 @@
-
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { StudentMessage } from "@/types/sharedTypes";
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { StudentMessage } from '@/types/sharedTypes';
 
 interface StudentMessagesProps {
   messages: StudentMessage[];
   onSendMessage: (message: string) => void;
 }
 
-const StudentMessages: React.FC<StudentMessagesProps> = ({ messages, onSendMessage }) => {
-  const [newMessage, setNewMessage] = useState<string>("");
-  
+const StudentMessages: React.FC<StudentMessagesProps> = ({
+  messages,
+  onSendMessage,
+}) => {
+  const [newMessage, setNewMessage] = useState<string>('');
+
   const handleSendMessage = () => {
     if (newMessage.trim()) {
       onSendMessage(newMessage);
-      setNewMessage("");
+      setNewMessage('');
     }
   };
 
@@ -24,14 +26,14 @@ const StudentMessages: React.FC<StudentMessagesProps> = ({ messages, onSendMessa
       <div className="border rounded-md p-4 h-64 overflow-y-auto space-y-3">
         {messages.length > 0 ? (
           messages.map((msg) => (
-            <div 
-              key={msg.id} 
+            <div
+              key={msg.id}
               className={`flex ${msg.sender === 'tutor' ? 'justify-end' : 'justify-start'}`}
             >
-              <div 
+              <div
                 className={`max-w-[70%] p-3 rounded-lg ${
-                  msg.sender === 'tutor' 
-                    ? 'bg-tutoring-blue text-white' 
+                  msg.sender === 'tutor'
+                    ? 'bg-tutoring-blue text-white'
                     : 'bg-gray-100 text-gray-800'
                 }`}
               >
@@ -48,10 +50,10 @@ const StudentMessages: React.FC<StudentMessagesProps> = ({ messages, onSendMessa
           </div>
         )}
       </div>
-      
+
       <div className="flex gap-2">
-        <Textarea 
-          placeholder="Type your message..." 
+        <Textarea
+          placeholder="Type your message..."
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
           className="flex-1"

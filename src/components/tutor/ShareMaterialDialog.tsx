@@ -1,10 +1,21 @@
-
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2 } from "lucide-react";
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Trash2 } from 'lucide-react';
 
 interface Student {
   id: string;
@@ -39,34 +50,40 @@ const ShareMaterialDialog: React.FC<ShareMaterialDialogProps> = ({
   students,
   selectedStudents,
   onSelectedStudentsChange,
-  onShareMaterial
+  onShareMaterial,
 }) => {
   // Filter out already selected students
   const availableStudents = students.filter(
-    student => !selectedStudents.includes(student.id)
+    (student) => !selectedStudents.includes(student.id)
   );
-  
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Share Material with Students</DialogTitle>
         </DialogHeader>
-        
+
         {selectedMaterial && (
           <div className="py-4">
             <div className="bg-gray-50 p-3 rounded-md mb-4">
               <p className="text-sm font-medium">{selectedMaterial.name}</p>
-              <p className="text-xs text-gray-500">{selectedMaterial.subject} • {selectedMaterial.type}</p>
+              <p className="text-xs text-gray-500">
+                {selectedMaterial.subject} • {selectedMaterial.type}
+              </p>
             </div>
-            
+
             <div className="space-y-4">
               <div>
                 <Label htmlFor="select-students">Select Students</Label>
-                <Select 
+                <Select
                   value="placeholder"
                   onValueChange={(value) => {
-                    if (value && value !== "placeholder" && !selectedStudents.includes(value)) {
+                    if (
+                      value &&
+                      value !== 'placeholder' &&
+                      !selectedStudents.includes(value)
+                    ) {
                       onSelectedStudentsChange([...selectedStudents, value]);
                     }
                   }}
@@ -76,7 +93,7 @@ const ShareMaterialDialog: React.FC<ShareMaterialDialogProps> = ({
                   </SelectTrigger>
                   <SelectContent>
                     {availableStudents.length > 0 ? (
-                      availableStudents.map(student => (
+                      availableStudents.map((student) => (
                         <SelectItem key={student.id} value={student.id}>
                           {student.name}
                         </SelectItem>
@@ -89,20 +106,29 @@ const ShareMaterialDialog: React.FC<ShareMaterialDialogProps> = ({
                   </SelectContent>
                 </Select>
               </div>
-              
+
               <div>
                 <h4 className="text-sm font-medium mb-2">Selected Students:</h4>
                 <div className="space-y-2">
                   {selectedStudents.length > 0 ? (
-                    selectedStudents.map(studentId => {
-                      const student = students.find(s => s.id === studentId);
+                    selectedStudents.map((studentId) => {
+                      const student = students.find((s) => s.id === studentId);
                       return (
-                        <div key={studentId} className="flex justify-between items-center bg-gray-50 p-2 rounded">
+                        <div
+                          key={studentId}
+                          className="flex justify-between items-center bg-gray-50 p-2 rounded"
+                        >
                           <span>{student?.name}</span>
-                          <Button 
-                            variant="ghost" 
+                          <Button
+                            variant="ghost"
                             size="icon"
-                            onClick={() => onSelectedStudentsChange(selectedStudents.filter(id => id !== studentId))}
+                            onClick={() =>
+                              onSelectedStudentsChange(
+                                selectedStudents.filter(
+                                  (id) => id !== studentId
+                                )
+                              )
+                            }
                           >
                             <Trash2 className="h-4 w-4 text-red-500" />
                           </Button>
@@ -110,18 +136,22 @@ const ShareMaterialDialog: React.FC<ShareMaterialDialogProps> = ({
                       );
                     })
                   ) : (
-                    <p className="text-sm text-gray-500">No students selected</p>
+                    <p className="text-sm text-gray-500">
+                      No students selected
+                    </p>
                   )}
                 </div>
               </div>
             </div>
           </div>
         )}
-        
+
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button 
-            onClick={onShareMaterial} 
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button
+            onClick={onShareMaterial}
             disabled={selectedStudents.length === 0}
           >
             Share Material

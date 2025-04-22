@@ -1,7 +1,7 @@
 import React from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Mail, Phone, MapPin } from 'lucide-react';
 
 const Contact = () => {
@@ -21,7 +21,7 @@ const Contact = () => {
           <div className="flex flex-col md:flex-row">
             <div className="w-full md:w-1/2 bg-tutoring-blue p-10 text-white">
               <h3 className="text-2xl font-bold mb-6">Contact Information</h3>
-              
+
               <div className="space-y-6">
                 <div className="flex items-start">
                   <Mail className="h-6 w-6 mr-4 mt-1" />
@@ -30,7 +30,7 @@ const Contact = () => {
                     <p className="mt-1">learn2leadtutoring@gmail.com</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start">
                   <Phone className="h-6 w-6 mr-4 mt-1" />
                   <div>
@@ -38,7 +38,7 @@ const Contact = () => {
                     <p className="mt-1">(925) 854-7020</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-start">
                   <MapPin className="h-6 w-6 mr-4 mt-1" />
                   <div>
@@ -47,38 +47,64 @@ const Contact = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="mt-12">
                 <h4 className="font-medium mb-4">Follow Us</h4>
                 <p>Coming Soon...</p>
               </div>
             </div>
-            
+
             <div className="w-full md:w-1/2 p-10">
-              <h3 className="text-2xl font-bold text-gray-900 mb-6">Send Us a Message</h3>
-              
+              <h3 className="text-2xl font-bold text-gray-900 mb-6">
+                Send Us a Message
+              </h3>
+
               <form className="space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                    <label
+                      htmlFor="name"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Name
+                    </label>
                     <Input id="name" placeholder="Your name" />
                   </div>
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <label
+                      htmlFor="email"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
+                      Email
+                    </label>
                     <Input id="email" type="email" placeholder="Your email" />
                   </div>
                 </div>
-                
+
                 <div>
-                  <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                  <label
+                    htmlFor="subject"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Subject
+                  </label>
                   <Input id="subject" placeholder="What is this regarding?" />
                 </div>
-                
+
                 <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">Message</label>
-                  <Textarea id="message" placeholder="Tell us how we can help..." className="min-h-[120px]" />
+                  <label
+                    htmlFor="message"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Message
+                  </label>
+                  <Textarea
+                    id="message"
+                    placeholder="Tell us how we can help..."
+                    className="min-h-[120px]"
+                  />
                 </div>
-                
+
                 <Button className="w-full bg-tutoring-blue hover:bg-blue-700 text-white py-6">
                   Send Message
                 </Button>

@@ -1,19 +1,18 @@
-
-import { format, parse } from "date-fns";
-import { parseNumericString } from "@/utils/numberUtils";
-import { DbClassLog, DbCodeLog, TransformedClassLog } from "./types";
-import { Database } from "@/integrations/supabase/types";
+import { format, parse } from 'date-fns';
+import { parseNumericString } from '@/utils/numberUtils';
+import { DbClassLog, DbCodeLog, TransformedClassLog } from './types';
+import { Database } from '@/integrations/supabase/types';
 
 type ClassLogs = Database['public']['Tables']['class_logs']['Row'];
 
 export const transformClassLog = (record: DbClassLog): TransformedClassLog => {
   try {
     let dateObj: Date;
-    if (record["Date"]) {
+    if (record['Date']) {
       try {
-        dateObj = parse(record["Date"], 'yyyy-MM-dd', new Date());
+        dateObj = parse(record['Date'], 'yyyy-MM-dd', new Date());
       } catch (e) {
-        console.error('Error parsing date:', record["Date"]);
+        console.error('Error parsing date:', record['Date']);
         dateObj = new Date();
       }
     } else {
@@ -22,28 +21,28 @@ export const transformClassLog = (record: DbClassLog): TransformedClassLog => {
 
     return {
       id: record.id,
-      classNumber: record["Class Number"] ?? '',
-      tutorName: record["Tutor Name"] ?? '',
-      studentName: record["Student Name"] ?? '',
+      classNumber: record['Class Number'] ?? '',
+      tutorName: record['Tutor Name'] ?? '',
+      studentName: record['Student Name'] ?? '',
       date: dateObj,
-      day: record["Day"] || format(dateObj, 'EEEE'),
-      startTime: record["Time (CST)"] ?? '',
-      duration: parseNumericString(record["Time (hrs)"] ?? '0'),
-      subject: record["Subject"] ?? '',
-      content: record["Content"] || '',
-      homework: record["HW"] || '',
-      classId: record["Class ID"] ?? '',
-      classCost: parseNumericString(record["Class Cost"] ?? '0'),
-      tutorCost: parseNumericString(record["Tutor Cost"] ?? '0'),
-      studentPayment: record["Student Payment"] || 'Pending',
-      tutorPayment: record["Tutor Payment"] || 'Pending',
-      additionalInfo: record["Additional Info"],
+      day: record['Day'] || format(dateObj, 'EEEE'),
+      startTime: record['Time (CST)'] ?? '',
+      duration: parseNumericString(record['Time (hrs)'] ?? '0'),
+      subject: record['Subject'] ?? '',
+      content: record['Content'] || '',
+      homework: record['HW'] || '',
+      classId: record['Class ID'] ?? '',
+      classCost: parseNumericString(record['Class Cost'] ?? '0'),
+      tutorCost: parseNumericString(record['Tutor Cost'] ?? '0'),
+      studentPayment: record['Student Payment'] || 'Pending',
+      tutorPayment: record['Tutor Payment'] || 'Pending',
+      additionalInfo: record['Additional Info'],
       isCodeLog: false,
       // Add these to match ClassEvent interface
-      title: record["Class Number"] ?? '',
+      title: record['Class Number'] ?? '',
       endTime: '',
       zoomLink: null,
-      notes: record["Additional Info"]
+      notes: record['Additional Info'],
     };
   } catch (error) {
     console.error(`Error transforming class log record:`, error, record);
@@ -88,7 +87,7 @@ export const transformCodeLog = (record: DbCodeLog): TransformedClassLog => {
       title: record.class_number || 'Code Session',
       endTime: '',
       zoomLink: null,
-      notes: record.additional_info
+      notes: record.additional_info,
     };
   } catch (error) {
     console.error(`Error transforming code log record:`, error, record);
@@ -96,7 +95,10 @@ export const transformCodeLog = (record: DbCodeLog): TransformedClassLog => {
   }
 };
 
-const createErrorLog = (id: string = 'unknown', isCodeLog: boolean): TransformedClassLog => ({
+const createErrorLog = (
+  id: string = 'unknown',
+  isCodeLog: boolean
+): TransformedClassLog => ({
   id: id,
   classNumber: 'Error',
   tutorName: 'Error Loading',
@@ -118,5 +120,5 @@ const createErrorLog = (id: string = 'unknown', isCodeLog: boolean): Transformed
   title: 'Error',
   endTime: '',
   zoomLink: null,
-  notes: 'Error loading class data'
+  notes: 'Error loading class data',
 });

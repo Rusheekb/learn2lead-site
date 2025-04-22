@@ -1,64 +1,66 @@
-import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { FileUp } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "sonner";
-import { StudentUpload } from "@/types/classTypes";
-import { Material, Student } from "@/types/sharedTypes";
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { FileUp } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from 'sonner';
+import { StudentUpload } from '@/types/classTypes';
+import { Material, Student } from '@/types/sharedTypes';
 
 // Import components
-import MaterialsTable from "./MaterialsTable";
-import StudentUploadsTable from "./StudentUploadsTable";
-import UploadMaterialDialog from "./UploadMaterialDialog";
-import ShareMaterialDialog from "./ShareMaterialDialog";
-import { mockStudents, mockMaterials } from "./mock-data-students";
+import MaterialsTable from './MaterialsTable';
+import StudentUploadsTable from './StudentUploadsTable';
+import UploadMaterialDialog from './UploadMaterialDialog';
+import ShareMaterialDialog from './ShareMaterialDialog';
+import { mockStudents, mockMaterials } from './mock-data-students';
 
 // Define a complete mock data set for uploads
 const mockUploads: StudentUpload[] = [
   {
-    id: "1",
-    fileName: "Homework1.pdf",
-    fileSize: "1.2 MB",
-    uploadDate: "2023-04-10",
-    classId: "101",
-    studentName: "Alex Johnson",
-    note: "First homework submission"
+    id: '1',
+    fileName: 'Homework1.pdf',
+    fileSize: '1.2 MB',
+    uploadDate: '2023-04-10',
+    classId: '101',
+    studentName: 'Alex Johnson',
+    note: 'First homework submission',
   },
   {
-    id: "2",
-    fileName: "ChemistryNotes.docx",
-    fileSize: "842 KB",
-    uploadDate: "2023-04-11",
-    classId: "102", 
-    studentName: "Jamie Smith",
-    note: "Notes from class"
+    id: '2',
+    fileName: 'ChemistryNotes.docx',
+    fileSize: '842 KB',
+    uploadDate: '2023-04-11',
+    classId: '102',
+    studentName: 'Jamie Smith',
+    note: 'Notes from class',
   },
   {
-    id: "3",
-    fileName: "EssayDraft.docx",
-    fileSize: "1.5 MB", 
-    uploadDate: "2023-04-12",
-    classId: "103",
-    studentName: "Taylor Brown",
-    note: "First draft of essay"
-  }
+    id: '3',
+    fileName: 'EssayDraft.docx',
+    fileSize: '1.5 MB',
+    uploadDate: '2023-04-12',
+    classId: '103',
+    studentName: 'Taylor Brown',
+    note: 'First draft of essay',
+  },
 ];
 
 const TutorMaterials: React.FC = () => {
   const [isUploadOpen, setIsUploadOpen] = useState<boolean>(false);
   const [isShareOpen, setIsShareOpen] = useState<boolean>(false);
-  const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null);
+  const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(
+    null
+  );
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [activeTab, setActiveTab] = useState<string>("my-materials");
+  const [activeTab, setActiveTab] = useState<string>('my-materials');
   const [materialData, setMaterialData] = useState({
-    name: "",
-    description: "",
-    subject: "",
-    type: "",
+    name: '',
+    description: '',
+    subject: '',
+    type: '',
   });
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
-  
+
   const [studentUploads] = useState<StudentUpload[]>(mockUploads);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,28 +69,33 @@ const TutorMaterials: React.FC = () => {
       setUploadedFile(file);
       setMaterialData({
         ...materialData,
-        name: file.name.split('.')[0]
+        name: file.name.split('.')[0],
       });
     }
   };
 
   const handleUpload = () => {
-    console.log("Uploading material:", materialData);
-    console.log("File:", uploadedFile);
+    console.log('Uploading material:', materialData);
+    console.log('File:', uploadedFile);
     setIsUploadOpen(false);
-    
+
     setMaterialData({
-      name: "",
-      description: "",
-      subject: "",
-      type: "",
+      name: '',
+      description: '',
+      subject: '',
+      type: '',
     });
     setUploadedFile(null);
   };
 
   const handleShareMaterial = () => {
     if (selectedMaterial) {
-      console.log("Sharing material:", selectedMaterial.id, "with students:", selectedStudents);
+      console.log(
+        'Sharing material:',
+        selectedMaterial.id,
+        'with students:',
+        selectedStudents
+      );
       setIsShareOpen(false);
       setSelectedStudents([]);
     }
@@ -96,22 +103,26 @@ const TutorMaterials: React.FC = () => {
 
   const openShareDialog = (material: Material) => {
     setSelectedMaterial(material);
-    setSelectedStudents(material.sharedWith.map((name: string) => {
-      const student = mockStudents.find(s => s.name === name);
-      return student ? student.id : "";
-    }).filter(Boolean));
+    setSelectedStudents(
+      material.sharedWith
+        .map((name: string) => {
+          const student = mockStudents.find((s) => s.name === name);
+          return student ? student.id : '';
+        })
+        .filter(Boolean)
+    );
     setIsShareOpen(true);
   };
 
   const handleDownloadStudentFile = (uploadId: string) => {
-    const upload = studentUploads.find(u => u.id === uploadId);
+    const upload = studentUploads.find((u) => u.id === uploadId);
     if (upload) {
       toast.success(`Downloading ${upload.fileName}`);
     }
   };
 
   const handleMaterialDataChange = (data: Partial<typeof materialData>) => {
-    setMaterialData({...materialData, ...data});
+    setMaterialData({ ...materialData, ...data });
   };
 
   return (
@@ -122,34 +133,34 @@ const TutorMaterials: React.FC = () => {
           <FileUp className="h-4 w-4 mr-1" /> Upload Material
         </Button>
       </div>
-      
+
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="my-materials">My Materials</TabsTrigger>
           <TabsTrigger value="student-uploads">Student Uploads</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="my-materials" className="pt-4">
           <Card>
             <CardHeader>
               <CardTitle>Teaching Materials</CardTitle>
             </CardHeader>
             <CardContent>
-              <MaterialsTable 
-                materials={mockMaterials} 
-                onShareMaterial={openShareDialog} 
+              <MaterialsTable
+                materials={mockMaterials}
+                onShareMaterial={openShareDialog}
               />
             </CardContent>
           </Card>
         </TabsContent>
-        
+
         <TabsContent value="student-uploads" className="pt-4">
           <Card>
             <CardHeader>
               <CardTitle>Student Uploaded Materials</CardTitle>
             </CardHeader>
             <CardContent>
-              <StudentUploadsTable 
+              <StudentUploadsTable
                 uploads={studentUploads}
                 onDownload={handleDownloadStudentFile}
               />
@@ -157,8 +168,8 @@ const TutorMaterials: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
-      
-      <UploadMaterialDialog 
+
+      <UploadMaterialDialog
         isOpen={isUploadOpen}
         onOpenChange={setIsUploadOpen}
         materialData={materialData}
@@ -167,8 +178,8 @@ const TutorMaterials: React.FC = () => {
         onFileChange={handleFileChange}
         onUpload={handleUpload}
       />
-      
-      <ShareMaterialDialog 
+
+      <ShareMaterialDialog
         isOpen={isShareOpen}
         onOpenChange={setIsShareOpen}
         selectedMaterial={selectedMaterial}

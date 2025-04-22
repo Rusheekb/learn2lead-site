@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
@@ -95,17 +94,21 @@
     @apply bg-background text-foreground;
     font-family: 'Inter', sans-serif;
   }
-  
+
   .hero-gradient {
-    background: linear-gradient(100deg, #2D46B9 0%, #34D3B4 100%);
+    background: linear-gradient(100deg, #2d46b9 0%, #34d3b4 100%);
   }
-  
+
   .feature-card-hover {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition:
+      transform 0.3s ease,
+      box-shadow 0.3s ease;
   }
-  
+
   .feature-card-hover:hover {
     transform: translateY(-5px);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    box-shadow:
+      0 20px 25px -5px rgba(0, 0, 0, 0.1),
+      0 10px 10px -5px rgba(0, 0, 0, 0.04);
   }
 }

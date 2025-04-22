@@ -1,7 +1,6 @@
-
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { Download, Eye, Clock } from "lucide-react";
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { Download, Eye, Clock } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -9,8 +8,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { ContentShareItem } from "@/types/sharedTypes";
+} from '@/components/ui/table';
+import { ContentShareItem } from '@/types/sharedTypes';
 
 interface ShareTableProps {
   shares: ContentShareItem[];
@@ -25,7 +24,7 @@ const ShareTable: React.FC<ShareTableProps> = ({
   user,
   handleDownload,
   markAsViewed,
-  getUserName
+  getUserName,
 }) => {
   return (
     <Table>
@@ -50,7 +49,7 @@ const ShareTable: React.FC<ShareTableProps> = ({
                 )}
               </TableCell>
               <TableCell>
-                {isSender 
+                {isSender
                   ? getUserName(share.receiver_id)
                   : getUserName(share.sender_id)}
               </TableCell>
@@ -71,20 +70,20 @@ const ShareTable: React.FC<ShareTableProps> = ({
               <TableCell>
                 <div className="flex space-x-2">
                   {share.file_path && (
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => handleDownload(share.file_path)}
                       className="flex items-center"
                     >
-                      <Download className="h-4 w-4 mr-1" /> 
+                      <Download className="h-4 w-4 mr-1" />
                       <span>Download</span>
                     </Button>
                   )}
-                  
+
                   {!isSender && !share.viewed_at && (
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       onClick={() => markAsViewed(share.id)}
                       variant="secondary"
                     >

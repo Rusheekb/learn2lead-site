@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { AppRole } from './useProfile';
@@ -17,6 +16,6 @@ export const useAuthState = () => {
     isLoading,
     setIsLoading,
     userRole,
-    setUserRole
+    setUserRole,
   };
 };

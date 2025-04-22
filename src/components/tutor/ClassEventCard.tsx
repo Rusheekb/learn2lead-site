@@ -1,9 +1,8 @@
-
-import React from "react";
-import { Clock, MessageSquare, User, Video } from "lucide-react";
-import { ClassEvent } from "@/types/tutorTypes";
-import { formatTime } from "@/utils/dateTimeUtils";
-import { RecurringBadge, MessageBadge } from "@/components/shared/ClassBadges";
+import React from 'react';
+import { Clock, MessageSquare, User, Video } from 'lucide-react';
+import { ClassEvent } from '@/types/tutorTypes';
+import { formatTime } from '@/utils/dateTimeUtils';
+import { RecurringBadge, MessageBadge } from '@/components/shared/ClassBadges';
 
 export interface ClassEventCardProps {
   event: ClassEvent;
@@ -11,9 +10,13 @@ export interface ClassEventCardProps {
   unreadMessageCount: number;
 }
 
-const ClassEventCard: React.FC<ClassEventCardProps> = ({ event, onClick, unreadMessageCount }) => {
+const ClassEventCard: React.FC<ClassEventCardProps> = ({
+  event,
+  onClick,
+  unreadMessageCount,
+}) => {
   return (
-    <div 
+    <div
       key={event.id}
       className="p-4 border rounded-md hover:shadow-md transition-shadow cursor-pointer"
       onClick={() => onClick(event)}
@@ -33,18 +36,22 @@ const ClassEventCard: React.FC<ClassEventCardProps> = ({ event, onClick, unreadM
           )}
         </div>
       </div>
-      
+
       <div className="flex items-center text-sm text-gray-600 mt-2">
         <Clock className="h-4 w-4 mr-2" />
-        <span>{formatTime(event.startTime)} - {formatTime(event.endTime)}</span>
+        <span>
+          {formatTime(event.startTime)} - {formatTime(event.endTime)}
+        </span>
       </div>
-      
+
       <div className="flex justify-between items-center mt-3">
         <span className="text-xs text-gray-500">
-          {event.recurring ? `Every ${event.recurringDays?.join(', ')}` : 'One-time class'}
+          {event.recurring
+            ? `Every ${event.recurringDays?.join(', ')}`
+            : 'One-time class'}
         </span>
-        <a 
-          href={event.zoomLink || "#"}
+        <a
+          href={event.zoomLink || '#'}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center text-tutoring-blue hover:text-tutoring-teal transition-colors"

@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ClassItem } from '@/types/classTypes';
 import { toast } from 'sonner';
@@ -8,13 +7,14 @@ export const useClassSubscription = (
   setClasses: React.Dispatch<React.SetStateAction<ClassItem[]>>
 ) => {
   // Subscribe to class changes
-  const classesChannel = supabase.channel('student-class-changes')
+  const classesChannel = supabase
+    .channel('student-class-changes')
     .on(
       'postgres_changes',
       {
         event: '*',
         schema: 'public',
-        table: 'class_logs'
+        table: 'class_logs',
       },
       (payload: any) => {
         if (payload.new && payload.new.student_name === currentStudentName) {
@@ -33,10 +33,10 @@ export const useClassSubscription = (
               zoomLink: payload.new.zoom_link || '',
               notes: payload.new.notes || '',
               subjectId: payload.new.subject || '',
-              recurring: false
+              recurring: false,
             };
-            
-            setClasses(prevClasses => [...prevClasses, newClass]);
+
+            setClasses((prevClasses) => [...prevClasses, newClass]);
             toast.success(`New class added: ${newClass.title}`);
           } else if (payload.eventType === 'UPDATE') {
             const updatedClass: ClassItem = {
@@ -53,20 +53,24 @@ export const useClassSubscription = (
               zoomLink: payload.new.zoom_link || '',
               notes: payload.new.notes || '',
               subjectId: payload.new.subject || '',
-              recurring: false
+              recurring: false,
             };
-            
-            setClasses(prevClasses => 
-              prevClasses.map(cls => cls.id === updatedClass.id ? updatedClass : cls)
+
+            setClasses((prevClasses) =>
+              prevClasses.map((cls) =>
+                cls.id === updatedClass.id ? updatedClass : cls
+              )
             );
           } else if (payload.eventType === 'DELETE' && payload.old) {
             const classId = payload.old.id;
-            setClasses(prevClasses => prevClasses.filter(cls => cls.id !== classId));
+            setClasses((prevClasses) =>
+              prevClasses.filter((cls) => cls.id !== classId)
+            );
           }
         }
       }
     )
     .subscribe();
-    
+
   return classesChannel;
 };

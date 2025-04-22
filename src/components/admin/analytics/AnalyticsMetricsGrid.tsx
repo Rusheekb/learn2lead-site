@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Card,
@@ -6,15 +5,15 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+} from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
     minimumFractionDigits: 2,
-    maximumFractionDigits: 2
+    maximumFractionDigits: 2,
   }).format(amount);
 };
 
@@ -22,7 +21,7 @@ const formatPercent = (value: number) => {
   return new Intl.NumberFormat('en-US', {
     style: 'percent',
     minimumFractionDigits: 1,
-    maximumFractionDigits: 1
+    maximumFractionDigits: 1,
   }).format(value / 100);
 };
 
@@ -31,9 +30,9 @@ interface AnalyticsMetricsGridProps {
   businessAnalytics: any | null;
 }
 
-const AnalyticsMetricsGrid: React.FC<AnalyticsMetricsGridProps> = ({ 
-  isLoading, 
-  businessAnalytics 
+const AnalyticsMetricsGrid: React.FC<AnalyticsMetricsGridProps> = ({
+  isLoading,
+  businessAnalytics,
 }) => {
   if (isLoading) {
     return (

@@ -1,4 +1,3 @@
-
 export interface ClassSession {
   id: string;
   title: string;
@@ -18,7 +17,7 @@ export interface StudentMessage {
   content: string;
   timestamp: string;
   read: boolean;
-  sender: "student" | "tutor";
+  sender: 'student' | 'tutor';
   text?: string;
   classId?: string;
   studentName?: string;

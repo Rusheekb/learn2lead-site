@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -9,7 +8,7 @@ export const signInWithEmail = async (email: string, password: string) => {
   try {
     const { error } = await supabase.auth.signInWithPassword({
       email,
-      password
+      password,
     });
     if (error) {
       toast.error(error.message);
@@ -28,10 +27,12 @@ export const signInWithEmail = async (email: string, password: string) => {
  */
 export const signUpWithEmail = async (email: string, password: string) => {
   try {
-    const { data: signupData, error: signupError } = await supabase.auth.signUp({
-      email,
-      password
-    });
+    const { data: signupData, error: signupError } = await supabase.auth.signUp(
+      {
+        email,
+        password,
+      }
+    );
     if (signupError) {
       toast.error(signupError.message);
       throw signupError;
@@ -52,9 +53,7 @@ export const signUpWithEmail = async (email: string, password: string) => {
         const role = 'student';
         const { error: insertError } = await supabase
           .from('profiles')
-          .insert([
-            { id: user.id, email: user.email, role }
-          ]);
+          .insert([{ id: user.id, email: user.email, role }]);
         if (insertError) {
           toast.error('Failed to create user profile.');
           throw insertError;
@@ -62,7 +61,9 @@ export const signUpWithEmail = async (email: string, password: string) => {
       }
     }
 
-    toast.success('Signed up successfully! Please check your email for verification.');
+    toast.success(
+      'Signed up successfully! Please check your email for verification.'
+    );
   } catch (error) {
     console.error('Error signing up:', error);
     throw error;
@@ -86,4 +87,3 @@ export const signOut = async () => {
     return false;
   }
 };
-

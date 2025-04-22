@@ -1,8 +1,7 @@
-
-import React from "react";
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
-import FilterSelect from "@/components/shared/filters/FilterSelect";
+import React from 'react';
+import { Input } from '@/components/ui/input';
+import { Search } from 'lucide-react';
+import FilterSelect from '@/components/shared/filters/FilterSelect';
 
 interface StudentFiltersProps {
   searchTerm: string;
@@ -19,22 +18,22 @@ const StudentFilters: React.FC<StudentFiltersProps> = ({
   statusFilter,
   setStatusFilter,
   paymentFilter,
-  setPaymentFilter
+  setPaymentFilter,
 }) => {
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);
   };
 
   const statusOptions = [
-    { value: "active", label: "Active" },
-    { value: "inactive", label: "Inactive" },
-    { value: "pending", label: "Pending" }
+    { value: 'active', label: 'Active' },
+    { value: 'inactive', label: 'Inactive' },
+    { value: 'pending', label: 'Pending' },
   ];
 
   const paymentOptions = [
-    { value: "paid", label: "Paid" },
-    { value: "unpaid", label: "Unpaid" },
-    { value: "overdue", label: "Overdue" }
+    { value: 'paid', label: 'Paid' },
+    { value: 'unpaid', label: 'Unpaid' },
+    { value: 'overdue', label: 'Overdue' },
   ];
 
   return (

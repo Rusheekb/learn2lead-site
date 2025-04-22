@@ -19,7 +19,7 @@ export interface ClassEvent {
   studentPayment?: string;
   tutorPayment?: string;
   isCodeLog?: boolean;
-  
+
   // Add properties needed by Tutor components
   recurring?: boolean;
   recurringDays?: string[];

@@ -1,10 +1,9 @@
-
-import { useState, useEffect } from "react";
-import { toast } from "sonner";
-import { fetchClassLogs } from "@/services/classLogsService";
-import { ClassEvent } from "@/types/tutorTypes";
-import { supabase } from "@/integrations/supabase/client";
-import { formatTime } from "@/utils/timeUtils";
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
+import { fetchClassLogs } from '@/services/classLogsService';
+import { ClassEvent } from '@/types/tutorTypes';
+import { supabase } from '@/integrations/supabase/client';
+import { formatTime } from '@/utils/timeUtils';
 
 export const useClassData = (): {
   isLoading: boolean;
@@ -20,7 +19,9 @@ export const useClassData = (): {
   const [error, setError] = useState<string | null>(null);
 
   // Get unique subjects from classes
-  const allSubjects = Array.from(new Set(classes.map(cls => cls.subject || '')));
+  const allSubjects = Array.from(
+    new Set(classes.map((cls) => cls.subject || ''))
+  );
 
   const testConnection = async (): Promise<boolean> => {
     try {
@@ -46,7 +47,7 @@ export const useClassData = (): {
       console.log('Starting to load classes...');
       const classLogs = await fetchClassLogs();
       console.log('Fetched class logs:', classLogs);
-      
+
       if (!Array.isArray(classLogs)) {
         console.error('Class logs is not an array:', classLogs);
         setError('Invalid data format received');
@@ -55,15 +56,17 @@ export const useClassData = (): {
 
       const processedLogs = classLogs.map((log: ClassEvent) => ({
         ...log,
-        date: log.date instanceof Date ? log.date : new Date(log.date)
+        date: log.date instanceof Date ? log.date : new Date(log.date),
       }));
-      
+
       console.log('Processed logs:', processedLogs);
       setClasses(processedLogs);
     } catch (error: any) {
-      console.error("Error loading classes:", error);
-      setError(error instanceof Error ? error.message : 'Failed to load class logs');
-      toast.error("Failed to load class logs");
+      console.error('Error loading classes:', error);
+      setError(
+        error instanceof Error ? error.message : 'Failed to load class logs'
+      );
+      toast.error('Failed to load class logs');
     } finally {
       setIsLoading(false);
     }
@@ -91,7 +94,7 @@ export const useClassData = (): {
     setClasses,
     allSubjects,
     formatTime,
-    handleRefreshData
+    handleRefreshData,
   };
 };
 

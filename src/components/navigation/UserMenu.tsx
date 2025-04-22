@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { LogIn } from 'lucide-react';
-import { Button } from "@/components/ui/button";
-import { 
-  DropdownMenu, 
-  DropdownMenuTrigger 
-} from "@/components/ui/dropdown-menu";
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useNavigate } from 'react-router-dom';
 import UserAccountButton from './UserAccountButton';
 import UserDropdownContent from './UserDropdownContent';
@@ -22,10 +21,10 @@ const UserMenu: React.FC<UserMenuProps> = ({ user, userRole }) => {
   const handleLogin = () => {
     navigate('/login');
   };
-  
+
   if (!user) {
     return (
-      <Button 
+      <Button
         variant="ghost"
         onClick={handleLogin}
         className="flex items-center space-x-2 text-tutoring-blue hover:bg-tutoring-blue/10"
@@ -35,7 +34,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ user, userRole }) => {
       </Button>
     );
   }
-  
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>

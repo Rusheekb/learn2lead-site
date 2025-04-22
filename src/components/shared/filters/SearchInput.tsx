@@ -1,8 +1,7 @@
-
-import React from "react";
-import { Search, X } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import React from 'react';
+import { Search, X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 interface SearchInputProps {
   searchTerm: string;
@@ -14,7 +13,7 @@ interface SearchInputProps {
 const SearchInput: React.FC<SearchInputProps> = ({
   searchTerm,
   setSearchTerm,
-  placeholder = "Search...",
+  placeholder = 'Search...',
   className,
 }) => {
   return (
@@ -32,7 +31,7 @@ const SearchInput: React.FC<SearchInputProps> = ({
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setSearchTerm("")}
+          onClick={() => setSearchTerm('')}
           className="h-10 w-10"
           title="Clear search"
         >

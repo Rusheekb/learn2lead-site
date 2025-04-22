@@ -1,11 +1,14 @@
-
-import React from "react";
-import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { cn } from "@/lib/utils";
+import React from 'react';
+import { format } from 'date-fns';
+import { CalendarIcon } from 'lucide-react';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from '@/lib/utils';
 
 interface DateFilterProps {
   date: Date | undefined;
@@ -13,7 +16,11 @@ interface DateFilterProps {
   className?: string;
 }
 
-const DateFilter: React.FC<DateFilterProps> = ({ date, setDate, className }) => {
+const DateFilter: React.FC<DateFilterProps> = ({
+  date,
+  setDate,
+  className,
+}) => {
   return (
     <div className={className}>
       <Popover>
@@ -21,12 +28,12 @@ const DateFilter: React.FC<DateFilterProps> = ({ date, setDate, className }) => 
           <Button
             variant="outline"
             className={cn(
-              "w-full justify-start text-left",
-              !date && "text-muted-foreground"
+              'w-full justify-start text-left',
+              !date && 'text-muted-foreground'
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {date ? format(date, "PPP") : "Date"}
+            {date ? format(date, 'PPP') : 'Date'}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">

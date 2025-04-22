@@ -1,4 +1,3 @@
-
 import { Helmet } from 'react-helmet-async';
 import NavBar from '@/components/NavBar';
 import Hero from '@/components/Hero';
@@ -10,9 +9,9 @@ const Home = () => {
     <>
       <Helmet>
         <title>Learn2Lead – Home</title>
-        <meta 
-          name="description" 
-          content="Personalized K‑12 tutoring for academic success" 
+        <meta
+          name="description"
+          content="Personalized K‑12 tutoring for academic success"
         />
       </Helmet>
       <NavBar />

@@ -1,11 +1,15 @@
-
-import React from "react";
-import { ClassEvent } from "@/types/tutorTypes";
-import { StudentMessage, StudentUpload } from "@/types/classTypes";
-import ViewClassDialog from "./dialogs/ViewClassDialog";
-import EditClassForm from "./dialogs/EditClassForm";
-import AddClassDialog from "./dialogs/AddClassDialog";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import React from 'react';
+import { ClassEvent } from '@/types/tutorTypes';
+import { StudentMessage, StudentUpload } from '@/types/classTypes';
+import ViewClassDialog from './dialogs/ViewClassDialog';
+import EditClassForm from './dialogs/EditClassForm';
+import AddClassDialog from './dialogs/AddClassDialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 interface ClassDialogsProps {
   isViewEventOpen: boolean;
@@ -91,7 +95,7 @@ const ClassDialogs: React.FC<ClassDialogsProps> = ({
           getUnreadMessageCount={getUnreadMessageCount}
         />
       )}
-      
+
       <AddClassDialog
         isOpen={isAddEventOpen}
         setIsOpen={setIsAddEventOpen}

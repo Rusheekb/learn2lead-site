@@ -1,16 +1,25 @@
-
-import React from "react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { FileText, Download } from "lucide-react";
-import { StudentUpload } from "@/types/classTypes";
+import React from 'react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { FileText, Download } from 'lucide-react';
+import { StudentUpload } from '@/types/classTypes';
 
 interface StudentUploadsTableProps {
   uploads: StudentUpload[];
   onDownload: (uploadId: string) => void;
 }
 
-const StudentUploadsTable: React.FC<StudentUploadsTableProps> = ({ uploads, onDownload }) => {
+const StudentUploadsTable: React.FC<StudentUploadsTableProps> = ({
+  uploads,
+  onDownload,
+}) => {
   if (uploads.length === 0) {
     return (
       <div className="text-center py-8 text-gray-500">
@@ -45,8 +54,8 @@ const StudentUploadsTable: React.FC<StudentUploadsTableProps> = ({ uploads, onDo
             <TableCell>{upload.fileSize}</TableCell>
             <TableCell>
               <div className="flex space-x-2">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={() => onDownload(upload.id)}
                 >

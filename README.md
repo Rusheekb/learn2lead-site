@@ -31,6 +31,7 @@ A template for your environment variables is provided in `.env.example`.
 ## Building for Production
 
 Build the optimized production bundle:
+
 ```bash
 npm run build
 ```

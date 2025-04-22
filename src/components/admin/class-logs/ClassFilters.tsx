@@ -1,6 +1,5 @@
-
-import React from "react";
-import FilterControls from "@/components/shared/FilterControls";
+import React from 'react';
+import FilterControls from '@/components/shared/FilterControls';
 
 export interface ClassFiltersProps {
   searchTerm: string;
@@ -29,18 +28,19 @@ const ClassFilters: React.FC<ClassFiltersProps> = ({
   clearFilters,
   allSubjects,
   showCodeLogs,
-  setShowCodeLogs
+  setShowCodeLogs,
 }) => {
   // Common status options with guaranteed non-empty values
   const statusOptions = [
-    { value: "completed", label: "Completed" },
-    { value: "upcoming", label: "Upcoming" },
-    { value: "cancelled", label: "Cancelled" }
+    { value: 'completed', label: 'Completed' },
+    { value: 'upcoming', label: 'Upcoming' },
+    { value: 'cancelled', label: 'Cancelled' },
   ];
 
   // Filter out empty subjects and ensure all have valid values
-  const validSubjects = allSubjects
-    .filter(subject => subject && subject.trim() !== '');
+  const validSubjects = allSubjects.filter(
+    (subject) => subject && subject.trim() !== ''
+  );
 
   return (
     <FilterControls

@@ -1,4 +1,3 @@
-
 import { ClassItem, StudentMessage, StudentUpload } from '@/types/classTypes';
 import { useClassSubscription } from './subscriptions/useClassSubscription';
 import { useMessageSubscription } from './subscriptions/useMessageSubscription';
@@ -13,12 +12,17 @@ const useStudentRealtime = (
 ) => {
   // Use dedicated hooks for each subscription
   const classesChannel = useClassSubscription(currentStudentName, setClasses);
-  const messagesChannel = useMessageSubscription(currentStudentName, setStudentMessages);
-  const uploadsChannel = useUploadSubscription(currentStudentName, setStudentUploads);
-  
+  const messagesChannel = useMessageSubscription(
+    currentStudentName,
+    setStudentMessages
+  );
+  const uploadsChannel = useUploadSubscription(
+    currentStudentName,
+    setStudentUploads
+  );
+
   // Use cleanup hook for all channels
   useRealtimeCleanup([classesChannel, messagesChannel, uploadsChannel]);
 };
 
 export default useStudentRealtime;
-

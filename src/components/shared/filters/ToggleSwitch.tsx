@@ -1,7 +1,6 @@
-
-import React from "react";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
+import React from 'react';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 interface ToggleSwitchProps {
   checked: boolean;
@@ -20,11 +19,7 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
 }) => {
   return (
     <div className={`flex items-center space-x-2 ${className}`}>
-      <Switch 
-        id={id}
-        checked={checked} 
-        onCheckedChange={onCheckedChange} 
-      />
+      <Switch id={id} checked={checked} onCheckedChange={onCheckedChange} />
       <Label htmlFor={id}>{label}</Label>
     </div>
   );

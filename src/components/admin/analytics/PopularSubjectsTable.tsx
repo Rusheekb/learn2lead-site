@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Card,
@@ -6,7 +5,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -14,15 +13,15 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from '@/components/ui/table';
 import { PopularSubject } from '@/types/sharedTypes';
 
 interface PopularSubjectsTableProps {
   popularSubjects: PopularSubject[];
 }
 
-const PopularSubjectsTable: React.FC<PopularSubjectsTableProps> = ({ 
-  popularSubjects 
+const PopularSubjectsTable: React.FC<PopularSubjectsTableProps> = ({
+  popularSubjects,
 }) => {
   return (
     <Card>

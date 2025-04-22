@@ -1,7 +1,6 @@
-
-import React, { memo } from "react";
-import StatsCard from "./StatsCard";
-import { statsData } from "./mock-data";
+import React, { memo } from 'react';
+import StatsCard from './StatsCard';
+import { statsData } from './mock-data';
 
 // Memoize the StatsGrid component to prevent unnecessary re-renders
 const StatsGrid: React.FC = memo(() => {

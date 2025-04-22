@@ -1,5 +1,4 @@
-
-import { StudentMessage, StudentUpload } from "@/types/classTypes";
+import { StudentMessage, StudentUpload } from '@/types/classTypes';
 
 // Define database record types
 export interface ClassMessageRecord {
@@ -25,22 +24,27 @@ export interface ClassUploadRecord {
 }
 
 // Map database record to StudentMessage type
-export const mapToStudentMessage = (record: ClassMessageRecord): StudentMessage => {
+export const mapToStudentMessage = (
+  record: ClassMessageRecord
+): StudentMessage => {
   return {
     id: record.id,
     classId: record.class_id,
     studentName: record.student_name,
     message: record.message,
     content: record.message,
-    timestamp: record.timestamp || record.created_at || new Date().toISOString(),
+    timestamp:
+      record.timestamp || record.created_at || new Date().toISOString(),
     isRead: record.is_read,
     read: record.is_read,
-    sender: "student" // Default sender
+    sender: 'student', // Default sender
   };
 };
 
 // Map database record to StudentUpload type
-export const mapToStudentUpload = (record: ClassUploadRecord): StudentUpload => {
+export const mapToStudentUpload = (
+  record: ClassUploadRecord
+): StudentUpload => {
   return {
     id: record.id,
     classId: record.class_id,
@@ -48,15 +52,19 @@ export const mapToStudentUpload = (record: ClassUploadRecord): StudentUpload => 
     fileName: record.file_name,
     fileSize: record.file_size,
     uploadDate: record.upload_date,
-    note: record.note
+    note: record.note,
   };
 };
 
 // Map array of database records to array of app types
-export const mapToStudentMessages = (records: ClassMessageRecord[]): StudentMessage[] => {
+export const mapToStudentMessages = (
+  records: ClassMessageRecord[]
+): StudentMessage[] => {
   return records.map(mapToStudentMessage);
 };
 
-export const mapToStudentUploads = (records: ClassUploadRecord[]): StudentUpload[] => {
+export const mapToStudentUploads = (
+  records: ClassUploadRecord[]
+): StudentUpload[] => {
   return records.map(mapToStudentUpload);
 };

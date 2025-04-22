@@ -1,36 +1,46 @@
+import { parse, format, addMinutes } from 'date-fns';
 
-import { parse, format, addMinutes } from "date-fns";
-
-export const parseNumericString = (value: string | number | undefined): number => {
-  if (typeof value === "number") return value;
+export const parseNumericString = (
+  value: string | number | undefined
+): number => {
+  if (typeof value === 'number') return value;
   if (!value) return 0;
-  
+
   const parsed = parseFloat(value);
   if (!isNaN(parsed)) {
     return parsed;
   }
-  
+
   return 0;
 };
 
-export const calculateEndTime = (startTime: string, durationHours: number): string => {
-  if (!startTime || !durationHours) return "";
-  
+export const calculateEndTime = (
+  startTime: string,
+  durationHours: number
+): string => {
+  if (!startTime || !durationHours) return '';
+
   try {
     const [hours, minutes] = startTime.split(':').map(Number);
-    
-    if (isNaN(hours) || isNaN(minutes)) return "";
-    
+
+    if (isNaN(hours) || isNaN(minutes)) return '';
+
     const today = new Date();
-    const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), hours, minutes);
-    
+    const startDate = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+      hours,
+      minutes
+    );
+
     const durationMinutes = durationHours * 60;
     const endDate = addMinutes(startDate, durationMinutes);
-    
+
     return format(endDate, 'HH:mm');
   } catch (e: any) {
-    console.error("Error calculating end time:", e);
-    return "";
+    console.error('Error calculating end time:', e);
+    return '';
   }
 };
 
@@ -41,7 +51,7 @@ export const parseDateWithFormats = (dateStr: string): Date => {
     'dd/MM/yyyy',
     'yyyy/MM/dd',
     'dd-MMM-yyyy',
-    'MMM dd, yyyy'
+    'MMM dd, yyyy',
   ];
 
   for (const formatStr of formats) {

@@ -4,23 +4,25 @@ import { Star } from 'lucide-react';
 const Testimonials = () => {
   const testimonials = [
     {
-      quote: "My tutor helps me learn a lot of new topics to keep me ahead in my classes. They always explains new topics in a way that I can understand. In science I learned about the periodic table and in the end of class we played a quiz game to have fun and learn! They make class fun by playing educational games to help me learn but also have fun!",
-      author: "Anonymous Student",
-      role: "Middle School Student",
-      rating: 5
+      quote:
+        'My tutor helps me learn a lot of new topics to keep me ahead in my classes. They always explains new topics in a way that I can understand. In science I learned about the periodic table and in the end of class we played a quiz game to have fun and learn! They make class fun by playing educational games to help me learn but also have fun!',
+      author: 'Anonymous Student',
+      role: 'Middle School Student',
+      rating: 5,
     },
     {
-      quote: "My tutor is really good at teaching and understanding with what I'm struggling with. She comes up with several teaching methods if one is not working for me and she makes sure I'm growing.",
-      author: "Anonymous Student",
-      role: "High School Student",
-      rating: 5
+      quote:
+        "My tutor is really good at teaching and understanding with what I'm struggling with. She comes up with several teaching methods if one is not working for me and she makes sure I'm growing.",
+      author: 'Anonymous Student',
+      role: 'High School Student',
+      rating: 5,
     },
     {
-      quote: "...",
-      author: "Anonymous Parent",
-      role: "Parent",
-      rating: 5
-    }
+      quote: '...',
+      author: 'Anonymous Parent',
+      role: 'Parent',
+      rating: 5,
+    },
   ];
 
   return (
@@ -40,12 +42,17 @@ const Testimonials = () => {
             <div key={index} className="bg-white p-8 rounded-xl shadow-md">
               <div className="flex mb-4">
                 {[...Array(testimonial.rating)].map((_, i) => (
-                  <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
+                  <Star
+                    key={i}
+                    className="h-5 w-5 text-yellow-400 fill-current"
+                  />
                 ))}
               </div>
               <p className="text-gray-600 italic mb-6">"{testimonial.quote}"</p>
               <div>
-                <p className="font-semibold text-gray-900">{testimonial.author}</p>
+                <p className="font-semibold text-gray-900">
+                  {testimonial.author}
+                </p>
                 <p className="text-sm text-gray-500">{testimonial.role}</p>
               </div>
             </div>

@@ -1,76 +1,77 @@
-
-import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Label } from "@/components/ui/label";
-import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
-import NavBar from "@/components/NavBar";
-import { toast } from "sonner";
+import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Label } from '@/components/ui/label';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import NavBar from '@/components/NavBar';
+import { toast } from 'sonner';
 
 const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { signIn, signUp, user, userRole } = useAuth();
   const navigate = useNavigate();
-  
+
   // Redirect if already logged in
   useEffect(() => {
     if (user && userRole) {
       const redirectPaths = {
-        'student': "/dashboard",
-        'tutor': "/tutor-dashboard",
-        'admin': "/admin-dashboard"
+        student: '/dashboard',
+        tutor: '/tutor-dashboard',
+        admin: '/admin-dashboard',
       };
-      
-      const path = redirectPaths[userRole] || "/";
+
+      const path = redirectPaths[userRole] || '/';
       navigate(path, { replace: true });
     }
   }, [user, userRole, navigate]);
 
   const handleSubmit = async (e: React.FormEvent, isSignUp: boolean) => {
     e.preventDefault();
-    
+
     if (!email || !password) {
-      toast.error("Please enter your email and password.");
+      toast.error('Please enter your email and password.');
       return;
     }
-    
+
     if (isSignUp && password.length < 6) {
-      toast.error("Password must be at least 6 characters long.");
+      toast.error('Password must be at least 6 characters long.');
       return;
     }
-    
+
     setIsLoading(true);
-    
+
     try {
       if (isSignUp) {
         await signUp(email, password);
-        toast.success("Account created! Please check your email for verification.");
+        toast.success(
+          'Account created! Please check your email for verification.'
+        );
       } else {
         await signIn(email, password);
         // Navigation is handled by AuthContext
       }
     } catch (error) {
-      console.error(isSignUp ? "Registration error:" : "Login error:", error);
+      console.error(isSignUp ? 'Registration error:' : 'Login error:', error);
     } finally {
       setIsLoading(false);
     }
   };
-  
+
   return (
     <div className="min-h-screen bg-gray-50">
       <NavBar />
-      
+
       <div className="container mx-auto px-4 pt-20 pb-10">
         <div className="max-w-md mx-auto">
           <h1 className="text-3xl font-bold text-center mb-8 text-tutoring-blue">
             Welcome to Learn<span className="text-tutoring-teal">2</span>Lead
           </h1>
-          
+
           <Card>
             <CardHeader>
               <CardTitle className="text-center">Sign In or Register</CardTitle>
@@ -81,14 +82,17 @@ const Login = () => {
                   <TabsTrigger value="signin">Sign In</TabsTrigger>
                   <TabsTrigger value="signup">Sign Up</TabsTrigger>
                 </TabsList>
-                
+
                 <TabsContent value="signin">
-                  <form onSubmit={(e) => handleSubmit(e, false)} className="space-y-4">
+                  <form
+                    onSubmit={(e) => handleSubmit(e, false)}
+                    className="space-y-4"
+                  >
                     <div className="space-y-2">
                       <Label htmlFor="email-signin">Email</Label>
-                      <Input 
-                        id="email-signin" 
-                        type="email" 
+                      <Input
+                        id="email-signin"
+                        type="email"
                         placeholder="your@email.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -97,32 +101,35 @@ const Login = () => {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="password-signin">Password</Label>
-                      <Input 
-                        id="password-signin" 
-                        type="password" 
+                      <Input
+                        id="password-signin"
+                        type="password"
                         placeholder="••••••••"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
                       />
                     </div>
-                    <Button 
-                      type="submit" 
+                    <Button
+                      type="submit"
                       className="w-full"
                       disabled={isLoading}
                     >
-                      {isLoading ? "Signing In..." : "Sign In"}
+                      {isLoading ? 'Signing In...' : 'Sign In'}
                     </Button>
                   </form>
                 </TabsContent>
-                
+
                 <TabsContent value="signup">
-                  <form onSubmit={(e) => handleSubmit(e, true)} className="space-y-4">
+                  <form
+                    onSubmit={(e) => handleSubmit(e, true)}
+                    className="space-y-4"
+                  >
                     <div className="space-y-2">
                       <Label htmlFor="email-signup">Email</Label>
-                      <Input 
-                        id="email-signup" 
-                        type="email" 
+                      <Input
+                        id="email-signup"
+                        type="email"
                         placeholder="your@email.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -131,9 +138,9 @@ const Login = () => {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="password-signup">Password</Label>
-                      <Input 
-                        id="password-signup" 
-                        type="password" 
+                      <Input
+                        id="password-signup"
+                        type="password"
                         placeholder="••••••••"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
@@ -143,12 +150,12 @@ const Login = () => {
                         Password must be at least 6 characters long
                       </p>
                     </div>
-                    <Button 
-                      type="submit" 
+                    <Button
+                      type="submit"
                       className="w-full"
                       disabled={isLoading}
                     >
-                      {isLoading ? "Creating Account..." : "Create Account"}
+                      {isLoading ? 'Creating Account...' : 'Create Account'}
                     </Button>
                   </form>
                 </TabsContent>

@@ -1,14 +1,19 @@
-
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Profile } from "@/hooks/useProfile";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Profile } from '@/hooks/useProfile';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ProfileEditorProps {
   profile: Profile;
@@ -16,20 +21,26 @@ interface ProfileEditorProps {
   onCancel?: () => void;
 }
 
-const ProfileEditor: React.FC<ProfileEditorProps> = ({ profile, onSave, onCancel }) => {
+const ProfileEditor: React.FC<ProfileEditorProps> = ({
+  profile,
+  onSave,
+  onCancel,
+}) => {
   const [formData, setFormData] = useState({
-    first_name: profile.first_name || "",
-    last_name: profile.last_name || "",
-    bio: profile.bio || ""
+    first_name: profile.first_name || '',
+    last_name: profile.last_name || '',
+    bio: profile.bio || '',
   });
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaving(true);
@@ -44,42 +55,40 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ profile, onSave, onCancel
     if (!e.target.files || e.target.files.length === 0) {
       return;
     }
-    
+
     const file = e.target.files[0];
     const fileExt = file.name.split('.').pop();
     const filePath = `${profile.id}-${Date.now()}.${fileExt}`;
-    
+
     setIsUploading(true);
-    
+
     try {
       // Upload the file to Supabase Storage
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file);
-        
+
       if (uploadError) {
         throw uploadError;
       }
-      
+
       // Get the public URL
-      const { data } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
-        
+      const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
+
       // Update the user's profile with the avatar URL
       await onSave({ avatar_url: data.publicUrl });
-      
-      toast.success("Avatar updated successfully");
+
+      toast.success('Avatar updated successfully');
     } catch (error) {
-      console.error("Error uploading avatar:", error);
-      toast.error("Failed to upload avatar");
+      console.error('Error uploading avatar:', error);
+      toast.error('Failed to upload avatar');
     } finally {
       setIsUploading(false);
     }
   };
 
   const getInitials = (firstName?: string | null, lastName?: string | null) => {
-    let initials = "";
+    let initials = '';
     if (firstName) initials += firstName[0];
     if (lastName) initials += lastName[0];
     return initials || profile.email.substring(0, 2).toUpperCase();
@@ -99,22 +108,25 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ profile, onSave, onCancel
                 {getInitials(profile.first_name, profile.last_name)}
               </AvatarFallback>
             </Avatar>
-            
+
             <div>
-              <Label htmlFor="avatar" className="cursor-pointer px-4 py-2 border rounded-md bg-gray-100 hover:bg-gray-200">
-                {isUploading ? "Uploading..." : "Change Avatar"}
+              <Label
+                htmlFor="avatar"
+                className="cursor-pointer px-4 py-2 border rounded-md bg-gray-100 hover:bg-gray-200"
+              >
+                {isUploading ? 'Uploading...' : 'Change Avatar'}
               </Label>
-              <Input 
-                id="avatar" 
-                type="file" 
-                accept="image/*" 
+              <Input
+                id="avatar"
+                type="file"
+                accept="image/*"
                 onChange={uploadAvatar}
                 disabled={isUploading}
                 className="hidden"
               />
             </div>
           </div>
-          
+
           <div className="space-y-4">
             <div>
               <Label htmlFor="first_name">First Name</Label>
@@ -126,7 +138,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ profile, onSave, onCancel
                 placeholder="Enter your first name"
               />
             </div>
-            
+
             <div>
               <Label htmlFor="last_name">Last Name</Label>
               <Input
@@ -137,7 +149,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ profile, onSave, onCancel
                 placeholder="Enter your last name"
               />
             </div>
-            
+
             <div>
               <Label htmlFor="bio">Bio</Label>
               <Textarea
@@ -149,25 +161,27 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ profile, onSave, onCancel
                 className="resize-none h-32"
               />
             </div>
-            
+
             <div>
               <Label>Email</Label>
-              <Input
-                value={profile.email}
-                disabled
-                className="bg-gray-100"
-              />
-              <p className="text-sm text-gray-500 mt-1">Email cannot be changed</p>
+              <Input value={profile.email} disabled className="bg-gray-100" />
+              <p className="text-sm text-gray-500 mt-1">
+                Email cannot be changed
+              </p>
             </div>
-            
+
             <div>
               <Label>Role</Label>
               <Input
-                value={profile.role.charAt(0).toUpperCase() + profile.role.slice(1)}
+                value={
+                  profile.role.charAt(0).toUpperCase() + profile.role.slice(1)
+                }
                 disabled
                 className="bg-gray-100"
               />
-              <p className="text-sm text-gray-500 mt-1">Role is assigned by administrators</p>
+              <p className="text-sm text-gray-500 mt-1">
+                Role is assigned by administrators
+              </p>
             </div>
           </div>
         </form>
@@ -179,7 +193,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({ profile, onSave, onCancel
           </Button>
         )}
         <Button onClick={handleSubmit} disabled={isSaving}>
-          {isSaving ? "Saving..." : "Save Changes"}
+          {isSaving ? 'Saving...' : 'Save Changes'}
         </Button>
       </CardFooter>
     </Card>

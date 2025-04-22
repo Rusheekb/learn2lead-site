@@ -1,22 +1,21 @@
-
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "sonner";
-import UpcomingClassesTable from "../student/UpcomingClassesTable";
-import ClassDetailsDialog from "../student/ClassDetailsDialog";
-import { StudentUpload, StudentMessage } from "@/types/classTypes";
-import { supabase } from "@/integrations/supabase/client";
-import { fetchClassLogs } from "@/services/classLogsService";
-import { 
-  fetchClassMessages, 
-  createClassMessage 
-} from "@/services/classMessagesService";
-import { 
-  fetchClassUploads, 
-  uploadClassFile 
-} from "@/services/classUploadsService";
-import useStudentRealtime from "@/hooks/student/useStudentRealtime";
-import { ClassItem } from "@/types/classTypes";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { toast } from 'sonner';
+import UpcomingClassesTable from '../student/UpcomingClassesTable';
+import ClassDetailsDialog from '../student/ClassDetailsDialog';
+import { StudentUpload, StudentMessage } from '@/types/classTypes';
+import { supabase } from '@/integrations/supabase/client';
+import { fetchClassLogs } from '@/services/classLogsService';
+import {
+  fetchClassMessages,
+  createClassMessage,
+} from '@/services/classMessagesService';
+import {
+  fetchClassUploads,
+  uploadClassFile,
+} from '@/services/classUploadsService';
+import useStudentRealtime from '@/hooks/student/useStudentRealtime';
+import { ClassItem } from '@/types/classTypes';
 
 const ClassStudentActivity: React.FC = () => {
   const [studentUploads, setStudentUploads] = useState<StudentUpload[]>([]);
@@ -25,8 +24,8 @@ const ClassStudentActivity: React.FC = () => {
   const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false);
   const [classes, setClasses] = useState<ClassItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const currentStudentName = "Current Student"; // This would come from auth context in a real app
-  
+  const currentStudentName = 'Current Student'; // This would come from auth context in a real app
+
   // Setup realtime subscriptions
   useStudentRealtime(
     currentStudentName,
@@ -34,63 +33,70 @@ const ClassStudentActivity: React.FC = () => {
     setStudentMessages,
     setStudentUploads
   );
-  
+
   useEffect(() => {
     const loadClasses = async () => {
       setIsLoading(true);
       try {
         const classLogs = await fetchClassLogs();
-        
-        const transformedClasses: ClassItem[] = classLogs.map(cl => ({
+
+        const transformedClasses: ClassItem[] = classLogs.map((cl) => ({
           id: cl.id,
           title: cl.title,
           subject: cl.subject,
-          tutorName: cl.tutorName || "Ms. Johnson",
-          date: cl.date instanceof Date ? cl.date.toISOString().split('T')[0] : String(cl.date),
+          tutorName: cl.tutorName || 'Ms. Johnson',
+          date:
+            cl.date instanceof Date
+              ? cl.date.toISOString().split('T')[0]
+              : String(cl.date),
           startTime: cl.startTime,
           endTime: cl.endTime,
-          status: cl.status || "upcoming",
-          attendance: cl.attendance || "pending",
-          zoomLink: cl.zoomLink || "",
-          notes: cl.notes || "",
+          status: cl.status || 'upcoming',
+          attendance: cl.attendance || 'pending',
+          zoomLink: cl.zoomLink || '',
+          notes: cl.notes || '',
           studentName: cl.studentName,
           subjectId: cl.subject,
-          recurring: cl.recurring || false
+          recurring: cl.recurring || false,
         }));
-        
+
         setClasses(transformedClasses);
       } catch (error) {
-        console.error("Error loading classes:", error);
-        toast.error("Failed to load classes");
+        console.error('Error loading classes:', error);
+        toast.error('Failed to load classes');
       } finally {
         setIsLoading(false);
       }
     };
-    
+
     loadClasses();
   }, []);
 
   useEffect(() => {
     const loadClassContent = async () => {
       if (!selectedClass) return;
-      
+
       try {
         const classId = selectedClass.id;
-        
+
         const messages = await fetchClassMessages(classId);
         setStudentMessages(messages);
-        
+
         const uploads = await fetchClassUploads(classId);
         setStudentUploads(uploads);
       } catch (error) {
-        console.error("Error loading class content:", error);
+        console.error('Error loading class content:', error);
       }
     };
-    
+
     loadClassContent();
   }, [selectedClass]);
-  
-  const handleFileUpload = async (classId: string, file: File, note: string) => {
+
+  const handleFileUpload = async (
+    classId: string,
+    file: File,
+    note: string
+  ) => {
     try {
       const upload = await uploadClassFile(
         classId,
@@ -98,19 +104,19 @@ const ClassStudentActivity: React.FC = () => {
         file,
         note
       );
-      
+
       if (upload) {
-        setStudentUploads(prevUploads => [...prevUploads, upload]);
-        toast.success("File uploaded successfully");
+        setStudentUploads((prevUploads) => [...prevUploads, upload]);
+        toast.success('File uploaded successfully');
       } else {
-        toast.error("Failed to upload file");
+        toast.error('Failed to upload file');
       }
     } catch (error) {
-      console.error("Error uploading file:", error);
-      toast.error("Failed to upload file");
+      console.error('Error uploading file:', error);
+      toast.error('Failed to upload file');
     }
   };
-  
+
   const handleSendMessage = async (classId: string, messageText: string) => {
     try {
       const message = await createClassMessage(
@@ -118,19 +124,19 @@ const ClassStudentActivity: React.FC = () => {
         currentStudentName,
         messageText
       );
-      
+
       if (message) {
         setStudentMessages([...studentMessages, message]);
-        toast.success("Message sent successfully");
+        toast.success('Message sent successfully');
       } else {
-        toast.error("Failed to send message");
+        toast.error('Failed to send message');
       }
     } catch (error) {
-      console.error("Error sending message:", error);
-      toast.error("Failed to send message");
+      console.error('Error sending message:', error);
+      toast.error('Failed to send message');
     }
   };
-  
+
   const handleViewClass = (cls: ClassItem) => {
     setSelectedClass(cls);
     setIsDetailsOpen(true);
@@ -139,7 +145,7 @@ const ClassStudentActivity: React.FC = () => {
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">My Upcoming Classes</h2>
-      
+
       <Card>
         <CardHeader>
           <CardTitle>Scheduled Classes</CardTitle>
@@ -154,14 +160,14 @@ const ClassStudentActivity: React.FC = () => {
               <p>No scheduled classes found</p>
             </div>
           ) : (
-            <UpcomingClassesTable 
-              classes={classes as any} 
-              onViewClass={handleViewClass as any} 
+            <UpcomingClassesTable
+              classes={classes as any}
+              onViewClass={handleViewClass as any}
             />
           )}
         </CardContent>
       </Card>
-      
+
       <ClassDetailsDialog
         open={isDetailsOpen}
         onOpenChange={setIsDetailsOpen}

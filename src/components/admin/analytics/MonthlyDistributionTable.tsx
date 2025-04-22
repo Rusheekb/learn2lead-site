@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Card,
@@ -6,7 +5,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -14,14 +13,14 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from '@/components/ui/table';
 
 interface MonthlyDistributionTableProps {
   monthlyClasses: Record<string, number>;
 }
 
-const MonthlyDistributionTable: React.FC<MonthlyDistributionTableProps> = ({ 
-  monthlyClasses 
+const MonthlyDistributionTable: React.FC<MonthlyDistributionTableProps> = ({
+  monthlyClasses,
 }) => {
   return (
     <Card>
@@ -48,7 +47,9 @@ const MonthlyDistributionTable: React.FC<MonthlyDistributionTableProps> = ({
               .map(([month, count]) => (
                 <TableRow key={month}>
                   <TableCell>{month}</TableCell>
-                  <TableCell className="text-right">{count.toString()}</TableCell>
+                  <TableCell className="text-right">
+                    {count.toString()}
+                  </TableCell>
                 </TableRow>
               ))}
           </TableBody>

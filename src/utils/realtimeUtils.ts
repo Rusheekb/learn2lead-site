@@ -1,7 +1,6 @@
-
-import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { createRealtimeSubscription as createRealtimeSubscriptionNew } from "./realtimeSubscription";
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { createRealtimeSubscription as createRealtimeSubscriptionNew } from './realtimeSubscription';
 
 export interface RealtimeConfig {
   channelName: string;
@@ -20,10 +19,12 @@ export const createLegacyRealtimeSubscription = ({
   tableName,
   onInsert,
   onUpdate,
-  onDelete
+  onDelete,
 }: RealtimeConfig) => {
-  console.warn('Using deprecated createRealtimeSubscription from realtimeUtils.ts. Please update to use the new utility from realtimeSubscription.ts');
-  
+  console.warn(
+    'Using deprecated createRealtimeSubscription from realtimeUtils.ts. Please update to use the new utility from realtimeSubscription.ts'
+  );
+
   const channel = supabase
     .channel(channelName)
     .on(
@@ -31,11 +32,11 @@ export const createLegacyRealtimeSubscription = ({
       {
         event: '*', // Listen for all events
         schema: 'public',
-        table: tableName
+        table: tableName,
       },
       (payload) => {
         console.log(`Real-time update received for ${tableName}:`, payload);
-        
+
         // Handle different types of changes
         if (payload.eventType === 'INSERT' && onInsert) {
           onInsert(payload.new);
@@ -47,7 +48,7 @@ export const createLegacyRealtimeSubscription = ({
       }
     )
     .subscribe();
-  
+
   // Return channel for cleanup
   return channel;
 };

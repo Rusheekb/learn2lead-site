@@ -1,11 +1,10 @@
-
-import React from "react";
-import { Video, FileText } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ClassEvent } from "@/types/tutorTypes";
-import { StudentMessage, StudentUpload } from "@/types/classTypes";
-import { StudentContent } from "@/components/shared/StudentContent";
-import { MessageCountBadge } from "@/components/shared/ClassBadges";
+import React from 'react';
+import { Video, FileText } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ClassEvent } from '@/types/tutorTypes';
+import { StudentMessage, StudentUpload } from '@/types/classTypes';
+import { StudentContent } from '@/components/shared/StudentContent';
+import { MessageCountBadge } from '@/components/shared/ClassBadges';
 
 interface ClassEventDetailsProps {
   selectedEvent: ClassEvent;
@@ -18,7 +17,7 @@ interface ClassEventDetailsProps {
   unreadMessageCount: number;
 }
 
-const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({ 
+const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
   selectedEvent,
   studentMessages,
   studentUploads,
@@ -26,7 +25,7 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
   onDownloadFile,
   activeTab,
   setActiveTab,
-  unreadMessageCount
+  unreadMessageCount,
 }) => {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -50,21 +49,24 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
           </div>
           <div>
             <h4 className="text-sm font-medium text-gray-500">Date</h4>
-            <p>{selectedEvent.date instanceof Date ? 
-                selectedEvent.date.toLocaleDateString() : 
-                new Date(selectedEvent.date).toLocaleDateString()}
+            <p>
+              {selectedEvent.date instanceof Date
+                ? selectedEvent.date.toLocaleDateString()
+                : new Date(selectedEvent.date).toLocaleDateString()}
             </p>
           </div>
           <div>
             <h4 className="text-sm font-medium text-gray-500">Time</h4>
-            <p>{selectedEvent.startTime} - {selectedEvent.endTime}</p>
+            <p>
+              {selectedEvent.startTime} - {selectedEvent.endTime}
+            </p>
           </div>
         </div>
-        
+
         <div>
           <h4 className="text-sm font-medium text-gray-500">Zoom Link</h4>
-          <a 
-            href={selectedEvent.zoomLink || "#"} 
+          <a
+            href={selectedEvent.zoomLink || '#'}
             target="_blank"
             rel="noopener noreferrer"
             className="text-tutoring-blue hover:underline flex items-center"
@@ -73,13 +75,16 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
             <span>Join Meeting</span>
           </a>
         </div>
-        
+
         {selectedEvent.materials && selectedEvent.materials.length > 0 && (
           <div>
             <h4 className="text-sm font-medium text-gray-500">Materials</h4>
             <ul className="list-disc list-inside">
               {selectedEvent.materials.map((material, index) => (
-                <li key={index} className="text-tutoring-blue hover:underline cursor-pointer">
+                <li
+                  key={index}
+                  className="text-tutoring-blue hover:underline cursor-pointer"
+                >
                   <div className="inline-flex items-center">
                     <FileText className="h-4 w-4 mr-1" />
                     <span>{material}</span>
@@ -89,7 +94,7 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
             </ul>
           </div>
         )}
-        
+
         {selectedEvent.notes && (
           <div>
             <h4 className="text-sm font-medium text-gray-500">Notes</h4>
@@ -97,9 +102,9 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
           </div>
         )}
       </TabsContent>
-      
+
       <TabsContent value="student-content" className="space-y-4 pt-4">
-        <StudentContent 
+        <StudentContent
           classId={selectedEvent.id}
           uploads={studentUploads}
           messages={studentMessages}

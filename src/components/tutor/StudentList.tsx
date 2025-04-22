@@ -1,15 +1,24 @@
-
-import React from "react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Student } from "@/types/sharedTypes";
+import React from 'react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { Student } from '@/types/sharedTypes';
 
 interface StudentListProps {
   students: Student[];
   onSelectStudent: (student: Student) => void;
 }
 
-const StudentList: React.FC<StudentListProps> = ({ students, onSelectStudent }) => {
+const StudentList: React.FC<StudentListProps> = ({
+  students,
+  onSelectStudent,
+}) => {
   return (
     <Table>
       <TableHeader>
@@ -24,14 +33,18 @@ const StudentList: React.FC<StudentListProps> = ({ students, onSelectStudent }) 
         {students.map((student) => (
           <TableRow key={student.id}>
             <TableCell className="font-medium">{student.name}</TableCell>
-            <TableCell>{student.subjects.join(", ")}</TableCell>
+            <TableCell>{student.subjects.join(', ')}</TableCell>
             <TableCell>
-              {student.nextSession 
-                ? new Date(student.nextSession).toLocaleDateString() 
+              {student.nextSession
+                ? new Date(student.nextSession).toLocaleDateString()
                 : 'Not scheduled'}
             </TableCell>
             <TableCell>
-              <Button variant="outline" size="sm" onClick={() => onSelectStudent(student)}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onSelectStudent(student)}
+              >
                 View Details
               </Button>
             </TableCell>

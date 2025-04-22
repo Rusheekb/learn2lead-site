@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Card,
@@ -6,7 +5,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -14,7 +13,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from '@/components/ui/table';
 
 interface TopPerformer {
   name: string;
@@ -26,9 +25,9 @@ interface TopPerformersGridProps {
   topStudents: TopPerformer[];
 }
 
-const TopPerformersGrid: React.FC<TopPerformersGridProps> = ({ 
-  topTutors, 
-  topStudents 
+const TopPerformersGrid: React.FC<TopPerformersGridProps> = ({
+  topTutors,
+  topStudents,
 }) => {
   return (
     <div className="grid gap-4 md:grid-cols-2">
@@ -49,7 +48,9 @@ const TopPerformersGrid: React.FC<TopPerformersGridProps> = ({
               {topTutors.map(({ name, value }) => (
                 <TableRow key={name}>
                   <TableCell>{name}</TableCell>
-                  <TableCell className="text-right">{value.toString()}</TableCell>
+                  <TableCell className="text-right">
+                    {value.toString()}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -74,7 +75,9 @@ const TopPerformersGrid: React.FC<TopPerformersGridProps> = ({
               {topStudents.map(({ name, value }) => (
                 <TableRow key={name}>
                   <TableCell>{name}</TableCell>
-                  <TableCell className="text-right">{value.toString()}</TableCell>
+                  <TableCell className="text-right">
+                    {value.toString()}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

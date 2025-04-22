@@ -68,7 +68,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     (async () => {
-      const { data: { session: s } } = await supabase.auth.getSession();
+      const {
+        data: { session: s },
+      } = await supabase.auth.getSession();
       setSession(s);
       setUser(s?.user ?? null);
 
@@ -105,7 +107,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isLoading,
     signIn: handleSignIn,
     signUp: handleSignUp,
-    signOut: handleSignOut
+    signOut: handleSignOut,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

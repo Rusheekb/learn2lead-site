@@ -1,13 +1,23 @@
-
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreVertical, Edit2, Copy, Trash2 } from "lucide-react";
-import { ClassEvent } from "@/types/tutorTypes";
-import ClassEventDetails from "../ClassEventDetails";
-import { StudentMessage, StudentUpload } from "@/types/classTypes";
-import { format } from "date-fns";
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { MoreVertical, Edit2, Copy, Trash2 } from 'lucide-react';
+import { ClassEvent } from '@/types/tutorTypes';
+import ClassEventDetails from '../ClassEventDetails';
+import { StudentMessage, StudentUpload } from '@/types/classTypes';
+import { format } from 'date-fns';
 
 interface ViewClassDialogProps {
   isOpen: boolean;
@@ -48,7 +58,7 @@ const ViewClassDialog: React.FC<ViewClassDialogProps> = ({
     try {
       const dateObj = date instanceof Date ? date : new Date(date);
       if (isNaN(dateObj.getTime())) return String(date);
-      return format(dateObj, "MMMM d, yyyy");
+      return format(dateObj, 'MMMM d, yyyy');
     } catch (e) {
       console.error('Error formatting date:', e);
       return String(date);
@@ -58,7 +68,7 @@ const ViewClassDialog: React.FC<ViewClassDialogProps> = ({
   // Add formatted date to the event if needed
   const eventWithFormattedDate = {
     ...selectedEvent,
-    formattedDate: formatEventDate(selectedEvent.date)
+    formattedDate: formatEventDate(selectedEvent.date),
   };
 
   return (
@@ -81,7 +91,7 @@ const ViewClassDialog: React.FC<ViewClassDialogProps> = ({
                 <Copy className="h-4 w-4 mr-2" />
                 Duplicate Class
               </DropdownMenuItem>
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 className="text-red-600"
                 onClick={() => onDeleteEvent(selectedEvent.id)}
               >
@@ -89,7 +99,7 @@ const ViewClassDialog: React.FC<ViewClassDialogProps> = ({
                 Delete Class
               </DropdownMenuItem>
               {selectedEvent.recurring && (
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   className="text-red-600"
                   onClick={() => onDeleteEvent(selectedEvent.id, true)}
                 >
@@ -100,8 +110,8 @@ const ViewClassDialog: React.FC<ViewClassDialogProps> = ({
             </DropdownMenuContent>
           </DropdownMenu>
         </DialogHeader>
-        
-        <ClassEventDetails 
+
+        <ClassEventDetails
           selectedEvent={eventWithFormattedDate}
           studentMessages={studentMessages}
           studentUploads={studentUploads}
@@ -111,7 +121,7 @@ const ViewClassDialog: React.FC<ViewClassDialogProps> = ({
           setActiveTab={setActiveTab}
           unreadMessageCount={getUnreadMessageCount(selectedEvent.id)}
         />
-        
+
         <DialogFooter>
           <Button variant="outline" onClick={() => setIsOpen(false)}>
             Close

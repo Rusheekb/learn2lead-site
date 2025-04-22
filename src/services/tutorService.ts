@@ -1,6 +1,5 @@
-
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export interface Tutor {
   id: string;
@@ -51,16 +50,18 @@ export const fetchTutors = async (): Promise<Tutor[]> => {
   }
 };
 
-export const fetchTutorStudents = async (tutorId?: string): Promise<TutorStudent[]> => {
+export const fetchTutorStudents = async (
+  tutorId?: string
+): Promise<TutorStudent[]> => {
   try {
     let query = supabase.from('tutor_students').select('*');
-    
+
     if (tutorId) {
       query = query.eq('tutor_id', tutorId);
     }
-    
+
     const { data, error } = await query.order('student_name');
-    
+
     if (error) throw error;
     return data || [];
   } catch (error: any) {
@@ -75,7 +76,7 @@ export const fetchStudents = async (): Promise<Student[]> => {
       .from('students')
       .select('*')
       .order('name');
-    
+
     if (error) throw error;
     return data || [];
   } catch (error: any) {
@@ -84,16 +85,20 @@ export const fetchStudents = async (): Promise<Student[]> => {
   }
 };
 
-export const assignStudentToTutor = async (tutorId: string, studentId: string, assignedBy: string): Promise<boolean> => {
+export const assignStudentToTutor = async (
+  tutorId: string,
+  studentId: string,
+  assignedBy: string
+): Promise<boolean> => {
   try {
     const { error } = await supabase
       .from('tutor_student_relationships')
       .insert({
         tutor_id: tutorId,
         student_id: studentId,
-        assigned_by: assignedBy
+        assigned_by: assignedBy,
       });
-    
+
     if (error) throw error;
     toast.success('Student assigned successfully');
     return true;
@@ -103,14 +108,17 @@ export const assignStudentToTutor = async (tutorId: string, studentId: string, a
   }
 };
 
-export const removeStudentFromTutor = async (tutorId: string, studentId: string): Promise<boolean> => {
+export const removeStudentFromTutor = async (
+  tutorId: string,
+  studentId: string
+): Promise<boolean> => {
   try {
     const { error } = await supabase
       .from('tutor_student_relationships')
       .update({ active: false })
       .eq('tutor_id', tutorId)
       .eq('student_id', studentId);
-    
+
     if (error) throw error;
     toast.success('Student removed successfully');
     return true;

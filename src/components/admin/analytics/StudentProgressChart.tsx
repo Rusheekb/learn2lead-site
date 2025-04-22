@@ -1,8 +1,14 @@
-
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChartContainer, ChartTooltip } from "@/components/ui/chart";
-import { LineChart, Line, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from "recharts";
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ChartContainer, ChartTooltip } from '@/components/ui/chart';
+import {
+  LineChart,
+  Line,
+  CartesianGrid,
+  XAxis,
+  YAxis,
+  ResponsiveContainer,
+} from 'recharts';
 
 interface StudentProgress {
   name: string;
@@ -13,7 +19,9 @@ interface StudentProgressChartProps {
   data: StudentProgress[];
 }
 
-const StudentProgressChart: React.FC<StudentProgressChartProps> = ({ data }) => {
+const StudentProgressChart: React.FC<StudentProgressChartProps> = ({
+  data,
+}) => {
   return (
     <Card>
       <CardHeader>
@@ -22,7 +30,7 @@ const StudentProgressChart: React.FC<StudentProgressChartProps> = ({ data }) => 
       <CardContent className="pt-0">
         <ChartContainer
           config={{
-            avgScore: { color: "#10B981" },
+            avgScore: { color: '#10B981' },
           }}
         >
           <ResponsiveContainer width="100%" height={300}>
@@ -34,11 +42,11 @@ const StudentProgressChart: React.FC<StudentProgressChartProps> = ({ data }) => 
               <XAxis dataKey="name" />
               <YAxis domain={[60, 100]} />
               <ChartTooltip />
-              <Line 
-                type="monotone" 
-                dataKey="avgScore" 
-                name="Average Score" 
-                stroke="var(--color-avgScore)" 
+              <Line
+                type="monotone"
+                dataKey="avgScore"
+                name="Average Score"
+                stroke="var(--color-avgScore)"
                 activeDot={{ r: 8 }}
               />
             </LineChart>

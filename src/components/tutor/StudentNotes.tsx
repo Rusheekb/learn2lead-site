@@ -1,11 +1,10 @@
-
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { FileText } from "lucide-react";
-import { StudentNote } from "@/types/sharedTypes";
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { FileText } from 'lucide-react';
+import { StudentNote } from '@/types/sharedTypes';
 
 interface StudentNotesProps {
   notes: StudentNote[];
@@ -13,12 +12,12 @@ interface StudentNotesProps {
 }
 
 const StudentNotes: React.FC<StudentNotesProps> = ({ notes, onAddNote }) => {
-  const [newNote, setNewNote] = useState({ title: "", content: "" });
-  
+  const [newNote, setNewNote] = useState({ title: '', content: '' });
+
   const handleAddNote = () => {
     if (newNote.title.trim() && newNote.content.trim()) {
       onAddNote(newNote.title, newNote.content);
-      setNewNote({ title: "", content: "" });
+      setNewNote({ title: '', content: '' });
     }
   };
 
@@ -44,25 +43,29 @@ const StudentNotes: React.FC<StudentNotesProps> = ({ notes, onAddNote }) => {
           </div>
         )}
       </div>
-      
+
       <div className="border-t pt-4 mt-4">
         <h4 className="font-medium mb-3">Add New Note</h4>
         <div className="space-y-3">
           <div>
             <Label htmlFor="note-title">Title</Label>
-            <Input 
-              id="note-title" 
+            <Input
+              id="note-title"
               value={newNote.title}
-              onChange={(e) => setNewNote({...newNote, title: e.target.value})}
+              onChange={(e) =>
+                setNewNote({ ...newNote, title: e.target.value })
+              }
               placeholder="Note title"
             />
           </div>
           <div>
             <Label htmlFor="note-content">Content</Label>
-            <Textarea 
-              id="note-content" 
+            <Textarea
+              id="note-content"
               value={newNote.content}
-              onChange={(e) => setNewNote({...newNote, content: e.target.value})}
+              onChange={(e) =>
+                setNewNote({ ...newNote, content: e.target.value })
+              }
               placeholder="Note content"
             />
           </div>

@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { User } from 'lucide-react';
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 
 interface UserAccountButtonProps {
   email: string | undefined;
@@ -15,9 +14,9 @@ const UserAccountButton = React.forwardRef<
   const displayName = email?.split('@')[0] || 'Account';
 
   return (
-    <Button 
-      variant="ghost" 
-      onClick={onClick} 
+    <Button
+      variant="ghost"
+      onClick={onClick}
       ref={ref}
       className="flex items-center space-x-2 text-tutoring-blue hover:bg-tutoring-blue/10"
       type="button"
@@ -28,6 +27,6 @@ const UserAccountButton = React.forwardRef<
   );
 });
 
-UserAccountButton.displayName = "UserAccountButton";
+UserAccountButton.displayName = 'UserAccountButton';
 
 export default UserAccountButton;

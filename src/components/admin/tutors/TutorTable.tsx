@@ -1,9 +1,15 @@
-
-import React from "react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Edit2, Trash2 } from "lucide-react";
-import { Tutor } from "@/types/tutorTypes";
+import React from 'react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { Edit2, Trash2 } from 'lucide-react';
+import { Tutor } from '@/types/tutorTypes';
 
 interface TutorTableProps {
   tutors: Tutor[];
@@ -11,7 +17,11 @@ interface TutorTableProps {
   onDelete: (tutorId: string) => void;
 }
 
-const TutorTable: React.FC<TutorTableProps> = ({ tutors, isLoading, onDelete }) => {
+const TutorTable: React.FC<TutorTableProps> = ({
+  tutors,
+  isLoading,
+  onDelete,
+}) => {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-12">
@@ -46,10 +56,12 @@ const TutorTable: React.FC<TutorTableProps> = ({ tutors, isLoading, onDelete }) 
             <TableCell>
               <div className="flex flex-col">
                 <div className="font-medium">{tutor.name}</div>
-                <div className="text-sm text-muted-foreground">{tutor.email}</div>
+                <div className="text-sm text-muted-foreground">
+                  {tutor.email}
+                </div>
               </div>
             </TableCell>
-            <TableCell>{tutor.subjects.join(", ") || "None"}</TableCell>
+            <TableCell>{tutor.subjects.join(', ') || 'None'}</TableCell>
             <TableCell>{tutor.rating}/5</TableCell>
             <TableCell>{tutor.classes}</TableCell>
             <TableCell>${tutor.hourlyRate}/hr</TableCell>
@@ -58,8 +70,8 @@ const TutorTable: React.FC<TutorTableProps> = ({ tutors, isLoading, onDelete }) 
                 <Button variant="ghost" size="icon">
                   <Edit2 className="h-4 w-4" />
                 </Button>
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   size="icon"
                   onClick={() => onDelete(tutor.id)}
                 >

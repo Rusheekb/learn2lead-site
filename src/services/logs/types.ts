@@ -1,10 +1,11 @@
-
 import { Database } from '@/integrations/supabase/types';
 
 // Define the column names as they appear in the database
 export type DbClassLog = Database['public']['Tables']['class_logs']['Row'];
-export type InsertDbClassLog = Database['public']['Tables']['class_logs']['Insert'];
-export type UpdateDbClassLog = Database['public']['Tables']['class_logs']['Update'];
+export type InsertDbClassLog =
+  Database['public']['Tables']['class_logs']['Insert'];
+export type UpdateDbClassLog =
+  Database['public']['Tables']['class_logs']['Update'];
 
 // Define a type for code logs since it's not in the database type definitions
 export interface DbCodeLog {

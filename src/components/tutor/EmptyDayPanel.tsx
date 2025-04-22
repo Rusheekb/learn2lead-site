@@ -1,19 +1,21 @@
-
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { CalendarPlus } from "lucide-react";
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { CalendarPlus } from 'lucide-react';
 
 interface EmptyDayPanelProps {
   selectedDate: Date;
   onAddClick: () => void;
 }
 
-const EmptyDayPanel: React.FC<EmptyDayPanelProps> = ({ selectedDate, onAddClick }) => {
-  const formattedDate = selectedDate.toLocaleDateString(undefined, { 
-    weekday: 'long', 
-    year: 'numeric', 
-    month: 'long', 
-    day: 'numeric' 
+const EmptyDayPanel: React.FC<EmptyDayPanelProps> = ({
+  selectedDate,
+  onAddClick,
+}) => {
+  const formattedDate = selectedDate.toLocaleDateString(undefined, {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
   });
 
   return (

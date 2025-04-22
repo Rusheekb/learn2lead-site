@@ -1,12 +1,11 @@
-
-import { Button } from "@/components/ui/button";
+import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 
 const DesktopBookButton = () => {
   const navigate = useNavigate();
-  
+
   return (
-    <Button 
+    <Button
       onClick={() => navigate('/book')}
       className="bg-tutoring-blue hover:bg-blue-700 text-white"
     >

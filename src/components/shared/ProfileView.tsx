@@ -1,8 +1,7 @@
-
-import React from "react";
-import { Profile } from "@/hooks/useProfile";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import React from 'react';
+import { Profile } from '@/hooks/useProfile';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface ProfileViewProps {
   profile: Profile;
@@ -10,7 +9,7 @@ interface ProfileViewProps {
 
 const ProfileView: React.FC<ProfileViewProps> = ({ profile }) => {
   const getInitials = (firstName?: string | null, lastName?: string | null) => {
-    let initials = "";
+    let initials = '';
     if (firstName) initials += firstName[0];
     if (lastName) initials += lastName[0];
     return initials || profile.email.substring(0, 2).toUpperCase();
@@ -24,7 +23,10 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile }) => {
       <CardContent className="space-y-6">
         <div className="flex flex-col items-center gap-4 mb-6">
           <Avatar className="w-24 h-24">
-            <AvatarImage src={profile.avatar_url || undefined} alt={profile.email} />
+            <AvatarImage
+              src={profile.avatar_url || undefined}
+              alt={profile.email}
+            />
             <AvatarFallback className="bg-tutoring-blue text-white text-xl">
               {getInitials(profile.first_name, profile.last_name)}
             </AvatarFallback>
@@ -51,7 +53,7 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile }) => {
             <h3 className="text-sm font-medium text-gray-500">Email</h3>
             <p className="break-words">{profile.email}</p>
           </div>
-          
+
           <div>
             <h3 className="text-sm font-medium text-gray-500">Joined</h3>
             <p>{new Date(profile.created_at).toLocaleDateString()}</p>

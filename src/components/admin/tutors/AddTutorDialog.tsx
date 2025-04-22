@@ -1,10 +1,15 @@
-
-import React from "react";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/ui/use-toast";
-import { Tutor } from "@/types/tutorTypes";
+import React from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/components/ui/use-toast';
+import { Tutor } from '@/types/tutorTypes';
 
 interface AddTutorDialogProps {
   open: boolean;
@@ -12,7 +17,11 @@ interface AddTutorDialogProps {
   onAddTutor: (tutor: Tutor) => void;
 }
 
-const AddTutorDialog: React.FC<AddTutorDialogProps> = ({ open, onOpenChange, onAddTutor }) => {
+const AddTutorDialog: React.FC<AddTutorDialogProps> = ({
+  open,
+  onOpenChange,
+  onAddTutor,
+}) => {
   const { toast } = useToast();
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -22,16 +31,18 @@ const AddTutorDialog: React.FC<AddTutorDialogProps> = ({ open, onOpenChange, onA
       id: Date.now().toString(),
       name: formData.get('name') as string,
       email: formData.get('email') as string,
-      subjects: (formData.get('subjects') as string).split(',').map(s => s.trim()),
+      subjects: (formData.get('subjects') as string)
+        .split(',')
+        .map((s) => s.trim()),
       rating: 5,
       classes: 0,
-      hourlyRate: parseInt(formData.get('hourlyRate') as string || '0')
+      hourlyRate: parseInt((formData.get('hourlyRate') as string) || '0'),
     };
-    
+
     onAddTutor(newTutor);
     toast({
-      title: "Tutor Added",
-      description: "New tutor has been successfully added to the system.",
+      title: 'Tutor Added',
+      description: 'New tutor has been successfully added to the system.',
     });
     onOpenChange(false);
   };
@@ -45,20 +56,46 @@ const AddTutorDialog: React.FC<AddTutorDialogProps> = ({ open, onOpenChange, onA
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <label htmlFor="name" className="text-sm font-medium">Full Name</label>
+              <label htmlFor="name" className="text-sm font-medium">
+                Full Name
+              </label>
               <Input id="name" name="name" required placeholder="John Smith" />
             </div>
             <div className="grid gap-2">
-              <label htmlFor="email" className="text-sm font-medium">Email</label>
-              <Input id="email" name="email" type="email" required placeholder="john.smith@example.com" />
+              <label htmlFor="email" className="text-sm font-medium">
+                Email
+              </label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                required
+                placeholder="john.smith@example.com"
+              />
             </div>
             <div className="grid gap-2">
-              <label htmlFor="subjects" className="text-sm font-medium">Subjects (comma-separated)</label>
-              <Input id="subjects" name="subjects" required placeholder="Mathematics, Physics, Chemistry" />
+              <label htmlFor="subjects" className="text-sm font-medium">
+                Subjects (comma-separated)
+              </label>
+              <Input
+                id="subjects"
+                name="subjects"
+                required
+                placeholder="Mathematics, Physics, Chemistry"
+              />
             </div>
             <div className="grid gap-2">
-              <label htmlFor="hourlyRate" className="text-sm font-medium">Hourly Rate ($)</label>
-              <Input id="hourlyRate" name="hourlyRate" type="number" min="0" required placeholder="50" />
+              <label htmlFor="hourlyRate" className="text-sm font-medium">
+                Hourly Rate ($)
+              </label>
+              <Input
+                id="hourlyRate"
+                name="hourlyRate"
+                type="number"
+                min="0"
+                required
+                placeholder="50"
+              />
             </div>
           </div>
           <DialogFooter>

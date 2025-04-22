@@ -1,9 +1,15 @@
-
-import React from "react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
-import { formatTime } from "@/utils/dateTimeUtils";
+import React from 'react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { ArrowRight } from 'lucide-react';
+import { formatTime } from '@/utils/dateTimeUtils';
 
 interface ClassItem {
   id: number;
@@ -25,7 +31,10 @@ interface UpcomingClassesTableProps {
   onViewClass: (cls: ClassItem) => void;
 }
 
-const UpcomingClassesTable: React.FC<UpcomingClassesTableProps> = ({ classes, onViewClass }) => {
+const UpcomingClassesTable: React.FC<UpcomingClassesTableProps> = ({
+  classes,
+  onViewClass,
+}) => {
   return (
     <Table>
       <TableHeader>
@@ -47,21 +56,20 @@ const UpcomingClassesTable: React.FC<UpcomingClassesTableProps> = ({ classes, on
               </div>
             </TableCell>
             <TableCell>{cls.date}</TableCell>
-            <TableCell>{formatTime(cls.startTime)} - {formatTime(cls.endTime)}</TableCell>
+            <TableCell>
+              {formatTime(cls.startTime)} - {formatTime(cls.endTime)}
+            </TableCell>
             <TableCell>{cls.tutorName}</TableCell>
             <TableCell>
               <div className="flex space-x-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={() => onViewClass(cls)}
                 >
                   View Details
                 </Button>
-                <Button
-                  size="sm"
-                  onClick={() => onViewClass(cls)}
-                >
+                <Button size="sm" onClick={() => onViewClass(cls)}>
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </div>

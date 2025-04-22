@@ -1,7 +1,6 @@
-
-import React from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Calendar, Clock, Users } from "lucide-react";
+import React from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Calendar, Clock, Users } from 'lucide-react';
 
 interface StatsCardProps {
   title: string;
@@ -11,21 +10,21 @@ interface StatsCardProps {
   iconColor: string;
 }
 
-const StatsCard: React.FC<StatsCardProps> = ({ 
-  title, 
-  value, 
-  change, 
-  iconName, 
-  iconColor 
+const StatsCard: React.FC<StatsCardProps> = ({
+  title,
+  value,
+  change,
+  iconName,
+  iconColor,
 }) => {
   // Render the appropriate icon based on the iconName
   const renderIcon = () => {
     switch (iconName) {
-      case "Calendar":
+      case 'Calendar':
         return <Calendar className={`h-8 w-8 ${iconColor}`} />;
-      case "Users":
+      case 'Users':
         return <Users className={`h-8 w-8 ${iconColor}`} />;
-      case "Clock":
+      case 'Clock':
         return <Clock className={`h-8 w-8 ${iconColor}`} />;
       default:
         return null;
@@ -40,9 +39,7 @@ const StatsCard: React.FC<StatsCardProps> = ({
           <p className="text-2xl font-bold mt-1">{value}</p>
           <p className="text-xs text-gray-500 mt-1">{change}</p>
         </div>
-        <div className="bg-gray-100 p-3 rounded-full">
-          {renderIcon()}
-        </div>
+        <div className="bg-gray-100 p-3 rounded-full">{renderIcon()}</div>
       </CardContent>
     </Card>
   );

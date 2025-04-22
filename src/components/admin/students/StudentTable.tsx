@@ -1,10 +1,16 @@
-
-import React, { memo } from "react";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Edit2, Trash2 } from "lucide-react";
-import { format } from "date-fns";
+import React, { memo } from 'react';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Edit2, Trash2 } from 'lucide-react';
+import { format } from 'date-fns';
 
 export interface Student {
   id: string;
@@ -12,10 +18,10 @@ export interface Student {
   email: string;
   grade: string;
   subjects: string[];
-  status: "active" | "inactive" | "pending";
+  status: 'active' | 'inactive' | 'pending';
   enrollDate: string;
   lastSession: string;
-  paymentStatus: "paid" | "unpaid" | "overdue";
+  paymentStatus: 'paid' | 'unpaid' | 'overdue';
 }
 
 interface StudentTableProps {
@@ -35,76 +41,90 @@ const formatDate = (dateString: string | undefined) => {
 };
 
 // Map status and payment status to badge variants
-const statusBadgeVariants: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
-  "active": "default",
-  "inactive": "secondary",
-  "pending": "outline"
+const statusBadgeVariants: Record<
+  string,
+  'default' | 'secondary' | 'outline' | 'destructive'
+> = {
+  active: 'default',
+  inactive: 'secondary',
+  pending: 'outline',
 };
 
-const paymentBadgeVariants: Record<string, "default" | "secondary" | "outline" | "destructive"> = {
-  "paid": "default",
-  "unpaid": "outline",
-  "overdue": "destructive"
+const paymentBadgeVariants: Record<
+  string,
+  'default' | 'secondary' | 'outline' | 'destructive'
+> = {
+  paid: 'default',
+  unpaid: 'outline',
+  overdue: 'destructive',
 };
 
 // Create a memoized StudentRow component
-const StudentRow = memo(({ 
-  student, 
-  onDelete 
-}: { 
-  student: Student, 
-  onDelete: (id: string) => void 
-}) => {
-  const statusVariant = statusBadgeVariants[student.status] || "default";
-  const paymentVariant = paymentBadgeVariants[student.paymentStatus] || "default";
-  
-  const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
-  
-  return (
-    <TableRow>
-      <TableCell>
-        <div className="flex flex-col">
-          <div className="font-medium">{student.name}</div>
-          <div className="text-sm text-muted-foreground">{student.email}</div>
-        </div>
-      </TableCell>
-      <TableCell>{student.grade}</TableCell>
-      <TableCell className="hidden md:table-cell">{student.subjects.join(", ")}</TableCell>
-      <TableCell>
-        <Badge variant={statusVariant}>
-          {capitalize(student.status)}
-        </Badge>
-      </TableCell>
-      <TableCell>
-        <Badge variant={paymentVariant}>
-          {capitalize(student.paymentStatus)}
-        </Badge>
-      </TableCell>
-      <TableCell className="hidden md:table-cell">{student.lastSession === "N/A" ? "N/A" : formatDate(student.lastSession)}</TableCell>
-      <TableCell>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon">
-            <Edit2 className="h-4 w-4" />
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => onDelete(student.id)}
-          >
-            <Trash2 className="h-4 w-4 text-red-500" />
-          </Button>
-        </div>
-      </TableCell>
-    </TableRow>
-  );
-});
+const StudentRow = memo(
+  ({
+    student,
+    onDelete,
+  }: {
+    student: Student;
+    onDelete: (id: string) => void;
+  }) => {
+    const statusVariant = statusBadgeVariants[student.status] || 'default';
+    const paymentVariant =
+      paymentBadgeVariants[student.paymentStatus] || 'default';
+
+    const capitalize = (str: string) =>
+      str.charAt(0).toUpperCase() + str.slice(1);
+
+    return (
+      <TableRow>
+        <TableCell>
+          <div className="flex flex-col">
+            <div className="font-medium">{student.name}</div>
+            <div className="text-sm text-muted-foreground">{student.email}</div>
+          </div>
+        </TableCell>
+        <TableCell>{student.grade}</TableCell>
+        <TableCell className="hidden md:table-cell">
+          {student.subjects.join(', ')}
+        </TableCell>
+        <TableCell>
+          <Badge variant={statusVariant}>{capitalize(student.status)}</Badge>
+        </TableCell>
+        <TableCell>
+          <Badge variant={paymentVariant}>
+            {capitalize(student.paymentStatus)}
+          </Badge>
+        </TableCell>
+        <TableCell className="hidden md:table-cell">
+          {student.lastSession === 'N/A'
+            ? 'N/A'
+            : formatDate(student.lastSession)}
+        </TableCell>
+        <TableCell>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon">
+              <Edit2 className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onDelete(student.id)}
+            >
+              <Trash2 className="h-4 w-4 text-red-500" />
+            </Button>
+          </div>
+        </TableCell>
+      </TableRow>
+    );
+  }
+);
 
 StudentRow.displayName = 'StudentRow';
 
-const StudentTable: React.FC<StudentTableProps> = ({ 
-  students, 
+const StudentTable: React.FC<StudentTableProps> = ({
+  students,
   isLoading,
-  onDeleteStudent 
+  onDeleteStudent,
 }) => {
   if (isLoading) {
     return (
@@ -138,9 +158,9 @@ const StudentTable: React.FC<StudentTableProps> = ({
         </TableHeader>
         <TableBody>
           {students.map((student) => (
-            <StudentRow 
-              key={student.id} 
-              student={student} 
+            <StudentRow
+              key={student.id}
+              student={student}
               onDelete={onDeleteStudent}
             />
           ))}

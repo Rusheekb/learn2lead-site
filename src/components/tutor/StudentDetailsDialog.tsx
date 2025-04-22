@@ -1,13 +1,18 @@
-
-import React from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User } from "lucide-react";
-import { Student, StudentMessage, StudentNote } from "@/types/sharedTypes";
-import StudentOverview from "./StudentOverview";
-import StudentMessages from "./StudentMessages";
-import StudentNotes from "./StudentNotes";
+import React from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { User } from 'lucide-react';
+import { Student, StudentMessage, StudentNote } from '@/types/sharedTypes';
+import StudentOverview from './StudentOverview';
+import StudentMessages from './StudentMessages';
+import StudentNotes from './StudentNotes';
 
 interface StudentDetailsDialogProps {
   open: boolean;
@@ -30,7 +35,7 @@ const StudentDetailsDialog: React.FC<StudentDetailsDialogProps> = ({
   studentMessages,
   studentNotes,
   onSendMessage,
-  onAddNote
+  onAddNote,
 }) => {
   if (!student) return null;
 
@@ -43,39 +48,38 @@ const StudentDetailsDialog: React.FC<StudentDetailsDialogProps> = ({
             {student.name}
           </DialogTitle>
         </DialogHeader>
-        
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="messages">Messages</TabsTrigger>
             <TabsTrigger value="notes">Notes</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="overview">
-            <StudentOverview 
+            <StudentOverview
               student={student}
-              onViewMessages={() => setActiveTab("messages")}
-              onViewNotes={() => setActiveTab("notes")}
+              onViewMessages={() => setActiveTab('messages')}
+              onViewNotes={() => setActiveTab('notes')}
             />
           </TabsContent>
-          
+
           <TabsContent value="messages">
-            <StudentMessages 
+            <StudentMessages
               messages={studentMessages}
               onSendMessage={onSendMessage}
             />
           </TabsContent>
-          
+
           <TabsContent value="notes">
-            <StudentNotes 
-              notes={studentNotes}
-              onAddNote={onAddNote}
-            />
+            <StudentNotes notes={studentNotes} onAddNote={onAddNote} />
           </TabsContent>
         </Tabs>
-        
+
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Close
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

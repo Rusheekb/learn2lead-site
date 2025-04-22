@@ -1,15 +1,27 @@
-
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, RefreshCw, FileDown } from "lucide-react";
-import { format } from "date-fns";
-import { fetchPaymentsData } from "@/services/dataService";
-import { useClassLogs } from "@/hooks/useClassLogs";
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Search, RefreshCw, FileDown } from 'lucide-react';
+import { format } from 'date-fns';
+import { fetchPaymentsData } from '@/services/dataService';
+import { useClassLogs } from '@/hooks/useClassLogs';
 
 interface Payment {
   id: string;
@@ -25,8 +37,8 @@ interface Payment {
 const PaymentsManager: React.FC = () => {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [filteredPayments, setFilteredPayments] = useState<Payment[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
   const { classes } = useClassLogs();
 
@@ -38,7 +50,7 @@ const PaymentsManager: React.FC = () => {
         setPayments(data);
         setFilteredPayments(data);
       } catch (error) {
-        console.error("Error loading payments:", error);
+        console.error('Error loading payments:', error);
       } finally {
         setIsLoading(false);
       }
@@ -51,40 +63,41 @@ const PaymentsManager: React.FC = () => {
 
   useEffect(() => {
     // Apply filters whenever search term or status filter changes
-    const filtered = payments.filter(payment => {
-      const matchesSearch = 
+    const filtered = payments.filter((payment) => {
+      const matchesSearch =
         payment.tutorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         payment.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         payment.id.toLowerCase().includes(searchTerm.toLowerCase());
-        
-      const matchesStatus = 
-        statusFilter === "all" || 
-        payment.studentPaymentStatus.toLowerCase() === statusFilter.toLowerCase() ||
+
+      const matchesStatus =
+        statusFilter === 'all' ||
+        payment.studentPaymentStatus.toLowerCase() ===
+          statusFilter.toLowerCase() ||
         payment.tutorPaymentStatus.toLowerCase() === statusFilter.toLowerCase();
-        
+
       return matchesSearch && matchesStatus;
     });
-    
+
     setFilteredPayments(filtered);
   }, [searchTerm, statusFilter, payments]);
 
   const formatDate = (dateStr: string) => {
     try {
-      return dateStr ? format(new Date(dateStr), "MMM d, yyyy") : "N/A";
+      return dateStr ? format(new Date(dateStr), 'MMM d, yyyy') : 'N/A';
     } catch (e) {
-      console.error("Error formatting date:", e, dateStr);
-      return String(dateStr || "N/A");
+      console.error('Error formatting date:', e, dateStr);
+      return String(dateStr || 'N/A');
     }
   };
 
   const getStatusBadge = (status: string) => {
     const statusLower = status.toLowerCase();
-    
-    if (statusLower === "paid") {
+
+    if (statusLower === 'paid') {
       return <Badge variant="default">Paid</Badge>;
-    } else if (statusLower === "pending") {
+    } else if (statusLower === 'pending') {
       return <Badge variant="outline">Pending</Badge>;
-    } else if (statusLower.includes("overdue") || statusLower === "late") {
+    } else if (statusLower.includes('overdue') || statusLower === 'late') {
       return <Badge variant="destructive">Overdue</Badge>;
     } else {
       return <Badge variant="secondary">{status}</Badge>;
@@ -106,7 +119,7 @@ const PaymentsManager: React.FC = () => {
       setPayments(data);
       setFilteredPayments(data);
     } catch (error) {
-      console.error("Error refreshing payments:", error);
+      console.error('Error refreshing payments:', error);
     } finally {
       setIsLoading(false);
     }
@@ -114,20 +127,24 @@ const PaymentsManager: React.FC = () => {
 
   const handleExport = () => {
     // Create CSV content
-    let csvContent = "data:text/csv;charset=utf-8,";
-    csvContent += "Class ID,Date,Tutor,Student,Class Cost,Tutor Cost,Student Payment,Tutor Payment\n";
-    
-    filteredPayments.forEach(payment => {
+    let csvContent = 'data:text/csv;charset=utf-8,';
+    csvContent +=
+      'Class ID,Date,Tutor,Student,Class Cost,Tutor Cost,Student Payment,Tutor Payment\n';
+
+    filteredPayments.forEach((payment) => {
       csvContent += `${payment.id},${payment.date},${payment.tutorName},${payment.studentName},${payment.classCost},${payment.tutorCost},${payment.studentPaymentStatus},${payment.tutorPaymentStatus}\n`;
     });
-    
+
     // Create download link
     const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `payments_export_${format(new Date(), "yyyy-MM-dd")}.csv`);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute(
+      'download',
+      `payments_export_${format(new Date(), 'yyyy-MM-dd')}.csv`
+    );
     document.body.appendChild(link);
-    
+
     // Download file
     link.click();
     document.body.removeChild(link);
@@ -139,18 +156,18 @@ const PaymentsManager: React.FC = () => {
         acc.classCost += payment.classCost;
         acc.tutorCost += payment.tutorCost;
         acc.profit += payment.classCost - payment.tutorCost;
-        
-        if (payment.studentPaymentStatus.toLowerCase() === "paid") {
+
+        if (payment.studentPaymentStatus.toLowerCase() === 'paid') {
           acc.collected += payment.classCost;
         } else {
           acc.pending += payment.classCost;
         }
-        
+
         return acc;
       },
       { classCost: 0, tutorCost: 0, profit: 0, collected: 0, pending: 0 }
     );
-    
+
     return total;
   };
 
@@ -190,7 +207,9 @@ const PaymentsManager: React.FC = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totals.classCost.toFixed(2)}</div>
+            <div className="text-2xl font-bold">
+              ${totals.classCost.toFixed(2)}
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -200,7 +219,9 @@ const PaymentsManager: React.FC = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totals.tutorCost.toFixed(2)}</div>
+            <div className="text-2xl font-bold">
+              ${totals.tutorCost.toFixed(2)}
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -210,7 +231,9 @@ const PaymentsManager: React.FC = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totals.profit.toFixed(2)}</div>
+            <div className="text-2xl font-bold">
+              ${totals.profit.toFixed(2)}
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -220,7 +243,9 @@ const PaymentsManager: React.FC = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${totals.pending.toFixed(2)}</div>
+            <div className="text-2xl font-bold">
+              ${totals.pending.toFixed(2)}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -288,8 +313,12 @@ const PaymentsManager: React.FC = () => {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>{getStatusBadge(payment.studentPaymentStatus)}</TableCell>
-                    <TableCell>{getStatusBadge(payment.tutorPaymentStatus)}</TableCell>
+                    <TableCell>
+                      {getStatusBadge(payment.studentPaymentStatus)}
+                    </TableCell>
+                    <TableCell>
+                      {getStatusBadge(payment.tutorPaymentStatus)}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

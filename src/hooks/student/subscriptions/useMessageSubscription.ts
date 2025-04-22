@@ -6,13 +6,14 @@ export const useMessageSubscription = (
   setStudentMessages: React.Dispatch<React.SetStateAction<StudentMessage[]>>
 ) => {
   // Subscribe to messages
-  const messagesChannel = supabase.channel('student-messages-changes')
+  const messagesChannel = supabase
+    .channel('student-messages-changes')
     .on(
       'postgres_changes',
       {
         event: '*',
         schema: 'public',
-        table: 'class_messages'
+        table: 'class_messages',
       },
       (payload: any) => {
         if (payload.new && payload.new.student_name === currentStudentName) {
@@ -26,10 +27,10 @@ export const useMessageSubscription = (
               timestamp: payload.new.created_at || payload.new.timestamp,
               read: payload.new.is_read,
               isRead: payload.new.is_read,
-              sender: "student"
+              sender: 'student',
             };
-            
-            setStudentMessages(prevMessages => [...prevMessages, newMessage]);
+
+            setStudentMessages((prevMessages) => [...prevMessages, newMessage]);
           } else if (payload.eventType === 'UPDATE') {
             const updatedMessage: StudentMessage = {
               id: payload.new.id,
@@ -40,20 +41,24 @@ export const useMessageSubscription = (
               timestamp: payload.new.created_at || payload.new.timestamp,
               read: payload.new.is_read,
               isRead: payload.new.is_read,
-              sender: "student"
+              sender: 'student',
             };
-            
-            setStudentMessages(prevMessages => 
-              prevMessages.map(msg => msg.id === updatedMessage.id ? updatedMessage : msg)
+
+            setStudentMessages((prevMessages) =>
+              prevMessages.map((msg) =>
+                msg.id === updatedMessage.id ? updatedMessage : msg
+              )
             );
           } else if (payload.eventType === 'DELETE' && payload.old) {
             const messageId = payload.old.id;
-            setStudentMessages(prevMessages => prevMessages.filter(msg => msg.id !== messageId));
+            setStudentMessages((prevMessages) =>
+              prevMessages.filter((msg) => msg.id !== messageId)
+            );
           }
         }
       }
     )
     .subscribe();
-    
+
   return messagesChannel;
 };

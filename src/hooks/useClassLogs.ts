@@ -1,29 +1,39 @@
-
-import { useEffect, Dispatch, SetStateAction } from "react";
-import useClassFilters from "./class-logs/useClassFilters";
-import useClassActions from "./class-logs/useClassActions";
-import useClassData from "./class-logs/useClassData";
-import useClassRealtime from "./class-logs/useClassRealtime";
+import { useEffect, Dispatch, SetStateAction } from 'react';
+import useClassFilters from './class-logs/useClassFilters';
+import useClassActions from './class-logs/useClassActions';
+import useClassData from './class-logs/useClassData';
+import useClassRealtime from './class-logs/useClassRealtime';
 
 export const useClassLogs = () => {
   const {
-    searchTerm, setSearchTerm,
-    statusFilter, setStatusFilter,
-    subjectFilter, setSubjectFilter,
-    dateFilter, setDateFilter,
-    showCodeLogs, setShowCodeLogs,
+    searchTerm,
+    setSearchTerm,
+    statusFilter,
+    setStatusFilter,
+    subjectFilter,
+    setSubjectFilter,
+    dateFilter,
+    setDateFilter,
+    showCodeLogs,
+    setShowCodeLogs,
     clearFilters,
-    applyFilters
+    applyFilters,
   } = useClassFilters();
 
   const {
-    isDetailsOpen, setIsDetailsOpen,
-    selectedClass, setSelectedClass,
-    studentUploads, studentMessages,
-    activeDetailsTab, setActiveDetailsTab,
+    isDetailsOpen,
+    setIsDetailsOpen,
+    selectedClass,
+    setSelectedClass,
+    studentUploads,
+    studentMessages,
+    activeDetailsTab,
+    setActiveDetailsTab,
     isExporting,
-    page, setPage,
-    pageSize, setPageSize,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
     handleClassClick,
     loadClassContent,
     handleMarkMessageRead,
@@ -31,24 +41,25 @@ export const useClassLogs = () => {
     handleExport,
     getUnreadMessageCount,
     handlePageChange,
-    handlePageSizeChange
+    handlePageSizeChange,
   } = useClassActions();
 
   const {
     isLoading,
     error,
-    classes, setClasses,
+    classes,
+    setClasses,
     allSubjects,
     formatTime,
-    handleRefreshData
+    handleRefreshData,
   } = useClassData();
 
   // Create realtime subscription
   useClassRealtime(
-    classes, 
-    setClasses, 
-    selectedClass, 
-    setSelectedClass, 
+    classes,
+    setClasses,
+    selectedClass,
+    setSelectedClass,
     setIsDetailsOpen as Dispatch<SetStateAction<boolean>> // Fix the type here
   );
 
@@ -61,24 +72,34 @@ export const useClassLogs = () => {
 
   // Apply filters to classes
   const filteredClasses = applyFilters(classes);
-  
+
   // Calculate pagination values
   const totalItems = filteredClasses.length;
   const totalPages = Math.ceil(totalItems / pageSize);
-  const paginatedClasses = filteredClasses.slice((page - 1) * pageSize, page * pageSize);
+  const paginatedClasses = filteredClasses.slice(
+    (page - 1) * pageSize,
+    page * pageSize
+  );
 
   return {
     // State
-    searchTerm, setSearchTerm,
-    statusFilter, setStatusFilter,
-    subjectFilter, setSubjectFilter,
-    dateFilter, setDateFilter,
-    showCodeLogs, setShowCodeLogs,
-    isDetailsOpen, setIsDetailsOpen,
+    searchTerm,
+    setSearchTerm,
+    statusFilter,
+    setStatusFilter,
+    subjectFilter,
+    setSubjectFilter,
+    dateFilter,
+    setDateFilter,
+    showCodeLogs,
+    setShowCodeLogs,
+    isDetailsOpen,
+    setIsDetailsOpen,
     selectedClass,
     studentUploads,
     studentMessages,
-    activeDetailsTab, setActiveDetailsTab,
+    activeDetailsTab,
+    setActiveDetailsTab,
     isExporting,
     isLoading,
     error,
@@ -86,7 +107,7 @@ export const useClassLogs = () => {
     filteredClasses,
     paginatedClasses,
     allSubjects,
-    page, 
+    page,
     pageSize,
     totalPages,
     totalItems,
@@ -101,7 +122,7 @@ export const useClassLogs = () => {
     handleExport,
     handleRefreshData,
     handlePageChange,
-    handlePageSizeChange
+    handlePageSizeChange,
   };
 };
 

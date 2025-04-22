@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 interface NavMenuProps {
@@ -11,13 +10,13 @@ const NavMenu: React.FC<NavMenuProps> = ({ onNavItemClick }) => {
     { id: 'about', label: 'About' },
     { id: 'services', label: 'Services' },
     { id: 'testimonials', label: 'Testimonials' },
-    { id: 'contact', label: 'Contact' }
+    { id: 'contact', label: 'Contact' },
   ];
 
   return (
     <>
-      {navItems.map(item => (
-        <button 
+      {navItems.map((item) => (
+        <button
           key={item.id}
           onClick={() => onNavItemClick(item.id)}
           className="text-gray-600 hover:text-tutoring-blue transition-colors"

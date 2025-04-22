@@ -1,8 +1,7 @@
-
-import React, { useState } from "react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Upload, CheckCircle2, AlertCircle } from "lucide-react";
+import React, { useState } from 'react';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Upload, CheckCircle2, AlertCircle } from 'lucide-react';
 
 interface CsvUploaderProps {
   onUploadComplete: () => void;
@@ -15,8 +14,8 @@ const CsvUploader: React.FC<CsvUploaderProps> = ({ onUploadComplete }) => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const selectedFile = e.target.files[0];
-      if (selectedFile.type !== "text/csv") {
-        toast.error("Please select a CSV file");
+      if (selectedFile.type !== 'text/csv') {
+        toast.error('Please select a CSV file');
         return;
       }
       setFile(selectedFile);
@@ -25,21 +24,21 @@ const CsvUploader: React.FC<CsvUploaderProps> = ({ onUploadComplete }) => {
 
   const handleUpload = async () => {
     if (!file) {
-      toast.error("Please select a file to upload");
+      toast.error('Please select a file to upload');
       return;
     }
 
     setIsUploading(true);
     try {
       // In a real implementation, this would send the file to a backend service
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate upload
-      
-      toast.success("File uploaded successfully");
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate upload
+
+      toast.success('File uploaded successfully');
       setFile(null);
       onUploadComplete();
     } catch (error) {
-      console.error("Upload error:", error);
-      toast.error("Failed to upload file");
+      console.error('Upload error:', error);
+      toast.error('Failed to upload file');
     } finally {
       setIsUploading(false);
     }
@@ -86,11 +85,8 @@ const CsvUploader: React.FC<CsvUploaderProps> = ({ onUploadComplete }) => {
         <Button variant="outline" onClick={() => onUploadComplete()}>
           Cancel
         </Button>
-        <Button 
-          onClick={handleUpload}
-          disabled={!file || isUploading}
-        >
-          {isUploading ? "Uploading..." : "Upload"}
+        <Button onClick={handleUpload} disabled={!file || isUploading}>
+          {isUploading ? 'Uploading...' : 'Upload'}
         </Button>
       </div>
     </div>

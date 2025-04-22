@@ -1,8 +1,13 @@
-
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import NewClassEventForm from "../NewClassEventForm";
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import NewClassEventForm from '../NewClassEventForm';
 
 interface AddClassDialogProps {
   isOpen: boolean;
@@ -27,24 +32,32 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold">Schedule New Class</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">
+            Schedule New Class
+          </DialogTitle>
         </DialogHeader>
-        
-        <NewClassEventForm 
+
+        <NewClassEventForm
           newEvent={newEvent}
           setNewEvent={setNewEvent}
           students={students}
         />
-        
+
         <DialogFooter className="pt-2">
           <div className="flex gap-2 justify-end w-full">
-            <Button variant="outline" onClick={() => {
-              setIsOpen(false);
-              onResetForm();
-            }}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsOpen(false);
+                onResetForm();
+              }}
+            >
               Cancel
             </Button>
-            <Button onClick={onCreateEvent} className="bg-tutoring-blue hover:bg-tutoring-blue/90">
+            <Button
+              onClick={onCreateEvent}
+              className="bg-tutoring-blue hover:bg-tutoring-blue/90"
+            >
               Schedule Class
             </Button>
           </div>

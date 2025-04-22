@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import NavBar from '@/components/NavBar';
@@ -17,12 +16,12 @@ const Index = () => {
     // Check if there's a section parameter in the URL
     const params = new URLSearchParams(location.search);
     const section = params.get('section');
-    
+
     if (section) {
       // Remove the section parameter from the URL
       const newUrl = window.location.pathname;
       window.history.replaceState({}, '', newUrl);
-      
+
       // Scroll to the section
       const element = document.getElementById(section);
       if (element) {
@@ -44,7 +43,7 @@ const Index = () => {
       <Hero />
       <Features />
       <Testimonials />
-      
+
       {/* Student Portal Section */}
       <section className="py-16 bg-tutoring-lightBlue">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -52,9 +51,10 @@ const Index = () => {
             Access Your Student Portal
           </h2>
           <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-            Already a Learn2Lead student? Sign in to access your personalized dashboard, learning materials, and track your progress.
+            Already a Learn2Lead student? Sign in to access your personalized
+            dashboard, learning materials, and track your progress.
           </p>
-          <Button 
+          <Button
             onClick={handleStudentLogin}
             className="bg-tutoring-blue hover:bg-blue-700 text-white px-8 py-3 text-lg"
           >
@@ -62,11 +62,11 @@ const Index = () => {
           </Button>
         </div>
       </section>
-      
+
       <Contact />
       <Footer />
     </div>
   );
-}
+};
 
 export default Index;

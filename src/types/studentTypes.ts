@@ -1,7 +1,7 @@
-import { Database } from "@/integrations/supabase/types";
+import { Database } from '@/integrations/supabase/types';
 
-export type StudentStatus = "active" | "inactive" | "pending";
-export type PaymentStatus = "paid" | "unpaid" | "overdue";
+export type StudentStatus = 'active' | 'inactive' | 'pending';
+export type PaymentStatus = 'paid' | 'unpaid' | 'overdue';
 
 export interface Student {
   id: number;
@@ -17,7 +17,7 @@ export interface Student {
 
 export interface StudentMessage {
   id: number;
-  sender: "student" | "tutor";
+  sender: 'student' | 'tutor';
   text: string;
   timestamp: string;
 }
@@ -40,16 +40,16 @@ export interface StudentNotes {
 }
 
 export function isValidStudentStatus(status: string): status is StudentStatus {
-  return ["active", "inactive", "pending"].includes(status);
+  return ['active', 'inactive', 'pending'].includes(status);
 }
 
 export function isValidPaymentStatus(status: string): status is PaymentStatus {
-  return ["paid", "unpaid", "overdue"].includes(status);
+  return ['paid', 'unpaid', 'overdue'].includes(status);
 }
 
 export function validateStudent(data: any): Student {
-  if (!data || typeof data !== "object") {
-    throw new Error("Invalid student data");
+  if (!data || typeof data !== 'object') {
+    throw new Error('Invalid student data');
   }
 
   if (!isValidStudentStatus(data.status)) {
@@ -69,6 +69,6 @@ export function validateStudent(data: any): Student {
     status: data.status,
     enrollDate: data.enrollDate,
     lastSession: data.lastSession,
-    paymentStatus: data.paymentStatus
+    paymentStatus: data.paymentStatus,
   };
-} 
+}

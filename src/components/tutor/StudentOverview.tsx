@@ -1,8 +1,7 @@
-
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { MessageSquare, FileText } from "lucide-react";
-import { Student } from "@/types/sharedTypes";
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { MessageSquare, FileText } from 'lucide-react';
+import { Student } from '@/types/sharedTypes';
 
 interface StudentOverviewProps {
   student: Student;
@@ -10,7 +9,11 @@ interface StudentOverviewProps {
   onViewNotes: () => void;
 }
 
-const StudentOverview: React.FC<StudentOverviewProps> = ({ student, onViewMessages, onViewNotes }) => {
+const StudentOverview: React.FC<StudentOverviewProps> = ({
+  student,
+  onViewMessages,
+  onViewNotes,
+}) => {
   return (
     <div className="space-y-4 pt-4">
       <div className="grid grid-cols-2 gap-4">
@@ -20,27 +23,33 @@ const StudentOverview: React.FC<StudentOverviewProps> = ({ student, onViewMessag
         </div>
         <div>
           <h4 className="text-sm font-medium text-gray-500">Subjects</h4>
-          <p>{student.subjects.join(", ")}</p>
+          <p>{student.subjects.join(', ')}</p>
         </div>
         <div>
           <h4 className="text-sm font-medium text-gray-500">Last Session</h4>
-          <p>{student.lastSession && new Date(student.lastSession).toLocaleDateString()}</p>
+          <p>
+            {student.lastSession &&
+              new Date(student.lastSession).toLocaleDateString()}
+          </p>
         </div>
         <div>
           <h4 className="text-sm font-medium text-gray-500">Next Session</h4>
-          <p>{student.nextSession && new Date(student.nextSession).toLocaleDateString()}</p>
+          <p>
+            {student.nextSession &&
+              new Date(student.nextSession).toLocaleDateString()}
+          </p>
         </div>
       </div>
-      
+
       <div>
         <h4 className="text-sm font-medium text-gray-500">Progress Notes</h4>
         <p className="mt-1 text-gray-700">{student.progress}</p>
       </div>
-      
+
       <div className="flex gap-2 justify-end">
-        <Button 
-          variant="outline" 
-          onClick={onViewMessages} 
+        <Button
+          variant="outline"
+          onClick={onViewMessages}
           className="flex items-center gap-1"
         >
           <MessageSquare className="h-4 w-4" />

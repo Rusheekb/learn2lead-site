@@ -1,8 +1,7 @@
-
-import React from "react";
-import { Calendar } from "@/components/ui/calendar";
-import { format } from "date-fns";
-import { ClassSession } from "@/types/classTypes";
+import React from 'react';
+import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { ClassSession } from '@/types/classTypes';
 
 interface ClassCalendarColumnProps {
   selectedDate: Date;
@@ -10,10 +9,10 @@ interface ClassCalendarColumnProps {
   sessions: ClassSession[];
 }
 
-const ClassCalendarColumn: React.FC<ClassCalendarColumnProps> = ({ 
-  selectedDate, 
-  setSelectedDate, 
-  sessions 
+const ClassCalendarColumn: React.FC<ClassCalendarColumnProps> = ({
+  selectedDate,
+  setSelectedDate,
+  sessions,
 }) => {
   // Function to check if a date has sessions
   const hasSessionsOnDate = (date: Date) => {
@@ -22,22 +21,33 @@ const ClassCalendarColumn: React.FC<ClassCalendarColumnProps> = ({
 
   // Function to get sessions for a specific date
   const getSessionsForDate = (date: Date, sessions: ClassSession[]) => {
-    return sessions.filter(session => {
-      const sessionDate = session.date instanceof Date ? session.date : new Date(session.date);
-      
+    return sessions.filter((session) => {
+      const sessionDate =
+        session.date instanceof Date ? session.date : new Date(session.date);
+
       // Check if it's the exact date
-      if (sessionDate.getDate() === date.getDate() && 
-          sessionDate.getMonth() === date.getMonth() && 
-          sessionDate.getFullYear() === date.getFullYear()) {
+      if (
+        sessionDate.getDate() === date.getDate() &&
+        sessionDate.getMonth() === date.getMonth() &&
+        sessionDate.getFullYear() === date.getFullYear()
+      ) {
         return true;
       }
-      
+
       // Check if it's a recurring session and if today is one of the recurring days
       if (session.recurring && session.recurringDays) {
-        const dayOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][date.getDay()];
+        const dayOfWeek = [
+          'Sunday',
+          'Monday',
+          'Tuesday',
+          'Wednesday',
+          'Thursday',
+          'Friday',
+          'Saturday',
+        ][date.getDay()];
         return session.recurringDays.includes(dayOfWeek);
       }
-      
+
       return false;
     });
   };
@@ -53,7 +63,8 @@ const ClassCalendarColumn: React.FC<ClassCalendarColumnProps> = ({
           hasSession: (date) => hasSessionsOnDate(date),
         }}
         modifiersClassNames={{
-          hasSession: "relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1 after:w-1 after:bg-tutoring-teal after:rounded-full"
+          hasSession:
+            'relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1 after:w-1 after:bg-tutoring-teal after:rounded-full',
         }}
         components={{
           DayContent: ({ date, ...props }) => (

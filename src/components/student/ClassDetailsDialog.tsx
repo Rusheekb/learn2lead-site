@@ -1,12 +1,16 @@
-
-import React from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import ClassSessionDetail from "./ClassSessionDetail";
-import { StudentContent } from "@/components/shared/StudentContent";
-import { StudentMessage, StudentUpload } from "@/types/classTypes";
-import { ClassItem, ClassSession } from "@/types/classTypes";
+import React from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Button } from '@/components/ui/button';
+import ClassSessionDetail from './ClassSessionDetail';
+import { StudentContent } from '@/components/shared/StudentContent';
+import { StudentMessage, StudentUpload } from '@/types/classTypes';
+import { ClassItem, ClassSession } from '@/types/classTypes';
 
 interface ClassDetailsDialogProps {
   open: boolean;
@@ -25,10 +29,10 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
   studentUploads,
   studentMessages,
   onFileUpload,
-  onSendMessage
+  onSendMessage,
 }) => {
   if (!selectedClass) return null;
-  
+
   const classSession: ClassSession = {
     id: selectedClass.id,
     title: selectedClass.title,
@@ -39,7 +43,7 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
     endTime: selectedClass.endTime,
     zoomLink: selectedClass.zoomLink,
     recurring: selectedClass.recurring || false,
-    studentName: selectedClass.studentName
+    studentName: selectedClass.studentName,
   };
 
   return (
@@ -48,31 +52,37 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
         <DialogHeader>
           <DialogTitle>{selectedClass?.title || 'Class Details'}</DialogTitle>
         </DialogHeader>
-        
+
         {selectedClass && (
           <Tabs defaultValue="details">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="details">Class Details</TabsTrigger>
-              <TabsTrigger value="materials">Materials & Communication</TabsTrigger>
+              <TabsTrigger value="materials">
+                Materials & Communication
+              </TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="details">
               <ClassSessionDetail session={classSession} />
             </TabsContent>
-            
+
             <TabsContent value="materials" className="space-y-4">
               <StudentContent
                 classId={selectedClass.id}
                 uploads={studentUploads}
                 messages={studentMessages}
-                onSendMessage={(message) => onSendMessage(selectedClass.id, message)}
-                onFileUpload={(file, note) => onFileUpload(selectedClass.id, file, note)}
+                onSendMessage={(message) =>
+                  onSendMessage(selectedClass.id, message)
+                }
+                onFileUpload={(file, note) =>
+                  onFileUpload(selectedClass.id, file, note)
+                }
                 showUploadControls={true}
               />
             </TabsContent>
           </Tabs>
         )}
-        
+
         <div className="flex justify-end mt-4">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Close

@@ -1,8 +1,7 @@
-
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { ClassEvent } from "@/types/tutorTypes";
-import { parseTime24to12 } from "@/utils/dateTimeUtils";
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { ClassEvent } from '@/types/tutorTypes';
+import { parseTime24to12 } from '@/utils/dateTimeUtils';
 
 export interface ScheduledClass {
   id: string;
@@ -23,23 +22,28 @@ export interface ScheduledClass {
   student_name?: string;
 }
 
-export const fetchScheduledClasses = async (tutorId?: string, studentId?: string): Promise<ClassEvent[]> => {
+export const fetchScheduledClasses = async (
+  tutorId?: string,
+  studentId?: string
+): Promise<ClassEvent[]> => {
   try {
     let query = supabase.from('student_classes').select('*');
-    
+
     if (tutorId) {
       query = query.eq('tutor_id', tutorId);
     }
-    
+
     if (studentId) {
       query = query.eq('student_id', studentId);
     }
-    
-    const { data, error } = await query.order('date', { ascending: true }).order('start_time');
-    
+
+    const { data, error } = await query
+      .order('date', { ascending: true })
+      .order('start_time');
+
     if (error) throw error;
-    
-    const classEvents: ClassEvent[] = (data || []).map(cls => ({
+
+    const classEvents: ClassEvent[] = (data || []).map((cls) => ({
       id: cls.id,
       title: cls.title,
       tutorName: cls.tutor_name || '',
@@ -53,9 +57,9 @@ export const fetchScheduledClasses = async (tutorId?: string, studentId?: string
       status: cls.status,
       attendance: cls.attendance,
       studentId: cls.student_id,
-      tutorId: cls.tutor_id
+      tutorId: cls.tutor_id,
     }));
-    
+
     return classEvents;
   } catch (error: any) {
     toast.error(`Error loading scheduled classes: ${error.message}`);
@@ -63,7 +67,9 @@ export const fetchScheduledClasses = async (tutorId?: string, studentId?: string
   }
 };
 
-export const createScheduledClass = async (classData: Record<string, any>): Promise<string | null> => {
+export const createScheduledClass = async (
+  classData: Record<string, any>
+): Promise<string | null> => {
   try {
     // Ensure required fields are present
     const requiredFields = {
@@ -75,7 +81,7 @@ export const createScheduledClass = async (classData: Record<string, any>): Prom
       end_time: classData.end_time,
       subject: classData.subject,
     };
-    
+
     // Check that all required fields have values
     for (const [key, value] of Object.entries(requiredFields)) {
       if (!value) {
@@ -83,7 +89,7 @@ export const createScheduledClass = async (classData: Record<string, any>): Prom
         return null;
       }
     }
-    
+
     // Create a properly typed object for insertion
     const insertData = {
       title: classData.title,
@@ -96,15 +102,15 @@ export const createScheduledClass = async (classData: Record<string, any>): Prom
       zoom_link: classData.zoom_link || null,
       notes: classData.notes || null,
       status: classData.status || 'scheduled',
-      attendance: classData.attendance || null
+      attendance: classData.attendance || null,
     };
-    
+
     const { data, error } = await supabase
       .from('scheduled_classes')
       .insert(insertData)
       .select('id')
       .single();
-    
+
     if (error) throw error;
     toast.success('Class scheduled successfully');
     return data?.id || null;
@@ -114,16 +120,19 @@ export const createScheduledClass = async (classData: Record<string, any>): Prom
   }
 };
 
-export const updateScheduledClass = async (id: string, classData: Partial<ScheduledClass>): Promise<boolean> => {
+export const updateScheduledClass = async (
+  id: string,
+  classData: Partial<ScheduledClass>
+): Promise<boolean> => {
   try {
     const { error } = await supabase
       .from('scheduled_classes')
       .update({
         ...classData,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .eq('id', id);
-    
+
     if (error) throw error;
     toast.success('Class updated successfully');
     return true;
@@ -139,7 +148,7 @@ export const deleteScheduledClass = async (id: string): Promise<boolean> => {
       .from('scheduled_classes')
       .delete()
       .eq('id', id);
-    
+
     if (error) throw error;
     toast.success('Class deleted successfully');
     return true;

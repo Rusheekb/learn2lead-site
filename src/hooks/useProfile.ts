@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback, useMemo} from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 export type AppRole = 'student' | 'tutor' | 'admin';
 
@@ -24,41 +24,44 @@ export const useProfile = () => {
 
   const profileCache = useMemo(() => new Map<string, Profile>(), []);
 
-  const fetchProfile = useCallback(async (userId: string) => {
-    if (profileCache.has(userId)) {
-      const cachedProfile = profileCache.get(userId);
-      if (cachedProfile) {
-        setProfile(cachedProfile);
-        return cachedProfile;
+  const fetchProfile = useCallback(
+    async (userId: string) => {
+      if (profileCache.has(userId)) {
+        const cachedProfile = profileCache.get(userId);
+        if (cachedProfile) {
+          setProfile(cachedProfile);
+          return cachedProfile;
+        }
       }
-    }
 
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single();
 
-      if (error) {
-        console.error("Error fetching profile:", error);
-        toast.error("Failed to load profile");
+        if (error) {
+          console.error('Error fetching profile:', error);
+          toast.error('Failed to load profile');
+          setIsLoading(false);
+          return null;
+        }
+
+        profileCache.set(userId, data);
+        setProfile(data);
+        setIsLoading(false);
+        return data;
+      } catch (error) {
+        console.error('Error in profile fetch:', error);
+        toast.error('Failed to load profile');
         setIsLoading(false);
         return null;
       }
-
-      profileCache.set(userId, data);
-      setProfile(data);
-      setIsLoading(false);
-      return data;
-    } catch (error) {
-      console.error("Error in profile fetch:", error);
-      toast.error("Failed to load profile");
-      setIsLoading(false);
-      return null;
-    }
-  }, [profileCache]);
+    },
+    [profileCache]
+  );
 
   useEffect(() => {
     if (!user) {
@@ -81,23 +84,25 @@ export const useProfile = () => {
         .single();
 
       if (error) {
-        toast.error("Failed to update profile");
-        console.error("Error updating profile:", error);
+        toast.error('Failed to update profile');
+        console.error('Error updating profile:', error);
         return null;
       }
 
       profileCache.set(user.id, data);
       setProfile(data);
-      toast.success("Profile updated successfully");
+      toast.success('Profile updated successfully');
       return data;
     } catch (error) {
-      console.error("Error in profile update:", error);
-      toast.error("Failed to update profile");
+      console.error('Error in profile update:', error);
+      toast.error('Failed to update profile');
       return null;
     }
   };
 
-  const fetchProfileById = async (profileId: string): Promise<Profile | null> => {
+  const fetchProfileById = async (
+    profileId: string
+  ): Promise<Profile | null> => {
     return fetchProfile(profileId);
   };
 
@@ -105,6 +110,6 @@ export const useProfile = () => {
     profile,
     isLoading,
     updateProfile,
-    fetchProfileById
+    fetchProfileById,
   };
 };

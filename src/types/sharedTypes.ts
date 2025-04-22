@@ -26,7 +26,7 @@ export interface StudentMessage {
   content: string;
   timestamp: string;
   read: boolean;
-  sender?: "tutor" | "student";
+  sender?: 'tutor' | 'student';
   text?: string;
 }
 
@@ -56,8 +56,8 @@ export interface ClassSession {
   subject: string;
   tutorName?: string;
   studentName?: string;
-  status: "upcoming" | "completed" | "cancelled";
-  attendance?: "present" | "absent" | "late" | "excused" | "pending";
+  status: 'upcoming' | 'completed' | 'cancelled';
+  attendance?: 'present' | 'absent' | 'late' | 'excused' | 'pending';
 }
 
 export type ExportFormat = 'csv' | 'pdf';

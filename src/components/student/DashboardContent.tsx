@@ -1,4 +1,3 @@
-
 import React, { memo } from 'react';
 import SubjectCards from './SubjectCards';
 import ClassCalendar from '@/components/ClassCalendar';
@@ -10,23 +9,21 @@ interface DashboardContentProps {
   onSubjectClick: (subjectId: number) => void;
 }
 
-const DashboardContent: React.FC<DashboardContentProps> = memo(({
-  studentId,
-  selectedSubject,
-  onSubjectClick
-}) => {
-  return (
-    <>
-      <h2 className="text-2xl font-bold mb-6">My Learning Portal</h2>
-      <SubjectCards 
-        subjects={subjects}
-        selectedSubject={selectedSubject}
-        onSubjectClick={onSubjectClick}
-      />
-      <ClassCalendar studentId={studentId} />
-    </>
-  );
-});
+const DashboardContent: React.FC<DashboardContentProps> = memo(
+  ({ studentId, selectedSubject, onSubjectClick }) => {
+    return (
+      <>
+        <h2 className="text-2xl font-bold mb-6">My Learning Portal</h2>
+        <SubjectCards
+          subjects={subjects}
+          selectedSubject={selectedSubject}
+          onSubjectClick={onSubjectClick}
+        />
+        <ClassCalendar studentId={studentId} />
+      </>
+    );
+  }
+);
 
 DashboardContent.displayName = 'DashboardContent';
 

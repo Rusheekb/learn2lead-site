@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from 'react';
 import { useClassLogs } from '@/hooks/useClassLogs';
 import { useAnalytics } from '@/hooks/useAnalytics';
@@ -19,31 +18,38 @@ export const useDashboardData = () => {
     topTutors: [] as TopPerformer[],
     topStudents: [] as TopPerformer[],
     monthlyClasses: {} as Record<string, number>,
-    popularSubjects: [] as PopularSubject[]
+    popularSubjects: [] as PopularSubject[],
   });
 
   const isLoading = isLoadingClasses || isLoadingAnalytics;
-  
+
   // Cache calculated values when data is loaded to prevent recalculations
   useEffect(() => {
     if (!isLoading && classes.length > 0) {
       const revenueByMonth = getRevenueByMonth();
-      
+
       setCachedData({
-        topTutors: getTopPerformingTutors('totalClasses').map(item => ({
+        topTutors: getTopPerformingTutors('totalClasses').map((item) => ({
           name: item.name,
-          value: typeof item.value === 'number' ? item.value : 0
+          value: typeof item.value === 'number' ? item.value : 0,
         })),
-        topStudents: getTopPerformingStudents('totalClasses').map(item => ({
+        topStudents: getTopPerformingStudents('totalClasses').map((item) => ({
           name: item.name,
-          value: typeof item.value === 'number' ? item.value : 0
+          value: typeof item.value === 'number' ? item.value : 0,
         })),
         // Store as Record<string, number> directly rather than an array of objects
         monthlyClasses: revenueByMonth,
-        popularSubjects: getSubjectPopularity()
+        popularSubjects: getSubjectPopularity(),
       });
     }
-  }, [isLoading, classes.length, getTopPerformingTutors, getTopPerformingStudents, getRevenueByMonth, getSubjectPopularity]);
+  }, [
+    isLoading,
+    classes.length,
+    getTopPerformingTutors,
+    getTopPerformingStudents,
+    getRevenueByMonth,
+    getSubjectPopularity,
+  ]);
 
   return {
     isLoading,

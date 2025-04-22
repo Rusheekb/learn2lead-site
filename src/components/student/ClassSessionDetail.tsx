@@ -1,8 +1,8 @@
 /* eslint-disable react-refresh/only-export-components */
-import React from "react";
-import { Button } from "@/components/ui/button";
-import { Video, User, Clock, Calendar as CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
+import React from 'react';
+import { Button } from '@/components/ui/button';
+import { Video, User, Clock, Calendar as CalendarIcon } from 'lucide-react';
+import { format } from 'date-fns';
 
 interface ClassSession {
   id: string; // Changed from number to string
@@ -26,10 +26,10 @@ export const formatTime = (timeString: string) => {
   const [hourStr, minuteStr] = timeString.split(':');
   const hour = parseInt(hourStr);
   const minute = parseInt(minuteStr);
-  
+
   const period = hour >= 12 ? 'PM' : 'AM';
   const hour12 = hour % 12 || 12;
-  
+
   return `${hour12}:${minute.toString().padStart(2, '0')} ${period}`;
 };
 
@@ -50,19 +50,23 @@ const ClassSessionDetail: React.FC<SessionDetailProps> = ({ session }) => {
           </span>
         )}
       </div>
-      
+
       <div className="flex items-center text-sm text-gray-600 mb-2">
         <Clock className="h-4 w-4 mr-2" />
-        <span>{formatTime(session.startTime)} - {formatTime(session.endTime)}</span>
+        <span>
+          {formatTime(session.startTime)} - {formatTime(session.endTime)}
+        </span>
       </div>
-      
+
       <div className="flex justify-between items-center mt-4">
         <span className="text-xs text-gray-500">
-          {session.recurring ? 'Every ' + session.recurringDays?.join(', ') : 'One-time class'}
+          {session.recurring
+            ? 'Every ' + session.recurringDays?.join(', ')
+            : 'One-time class'}
         </span>
-        <a 
-          href={session.zoomLink} 
-          target="_blank" 
+        <a
+          href={session.zoomLink}
+          target="_blank"
           rel="noopener noreferrer"
           className="flex items-center text-tutoring-blue hover:text-tutoring-teal transition-colors"
         >

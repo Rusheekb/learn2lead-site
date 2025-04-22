@@ -1,6 +1,5 @@
-
-import React from "react";
-import { Button } from "@/components/ui/button";
+import React from 'react';
+import { Button } from '@/components/ui/button';
 
 interface ClearFiltersButtonProps {
   onClick: () => void;
@@ -12,12 +11,7 @@ const ClearFiltersButton: React.FC<ClearFiltersButtonProps> = ({
   className,
 }) => {
   return (
-    <Button 
-      variant="ghost" 
-      size="sm" 
-      onClick={onClick} 
-      className={className}
-    >
+    <Button variant="ghost" size="sm" onClick={onClick} className={className}>
       Clear Filters
     </Button>
   );

@@ -1,11 +1,10 @@
-
-import { useEffect } from "react";
-import { ClassEvent } from "@/types/tutorTypes";
-import useSchedulerFilters from "./tutor-scheduler/useSchedulerFilters";
-import useEventHandlers from "./tutor-scheduler/useEventHandlers";
-import useSchedulerRealtime from "./tutor-scheduler/useSchedulerRealtime";
-import useStudentContent from "./tutor-scheduler/useStudentContent";
-import useSchedulerData from "./tutor-scheduler/useSchedulerData";
+import { useEffect } from 'react';
+import { ClassEvent } from '@/types/tutorTypes';
+import useSchedulerFilters from './tutor-scheduler/useSchedulerFilters';
+import useEventHandlers from './tutor-scheduler/useEventHandlers';
+import useSchedulerRealtime from './tutor-scheduler/useSchedulerRealtime';
+import useStudentContent from './tutor-scheduler/useStudentContent';
+import useSchedulerData from './tutor-scheduler/useSchedulerData';
 
 export function useTutorScheduler() {
   const {
@@ -21,7 +20,7 @@ export function useTutorScheduler() {
     newEvent,
     setNewEvent,
     allSubjects,
-    resetNewEventForm
+    resetNewEventForm,
   } = useSchedulerData();
 
   const {
@@ -31,7 +30,7 @@ export function useTutorScheduler() {
     setSubjectFilter,
     studentFilter,
     setStudentFilter,
-    applyFilters
+    applyFilters,
   } = useSchedulerFilters();
 
   const {
@@ -45,18 +44,28 @@ export function useTutorScheduler() {
     handleCreateEvent,
     handleEditEvent,
     handleDeleteEvent,
-    handleDuplicateEvent
-  } = useEventHandlers(scheduledClasses, setScheduledClasses, setIsViewEventOpen);
+    handleDuplicateEvent,
+  } = useEventHandlers(
+    scheduledClasses,
+    setScheduledClasses,
+    setIsViewEventOpen
+  );
 
   // Create realtime subscription
-  useSchedulerRealtime(scheduledClasses, setScheduledClasses, selectedEvent, setSelectedEvent, setIsViewEventOpen);
+  useSchedulerRealtime(
+    scheduledClasses,
+    setScheduledClasses,
+    selectedEvent,
+    setSelectedEvent,
+    setIsViewEventOpen
+  );
 
   const {
     studentUploads,
     studentMessages,
     handleMarkMessageRead,
     handleDownloadFile,
-    getUnreadMessageCount
+    getUnreadMessageCount,
   } = useStudentContent(selectedEvent);
 
   // Apply filters to create filtered list
@@ -88,7 +97,7 @@ export function useTutorScheduler() {
     setIsEditMode,
     searchTerm,
     setSearchTerm,
-    subjectFilter, 
+    subjectFilter,
     setSubjectFilter,
     studentFilter,
     setStudentFilter,

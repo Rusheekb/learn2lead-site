@@ -1,6 +1,9 @@
-
-import { ClassEvent } from "@/types/tutorTypes";
-import { parseNumericString, calculateEndTime, parseDateWithFormats } from "./dateTimeTransformers";
+import { ClassEvent } from '@/types/tutorTypes';
+import {
+  parseNumericString,
+  calculateEndTime,
+  parseDateWithFormats,
+} from './dateTimeTransformers';
 
 interface DbRecord {
   id: string;
@@ -23,7 +26,7 @@ interface DbRecord {
 export const transformDbRecordToClassEvent = (record: DbRecord): ClassEvent => {
   try {
     let dateObj: Date;
-    
+
     if (record.Date) {
       try {
         dateObj = parseDateWithFormats(record.Date);
@@ -53,14 +56,14 @@ export const transformDbRecordToClassEvent = (record: DbRecord): ClassEvent => {
       homework: record.HW || '',
       status: 'completed' as const,
       attendance: 'present' as const,
-      zoomLink: "",
+      zoomLink: '',
       notes: record['Additional Info'] || '',
       classCost: parseNumericString(record['Class Cost']),
       tutorCost: parseNumericString(record['Tutor Cost']),
       studentPayment: record['Student Payment'] || 'Pending',
       tutorPayment: record['Tutor Payment'] || 'Pending',
       recurring: false,
-      materials: []
+      materials: [],
     };
   } catch (error: any) {
     console.error('Error transforming record:', error, record);
@@ -78,14 +81,14 @@ export const transformDbRecordToClassEvent = (record: DbRecord): ClassEvent => {
       homework: '',
       status: 'error' as const,
       attendance: 'unknown' as const,
-      zoomLink: "",
+      zoomLink: '',
       notes: 'Error loading class data',
       classCost: 0,
       tutorCost: 0,
       studentPayment: 'Error',
       tutorPayment: 'Error',
       recurring: false,
-      materials: []
+      materials: [],
     };
   }
 };

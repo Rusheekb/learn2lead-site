@@ -1,11 +1,16 @@
-
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { FileUp, MessageSquare } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { FileUp, MessageSquare } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface ClassContentUploadProps {
   classId: number;
@@ -13,16 +18,16 @@ interface ClassContentUploadProps {
   onMessage?: (message: string) => void;
 }
 
-const ClassContentUpload: React.FC<ClassContentUploadProps> = ({ 
+const ClassContentUpload: React.FC<ClassContentUploadProps> = ({
   classId,
   onUpload,
-  onMessage
+  onMessage,
 }) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<string>("message");
-  const [message, setMessage] = useState<string>("");
+  const [activeTab, setActiveTab] = useState<string>('message');
+  const [message, setMessage] = useState<string>('');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [fileNote, setFileNote] = useState<string>("");
+  const [fileNote, setFileNote] = useState<string>('');
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -33,7 +38,7 @@ const ClassContentUpload: React.FC<ClassContentUploadProps> = ({
   const handleSendMessage = () => {
     if (message.trim() && onMessage) {
       onMessage(message.trim());
-      setMessage("");
+      setMessage('');
       setIsOpen(false);
     }
   };
@@ -42,17 +47,14 @@ const ClassContentUpload: React.FC<ClassContentUploadProps> = ({
     if (uploadedFile && onUpload) {
       onUpload(uploadedFile, fileNote);
       setUploadedFile(null);
-      setFileNote("");
+      setFileNote('');
       setIsOpen(false);
     }
   };
 
   return (
     <>
-      <Button 
-        onClick={() => setIsOpen(true)}
-        className="w-full"
-      >
+      <Button onClick={() => setIsOpen(true)} className="w-full">
         Add Content or Message
       </Button>
 
@@ -75,7 +77,7 @@ const ClassContentUpload: React.FC<ClassContentUploadProps> = ({
             </TabsList>
 
             <TabsContent value="message" className="space-y-4 pt-4">
-              <Textarea 
+              <Textarea
                 placeholder="Type your question or message for the tutor..."
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
@@ -96,7 +98,7 @@ const ClassContentUpload: React.FC<ClassContentUploadProps> = ({
                   className="hidden"
                   onChange={handleFileChange}
                 />
-                <label 
+                <label
                   htmlFor="file-upload"
                   className="cursor-pointer flex flex-col items-center text-gray-500 hover:text-gray-700"
                 >
@@ -104,16 +106,18 @@ const ClassContentUpload: React.FC<ClassContentUploadProps> = ({
                   <span className="font-medium">Click to upload</span>
                   <span className="text-sm">or drag and drop</span>
                 </label>
-                
+
                 {uploadedFile && (
                   <div className="mt-4 text-left bg-gray-50 p-3 rounded-md">
                     <p className="text-sm font-medium">{uploadedFile.name}</p>
-                    <p className="text-xs text-gray-500">{Math.round(uploadedFile.size / 1024)} KB</p>
+                    <p className="text-xs text-gray-500">
+                      {Math.round(uploadedFile.size / 1024)} KB
+                    </p>
                   </div>
                 )}
               </div>
-              
-              <Textarea 
+
+              <Textarea
                 placeholder="Add a note about this file (optional)"
                 value={fileNote}
                 onChange={(e) => setFileNote(e.target.value)}

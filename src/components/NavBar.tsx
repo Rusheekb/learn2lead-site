@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -62,10 +61,10 @@ const NavBar = () => {
 
       {/* Mobile Menu */}
       {isMenuOpen && (
-        <MobileMenu 
-          user={user} 
-          userRole={userRole} 
-          onNavItemClick={handleNavigation} 
+        <MobileMenu
+          user={user}
+          userRole={userRole}
+          onNavItemClick={handleNavigation}
         />
       )}
     </nav>

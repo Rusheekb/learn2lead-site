@@ -1,9 +1,8 @@
-
 import { AppRole } from '@/hooks/useProfile';
 
 export const getDashboardPath = (role: AppRole | null): string => {
   if (!role) return '/login';
-  
+
   switch (role) {
     case 'student':
       return '/dashboard';
