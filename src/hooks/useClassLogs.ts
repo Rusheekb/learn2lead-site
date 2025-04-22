@@ -49,8 +49,7 @@ export const useClassLogs = () => {
     setClasses, 
     selectedClass, 
     setSelectedClass, 
-    // Use the correct dispatch type
-    setIsDetailsOpen
+    setIsDetailsOpen as Dispatch<SetStateAction<boolean>> // Fix the type here
   );
 
   // Load class content when a class is selected
