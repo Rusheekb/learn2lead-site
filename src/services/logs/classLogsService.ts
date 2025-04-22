@@ -4,40 +4,32 @@ import { ClassEvent } from "@/types/tutorTypes";
 import { format } from "date-fns";
 import { Database } from '@/integrations/supabase/types';
 import { parseNumericString } from "@/utils/numberUtils";
-import { transformClassLog, transformCodeLog } from "./transformers";
-import { DbClassLog, TransformedClassLog } from "./types";
+import { transformClassLog } from "./transformers";
+import { DbClassLog, DbCodeLog, TransformedClassLog } from "./types";
 
 type ClassLogs = Database['public']['Tables']['class_logs']['Row'];
-type CodeLogs = Database['public']['Tables']['code_logs']['Row'];
 
 // Fetch all class logs
 export const fetchClassLogs = async (): Promise<TransformedClassLog[]> => {
   console.log('Fetching class logs from Supabase...');
   try {
-    const [classLogsResult, codeLogsResult] = await Promise.all([
-      supabase.from<ClassLogs>('class_logs').select('*'),
-      supabase.from<CodeLogs>('code_logs').select('*')
-    ]);
+    // Only fetch class_logs since code_logs doesn't exist in the types
+    const classLogsResult = await supabase
+      .from('class_logs')
+      .select<string, ClassLogs>();
 
     if (classLogsResult.error) {
       console.error('Error fetching class logs:', classLogsResult.error);
       return [];
     }
 
-    if (codeLogsResult.error) {
-      console.error('Error fetching code logs:', codeLogsResult.error);
-      return [];
-    }
-
     const classLogs = classLogsResult.data || [];
-    const codeLogs = codeLogsResult.data || [];
 
     // Transform logs
     const transformedClassLogs = classLogs.map(transformClassLog);
-    const transformedCodeLogs = codeLogs.map(transformCodeLog);
 
-    // Combine and sort all logs by date
-    return [...transformedClassLogs, ...transformedCodeLogs].sort((a, b) => 
+    // Sort by date
+    return [...transformedClassLogs].sort((a, b) => 
       b.date.getTime() - a.date.getTime()
     );
   } catch (error) {
@@ -49,28 +41,28 @@ export const fetchClassLogs = async (): Promise<TransformedClassLog[]> => {
 // Create a new class log
 export const createClassLog = async (classEvent: ClassEvent): Promise<ClassEvent | null> => {
   const record = {
-    class_number: classEvent.classNumber,
-    tutor_name: classEvent.tutorName,
-    student_name: classEvent.studentName,
-    date: format(classEvent.date, 'yyyy-MM-dd'),
-    day: format(classEvent.date, 'EEEE'),
-    time_cst: classEvent.startTime,
-    time_hrs: classEvent.duration.toString(),
-    subject: classEvent.subject,
-    content: classEvent.content || null,
-    hw: classEvent.homework || null,
-    class_id: classEvent.id,
-    class_cost: classEvent.classCost?.toString() || null,
-    tutor_cost: classEvent.tutorCost?.toString() || null,
-    student_payment: 'Pending',
-    tutor_payment: 'Pending',
-    additional_info: classEvent.notes || null
+    "Class Number": classEvent.title,
+    "Tutor Name": classEvent.tutorName,
+    "Student Name": classEvent.studentName,
+    "Date": format(new Date(classEvent.date), 'yyyy-MM-dd'),
+    "Day": format(new Date(classEvent.date), 'EEEE'),
+    "Time (CST)": classEvent.startTime,
+    "Time (hrs)": classEvent.duration?.toString() || "0",
+    "Subject": classEvent.subject,
+    "Content": classEvent.content || null,
+    "HW": classEvent.homework || null,
+    "Class ID": classEvent.id,
+    "Class Cost": classEvent.classCost?.toString() || null,
+    "Tutor Cost": classEvent.tutorCost?.toString() || null,
+    "Student Payment": 'Pending',
+    "Tutor Payment": 'Pending',
+    "Additional Info": classEvent.notes || null
   };
   
   const { data, error } = await supabase
-    .from<ClassLogs>('class_logs')
+    .from('class_logs')
     .insert(record)
-    .select()
+    .select<string, ClassLogs>()
     .single();
   
   if (error) {
@@ -82,5 +74,6 @@ export const createClassLog = async (classEvent: ClassEvent): Promise<ClassEvent
     return null;
   }
   
-  return transformClassLog(data);
+  const transformedData = transformClassLog(data);
+  return transformedData as ClassEvent;
 }; 

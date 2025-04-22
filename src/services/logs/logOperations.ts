@@ -2,7 +2,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { ClassEvent } from "@/types/tutorTypes";
 import { format } from "date-fns";
-import { UpdateDbClassLog } from "./types";
+import { UpdateDbClassLog, TransformedClassLog } from "./types";
 import { transformClassLog } from "./transformers";
 import { Database } from "@/integrations/supabase/types";
 
@@ -12,27 +12,27 @@ type ClassLogs = Database['public']['Tables']['class_logs']['Row'];
 export const updateClassLog = async (id: string, classEvent: Partial<ClassEvent>): Promise<ClassEvent | null> => {
   const updateData: UpdateDbClassLog = {};
   
-  if (classEvent.classNumber) updateData.class_number = classEvent.classNumber;
-  if (classEvent.tutorName) updateData.tutor_name = classEvent.tutorName;
-  if (classEvent.studentName) updateData.student_name = classEvent.studentName;
+  if (classEvent.title) updateData["Class Number"] = classEvent.title;
+  if (classEvent.tutorName) updateData["Tutor Name"] = classEvent.tutorName;
+  if (classEvent.studentName) updateData["Student Name"] = classEvent.studentName;
   if (classEvent.date) {
-    updateData.date = format(classEvent.date, 'yyyy-MM-dd');
-    updateData.day = format(classEvent.date, 'EEEE');
+    updateData["Date"] = format(new Date(classEvent.date), 'yyyy-MM-dd');
+    updateData["Day"] = format(new Date(classEvent.date), 'EEEE');
   }
-  if (classEvent.startTime) updateData.time_cst = classEvent.startTime;
-  if (classEvent.duration) updateData.time_hrs = classEvent.duration.toString();
-  if (classEvent.subject) updateData.subject = classEvent.subject;
-  if (classEvent.content !== undefined) updateData.content = classEvent.content || null;
-  if (classEvent.homework !== undefined) updateData.hw = classEvent.homework || null;
-  if (classEvent.classCost !== undefined) updateData.class_cost = classEvent.classCost?.toString() || null;
-  if (classEvent.tutorCost !== undefined) updateData.tutor_cost = classEvent.tutorCost?.toString() || null;
-  if (classEvent.notes !== undefined) updateData.additional_info = classEvent.notes || null;
+  if (classEvent.startTime) updateData["Time (CST)"] = classEvent.startTime;
+  if (classEvent.duration) updateData["Time (hrs)"] = classEvent.duration.toString();
+  if (classEvent.subject) updateData["Subject"] = classEvent.subject;
+  if (classEvent.content !== undefined) updateData["Content"] = classEvent.content || null;
+  if (classEvent.homework !== undefined) updateData["HW"] = classEvent.homework || null;
+  if (classEvent.classCost !== undefined) updateData["Class Cost"] = classEvent.classCost?.toString() || null;
+  if (classEvent.tutorCost !== undefined) updateData["Tutor Cost"] = classEvent.tutorCost?.toString() || null;
+  if (classEvent.notes !== undefined) updateData["Additional Info"] = classEvent.notes || null;
   
   const { data, error } = await supabase
-    .from<ClassLogs>('class_logs')
+    .from('class_logs')
     .update(updateData)
     .eq('id', id)
-    .select()
+    .select<string, ClassLogs>()
     .single();
   
   if (error) {
@@ -44,13 +44,14 @@ export const updateClassLog = async (id: string, classEvent: Partial<ClassEvent>
     return null;
   }
   
-  return transformClassLog(data);
+  const transformedData = transformClassLog(data);
+  return transformedData as ClassEvent;
 };
 
 // Delete a class log
 export const deleteClassLog = async (id: string): Promise<boolean> => {
   const { error } = await supabase
-    .from<ClassLogs>('class_logs')
+    .from('class_logs')
     .delete()
     .eq('id', id);
   
