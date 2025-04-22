@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,7 +27,6 @@ export const useClassRealtime = (
   setSelectedClass: React.Dispatch<React.SetStateAction<any | null>>,
   setIsDetailsOpen: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
-  // Subscribe to real-time updates
   useEffect(() => {
     const channel = createRealtimeSubscription({
       channelName: 'class-logs-changes',
@@ -44,14 +42,12 @@ export const useClassRealtime = (
       }
     });
     
-    // Cleanup subscription when component unmounts
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [classes]); // Depend on classes to ensure we have the latest reference when handling events
+  }, [classes, handleClassInserted, handleClassUpdated, handleClassDeleted]); // Added handler dependencies
 
   const handleClassInserted = (newClass: ClassLogRecord) => {
-    // Transform to the format expected by the component
     const transformedClass = {
       id: dbIdToNumeric(newClass.id),
       title: newClass.title,
@@ -72,7 +68,6 @@ export const useClassRealtime = (
   };
 
   const handleClassUpdated = (updatedClass: ClassLogRecord) => {
-    // Transform to the format expected by the component
     const transformedClass = {
       id: dbIdToNumeric(updatedClass.id),
       title: updatedClass.title,
@@ -94,7 +89,6 @@ export const useClassRealtime = (
       )
     );
 
-    // If this is the currently selected class, update it
     if (selectedClass && selectedClass.id === transformedClass.id) {
       setSelectedClass(transformedClass);
     }
@@ -109,7 +103,6 @@ export const useClassRealtime = (
       prevClasses.filter(cls => cls.id !== classId)
     );
 
-    // If this is the currently selected class, close the details dialog
     if (selectedClass && selectedClass.id === classId) {
       setIsDetailsOpen(false);
       setSelectedClass(null);

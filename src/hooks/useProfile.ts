@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,11 +22,9 @@ export const useProfile = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Create a cache for profiles to avoid redundant fetches
   const profileCache = new Map<string, Profile>();
 
   const fetchProfile = useCallback(async (userId: string) => {
-    // Check cache first
     if (profileCache.has(userId)) {
       const cachedProfile = profileCache.get(userId);
       if (cachedProfile) {
@@ -51,7 +48,6 @@ export const useProfile = () => {
         return null;
       }
 
-      // Add to cache
       profileCache.set(userId, data);
       setProfile(data);
       setIsLoading(false);
@@ -62,7 +58,7 @@ export const useProfile = () => {
       setIsLoading(false);
       return null;
     }
-  }, []);
+  }, [toast, profileCache]);
 
   useEffect(() => {
     if (!user) {
@@ -71,7 +67,7 @@ export const useProfile = () => {
     }
 
     fetchProfile(user.id);
-  }, [user?.id, fetchProfile]);
+  }, [user, fetchProfile]);
 
   const updateProfile = async (updates: Partial<Profile>) => {
     if (!user) return null;
@@ -90,7 +86,6 @@ export const useProfile = () => {
         return null;
       }
 
-      // Update cache
       profileCache.set(user.id, data);
       setProfile(data);
       toast.success("Profile updated successfully");
@@ -113,4 +108,3 @@ export const useProfile = () => {
     fetchProfileById
   };
 };
-

@@ -33,48 +33,48 @@ const TutorsManager: React.FC = () => {
   const { classes, allSubjects } = useClassLogs();
 
   useEffect(() => {
-    const loadTutors = async () => {
-      setIsLoading(true);
-      try {
-        const tutorData = await fetchTutors();
-        
-        const enhancedTutors = tutorData.map(tutor => {
-          const tutorClasses = classes.filter(cls => cls.tutorName === tutor.name);
-          
-          const subjects = Array.from(new Set(tutorClasses.map(cls => cls.subject))).filter(Boolean);
-          
-          const classesCount = tutorClasses.length;
-          
-          const totalCost = tutorClasses.reduce((sum, cls) => sum + (cls.tutorCost || 0), 0);
-          const totalHours = tutorClasses.reduce((sum, cls) => sum + (cls.duration || 0), 0);
-          const hourlyRate = totalHours > 0 ? Math.round(totalCost / totalHours) : 0;
-          
-          return {
-            ...tutor,
-            subjects,
-            classes: classesCount,
-            hourlyRate,
-            rating: Math.floor(Math.random() * 2) + 4
-          };
-        });
-        
-        setTutors(enhancedTutors);
-      } catch (error) {
-        console.error("Error loading tutors:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load tutor data",
-          variant: "destructive",
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     if (classes.length > 0) {
       loadTutors();
     }
-  }, [classes]);
+  }, [classes, toast]);
+
+  const loadTutors = async () => {
+    setIsLoading(true);
+    try {
+      const tutorData = await fetchTutors();
+      
+      const enhancedTutors = tutorData.map(tutor => {
+        const tutorClasses = classes.filter(cls => cls.tutorName === tutor.name);
+        
+        const subjects = Array.from(new Set(tutorClasses.map(cls => cls.subject))).filter(Boolean);
+        
+        const classesCount = tutorClasses.length;
+        
+        const totalCost = tutorClasses.reduce((sum, cls) => sum + (cls.tutorCost || 0), 0);
+        const totalHours = tutorClasses.reduce((sum, cls) => sum + (cls.duration || 0), 0);
+        const hourlyRate = totalHours > 0 ? Math.round(totalCost / totalHours) : 0;
+        
+        return {
+          ...tutor,
+          subjects,
+          classes: classesCount,
+          hourlyRate,
+          rating: Math.floor(Math.random() * 2) + 4
+        };
+      });
+      
+      setTutors(enhancedTutors);
+    } catch (error) {
+      console.error("Error loading tutors:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load tutor data",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(event.target.value);

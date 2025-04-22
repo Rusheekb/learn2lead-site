@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -68,7 +67,7 @@ const ContentShare: React.FC<ContentShareProps> = ({ role, fetchUsers }) => {
       loadShares();
       loadUsers();
     }
-  }, [user]);
+  }, [user, loadShares, loadUsers]);
 
   const loadShares = async () => {
     setIsLoading(true);

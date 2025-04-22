@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Session } from '@supabase/supabase-js';
@@ -28,7 +27,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userRole, setUserRole] = useState<AppRole | null>(null);
 
   useEffect(() => {
-    // Set up auth state listener (DO NOT use async in the callback!)
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, currentSession) => {
@@ -37,25 +35,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (event === 'SIGNED_IN' && currentSession?.user) {
         const u = currentSession.user;
-        // Use setTimeout to avoid deadlock, then fetch profile/role.
         setTimeout(async () => {
           try {
-            // 1. Check for existing profile row, create if missing (always role='student')
             const { data: existingProfile, error: fetchError } = await supabase
               .from('profiles')
               .select('id')
               .eq('id', u.id)
               .maybeSingle();
             if (!existingProfile) {
-              // Always default to 'student'
               await supabase
                 .from('profiles')
                 .insert({ id: u.id, email: u.email!, role: 'student' });
             }
-            // 2. Fetch user role from profile (never use email for role anymore)
             const role = await fetchUserRole(u.id);
             setUserRole(role);
-            // 3. Navigate to dashboard for this role
             navigate(getDashboardPath(role), { replace: true });
           } catch (err) {
             console.error('Error processing post-login actions:', err);
@@ -73,7 +66,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    // Init session on mount
     (async () => {
       const { data: { session: s } } = await supabase.auth.getSession();
       setSession(s);
@@ -89,7 +81,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  // Auth action wrappers
   const handleSignIn = async (email: string, password: string) => {
     await signInWithEmail(email, password);
   };
@@ -126,4 +117,3 @@ export const useAuth = () => {
   }
   return context;
 };
-

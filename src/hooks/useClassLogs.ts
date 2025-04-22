@@ -1,4 +1,3 @@
-
 import { useEffect, Dispatch, SetStateAction } from "react";
 import useClassFilters from "./class-logs/useClassFilters";
 import useClassActions from "./class-logs/useClassActions";
@@ -59,7 +58,7 @@ export const useClassLogs = () => {
     if (selectedClass) {
       loadClassContent(selectedClass.id);
     }
-  }, [selectedClass]);
+  }, [selectedClass, loadClassContent]);
 
   // Apply filters to classes
   const filteredClasses = applyFilters(classes);

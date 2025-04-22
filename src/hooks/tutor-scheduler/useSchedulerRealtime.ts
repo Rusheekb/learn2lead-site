@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { ClassEvent } from "@/types/tutorTypes";
@@ -11,7 +10,6 @@ export const useSchedulerRealtime = (
   setSelectedEvent: React.Dispatch<React.SetStateAction<ClassEvent | null>>,
   setIsViewEventOpen: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
-  // Subscribe to real-time updates
   useEffect(() => {
     const channel = supabase.channel('tutor-classes')
       .on(
@@ -49,14 +47,12 @@ export const useSchedulerRealtime = (
       )
       .subscribe();
     
-    // Cleanup subscription when component unmounts
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [scheduledClasses]); // Depend on scheduledClasses to ensure we have the latest reference when handling events
+  }, [scheduledClasses, handleClassInserted, handleClassUpdated, handleClassDeleted]); // Added handler dependencies
 
   const handleClassInserted = (newClass: any) => {
-    // Make sure we don't already have this class
     if (scheduledClasses.some(cls => cls.id === newClass.id)) {
       return;
     }
@@ -102,7 +98,6 @@ export const useSchedulerRealtime = (
       )
     );
 
-    // If this is the currently selected event, update it
     if (selectedEvent && selectedEvent.id === classEvent.id) {
       setSelectedEvent(classEvent);
     }
@@ -117,7 +112,6 @@ export const useSchedulerRealtime = (
       prevClasses.filter(cls => cls.id !== classId)
     );
 
-    // If this is the currently selected event, close the details dialog
     if (selectedEvent && selectedEvent.id === classId) {
       setIsViewEventOpen(false);
       setSelectedEvent(null);
