@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,14 +62,7 @@ const ContentShare: React.FC<ContentShareProps> = ({ role, fetchUsers }) => {
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      loadShares();
-      loadUsers();
-    }
-  }, [user, loadShares, loadUsers]);
-
-  const loadShares = async () => {
+  const loadShares = useCallback(async () => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase
@@ -89,9 +82,9 @@ const ContentShare: React.FC<ContentShareProps> = ({ role, fetchUsers }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user, toast]);
 
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     try {
       const loadedUsers = await fetchUsers();
       setUsers(loadedUsers.filter(u => u.id !== user?.id));
@@ -99,7 +92,14 @@ const ContentShare: React.FC<ContentShareProps> = ({ role, fetchUsers }) => {
       console.error("Error loading users:", error);
       toast.error("Failed to load users");
     }
-  };
+  }, [fetchUsers, user, toast]);
+
+  useEffect(() => {
+    if (user) {
+      loadShares();
+      loadUsers();
+    }
+  }, [user, loadShares, loadUsers]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;

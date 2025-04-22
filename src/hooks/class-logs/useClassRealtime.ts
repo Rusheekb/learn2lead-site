@@ -1,4 +1,5 @@
-import { useEffect } from "react";
+
+import { useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { createRealtimeSubscription } from "@/utils/realtimeSubscription";
@@ -27,27 +28,8 @@ export const useClassRealtime = (
   setSelectedClass: React.Dispatch<React.SetStateAction<any | null>>,
   setIsDetailsOpen: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
-  useEffect(() => {
-    const channel = createRealtimeSubscription({
-      channelName: 'class-logs-changes',
-      tableName: 'class_logs',
-      onData: (payload) => {
-        if (payload.eventType === 'INSERT' && payload.new) {
-          handleClassInserted(payload.new);
-        } else if (payload.eventType === 'UPDATE' && payload.new) {
-          handleClassUpdated(payload.new);
-        } else if (payload.eventType === 'DELETE' && payload.old) {
-          handleClassDeleted(payload.old);
-        }
-      }
-    });
-    
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [classes, handleClassInserted, handleClassUpdated, handleClassDeleted]); // Added handler dependencies
-
-  const handleClassInserted = (newClass: ClassLogRecord) => {
+  // Define handler functions before they're referenced in the useEffect dependency array
+  const handleClassInserted = useCallback((newClass: ClassLogRecord) => {
     const transformedClass = {
       id: dbIdToNumeric(newClass.id),
       title: newClass.title,
@@ -65,9 +47,9 @@ export const useClassRealtime = (
 
     setClasses(prevClasses => [...prevClasses, transformedClass]);
     toast.success(`New class added: ${transformedClass.title}`);
-  };
+  }, [setClasses, toast]);
 
-  const handleClassUpdated = (updatedClass: ClassLogRecord) => {
+  const handleClassUpdated = useCallback((updatedClass: ClassLogRecord) => {
     const transformedClass = {
       id: dbIdToNumeric(updatedClass.id),
       title: updatedClass.title,
@@ -94,9 +76,9 @@ export const useClassRealtime = (
     }
 
     toast.info(`Class updated: ${transformedClass.title}`);
-  };
+  }, [setClasses, selectedClass, setSelectedClass, toast]);
 
-  const handleClassDeleted = (deletedClass: ClassLogRecord) => {
+  const handleClassDeleted = useCallback((deletedClass: ClassLogRecord) => {
     const classId = dbIdToNumeric(deletedClass.id);
     
     setClasses(prevClasses => 
@@ -109,7 +91,27 @@ export const useClassRealtime = (
     }
 
     toast.info(`Class removed: ${deletedClass.title}`);
-  };
+  }, [setClasses, selectedClass, setSelectedClass, setIsDetailsOpen, toast]);
+
+  useEffect(() => {
+    const channel = createRealtimeSubscription({
+      channelName: 'class-logs-changes',
+      tableName: 'class_logs',
+      onData: (payload) => {
+        if (payload.eventType === 'INSERT' && payload.new) {
+          handleClassInserted(payload.new);
+        } else if (payload.eventType === 'UPDATE' && payload.new) {
+          handleClassUpdated(payload.new);
+        } else if (payload.eventType === 'DELETE' && payload.old) {
+          handleClassDeleted(payload.old);
+        }
+      }
+    });
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [classes, handleClassInserted, handleClassUpdated, handleClassDeleted]);
 
   return {
     handleClassInserted,
