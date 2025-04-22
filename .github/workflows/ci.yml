@@ -1,34 +1,32 @@
-
 name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: 18
-        cache: 'npm'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Run ESLint
-      run: npm run lint -- --fix
+      - name: Run ESLint
+        run: npm run lint -- --fix
 
-    - name: Run TypeScript type-check
-      run: npm run type-check
+      - name: Run TypeScript type-check
+        run: npm run type-check
 
-    - name: Check formatting
-      run: npm run format -- --check
-
+      - name: Check formatting
+        run: npm run format -- --check
