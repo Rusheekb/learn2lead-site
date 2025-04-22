@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -32,7 +32,7 @@ const TutorsManager: React.FC = () => {
   const { toast } = useToast();
   const { classes, allSubjects } = useClassLogs();
 
-  const loadTutors = async () => {
+  const loadTutors = useCallback(async () => {
     setIsLoading(true);
     try {
       const tutorData = await fetchTutors();
@@ -68,7 +68,7 @@ const TutorsManager: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [classes, toast]);
   
   useEffect(() => {
     if (classes.length > 0) {
