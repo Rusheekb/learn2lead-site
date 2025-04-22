@@ -4,6 +4,31 @@ import { ClassEvent } from "@/types/tutorTypes";
 import { Student } from "@/types/sharedTypes";
 import { transformDbRecordToClassEvent } from "./utils/classEventMapper";
 
+// Define types for database records to improve type safety
+interface TutorRecord {
+  "Tutor Name"?: string;
+  [key: string]: any;
+}
+
+interface StudentRecord {
+  "Student Name"?: string; 
+  "Subject"?: string;
+  "Date"?: string;
+  [key: string]: any;
+}
+
+interface PaymentRecord {
+  "Class Number"?: string;
+  "Tutor Name"?: string;
+  "Student Name"?: string;
+  "Date"?: string;
+  "Class Cost"?: string;
+  "Tutor Cost"?: string;
+  "Student Payment"?: string;
+  "Tutor Payment"?: string;
+  [key: string]: any;
+}
+
 // Fetch unique tutors from class logs
 export const fetchTutors = async () => {
   const { data, error } = await supabase
@@ -17,8 +42,8 @@ export const fetchTutors = async () => {
     return [];
   }
   
-  // Extract unique tutor names
-  const uniqueTutors = Array.from(new Set(data.map(record => record['Tutor Name'])))
+  // Extract unique tutor names with proper typing
+  const uniqueTutors = Array.from(new Set(data.map((record: TutorRecord) => record["Tutor Name"] || "")))
     .filter(Boolean)
     .sort();
   
@@ -50,13 +75,13 @@ export const fetchStudents = async (): Promise<Student[]> => {
   // Group by student name to collect all subjects and find last session
   const studentMap = new Map();
   
-  data.forEach(record => {
-    const name = record['Student Name'];
+  data.forEach((record: StudentRecord) => {
+    const name = record["Student Name"];
     if (!name) return;
     
     // Safely access properties
-    const subject = record['Subject'] || '';
-    const date = record['Date'] || '';
+    const subject = record["Subject"] || '';
+    const date = record["Date"] || '';
     
     if (!studentMap.has(name)) {
       studentMap.set(name, {
@@ -111,15 +136,15 @@ export const fetchPaymentsData = async () => {
     return [];
   }
   
-  return data.map(record => ({
-    id: `${record['Class Number'] || ''}`,
-    date: record['Date'] || '',
-    tutorName: record['Tutor Name'] || '',
-    studentName: record['Student Name'] || '',
-    classCost: parseFloat(record['Class Cost'] || '0'),
-    tutorCost: parseFloat(record['Tutor Cost'] || '0'),
-    studentPaymentStatus: record['Student Payment'] || 'Pending',
-    tutorPaymentStatus: record['Tutor Payment'] || 'Pending'
+  return data.map((record: PaymentRecord) => ({
+    id: `${record["Class Number"] || ''}`,
+    date: record["Date"] || '',
+    tutorName: record["Tutor Name"] || '',
+    studentName: record["Student Name"] || '',
+    classCost: parseFloat(record["Class Cost"] || '0'),
+    tutorCost: parseFloat(record["Tutor Cost"] || '0'),
+    studentPaymentStatus: record["Student Payment"] || 'Pending',
+    tutorPaymentStatus: record["Tutor Payment"] || 'Pending'
   }));
 };
 

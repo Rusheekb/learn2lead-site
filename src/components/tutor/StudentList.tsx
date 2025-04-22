@@ -25,7 +25,11 @@ const StudentList: React.FC<StudentListProps> = ({ students, onSelectStudent }) 
           <TableRow key={student.id}>
             <TableCell className="font-medium">{student.name}</TableCell>
             <TableCell>{student.subjects.join(", ")}</TableCell>
-            <TableCell>{new Date(student.nextSession).toLocaleDateString()}</TableCell>
+            <TableCell>
+              {student.nextSession 
+                ? new Date(student.nextSession).toLocaleDateString() 
+                : 'Not scheduled'}
+            </TableCell>
             <TableCell>
               <Button variant="outline" size="sm" onClick={() => onSelectStudent(student)}>
                 View Details

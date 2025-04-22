@@ -12,17 +12,23 @@ import {
   fetchClassUploads,
   downloadClassFile
 } from "@/services/classUploadsService";
-import { mapToStudentMessages, mapToStudentUploads } from "@/services/utils/classMappers";
 
-export const useStudentContent = (selectedEvent: ClassEvent | null) => {
+interface UseStudentContentReturn {
+  studentMessages: StudentMessage[];
+  studentUploads: StudentUpload[];
+  handleMarkMessageRead: (messageId: string) => Promise<void>;
+  handleDownloadFile: (uploadId: string) => Promise<void>;
+  getUnreadMessageCount: (classId: string) => number;
+}
+
+export const useStudentContent = (selectedEvent: ClassEvent | null): UseStudentContentReturn => {
   const [studentMessages, setStudentMessages] = useState<StudentMessage[]>([]);
   const [studentUploads, setStudentUploads] = useState<StudentUpload[]>([]);
   
-  // Load messages and uploads when selected event changes
   useEffect(() => {
     if (!selectedEvent) return;
     
-    const loadStudentContent = async () => {
+    const loadStudentContent = async (): Promise<void> => {
       try {
         const classId = selectedEvent.id;
         
@@ -31,7 +37,7 @@ export const useStudentContent = (selectedEvent: ClassEvent | null) => {
         
         const uploads = await fetchClassUploads(classId);
         setStudentUploads(uploads);
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error loading student content:", error);
         toast.error("Failed to load student content");
       }
@@ -40,8 +46,7 @@ export const useStudentContent = (selectedEvent: ClassEvent | null) => {
     loadStudentContent();
   }, [selectedEvent]);
 
-  // Mark a message as read
-  const handleMarkMessageRead = async (messageId: string) => {
+  const handleMarkMessageRead = async (messageId: string): Promise<void> => {
     try {
       const success = await markMessageAsRead(messageId);
       
@@ -55,14 +60,13 @@ export const useStudentContent = (selectedEvent: ClassEvent | null) => {
         );
         return;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error marking message as read:", error);
       toast.error("Failed to mark message as read");
     }
   };
   
-  // Download a file
-  const handleDownloadFile = async (uploadId: string) => {
+  const handleDownloadFile = async (uploadId: string): Promise<void> => {
     try {
       const success = await downloadClassFile(uploadId);
       
@@ -73,14 +77,13 @@ export const useStudentContent = (selectedEvent: ClassEvent | null) => {
         }
         return;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error downloading file:", error);
       toast.error("Failed to download file");
     }
   };
   
-  // Get count of unread messages for a class
-  const getUnreadMessageCount = (classId: string) => {
+  const getUnreadMessageCount = (classId: string): number => {
     return studentMessages.filter(msg => msg.classId === classId && !msg.isRead).length;
   };
 
