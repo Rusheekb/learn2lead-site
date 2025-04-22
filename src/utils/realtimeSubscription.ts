@@ -19,7 +19,7 @@ export const createRealtimeSubscription = <T = any>(options: RealtimeSubscriptio
     schema = 'public'
   } = options;
 
-  let changeConfig: any = {
+  const changeConfig: any = {
     event: '*', // Listen to all events by default
     schema: schema,
     table: tableName
