@@ -1,8 +1,12 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { ClassEvent } from "@/types/tutorTypes";
 import { format } from "date-fns";
 import { UpdateDbClassLog } from "./types";
 import { transformClassLog } from "./transformers";
+import { Database } from "@/integrations/supabase/types";
+
+type ClassLogs = Database['public']['Tables']['class_logs']['Row'];
 
 // Update an existing class log
 export const updateClassLog = async (id: string, classEvent: Partial<ClassEvent>): Promise<ClassEvent | null> => {
@@ -25,7 +29,7 @@ export const updateClassLog = async (id: string, classEvent: Partial<ClassEvent>
   if (classEvent.notes !== undefined) updateData.additional_info = classEvent.notes || null;
   
   const { data, error } = await supabase
-    .from('class_logs')
+    .from<ClassLogs>('class_logs')
     .update(updateData)
     .eq('id', id)
     .select()
@@ -35,6 +39,10 @@ export const updateClassLog = async (id: string, classEvent: Partial<ClassEvent>
     console.error("Error updating class log:", error);
     return null;
   }
+
+  if (!data) {
+    return null;
+  }
   
   return transformClassLog(data);
 };
@@ -42,7 +50,7 @@ export const updateClassLog = async (id: string, classEvent: Partial<ClassEvent>
 // Delete a class log
 export const deleteClassLog = async (id: string): Promise<boolean> => {
   const { error } = await supabase
-    .from('class_logs')
+    .from<ClassLogs>('class_logs')
     .delete()
     .eq('id', id);
   

@@ -1,27 +1,32 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { ClassEvent } from "@/types/tutorTypes";
-import { format, parse } from "date-fns";
-import { Database } from '../../integrations/supabase/types';
+import { format } from "date-fns";
+import { Database } from '@/integrations/supabase/types';
 import { parseNumericString } from "@/utils/numberUtils";
 import { transformClassLog, transformCodeLog } from "./transformers";
 import { DbClassLog, TransformedClassLog } from "./types";
+
+type ClassLogs = Database['public']['Tables']['class_logs']['Row'];
+type CodeLogs = Database['public']['Tables']['code_logs']['Row'];
 
 // Fetch all class logs
 export const fetchClassLogs = async (): Promise<TransformedClassLog[]> => {
   console.log('Fetching class logs from Supabase...');
   try {
-    // Fetch both regular class logs and code logs
     const [classLogsResult, codeLogsResult] = await Promise.all([
-      supabase.from('class_logs').select('*'),
-      supabase.from('code_logs').select('*')
+      supabase.from<ClassLogs>('class_logs').select('*'),
+      supabase.from<CodeLogs>('code_logs').select('*')
     ]);
 
     if (classLogsResult.error) {
       console.error('Error fetching class logs:', classLogsResult.error);
+      return [];
     }
 
     if (codeLogsResult.error) {
       console.error('Error fetching code logs:', codeLogsResult.error);
+      return [];
     }
 
     const classLogs = classLogsResult.data || [];
@@ -63,7 +68,7 @@ export const createClassLog = async (classEvent: ClassEvent): Promise<ClassEvent
   };
   
   const { data, error } = await supabase
-    .from('class_logs')
+    .from<ClassLogs>('class_logs')
     .insert(record)
     .select()
     .single();
@@ -72,6 +77,10 @@ export const createClassLog = async (classEvent: ClassEvent): Promise<ClassEvent
     console.error("Error creating class log:", error);
     return null;
   }
+
+  if (!data) {
+    return null;
+  }
   
-  return transformClassLog(data as DbClassLog);
+  return transformClassLog(data);
 }; 
