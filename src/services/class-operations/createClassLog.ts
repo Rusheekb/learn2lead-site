@@ -16,7 +16,7 @@ export const createClassLog = async (classEvent: ClassEvent): Promise<ClassEvent
     'Date': classEvent.date instanceof Date ? format(classEvent.date, 'yyyy-MM-dd') : classEvent.date,
     'Day': classEvent.date instanceof Date ? format(classEvent.date, 'EEEE') : format(new Date(classEvent.date), 'EEEE'),
     'Time (CST)': classEvent.startTime,
-    'Time (hrs)': classEvent.duration.toString(),
+    'Time (hrs)': (classEvent.duration || 0).toString(),
     'Subject': classEvent.subject,
     'Content': classEvent.content,
     'HW': classEvent.homework,

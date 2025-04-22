@@ -27,14 +27,14 @@ const EditClassForm: React.FC<EditClassFormProps> = ({
         newEvent={{
           title: selectedEvent.title,
           date: typeof selectedEvent.date === 'string' ? new Date(selectedEvent.date) : selectedEvent.date,
-          startTime: selectedEvent.startTime,
-          endTime: selectedEvent.endTime,
+          startTime: selectedEvent.startTime || '',
+          endTime: selectedEvent.endTime || '',
           studentId: selectedEvent.studentId || '',
-          subject: selectedEvent.subject,
+          subject: selectedEvent.subject || '',
           zoomLink: selectedEvent.zoomLink || '',
           notes: selectedEvent.notes || '',
-          tutorId: selectedEvent.tutorId,
-          recurring: selectedEvent.recurring,
+          tutorId: selectedEvent.tutorId || '',
+          recurring: selectedEvent.recurring || false,
           recurringDays: selectedEvent.recurringDays || []
         }}
         setNewEvent={(event) => setNewEvent({ ...selectedEvent, ...event })}

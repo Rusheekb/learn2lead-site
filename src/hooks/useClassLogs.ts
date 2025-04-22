@@ -44,7 +44,7 @@ export const useClassLogs = () => {
   } = useClassData();
 
   // Create realtime subscription
-  useClassRealtime(classes, setClasses, selectedClass, setSelectedClass, setIsDetailsOpen);
+  useClassRealtime(classes, setClasses, selectedClass, setSelectedClass, (open: boolean) => setIsDetailsOpen(open));
 
   // Load class content when a class is selected
   useEffect(() => {

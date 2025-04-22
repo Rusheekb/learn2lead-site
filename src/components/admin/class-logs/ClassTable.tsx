@@ -79,7 +79,7 @@ const ClassRow = memo(({
           </div>
         </div>
       </TableCell>
-      <TableCell><StatusBadge status={cls.status} /></TableCell>
+      <TableCell><StatusBadge status={cls.status || 'unknown'} /></TableCell>
       <TableCell><AttendanceBadge attendance={cls.attendance || 'pending'} /></TableCell>
       <TableCell>
         <CircleMessageBadge count={getUnreadMessageCount(cls.id)} />

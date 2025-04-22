@@ -18,7 +18,7 @@ export const fetchTutors = async () => {
   }
   
   // Extract unique tutor names
-  const uniqueTutors = Array.from(new Set(data.map(record => record['Tutor Name'])))
+  const uniqueTutors = Array.from(new Set(data.map(record => record['Tutor Name'] as string)))
     .filter(Boolean)
     .sort();
   
@@ -51,12 +51,12 @@ export const fetchStudents = async (): Promise<Student[]> => {
   const studentMap = new Map();
   
   data.forEach(record => {
-    const name = record['Student Name'];
+    const name = record['Student Name'] as string;
     if (!name) return;
     
     // Safely access properties
-    const subject = record['Subject'] || '';
-    const date = record['Date'] || '';
+    const subject = record['Subject'] as string || '';
+    const date = record['Date'] as string || '';
     
     if (!studentMap.has(name)) {
       studentMap.set(name, {

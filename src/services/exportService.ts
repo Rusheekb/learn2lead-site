@@ -7,14 +7,28 @@ import { toast } from "sonner";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 
+interface ExportableClassData {
+  Title: string;
+  Subject: string;
+  'Tutor Name': string;
+  'Student Name': string;
+  Date: string;
+  'Start Time': string;
+  'End Time': string;
+  Status: string | undefined;
+  Attendance: string | undefined;
+  'Zoom Link': string | null;
+  Notes: string | null;
+}
+
 // Helper function to format class data for export
-const prepareClassDataForExport = (classes: ClassEvent[]) => {
+const prepareClassDataForExport = (classes: ClassEvent[]): ExportableClassData[] => {
   return classes.map(cls => ({
     Title: cls.title,
     Subject: cls.subject,
     'Tutor Name': cls.tutorName,
     'Student Name': cls.studentName,
-    Date: cls.date instanceof Date ? cls.date.toISOString().split('T')[0] : cls.date,
+    Date: cls.date instanceof Date ? cls.date.toISOString().split('T')[0] : String(cls.date),
     'Start Time': cls.startTime,
     'End Time': cls.endTime,
     Status: cls.status,
@@ -79,7 +93,7 @@ const exportPDF = async (classes: ClassEvent[], filename = 'class-logs'): Promis
       margin: { top: 30 },
       styles: { overflow: 'linebreak' },
       headStyles: { fillColor: [41, 128, 185] },
-      didDrawPage: (data) => {
+      didDrawPage: (data: any) => {
         // Add title
         doc.setFontSize(18);
         doc.text('Class Logs Report', 14, 15);
