@@ -78,3 +78,15 @@ export interface Tutor {
   classes: number;
   hourlyRate: number;
 }
+
+export interface ContentShareItem {
+  id: string;
+  sender_id: string;
+  receiver_id: string;
+  title: string;
+  description?: string | null;
+  file_path?: string | null;
+  content_type?: string | null;
+  shared_at: string;
+  viewed_at?: string | null;
+}
