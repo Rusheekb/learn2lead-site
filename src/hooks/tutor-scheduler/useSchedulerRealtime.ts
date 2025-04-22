@@ -1,5 +1,7 @@
+
 import { useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { ClassEvent } from "@/types/tutorTypes";
 
 export const useSchedulerRealtime = (
   scheduledClasses: ClassEvent[], 

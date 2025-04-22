@@ -1,7 +1,12 @@
+
 import { useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { createRealtimeSubscription } from "@/utils/realtimeSubscription";
 import { dbIdToNumeric } from "@/utils/realtimeUtils";
+import { DbClassLog } from "@/services/logs/types";
+
+// Alias DbClassLog as ClassLogRecord for compatibility with existing code
+type ClassLogRecord = DbClassLog;
 
 export const useClassRealtime = (
   classes: any[],
