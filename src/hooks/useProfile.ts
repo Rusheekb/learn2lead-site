@@ -1,5 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo} from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -23,7 +22,7 @@ export const useProfile = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const profileCache = new Map<string, Profile>();
+  const profileCache = useMemo(() => new Map<string, Profile>(), []);
 
   const fetchProfile = useCallback(async (userId: string) => {
     if (profileCache.has(userId)) {
@@ -59,7 +58,7 @@ export const useProfile = () => {
       setIsLoading(false);
       return null;
     }
-  }, []);
+  }, [profileCache]);
 
   useEffect(() => {
     if (!user) {
