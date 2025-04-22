@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -9,6 +8,7 @@ import { Profile } from "@/hooks/useProfile";
 import ShareDialog from "./share/ShareDialog";
 import ShareTable from "./share/ShareTable";
 import SharesEmptyState from "./share/SharesEmptyState";
+import { ContentShareItem } from "@/types/sharedTypes";
 
 interface ContentShareProps {
   role: 'student' | 'tutor' | 'admin';
