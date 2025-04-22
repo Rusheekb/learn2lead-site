@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -58,7 +59,7 @@ export const useProfile = () => {
       setIsLoading(false);
       return null;
     }
-  }, [toast, profileCache]);
+  }, []);
 
   useEffect(() => {
     if (!user) {

@@ -1,4 +1,3 @@
-
 // Common types used across multiple components
 
 export interface Student {
@@ -71,4 +70,16 @@ export interface TopPerformer {
 export interface PopularSubject {
   subject: string;
   count: number;
+}
+
+export interface ContentShareItem {
+  id: string;
+  sender_id: string;
+  receiver_id: string;
+  title: string;
+  description: string | null;
+  file_path: string | null;
+  content_type: string | null;
+  shared_at: string;
+  viewed_at: string | null;
 }
