@@ -1,37 +1,29 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { ClassEvent } from '@/types/tutorTypes';
 import { format } from 'date-fns';
 import { transformDbRecordToClassEvent } from '../utils/classEventMapper';
 
-/**
- * Create a new class log in the database
- */
 export const createClassLog = async (
   classEvent: ClassEvent
 ): Promise<ClassEvent | null> => {
-  // Convert ClassEvent to the format expected by the database
   const record = {
     'Class Number': classEvent.title,
     'Tutor Name': classEvent.tutorName,
     'Student Name': classEvent.studentName,
-    Date:
-      classEvent.date instanceof Date
-        ? format(classEvent.date, 'yyyy-MM-dd')
-        : classEvent.date,
-    Day:
-      classEvent.date instanceof Date
-        ? format(classEvent.date, 'EEEE')
-        : format(new Date(classEvent.date), 'EEEE'),
+    Date: format(new Date(classEvent.date), 'yyyy-MM-dd'),
+    Day: format(new Date(classEvent.date), 'EEEE'),
     'Time (CST)': classEvent.startTime,
-    'Time (hrs)': (classEvent.duration || 0).toString(),
+    'Time (hrs)': classEvent.duration?.toString() || '0',
     Subject: classEvent.subject,
-    Content: classEvent.content,
-    HW: classEvent.homework,
-    'Class Cost': classEvent.classCost?.toString(),
-    'Tutor Cost': classEvent.tutorCost?.toString(),
-    'Student Payment': classEvent.studentPayment,
-    'Tutor Payment': classEvent.tutorPayment,
-    'Additional Info': classEvent.notes,
+    Content: classEvent.content || null,
+    HW: classEvent.homework || null,
+    'Class ID': classEvent.id,
+    'Class Cost': classEvent.classCost?.toString() || null,
+    'Tutor Cost': classEvent.tutorCost?.toString() || null,
+    'Student Payment': 'Pending',
+    'Tutor Payment': 'Pending',
+    'Additional Info': classEvent.notes || null,
   };
 
   const { data, error } = await supabase
