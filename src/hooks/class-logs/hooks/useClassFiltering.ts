@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { ClassEvent } from '@/types/tutorTypes';
 
@@ -57,18 +56,18 @@ export const useClassFiltering = () => {
       const paymentMatch =
         paymentStatusFilter === 'all' ||
         (paymentStatusFilter === 'paid'
-          ? cls?.studentPayment === 'Paid'
-          : cls?.studentPayment === 'Unpaid');
+          ? cls?.studentPayment === 'paid'
+          : cls?.studentPayment === 'unpaid');
 
       const tutorPaymentMatch =
         tutorPaymentStatusFilter === 'all' ||
         (tutorPaymentStatusFilter === 'paid'
-          ? cls?.tutorPayment === 'Paid'
-          : cls?.tutorPayment === 'Unpaid');
+          ? cls?.tutorPayment === 'paid'
+          : cls?.tutorPayment === 'unpaid');
 
       const costMatch =
-        (!costRangeFilter.min || cls?.classCost >= costRangeFilter.min) &&
-        (!costRangeFilter.max || cls?.classCost <= costRangeFilter.max);
+        (!costRangeFilter.min || (cls?.classCost || 0) >= costRangeFilter.min) &&
+        (!costRangeFilter.max || (cls?.classCost || 0) <= costRangeFilter.max);
 
       return (
         searchMatch &&
