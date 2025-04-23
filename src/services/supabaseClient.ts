@@ -9,16 +9,20 @@ import type {
 import type { Profile } from '@/types/profile';
 import type { PostgrestError, PostgrestResponse, PostgrestSingleResponse } from '@supabase/supabase-js';
 
-// Unified result handler for DRY error handling
-function handleResult<T>({ data, error }: PostgrestResponse<T> | PostgrestSingleResponse<T>): T {
-  if (error) {
-    console.error(error);
-    throw error;
+// Unified result handler for DRY error handling - Overload for single results
+function handleResult<T>(response: PostgrestSingleResponse<T>): T;
+// Overload for multiple results
+function handleResult<T>(response: PostgrestResponse<T>): T[];
+// Implementation
+function handleResult<T>(response: PostgrestResponse<T> | PostgrestSingleResponse<T>): T | T[] {
+  if (response.error) {
+    console.error(response.error);
+    throw response.error;
   }
-  if (!data) {
+  if (!response.data) {
     throw new Error('No data returned');
   }
-  return data;
+  return response.data;
 }
 
 // Class Logs Operations
@@ -41,7 +45,7 @@ export async function createClassLog(classLog: Omit<DbClassLog, 'id'>): Promise<
     .insert(classLog)
     .select()
     .single();
-  return handleResult<ClassEvent>(result);
+  return handleResult(result);
 }
 
 export async function updateClassLog(id: string, updates: Partial<DbClassLog>): Promise<ClassEvent> {
@@ -51,7 +55,7 @@ export async function updateClassLog(id: string, updates: Partial<DbClassLog>): 
     .eq('id', id)
     .select()
     .single();
-  return handleResult<ClassEvent>(result);
+  return handleResult(result);
 }
 
 // Now delete returns the deleted row:
@@ -62,7 +66,7 @@ export async function deleteClassLog(id: string): Promise<ClassEvent> {
     .eq('id', id)
     .select()
     .single();
-  return handleResult<ClassEvent>(result);
+  return handleResult(result);
 }
 
 // Student Operations
@@ -85,7 +89,7 @@ export async function createStudent(student: Omit<TutorStudent, 'id'>): Promise<
     .insert(student)
     .select()
     .single();
-  return handleResult<TutorStudent>(result);
+  return handleResult(result);
 }
 
 export async function updateStudent(id: string, updates: Partial<TutorStudent>): Promise<TutorStudent> {
@@ -95,7 +99,7 @@ export async function updateStudent(id: string, updates: Partial<TutorStudent>):
     .eq('id', id)
     .select()
     .single();
-  return handleResult<TutorStudent>(result);
+  return handleResult(result);
 }
 
 export async function deleteStudent(id: string): Promise<TutorStudent> {
@@ -105,7 +109,7 @@ export async function deleteStudent(id: string): Promise<TutorStudent> {
     .eq('id', id)
     .select()
     .single();
-  return handleResult<TutorStudent>(result);
+  return handleResult(result);
 }
 
 // Profile Operations
@@ -115,7 +119,7 @@ export async function fetchProfile(userId: string): Promise<Profile> {
     .select('*')
     .eq('id', userId)
     .single();
-  return handleResult<Profile>(result);
+  return handleResult(result);
 }
 
 export async function updateProfile(userId: string, updates: Partial<Profile>): Promise<Profile> {
@@ -125,7 +129,7 @@ export async function updateProfile(userId: string, updates: Partial<Profile>): 
     .eq('id', userId)
     .select()
     .single();
-  return handleResult<Profile>(result);
+  return handleResult(result);
 }
 
 // Content Shares Operations
@@ -148,7 +152,7 @@ export async function createContentShare(share: Omit<ContentShareItem, 'id'>): P
     .insert(share)
     .select()
     .single();
-  return handleResult<ContentShareItem>(result);
+  return handleResult(result);
 }
 
 export async function updateContentShare(id: string, updates: Partial<ContentShareItem>): Promise<ContentShareItem> {
@@ -158,7 +162,7 @@ export async function updateContentShare(id: string, updates: Partial<ContentSha
     .eq('id', id)
     .select()
     .single();
-  return handleResult<ContentShareItem>(result);
+  return handleResult(result);
 }
 
 export async function deleteContentShare(id: string): Promise<ContentShareItem> {
@@ -168,7 +172,7 @@ export async function deleteContentShare(id: string): Promise<ContentShareItem> 
     .eq('id', id)
     .select()
     .single();
-  return handleResult<ContentShareItem>(result);
+  return handleResult(result);
 }
 
 // Fetch content shares for a specific user
