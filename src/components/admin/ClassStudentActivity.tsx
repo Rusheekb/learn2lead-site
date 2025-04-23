@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
@@ -16,6 +17,7 @@ import {
 } from '@/services/classUploadsService';
 import useStudentRealtime from '@/hooks/student/useStudentRealtime';
 import { ClassItem } from '@/types/classTypes';
+import { ClassEvent } from '@/types/tutorTypes';
 
 const ClassStudentActivity: React.FC = () => {
   const [studentUploads, setStudentUploads] = useState<StudentUpload[]>([]);
@@ -40,7 +42,7 @@ const ClassStudentActivity: React.FC = () => {
       try {
         const classLogs = await fetchClassLogs();
 
-        const transformedClasses: ClassItem[] = classLogs.map((cl) => ({
+        const transformedClasses: ClassItem[] = classLogs.map((cl: ClassEvent) => ({
           id: cl.id,
           title: cl.title,
           subject: cl.subject,

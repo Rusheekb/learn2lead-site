@@ -1,74 +1,90 @@
-import { parse, format, addMinutes } from 'date-fns';
 
-export const parseNumericString = (
-  value: string | number | undefined
-): number => {
-  if (typeof value === 'number') return value;
-  if (!value) return 0;
+import { parseISO, format, parse } from 'date-fns';
 
-  const parsed = parseFloat(value);
-  if (!isNaN(parsed)) {
-    return parsed;
+// Parse a string that may have a numeric value in it
+export const parseNumericString = (value?: string | number): number => {
+  if (value === undefined || value === null) {
+    return 0;
   }
 
-  return 0;
+  if (typeof value === 'number') {
+    return value;
+  }
+
+  // Remove non-numeric characters except decimal point
+  const numericValue = value.replace(/[^0-9.]/g, '');
+  
+  return numericValue ? parseFloat(numericValue) : 0;
 };
 
-export const calculateEndTime = (
-  startTime: string,
-  durationHours: number
-): string => {
-  if (!startTime || !durationHours) return '';
+// Calculate end time based on start time and duration
+export const calculateEndTime = (startTime: string, duration: number): string => {
+  if (!startTime || !duration) {
+    return '';
+  }
 
   try {
-    const [hours, minutes] = startTime.split(':').map(Number);
+    // Parse hours and minutes
+    const [hoursStr, minutesStr] = startTime.split(':');
+    const hours = parseInt(hoursStr, 10);
+    const minutes = parseInt(minutesStr, 10);
 
-    if (isNaN(hours) || isNaN(minutes)) return '';
+    // Calculate hours and minutes for end time
+    const durationHours = Math.floor(duration);
+    const durationMinutes = Math.round((duration - durationHours) * 60);
 
-    const today = new Date();
-    const startDate = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      today.getDate(),
-      hours,
-      minutes
-    );
+    // Calculate total minutes
+    let totalMinutes = minutes + durationMinutes;
+    let totalHours = hours + durationHours;
 
-    const durationMinutes = durationHours * 60;
-    const endDate = addMinutes(startDate, durationMinutes);
+    // Adjust for overflow
+    if (totalMinutes >= 60) {
+      totalHours += Math.floor(totalMinutes / 60);
+      totalMinutes %= 60;
+    }
 
-    return format(endDate, 'HH:mm');
-  } catch (e: any) {
-    console.error('Error calculating end time:', e);
+    // Format to HH:MM
+    return `${String(totalHours).padStart(2, '0')}:${String(totalMinutes).padStart(2, '0')}`;
+  } catch (error) {
+    console.error('Error calculating end time:', error);
     return '';
   }
 };
 
-export const parseDateWithFormats = (dateStr: string): Date => {
-  const formats: string[] = [
+// Parse a date string using multiple possible formats
+export const parseDateWithFormats = (dateString: string): Date => {
+  // List of possible date formats to try
+  const formats = [
     'yyyy-MM-dd',
     'MM/dd/yyyy',
-    'dd/MM/yyyy',
-    'yyyy/MM/dd',
-    'dd-MMM-yyyy',
-    'MMM dd, yyyy',
+    'M/d/yyyy',
+    'MMM d, yyyy',
+    'MMMM d, yyyy',
+    'yyyy-MM-dd\'T\'HH:mm:ss.SSSX',
   ];
 
-  for (const formatStr of formats) {
+  // Try ISO format first
+  try {
+    const date = parseISO(dateString);
+    if (!isNaN(date.getTime())) {
+      return date;
+    }
+  } catch (e) {
+    // Continue to next approach
+  }
+
+  // Try each format
+  for (const formatString of formats) {
     try {
-      const parsed = parse(dateStr, formatStr, new Date());
-      if (!isNaN(parsed.getTime())) {
-        return parsed;
+      const date = parse(dateString, formatString, new Date());
+      if (!isNaN(date.getTime())) {
+        return date;
       }
-    } catch (e: any) {
-      continue;
+    } catch (e) {
+      // Try next format
     }
   }
 
-  const fallbackDate = new Date(dateStr);
-  if (!isNaN(fallbackDate.getTime())) {
-    return fallbackDate;
-  }
-
-  throw new Error(`Cannot parse date string: ${dateStr}`);
+  // If all parsing attempts fail, throw error
+  throw new Error(`Unable to parse date: ${dateString}`);
 };
