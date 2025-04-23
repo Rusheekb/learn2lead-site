@@ -1,3 +1,4 @@
+
 /* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -72,6 +73,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   name: u.email?.split('@')[0] || 'New Tutor',
                   email: u.email!,
                   subjects: [],
+                  rating: 0,           // Add default rating
+                  classes: 0,          // Add default classes count
+                  hourlyRate: 25,      // Add default hourly rate
                 });
               }
 
