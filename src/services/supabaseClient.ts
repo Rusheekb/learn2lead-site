@@ -26,7 +26,13 @@ export async function fetchClassLogs(): Promise<ClassEvent[]> {
   const result = await supabase
     .from('class_logs')
     .select('*');
-  return handleResult<ClassEvent[]>({ data: result.data || [], error: result.error });
+  
+  // Handle array response correctly
+  if (result.error) {
+    console.error(result.error);
+    throw result.error;
+  }
+  return result.data || [];
 }
 
 export async function createClassLog(classLog: Omit<DbClassLog, 'id'>): Promise<ClassEvent> {
@@ -64,7 +70,13 @@ export async function fetchStudents(): Promise<TutorStudent[]> {
   const result = await supabase
     .from('students')
     .select('*');
-  return handleResult<TutorStudent[]>({ data: result.data || [], error: result.error });
+  
+  // Handle array response correctly
+  if (result.error) {
+    console.error(result.error);
+    throw result.error;
+  }
+  return result.data || [];
 }
 
 export async function createStudent(student: Omit<TutorStudent, 'id'>): Promise<TutorStudent> {
@@ -121,7 +133,13 @@ export async function fetchContentShares(): Promise<ContentShareItem[]> {
   const result = await supabase
     .from('content_shares')
     .select('*');
-  return handleResult<ContentShareItem[]>({ data: result.data || [], error: result.error });
+  
+  // Handle array response correctly
+  if (result.error) {
+    console.error(result.error);
+    throw result.error;
+  }
+  return result.data || [];
 }
 
 export async function createContentShare(share: Omit<ContentShareItem, 'id'>): Promise<ContentShareItem> {
@@ -159,5 +177,11 @@ export async function fetchUserContentShares(userId: string): Promise<ContentSha
     .from('content_shares')
     .select('*')
     .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`);
-  return handleResult<ContentShareItem[]>({ data: result.data || [], error: result.error });
+  
+  // Handle array response correctly
+  if (result.error) {
+    console.error(result.error);
+    throw result.error;
+  }
+  return result.data || [];
 }
