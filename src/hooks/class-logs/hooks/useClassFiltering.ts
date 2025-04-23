@@ -1,5 +1,6 @@
+
 import { useState } from 'react';
-import { ClassEvent } from '@/types/tutorTypes';
+import { ClassEvent, PaymentStatus } from '@/types/tutorTypes';
 
 export const useClassFiltering = () => {
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -53,21 +54,26 @@ export const useClassFiltering = () => {
         !dateFilter ||
         new Date(cls?.date).toDateString() === dateFilter.toDateString();
 
+      // Convert the payment status values to lowercase for case-insensitive comparison
+      const studentPaymentLower = cls?.studentPayment?.toLowerCase() as PaymentStatus | undefined;
+      const tutorPaymentLower = cls?.tutorPayment?.toLowerCase() as PaymentStatus | undefined;
+
       const paymentMatch =
         paymentStatusFilter === 'all' ||
         (paymentStatusFilter === 'paid'
-          ? cls?.studentPayment === 'paid'
-          : cls?.studentPayment === 'unpaid');
+          ? studentPaymentLower === 'paid'
+          : studentPaymentLower === 'unpaid');
 
       const tutorPaymentMatch =
         tutorPaymentStatusFilter === 'all' ||
         (tutorPaymentStatusFilter === 'paid'
-          ? cls?.tutorPayment === 'paid'
-          : cls?.tutorPayment === 'unpaid');
+          ? tutorPaymentLower === 'paid'
+          : tutorPaymentLower === 'unpaid');
 
+      const classCost = cls?.classCost || 0;
       const costMatch =
-        (!costRangeFilter.min || (cls?.classCost || 0) >= costRangeFilter.min) &&
-        (!costRangeFilter.max || (cls?.classCost || 0) <= costRangeFilter.max);
+        (!costRangeFilter.min || classCost >= costRangeFilter.min) &&
+        (!costRangeFilter.max || classCost <= costRangeFilter.max);
 
       return (
         searchMatch &&
