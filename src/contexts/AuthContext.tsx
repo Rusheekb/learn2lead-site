@@ -63,14 +63,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               // Create corresponding student/tutor record
               if (defaultRole === 'student') {
                 await createStudent({
-                  id: u.id,
                   name: u.email?.split('@')[0] || 'New Student',
                   email: u.email!,
                   subjects: [],
                 });
               } else if (defaultRole === 'tutor') {
                 await createTutor({
-                  id: u.id,
                   name: u.email?.split('@')[0] || 'New Tutor',
                   email: u.email!,
                   subjects: [],

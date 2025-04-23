@@ -1,7 +1,9 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import type {
   ClassEvent,
-  Student as TutorStudent,
+  Student,
+  Tutor,
   ContentShareItem,
   DbClassLog,
 } from '@/types/tutorTypes';
@@ -78,7 +80,7 @@ export async function deleteClassLog(id: string): Promise<ClassEvent> {
 }
 
 // Student Operations
-export async function fetchStudents(): Promise<TutorStudent[]> {
+export async function fetchStudents(): Promise<Student[]> {
   const result = await supabase.from('students').select('*');
 
   // Handle array response correctly
@@ -90,8 +92,8 @@ export async function fetchStudents(): Promise<TutorStudent[]> {
 }
 
 export async function createStudent(
-  student: Omit<TutorStudent, 'id'>
-): Promise<TutorStudent> {
+  student: Omit<Student, 'id'>
+): Promise<Student> {
   const result = await supabase
     .from('students')
     .insert(student)
@@ -102,8 +104,8 @@ export async function createStudent(
 
 export async function updateStudent(
   id: string,
-  updates: Partial<TutorStudent>
-): Promise<TutorStudent> {
+  updates: Partial<Student>
+): Promise<Student> {
   const result = await supabase
     .from('students')
     .update(updates)
@@ -113,9 +115,59 @@ export async function updateStudent(
   return handleResult(result);
 }
 
-export async function deleteStudent(id: string): Promise<TutorStudent> {
+export async function deleteStudent(
+  id: string
+): Promise<Student> {
   const result = await supabase
     .from('students')
+    .delete()
+    .eq('id', id)
+    .select()
+    .single();
+  return handleResult(result);
+}
+
+// Tutor Operations
+export async function fetchTutors(): Promise<Tutor[]> {
+  const result = await supabase.from('tutors').select('*');
+
+  // Handle array response correctly
+  if (result.error) {
+    console.error(result.error);
+    throw result.error;
+  }
+  return result.data || [];
+}
+
+export async function createTutor(
+  tutor: Omit<Tutor, 'id'>
+): Promise<Tutor> {
+  const result = await supabase
+    .from('tutors')
+    .insert(tutor)
+    .select()
+    .single();
+  return handleResult(result);
+}
+
+export async function updateTutor(
+  id: string,
+  updates: Partial<Tutor>
+): Promise<Tutor> {
+  const result = await supabase
+    .from('tutors')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+  return handleResult(result);
+}
+
+export async function deleteTutor(
+  id: string
+): Promise<Tutor> {
+  const result = await supabase
+    .from('tutors')
     .delete()
     .eq('id', id)
     .select()

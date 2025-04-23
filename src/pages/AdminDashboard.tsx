@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import ClassAnalytics from '@/components/admin/ClassAnalytics';
@@ -9,15 +9,34 @@ import TutorsManager from '@/components/admin/TutorsManager';
 import StudentsManager from '@/components/admin/StudentsManager';
 import { useStudentRecordsRealtime } from '@/hooks/realtime/useStudentRecordsRealtime';
 import { useTutorRecordsRealtime } from '@/hooks/realtime/useTutorRecordsRealtime';
+import { Student, Tutor } from '@/types/tutorTypes';
+import { fetchStudents, fetchTutors } from '@/services/supabaseClient';
 
 const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('analytics');
-  const [students, setStudents] = useState([]);
-  const [tutors, setTutors] = useState([]);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [tutors, setTutors] = useState<Tutor[]>([]);
 
   // Initialize real-time subscriptions
   useStudentRecordsRealtime(setStudents);
   useTutorRecordsRealtime(setTutors);
+  
+  // Initial data fetch
+  useEffect(() => {
+    const loadInitialData = async () => {
+      try {
+        const studentsData = await fetchStudents();
+        const tutorsData = await fetchTutors();
+        
+        setStudents(studentsData);
+        setTutors(tutorsData);
+      } catch (error) {
+        console.error('Error loading initial data:', error);
+      }
+    };
+    
+    loadInitialData();
+  }, []);
 
   return (
     <DashboardLayout title="Admin Portal" role="admin">
