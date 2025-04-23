@@ -47,6 +47,10 @@ const useClassActions = () => {
     );
   };
 
+  const loadClassContent = (classId: string) => {
+    return baseLoadClassContent(classId, setStudentUploads, setStudentMessages);
+  };
+
   return {
     // State
     isDetailsOpen,
@@ -65,6 +69,7 @@ const useClassActions = () => {
 
     // Actions
     handleClassClick,
+    loadClassContent,
     handleMarkMessageRead,
     handleDownloadFile,
     handleUpdateStatus,

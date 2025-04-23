@@ -2,8 +2,9 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { deleteClassLog, updateClassLog } from '@/services/classLogsService';
-import { ClassEvent } from '@/types/tutorTypes';
-import { fetchClassMessages, fetchClassUploads } from '@/services/classMessagesService';
+import { ClassEvent, ClassStatus, AttendanceStatus, isValidClassStatus, isValidAttendanceStatus } from '@/types/tutorTypes';
+import { fetchClassMessages } from '@/services/classMessagesService';
+import { fetchClassUploads } from '@/services/classUploadsService';
 
 export const useClassHandling = () => {
   const handleClassClick = async (cls: ClassEvent, 
@@ -42,7 +43,14 @@ export const useClassHandling = () => {
     status: string
   ): Promise<boolean> => {
     try {
-      await updateClassLog(classId, { status });
+      // Validate status before updating
+      const validStatus: ClassStatus | undefined = isValidClassStatus(status) ? status as ClassStatus : undefined;
+      if (!validStatus) {
+        toast.error('Invalid class status');
+        return false;
+      }
+      
+      await updateClassLog(classId, { status: validStatus });
       toast.success('Class status updated');
       return true;
     } catch (error) {
@@ -57,7 +65,14 @@ export const useClassHandling = () => {
     attendance: string
   ): Promise<boolean> => {
     try {
-      await updateClassLog(classId, { attendance });
+      // Validate attendance before updating
+      const validAttendance: AttendanceStatus | undefined = isValidAttendanceStatus(attendance) ? attendance as AttendanceStatus : undefined;
+      if (!validAttendance) {
+        toast.error('Invalid attendance status');
+        return false;
+      }
+      
+      await updateClassLog(classId, { attendance: validAttendance });
       toast.success('Attendance updated');
       return true;
     } catch (error) {
