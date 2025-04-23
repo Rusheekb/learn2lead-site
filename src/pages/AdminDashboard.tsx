@@ -10,7 +10,8 @@ import StudentsManager from '@/components/admin/StudentsManager';
 import { useStudentRecordsRealtime } from '@/hooks/realtime/useStudentRecordsRealtime';
 import { useTutorRecordsRealtime } from '@/hooks/realtime/useTutorRecordsRealtime';
 import { Student, Tutor } from '@/types/tutorTypes';
-import { fetchStudents, fetchTutors } from '@/services/supabaseClient';
+import { fetchStudents } from '@/services/students/studentService';
+import { fetchTutors } from '@/services/tutors/tutorService';
 
 const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('analytics');

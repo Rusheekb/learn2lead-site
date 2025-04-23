@@ -9,7 +9,8 @@ import { fetchUserRole } from '@/hooks/useUserRole';
 import { getDashboardPath } from '@/utils/authNavigation';
 import { AppRole } from '@/hooks/useProfile';
 import { useAuthState } from '@/hooks/useAuthState';
-import { createStudent, createTutor } from '@/services/supabaseClient';
+import { createStudent } from '@/services/students/studentService';
+import { createTutor } from '@/services/tutors/tutorService';
 
 interface AuthContextType {
   user: User | null;
@@ -73,9 +74,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   name: u.email?.split('@')[0] || 'New Tutor',
                   email: u.email!,
                   subjects: [],
-                  rating: 0,           // Add default rating
-                  classes: 0,          // Add default classes count
-                  hourlyRate: 25,      // Add default hourly rate
+                  rating: 0,
+                  classes: 0,
+                  hourlyRate: 25,
                 });
               }
 

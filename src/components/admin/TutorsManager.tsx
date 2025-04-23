@@ -5,7 +5,7 @@ import TutorTable from './tutors/TutorTable';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { deleteTutor } from '@/services/supabaseClient';
+import { deleteTutor } from '@/services/tutors/tutorService';
 
 interface TutorsManagerProps {
   tutors: Tutor[];

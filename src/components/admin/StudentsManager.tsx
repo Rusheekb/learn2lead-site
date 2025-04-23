@@ -2,7 +2,7 @@
 import React from 'react';
 import { Student } from '@/types/tutorTypes';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { deleteStudent } from '@/services/supabaseClient';
+import { deleteStudent } from '@/services/students/studentService';
 import { toast } from 'sonner';
 
 interface StudentsManagerProps {
