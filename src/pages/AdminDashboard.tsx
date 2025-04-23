@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -6,9 +7,17 @@ import ClassLogs from '@/components/admin/ClassLogs';
 import PaymentsManager from '@/components/admin/PaymentsManager';
 import TutorsManager from '@/components/admin/TutorsManager';
 import StudentsManager from '@/components/admin/StudentsManager';
+import { useStudentRecordsRealtime } from '@/hooks/realtime/useStudentRecordsRealtime';
+import { useTutorRecordsRealtime } from '@/hooks/realtime/useTutorRecordsRealtime';
 
 const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('analytics');
+  const [students, setStudents] = useState([]);
+  const [tutors, setTutors] = useState([]);
+
+  // Initialize real-time subscriptions
+  useStudentRecordsRealtime(setStudents);
+  useTutorRecordsRealtime(setTutors);
 
   return (
     <DashboardLayout title="Admin Portal" role="admin">
@@ -37,11 +46,11 @@ const AdminDashboard: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="tutors" className="pt-2">
-            <TutorsManager />
+            <TutorsManager tutors={tutors} />
           </TabsContent>
 
           <TabsContent value="students" className="pt-2">
-            <StudentsManager />
+            <StudentsManager students={students} />
           </TabsContent>
         </Tabs>
       </div>

@@ -7,6 +7,8 @@ import { signInWithEmail, signUpWithEmail, signOut } from '@/utils/authActions';
 import { fetchUserRole } from '@/hooks/useUserRole';
 import { getDashboardPath } from '@/utils/authNavigation';
 import { AppRole } from '@/hooks/useProfile';
+import { useAuthState } from '@/hooks/useAuthState';
+import { createStudent, createTutor } from '@/services/supabaseClient';
 
 interface AuthContextType {
   user: User | null;
@@ -22,15 +24,21 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [userRole, setUserRole] = useState<AppRole | null>(null);
+  const {
+    user,
+    setUser,
+    session,
+    setSession,
+    isLoading,
+    setIsLoading,
+    userRole,
+    setUserRole,
+  } = useAuthState();
 
   useEffect(() => {
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, currentSession) => {
+    } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
 
@@ -40,17 +48,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           try {
             const { data: existingProfile, error: fetchError } = await supabase
               .from('profiles')
-              .select('id')
+              .select('role, id')
               .eq('id', u.id)
               .maybeSingle();
+
             if (!existingProfile) {
+              const defaultRole = u.email?.endsWith('@learn2lead.com')
+                ? 'tutor'
+                : 'student';
               await supabase
                 .from('profiles')
-                .insert({ id: u.id, email: u.email!, role: 'student' });
+                .insert({ id: u.id, email: u.email!, role: defaultRole });
+
+              // Create corresponding student/tutor record
+              if (defaultRole === 'student') {
+                await createStudent({
+                  id: u.id,
+                  name: u.email?.split('@')[0] || 'New Student',
+                  email: u.email!,
+                  subjects: [],
+                });
+              } else if (defaultRole === 'tutor') {
+                await createTutor({
+                  id: u.id,
+                  name: u.email?.split('@')[0] || 'New Tutor',
+                  email: u.email!,
+                  subjects: [],
+                });
+              }
+
+              setUserRole(defaultRole);
+            } else {
+              setUserRole(existingProfile.role);
             }
-            const role = await fetchUserRole(u.id);
-            setUserRole(role);
-            navigate(getDashboardPath(role), { replace: true });
+
+            navigate(getDashboardPath(existingProfile?.role || 'student'), {
+              replace: true,
+            });
           } catch (err) {
             console.error('Error processing post-login actions:', err);
             setUserRole(null);
