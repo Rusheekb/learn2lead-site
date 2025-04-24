@@ -22,15 +22,15 @@ export function useRoleSync() {
         try {
           if (role === 'student') {
             await createStudent({
-              id,
+              // Remove 'id' as it's not expected in Omit<Student, "id">
               name: email?.split('@')[0] || 'New Student',
               email: email || '',
               subjects: [],
             });
-            await deleteTutor(id);
+            await deleteStudent(id);
           } else if (role === 'tutor') {
             await createTutor({
-              id,
+              // Remove 'id' as it's not expected in Omit<Tutor, "id">
               name: email?.split('@')[0] || 'New Tutor',
               email: email || '',
               subjects: [],
