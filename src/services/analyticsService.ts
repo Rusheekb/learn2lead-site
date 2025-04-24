@@ -210,7 +210,7 @@ export async function fetchStudentAnalytics(studentId: string) {
 
   const totalSessions = count || 0;
   const avgDuration = data && data.length
-    ? Math.round(data.reduce((sum, r) => sum + (Number(r['Time (hrs)']) || 0), 0) / data.length * 60)
+    ? Math.round(data.reduce((sum: number, r: { 'Time (hrs)': string | number }) => sum + (Number(r['Time (hrs)']) || 0), 0) / data.length * 60)
     : 0;
 
   return { totalSessions, avgDuration };
@@ -226,7 +226,7 @@ export async function fetchTutorAnalytics(tutorId: string) {
 
   const totalSessions = count || 0;
   const avgDuration = data && data.length
-    ? Math.round(data.reduce((sum, r) => sum + (Number(r['Time (hrs)']) || 0), 0) / data.length * 60)
+    ? Math.round(data.reduce((sum: number, r: { 'Time (hrs)': string | number }) => sum + (Number(r['Time (hrs)']) || 0), 0) / data.length * 60)
     : 0;
 
   return { totalSessions, avgDuration };

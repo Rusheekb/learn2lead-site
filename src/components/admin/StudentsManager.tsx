@@ -7,9 +7,10 @@ import { toast } from 'sonner';
 
 interface StudentsManagerProps {
   students: Student[];
+  onSelect: (student: Student) => void;
 }
 
-const StudentsManager: React.FC<StudentsManagerProps> = ({ students }) => {
+const StudentsManager: React.FC<StudentsManagerProps> = ({ students, onSelect }) => {
   const [isLoading, setIsLoading] = React.useState(false);
   
   const handleDeleteStudent = async (studentId: string) => {
@@ -34,18 +35,22 @@ const StudentsManager: React.FC<StudentsManagerProps> = ({ students }) => {
           <CardTitle>Student Directory</CardTitle>
         </CardHeader>
         <CardContent>
-          {/* You'll need to implement or import a StudentTable component */}
-          <p>Total Students: {students.length}</p>
-          {/* This is a placeholder. In a real implementation, you would render a table of students */}
           <div className="mt-4">
             {students.map((student) => (
-              <div key={student.id} className="p-4 border rounded mb-2 flex justify-between">
+              <div 
+                key={student.id} 
+                className="p-4 border rounded mb-2 flex justify-between cursor-pointer hover:bg-muted/60"
+                onClick={() => onSelect(student)}
+              >
                 <div>
                   <h3 className="font-medium">{student.name}</h3>
                   <p className="text-sm text-gray-600">{student.email}</p>
                 </div>
                 <button 
-                  onClick={() => handleDeleteStudent(student.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteStudent(student.id);
+                  }}
                   className="text-red-500 hover:text-red-700"
                 >
                   Delete

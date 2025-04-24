@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import ClassAnalytics from '@/components/admin/ClassAnalytics';
