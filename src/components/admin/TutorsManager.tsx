@@ -12,6 +12,8 @@ interface TutorsManagerProps {
 }
 
 const TutorsManager: React.FC<TutorsManagerProps> = ({ tutors }) => {
+  console.log('rendering TutorsManager:', tutors);
+  
   const [isLoading, setIsLoading] = useState(false);
 
   const handleDeleteTutor = async (tutorId: string) => {

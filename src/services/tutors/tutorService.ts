@@ -11,6 +11,7 @@ export async function fetchTutors(): Promise<Tutor[]> {
     throw result.error;
   }
 
+  console.log('Tutor service fetched data:', result.data);
   return result.data || [];
 }
 
