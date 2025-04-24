@@ -1,18 +1,17 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Tutor } from '@/types/tutorTypes';
 import { toast } from 'sonner';
 
 export async function fetchTutors(): Promise<Tutor[]> {
-  const result = await supabase.from('tutors').select('*');
-
-  if (result.error) {
-    console.error('Error fetching tutors:', result.error);
-    throw result.error;
+  const { data, error } = await supabase.from('tutors').select('*');
+  
+  if (error) {
+    console.error('Error fetching tutors:', error);
+    throw error;
   }
 
-  console.log('Tutor service fetched data:', result.data);
-  return result.data || [];
+  console.log('Tutor service fetched data:', data);
+  return data || [];
 }
 
 export async function createTutor(tutor: Omit<Tutor, 'id'>): Promise<Tutor> {

@@ -1,9 +1,8 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Tutor } from '@/types/tutorTypes';
 import TutorTable from './tutors/TutorTable';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useState } from 'react';
 import { toast } from 'sonner';
 import { deleteTutor } from '@/services/tutors/tutorService';
 
