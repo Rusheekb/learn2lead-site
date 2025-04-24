@@ -15,12 +15,14 @@ interface TutorTableProps {
   tutors: Tutor[];
   isLoading: boolean;
   onDelete: (tutorId: string) => void;
+  onSelect: (tutor: Tutor) => void;
 }
 
 const TutorTable: React.FC<TutorTableProps> = ({
   tutors,
   isLoading,
   onDelete,
+  onSelect,
 }) => {
   if (isLoading) {
     return (
@@ -52,7 +54,11 @@ const TutorTable: React.FC<TutorTableProps> = ({
       </TableHeader>
       <TableBody>
         {tutors.map((tutor) => (
-          <TableRow key={tutor.id}>
+          <TableRow 
+            key={tutor.id} 
+            className="cursor-pointer hover:bg-muted/60"
+            onClick={() => onSelect(tutor)}
+          >
             <TableCell>
               <div className="flex flex-col">
                 <div className="font-medium">{tutor.name}</div>

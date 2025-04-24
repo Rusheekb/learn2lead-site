@@ -199,3 +199,35 @@ export const calculateBusinessAnalytics = (
     classesPerMonth,
   };
 };
+
+export async function fetchStudentAnalytics(studentId: string) {
+  const { data, error, count } = await supabase
+    .from('class_logs')
+    .select('Time (hrs)', { count: 'exact' })
+    .eq('Student Name', studentId);
+
+  if (error) throw error;
+
+  const totalSessions = count || 0;
+  const avgDuration = data && data.length
+    ? Math.round(data.reduce((sum, r) => sum + (Number(r['Time (hrs)']) || 0), 0) / data.length * 60)
+    : 0;
+
+  return { totalSessions, avgDuration };
+}
+
+export async function fetchTutorAnalytics(tutorId: string) {
+  const { data, error, count } = await supabase
+    .from('class_logs')
+    .select('Time (hrs)', { count: 'exact' })
+    .eq('Tutor Name', tutorId);
+
+  if (error) throw error;
+
+  const totalSessions = count || 0;
+  const avgDuration = data && data.length
+    ? Math.round(data.reduce((sum, r) => sum + (Number(r['Time (hrs)']) || 0), 0) / data.length * 60)
+    : 0;
+
+  return { totalSessions, avgDuration };
+}

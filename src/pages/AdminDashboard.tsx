@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import ClassAnalytics from '@/components/admin/ClassAnalytics';
@@ -7,22 +6,24 @@ import ClassLogs from '@/components/admin/ClassLogs';
 import PaymentsManager from '@/components/admin/PaymentsManager';
 import TutorsManager from '@/components/admin/TutorsManager';
 import StudentsManager from '@/components/admin/StudentsManager';
+import { UserDetailModal } from '@/components/admin/UserDetailModal';
 import { useStudentRecordsRealtime } from '@/hooks/realtime/useStudentRecordsRealtime';
 import { useTutorRecordsRealtime } from '@/hooks/realtime/useTutorRecordsRealtime';
 import { Student, Tutor } from '@/types/tutorTypes';
 import { fetchStudents } from '@/services/students/studentService';
 import { fetchTutors } from '@/services/tutors/tutorService';
 
+type User = (Student | Tutor) & { role: 'student' | 'tutor' };
+
 const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('analytics');
   const [students, setStudents] = useState<Student[]>([]);
   const [tutors, setTutors] = useState<Tutor[]>([]);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
-  // Initialize real-time subscriptions
   useStudentRecordsRealtime(setStudents);
   useTutorRecordsRealtime(setTutors);
-  
-  // Initial data fetch
+
   useEffect(() => {
     const loadInitialData = async () => {
       try {
@@ -39,6 +40,14 @@ const AdminDashboard: React.FC = () => {
     
     loadInitialData();
   }, []);
+
+  const handleStudentSelect = (student: Student) => {
+    setSelectedUser({ ...student, role: 'student' });
+  };
+
+  const handleTutorSelect = (tutor: Tutor) => {
+    setSelectedUser({ ...tutor, role: 'tutor' });
+  };
 
   return (
     <DashboardLayout title="Admin Portal" role="admin">
@@ -67,14 +76,15 @@ const AdminDashboard: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="tutors" className="pt-2">
-            <TutorsManager tutors={tutors} />
+            <TutorsManager tutors={tutors} onSelect={handleTutorSelect} />
           </TabsContent>
 
           <TabsContent value="students" className="pt-2">
-            <StudentsManager students={students} />
+            <StudentsManager students={students} onSelect={handleStudentSelect} />
           </TabsContent>
         </Tabs>
       </div>
+      <UserDetailModal user={selectedUser} onClose={() => setSelectedUser(null)} />
     </DashboardLayout>
   );
 };

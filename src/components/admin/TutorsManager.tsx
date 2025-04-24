@@ -8,11 +8,10 @@ import { deleteTutor } from '@/services/tutors/tutorService';
 
 interface TutorsManagerProps {
   tutors: Tutor[];
+  onSelect: (tutor: Tutor) => void;
 }
 
-const TutorsManager: React.FC<TutorsManagerProps> = ({ tutors }) => {
-  console.log('rendering TutorsManager:', tutors);
-  
+const TutorsManager: React.FC<TutorsManagerProps> = ({ tutors, onSelect }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleDeleteTutor = async (tutorId: string) => {
@@ -40,7 +39,8 @@ const TutorsManager: React.FC<TutorsManagerProps> = ({ tutors }) => {
           <TutorTable 
             tutors={tutors} 
             isLoading={isLoading} 
-            onDelete={handleDeleteTutor} 
+            onDelete={handleDeleteTutor}
+            onSelect={onSelect}
           />
         </CardContent>
       </Card>
