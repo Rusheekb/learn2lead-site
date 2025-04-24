@@ -1,3 +1,4 @@
+
 import { ClassEvent, PaymentStatus } from '@/types/tutorTypes';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -211,7 +212,13 @@ export async function fetchStudentAnalytics(studentId: string) {
 
   const totalSessions = count || 0;
   const avgDuration = data && data.length
-    ? Math.round(data.reduce((sum: number, r: { 'Time (hrs)': string | number }) => sum + (Number(r['Time (hrs)']) || 0), 0) / data.length * 60)
+    ? Math.round(data.reduce((sum: number, row: any) => {
+        // Convert the time value to number safely
+        const timeValue = typeof row['Time (hrs)'] === 'string' 
+          ? parseFloat(row['Time (hrs)']) || 0 
+          : (row['Time (hrs)'] || 0);
+        return sum + timeValue;
+      }, 0) / data.length * 60)
     : 0;
 
   return { totalSessions, avgDuration };
@@ -227,7 +234,13 @@ export async function fetchTutorAnalytics(tutorId: string) {
 
   const totalSessions = count || 0;
   const avgDuration = data && data.length
-    ? Math.round(data.reduce((sum: number, r: { 'Time (hrs)': string | number }) => sum + (Number(r['Time (hrs)']) || 0), 0) / data.length * 60)
+    ? Math.round(data.reduce((sum: number, row: any) => {
+        // Convert the time value to number safely
+        const timeValue = typeof row['Time (hrs)'] === 'string' 
+          ? parseFloat(row['Time (hrs)']) || 0 
+          : (row['Time (hrs)'] || 0);
+        return sum + timeValue;
+      }, 0) / data.length * 60)
     : 0;
 
   return { totalSessions, avgDuration };
