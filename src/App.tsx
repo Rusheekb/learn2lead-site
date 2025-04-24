@@ -4,13 +4,14 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import React, { Suspense } from 'react'; // Change this import
+import React, { Suspense } from 'react';
 import Index from './pages/Index';
 import NotFound from './pages/NotFound';
 import Login from './pages/Login';
 import Pricing from './pages/Pricing';
 import { AuthProvider } from './contexts/AuthContext';
 import PrivateRoute from './components/PrivateRoute';
+import { useRoleSync } from './hooks/useRoleSync';
 
 const Dashboard = React.lazy(() => import('./pages/Dashboard'));
 const TutorDashboard = React.lazy(() => import('./pages/TutorDashboard'));
@@ -19,6 +20,8 @@ const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
 const queryClient = new QueryClient();
 
 const App = () => {
+  useRoleSync();
+
   return (
     <QueryClientProvider client={queryClient}>
       <HelmetProvider>
