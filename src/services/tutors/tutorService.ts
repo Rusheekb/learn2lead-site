@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 
 export async function fetchTutors(): Promise<Tutor[]> {
   const { data, error } = await supabase.from('tutors').select('*');
+  console.log('[fetchTutors]', data, error); // Debug log as requested
   
   if (error) {
     console.error('Error fetching tutors:', error);

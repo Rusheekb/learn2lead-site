@@ -31,7 +31,7 @@ const AdminDashboard: React.FC = () => {
         const studentsData = await fetchStudents();
         const tutorsData = await fetchTutors();
         
-        console.log('fetched tutors:', tutorsData);
+        console.log('fetched tutors:', tutorsData); // Already present, kept for clarity
         setStudents(studentsData);
         setTutors(tutorsData);
       } catch (error) {
