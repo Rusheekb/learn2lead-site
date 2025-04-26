@@ -1,7 +1,9 @@
 import { supabase } from '@/services/supabaseClient';
 import type { TutorStudentRelationship } from './types';
 
-export async function fetchRelationshipsForTutor(tutorId: string) {
+export async function fetchRelationshipsForTutor(
+  tutorId: string
+): Promise<TutorStudentRelationship[]> {
   const { data, error } = await supabase
     .from('tutor_student_relationships')
     .select('*')
@@ -13,10 +15,12 @@ export async function fetchRelationshipsForTutor(tutorId: string) {
     throw error;
   }
 
-  return data || [];
+  return (data ?? []) as TutorStudentRelationship[];
 }
 
-export async function fetchRelationshipsForStudent(studentId: string) {
+export async function fetchRelationshipsForStudent(
+  studentId: string
+): Promise<TutorStudentRelationship[]> {
   const { data, error } = await supabase
     .from('tutor_student_relationships')
     .select('*')
@@ -28,7 +32,7 @@ export async function fetchRelationshipsForStudent(studentId: string) {
     throw error;
   }
 
-  return data || [];
+  return (data ?? []) as TutorStudentRelationship[];
 }
 
 export async function fetchActiveRelationshipsForAdmin(): Promise<
@@ -40,5 +44,5 @@ export async function fetchActiveRelationshipsForAdmin(): Promise<
     .eq('active', true);
 
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []) as TutorStudentRelationship[];
 }
