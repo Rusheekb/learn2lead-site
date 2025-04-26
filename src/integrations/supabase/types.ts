@@ -228,6 +228,7 @@ export type Database = {
           end_time: string
           id: string
           notes: string | null
+          relationship_id: string | null
           start_time: string
           status: string
           student_id: string
@@ -244,6 +245,7 @@ export type Database = {
           end_time: string
           id?: string
           notes?: string | null
+          relationship_id?: string | null
           start_time: string
           status?: string
           student_id: string
@@ -260,6 +262,7 @@ export type Database = {
           end_time?: string
           id?: string
           notes?: string | null
+          relationship_id?: string | null
           start_time?: string
           status?: string
           student_id?: string
@@ -270,6 +273,13 @@ export type Database = {
           zoom_link?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "scheduled_classes_relationship_id_fkey"
+            columns: ["relationship_id"]
+            isOneToOne: false
+            referencedRelation: "tutor_student_relationships"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "scheduled_classes_student_id_fkey"
             columns: ["student_id"]
@@ -354,25 +364,25 @@ export type Database = {
         Row: {
           active: boolean
           assigned_at: string
-          assigned_by: string | null
           id: string
           student_id: string
+          subject: string | null
           tutor_id: string
         }
         Insert: {
           active?: boolean
           assigned_at?: string
-          assigned_by?: string | null
           id?: string
           student_id: string
+          subject?: string | null
           tutor_id: string
         }
         Update: {
           active?: boolean
           assigned_at?: string
-          assigned_by?: string | null
           id?: string
           student_id?: string
+          subject?: string | null
           tutor_id?: string
         }
         Relationships: [
