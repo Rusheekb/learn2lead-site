@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 export { supabase }; //
+
 import type {
   ClassEvent,
   Student as TutorStudent,
