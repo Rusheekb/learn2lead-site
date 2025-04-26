@@ -13,7 +13,7 @@ import { useTutorRecordsRealtime } from '@/hooks/realtime/useTutorRecordsRealtim
 import { Student, Tutor } from '@/types/tutorTypes';
 import { fetchStudents } from '@/services/students/studentService';
 import { fetchTutors } from '@/services/tutors/tutorService';
-import { fetchRelationshipsForTutor, TutorStudentRelationship } from '@/services/relationships/relationshipService';
+import { fetchActiveRelationshipsForAdmin, TutorStudentRelationship } from '@/services/relationships/relationshipService';
 
 type User = (Student | Tutor) & { role: 'student' | 'tutor' };
 
@@ -27,38 +27,24 @@ const AdminDashboard: React.FC = () => {
   useStudentRecordsRealtime(setStudents);
   useTutorRecordsRealtime(setTutors);
 
-  const loadRelationships = async () => {
+  const loadAll = async () => {
     try {
-      if (tutors.length > 0) {
-        const rels = await fetchRelationshipsForTutor(tutors[0].id);
-        setRelationships(rels);
-      }
+      const [tutorsData, studentsData, relsData] = await Promise.all([
+        fetchTutors(),
+        fetchStudents(),
+        fetchActiveRelationshipsForAdmin(),
+      ]);
+      setTutors(tutorsData);
+      setStudents(studentsData);
+      setRelationships(relsData);
     } catch (error) {
-      console.error('Error loading relationships:', error);
+      console.error('Error loading dashboard data:', error);
     }
   };
 
   useEffect(() => {
-    const loadInitialData = async () => {
-      try {
-        const studentsData = await fetchStudents();
-        const tutorsData = await fetchTutors();
-        
-        setStudents(studentsData);
-        setTutors(tutorsData);
-      } catch (error) {
-        console.error('Error loading initial data:', error);
-      }
-    };
-    
-    loadInitialData();
+    loadAll();
   }, []);
-
-  useEffect(() => {
-    if (tutors.length > 0) {
-      loadRelationships();
-    }
-  }, [tutors]);
 
   const handleStudentSelect = (student: Student) => {
     setSelectedUser({ ...student, role: 'student' });
@@ -108,7 +94,7 @@ const AdminDashboard: React.FC = () => {
               tutors={tutors}
               students={students}
               relationships={relationships}
-              onRelationshipChange={loadRelationships}
+              onRelationshipChange={loadAll}
             />
           </TabsContent>
         </Tabs>

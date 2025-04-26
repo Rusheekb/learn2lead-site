@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { TutorStudentRelationship } from './types';
 
@@ -32,3 +31,16 @@ export async function fetchRelationshipsForStudent(studentId: string) {
   return data || [];
 }
 
+export async function fetchActiveRelationshipsForAdmin() {
+  const { data, error } = await supabase
+    .from('tutor_student_relationships')
+    .select('*')
+    .eq('active', true);
+    
+  if (error) {
+    console.error('Error fetching relationships:', error);
+    throw error;
+  }
+  
+  return data || [];
+}
