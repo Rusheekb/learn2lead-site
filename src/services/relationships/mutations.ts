@@ -1,5 +1,4 @@
-
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from '@/services/supabaseClient';
 import { toast } from 'sonner';
 import { TutorStudentRelationship } from './types';
 
@@ -13,12 +12,12 @@ export async function createRelationship(input: {
     .insert({ ...input, active: true })
     .select()
     .single();
-    
+
   if (error) {
     console.error('Error creating relationship:', error);
     throw error;
   }
-  
+
   toast.success('Tutor-student relationship created successfully');
   return data;
 }
@@ -30,13 +29,12 @@ export async function endRelationship(id: string) {
     .eq('id', id)
     .select()
     .single();
-    
+
   if (error) {
     console.error('Error ending relationship:', error);
     throw error;
   }
-  
+
   toast.success('Tutor-student relationship ended successfully');
   return data;
 }
-

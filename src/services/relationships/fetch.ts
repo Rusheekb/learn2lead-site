@@ -1,5 +1,5 @@
-import { supabase } from '@/integrations/supabase/client';
-import { TutorStudentRelationship } from './types';
+import { supabase } from '@/services/supabaseClient';
+import type { TutorStudentRelationship } from './types';
 
 export async function fetchRelationshipsForTutor(tutorId: string) {
   const { data, error } = await supabase
@@ -7,12 +7,12 @@ export async function fetchRelationshipsForTutor(tutorId: string) {
     .select('*')
     .eq('tutor_id', tutorId)
     .eq('active', true);
-    
+
   if (error) {
     console.error('Error fetching relationships:', error);
     throw error;
   }
-  
+
   return data || [];
 }
 
@@ -22,25 +22,23 @@ export async function fetchRelationshipsForStudent(studentId: string) {
     .select('*')
     .eq('student_id', studentId)
     .eq('active', true);
-    
+
   if (error) {
     console.error('Error fetching relationships:', error);
     throw error;
   }
-  
+
   return data || [];
 }
 
-export async function fetchActiveRelationshipsForAdmin() {
+export async function fetchActiveRelationshipsForAdmin(): Promise<
+  TutorStudentRelationship[]
+> {
   const { data, error } = await supabase
     .from('tutor_student_relationships')
     .select('*')
     .eq('active', true);
-    
-  if (error) {
-    console.error('Error fetching relationships:', error);
-    throw error;
-  }
-  
-  return data || [];
+
+  if (error) throw error;
+  return data ?? [];
 }
