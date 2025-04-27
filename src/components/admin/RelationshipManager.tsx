@@ -31,8 +31,7 @@ const RelationshipManager: React.FC<RelationshipManagerProps> = ({
     try {
       await createRelationship({
         tutor_id: selectedTutorId,
-        student_id: selectedStudentId,
-        assigned_by: user?.id || 'system'
+        student_id: selectedStudentId
       });
       
       setSelectedTutorId('');

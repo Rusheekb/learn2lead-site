@@ -5,7 +5,5 @@ export interface TutorStudentRelationship {
   student_id: string;
   subject?: string;
   assigned_at: string;
-  assigned_by?: string;
   active: boolean;
 }
-

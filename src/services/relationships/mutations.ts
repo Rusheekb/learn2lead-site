@@ -1,3 +1,4 @@
+
 import { supabase } from '@/services/supabaseClient';
 import { toast } from 'sonner';
 import { TutorStudentRelationship } from './types';
@@ -5,7 +6,6 @@ import { TutorStudentRelationship } from './types';
 export async function createRelationship(input: {
   tutor_id: string;
   student_id: string;
-  assigned_by: string;
 }) {
   const { data, error } = await supabase
     .from('tutor_student_relationships')
