@@ -51,12 +51,24 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
 
       // Fetch student details if we have relationships
       if (studentIds.length > 0) {
-        const { data: students } = await supabase
+        const { data: studentsData, error } = await supabase
           .from('students')
-          .select('id, name')
+          .select('id, name, subjects')
           .in('id', studentIds);
         
-        setAssignedStudents(students || []);
+        if (error) {
+          console.error('Error fetching students:', error);
+          return;
+        }
+        
+        // Ensure the data conforms to the Student type
+        const typedStudents: Student[] = studentsData.map(student => ({
+          id: student.id,
+          name: student.name,
+          subjects: student.subjects || []
+        }));
+        
+        setAssignedStudents(typedStudents);
       }
     };
 
@@ -65,7 +77,7 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">
             Schedule New Class
