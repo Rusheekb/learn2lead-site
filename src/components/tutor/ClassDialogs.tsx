@@ -101,7 +101,6 @@ const ClassDialogs: React.FC<ClassDialogsProps> = ({
         setIsOpen={setIsAddEventOpen}
         newEvent={newEvent}
         setNewEvent={setNewEvent}
-        students={students}
         onCreateEvent={onCreateEvent}
         onResetForm={onResetForm}
       />

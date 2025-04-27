@@ -20,7 +20,6 @@ interface AddClassDialogProps {
   setIsOpen: (isOpen: boolean) => void;
   newEvent: any;
   setNewEvent: (event: any) => void;
-  students: Student[];
   onCreateEvent: () => void;
   onResetForm: () => void;
 }
@@ -30,24 +29,37 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
   setIsOpen,
   newEvent,
   setNewEvent,
-  students,
   onCreateEvent,
   onResetForm,
 }) => {
   const { user } = useAuth();
   const [relationships, setRelationships] = useState<TutorStudentRelationship[]>([]);
+  const [assignedStudents, setAssignedStudents] = useState<Student[]>([]);
   const [selectedRelId, setSelectedRelId] = useState<string>('');
 
   useEffect(() => {
     if (!user) return;
     
-    const loadRelationships = async () => {
+    const loadRelationshipsAndStudents = async () => {
       // Load active pairings for this tutor
       const rels = await fetchRelationshipsForTutor(user.id);
       setRelationships(rels);
+
+      // Get unique student IDs from relationships
+      const studentIds = Array.from(new Set(rels.map(rel => rel.student_id)));
+
+      // Fetch student details if we have relationships
+      if (studentIds.length > 0) {
+        const { data: students } = await supabase
+          .from('students')
+          .select('id, name')
+          .in('id', studentIds);
+        
+        setAssignedStudents(students || []);
+      }
     };
 
-    loadRelationships();
+    loadRelationshipsAndStudents();
   }, [user]);
 
   return (
@@ -62,7 +74,7 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
         <NewClassEventForm
           newEvent={newEvent}
           setNewEvent={setNewEvent}
-          students={students}
+          assignedStudents={assignedStudents}
           relationships={relationships}
           selectedRelId={selectedRelId}
           setSelectedRelId={setSelectedRelId}

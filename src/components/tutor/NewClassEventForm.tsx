@@ -19,7 +19,7 @@ import type { TutorStudentRelationship } from '@/services/relationships/types';
 interface NewClassEventFormProps {
   newEvent: any;
   setNewEvent: (event: any) => void;
-  students: Student[];
+  assignedStudents: Student[];  // Changed from students to assignedStudents
   relationships: TutorStudentRelationship[];
   selectedRelId: string;
   setSelectedRelId: (id: string) => void;
@@ -28,7 +28,7 @@ interface NewClassEventFormProps {
 const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
   newEvent,
   setNewEvent,
-  students,
+  assignedStudents,  // Updated prop name
   relationships,
   selectedRelId,
   setSelectedRelId,
@@ -53,10 +53,10 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
           </SelectTrigger>
           <SelectContent>
             {relationships.map(rel => {
-              const student = students.find(s => s.id === rel.student_id);
+              const student = assignedStudents.find(s => s.id === rel.student_id);
               return (
                 <SelectItem key={rel.id} value={rel.id}>
-                  {student?.name ?? 'Unknown Student'}
+                  {student?.name ?? 'Loading...'}
                 </SelectItem>
               );
             })}
