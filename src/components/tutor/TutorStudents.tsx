@@ -1,18 +1,21 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import StudentList from './StudentList';
 import StudentDetailsDialog from './StudentDetailsDialog';
-import { StudentMessage, StudentNote } from '@/types/sharedTypes';
-import { fetchStudents } from '@/services/students/studentService';
-import { fetchRelationshipsForTutor } from '@/services/relationships/fetch';
 import { useAuth } from '@/contexts/AuthContext';
+import { fetchRelationshipsForTutor } from '@/services/relationships/fetch';
+import { fetchStudents } from '@/services/students/studentService';
+import type { Student } from '@/types/sharedTypes';
+import type { TutorStudentRelationship } from '@/services/relationships/types';
 
 const TutorStudents: React.FC = () => {
   const { user } = useAuth();
-  const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>('overview');
-  const [students, setStudents] = useState<any[]>([]);
+  const [relationships, setRelationships] = useState<TutorStudentRelationship[]>([]);
+  const [myStudents, setMyStudents] = useState<Student[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -23,13 +26,14 @@ const TutorStudents: React.FC = () => {
       try {
         // 1. Load active pairings for this tutor
         const rels = await fetchRelationshipsForTutor(user.id);
+        setRelationships(rels);
         
         // 2. Load all student profiles and filter to just your students
         const allStudents = await fetchStudents();
         const studentIds = rels.map(r => r.student_id);
         const myStudents = allStudents.filter(s => studentIds.includes(s.id));
         
-        setStudents(myStudents);
+        setMyStudents(myStudents);
       } catch (error) {
         console.error('Error loading students:', error);
       } finally {
@@ -40,7 +44,7 @@ const TutorStudents: React.FC = () => {
     loadStudents();
   }, [user]);
 
-  const handleStudentSelect = (student: any) => {
+  const handleStudentSelect = (student: Student) => {
     setSelectedStudent(student);
     setIsDetailsOpen(true);
     setActiveTab('overview');
@@ -72,9 +76,9 @@ const TutorStudents: React.FC = () => {
             <div className="flex justify-center items-center py-8">
               <p>Loading students...</p>
             </div>
-          ) : students.length > 0 ? (
+          ) : myStudents.length > 0 ? (
             <StudentList
-              students={students}
+              students={myStudents}
               onSelectStudent={handleStudentSelect}
             />
           ) : (
