@@ -3,87 +3,42 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import StudentList from './StudentList';
 import StudentDetailsDialog from './StudentDetailsDialog';
 import { StudentMessage, StudentNote } from '@/types/sharedTypes';
-import { fetchTutorStudents } from '@/services/tutorService';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-
-// Types for the component
-interface TutorStudent {
-  student_id: string;
-  student_name: string;
-  grade: string;
-  subjects: string[];
-  payment_status: string;
-}
+import { fetchStudents } from '@/services/students/studentService';
+import { fetchRelationshipsForTutor } from '@/services/relationships/fetch';
+import { useAuth } from '@/contexts/AuthContext';
 
 const TutorStudents: React.FC = () => {
+  const { user } = useAuth();
   const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>('overview');
   const [students, setStudents] = useState<any[]>([]);
-  const [tutorId, setTutorId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Get current user and fetch their tutor profile
   useEffect(() => {
-    const fetchCurrentUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (user) {
-        // Check if user is a tutor
-        const { data, error } = await supabase
-          .from('tutors')
-          .select('id')
-          .eq('email', user.email)
-          .maybeSingle();
-
-        if (data?.id) {
-          setTutorId(data.id);
-        } else {
-          console.log('User is not a registered tutor');
-        }
-      }
-    };
-
-    fetchCurrentUser();
-  }, []);
-
-  // Load tutor's students when tutorId is available
-  useEffect(() => {
-    if (!tutorId) return;
-
+    if (!user) return;
+    
     const loadStudents = async () => {
       setIsLoading(true);
       try {
-        const tutorStudents = await fetchTutorStudents(tutorId);
-
-        const formattedStudents = tutorStudents.map((ts) => ({
-          id: ts.student_id,
-          name: ts.student_name,
-          subjects: ts.subjects || [],
-          grade: ts.grade || '',
-          lastSession: '', // Will be populated from class data
-          nextSession: '', // Will be populated from class data
-          progress: ts.payment_status || 'active',
-        }));
-
-        setStudents(formattedStudents);
+        // 1. Load active pairings for this tutor
+        const rels = await fetchRelationshipsForTutor(user.id);
+        
+        // 2. Load all student profiles and filter to just your students
+        const allStudents = await fetchStudents();
+        const studentIds = rels.map(r => r.student_id);
+        const myStudents = allStudents.filter(s => studentIds.includes(s.id));
+        
+        setStudents(myStudents);
       } catch (error) {
         console.error('Error loading students:', error);
-        toast.error('Failed to load students');
       } finally {
         setIsLoading(false);
       }
     };
 
     loadStudents();
-  }, [tutorId]);
-
-  // Find messages and notes for selected student - empty arrays for now
-  const studentMessages: StudentMessage[] = [];
-  const studentNotes: StudentNote[] = [];
+  }, [user]);
 
   const handleStudentSelect = (student: any) => {
     setSelectedStudent(student);
@@ -140,8 +95,8 @@ const TutorStudents: React.FC = () => {
         student={selectedStudent}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        studentMessages={studentMessages}
-        studentNotes={studentNotes}
+        studentMessages={[]} // We'll implement these later
+        studentNotes={[]}    // We'll implement these later
         onSendMessage={handleSendMessage}
         onAddNote={handleAddNote}
       />
