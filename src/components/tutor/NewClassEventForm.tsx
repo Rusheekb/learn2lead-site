@@ -1,8 +1,13 @@
-import React from 'react';
-import { Input } from '@/components/ui/input';
+import React, { useState, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
+import { format } from 'date-fns';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { CalendarIcon } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -10,193 +15,183 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { CalendarIcon, Clock } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
+import type { Student } from '@/types/sharedTypes';
+import type { TutorStudentRelationship } from '@/services/relationships/types';
 
 interface NewClassEventFormProps {
-  newEvent: {
-    title: string;
-    date: Date;
-    startTime: string;
-    endTime: string;
-    studentId: string;
-    subject: string;
-    zoomLink: string;
-    notes: string;
-    tutorId: string;
-    recurring?: boolean; // Add optional recurring property
-    recurringDays?: string[]; // Add optional recurringDays property
-  };
-  setNewEvent: React.Dispatch<React.SetStateAction<any>>;
-  students: { id: string; name: string }[];
-  subjects?: string[];
+  newEvent: any;
+  setNewEvent: (event: any) => void;
+  students: Student[];
+  relationships: TutorStudentRelationship[];
+  selectedRelId: string;
+  setSelectedRelId: (id: string) => void;
 }
 
-const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
+const NewClassEventForm = ({
   newEvent,
   setNewEvent,
   students,
-  subjects = ['Mathematics', 'Science', 'English', 'History', 'Languages'],
-}) => {
+  relationships,
+  selectedRelId,
+  setSelectedRelId,
+}: NewClassEventFormProps) => {
+  const [classTitle, setClassTitle] = useState(newEvent?.title || '');
+  const [selectedSubject, setSelectedSubject] = useState(newEvent?.subject || '');
+  const [startDate, setStartDate] = useState<Date | undefined>(
+    newEvent?.start_time ? new Date(newEvent.start_time) : undefined
+  );
+  const [endDate, setEndDate] = useState<Date | undefined>(
+    newEvent?.end_time ? new Date(newEvent.end_time) : undefined
+  );
+  const [zoomLink, setZoomLink] = useState(newEvent?.zoom_link || '');
+  const [notes, setNotes] = useState(newEvent?.notes || '');
+
+  useEffect(() => {
+    setNewEvent({
+      ...newEvent,
+      title: classTitle,
+      subject: selectedSubject,
+      start_time: startDate ? startDate.toISOString() : null,
+      end_time: endDate ? endDate.toISOString() : null,
+      zoom_link: zoomLink,
+      notes: notes,
+    });
+  }, [classTitle, selectedSubject, startDate, endDate, zoomLink, notes, setNewEvent, newEvent]);
+
+  const subjects = ['Math', 'Science', 'English', 'History', 'Programming'];
+
   return (
-    <div className="grid gap-6 py-4">
+    <div className="space-y-4 py-4">
       <div className="space-y-2">
-        <Label htmlFor="title">Class Title</Label>
+        <Label htmlFor="classTitle">Class Title</Label>
         <Input
-          id="title"
-          value={newEvent.title}
-          onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
+          id="classTitle"
           placeholder="Enter class title"
-          className="w-full"
+          value={classTitle}
+          onChange={(e) => setClassTitle(e.target.value)}
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <Label htmlFor="student">Student</Label>
-          <Select
-            value={newEvent.studentId}
-            onValueChange={(value) =>
-              setNewEvent({ ...newEvent, studentId: value })
-            }
-          >
-            <SelectTrigger id="student" className="w-full">
-              <SelectValue placeholder="Select student" />
-            </SelectTrigger>
-            <SelectContent>
-              {students.length > 0 ? (
-                students.map((student) => (
-                  <SelectItem key={student.id} value={student.id}>
-                    {student.name}
-                  </SelectItem>
-                ))
-              ) : (
-                <SelectItem value="no-students" disabled>
-                  No students assigned
+      <div className="space-y-2">
+        <Label>Student</Label>
+        <Select
+          value={selectedRelId}
+          onValueChange={(value) => {
+            setSelectedRelId(value);
+            const rel = relationships.find(r => r.id === value);
+            setNewEvent({
+              ...newEvent,
+              relationship_id: value,
+              subject: rel?.subject || ''
+            });
+          }}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select student" />
+          </SelectTrigger>
+          <SelectContent>
+            {relationships.map(rel => {
+              const student = students.find(s => s.id === rel.student_id);
+              return (
+                <SelectItem key={rel.id} value={rel.id}>
+                  {student?.name || 'Unknown Student'}
+                  {rel.subject ? ` (${rel.subject})` : ''}
                 </SelectItem>
-              )}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="subject">Subject</Label>
-          <Select
-            value={newEvent.subject}
-            onValueChange={(value) =>
-              setNewEvent({ ...newEvent, subject: value })
-            }
-          >
-            <SelectTrigger id="subject" className="w-full">
-              <SelectValue placeholder="Select subject" />
-            </SelectTrigger>
-            <SelectContent>
-              {subjects.map((subject) => (
-                <SelectItem key={subject} value={subject}>
-                  {subject}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+              );
+            })}
+          </SelectContent>
+        </Select>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="space-y-2">
+        <Label htmlFor="subject">Subject</Label>
+        <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select a subject" />
+          </SelectTrigger>
+          <SelectContent>
+            {subjects.map((subject) => (
+              <SelectItem key={subject} value={subject}>
+                {subject}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label>Date</Label>
+          <Label>Start Date</Label>
           <Popover>
             <PopoverTrigger asChild>
               <Button
-                variant="outline"
+                variant={'outline'}
                 className={cn(
                   'w-full justify-start text-left font-normal',
-                  !newEvent.date && 'text-muted-foreground'
+                  !startDate && 'text-muted-foreground'
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {newEvent.date ? (
-                  format(newEvent.date, 'PPP')
-                ) : (
-                  <span>Select date</span>
-                )}
+                {startDate ? format(startDate, 'PPP') : <span>Pick a date</span>}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0" align="start">
               <Calendar
                 mode="single"
-                selected={newEvent.date}
-                onSelect={(date) => date && setNewEvent({ ...newEvent, date })}
+                selected={startDate}
+                onSelect={setStartDate}
+                disabled={(date) => date < new Date()}
                 initialFocus
-                className="rounded-md border"
               />
             </PopoverContent>
           </Popover>
         </div>
 
-        <div className="grid gap-6">
-          <div className="space-y-2">
-            <Label htmlFor="startTime">Start Time</Label>
-            <div className="relative">
-              <Input
-                id="startTime"
-                type="time"
-                value={newEvent.startTime}
-                onChange={(e) =>
-                  setNewEvent({ ...newEvent, startTime: e.target.value })
-                }
-                className="w-full pl-10"
+        <div className="space-y-2">
+          <Label>End Date</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={'outline'}
+                className={cn(
+                  'w-full justify-start text-left font-normal',
+                  !endDate && 'text-muted-foreground'
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {endDate ? format(endDate, 'PPP') : <span>Pick a date</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={endDate}
+                onSelect={setEndDate}
+                disabled={(date) => date < new Date()}
+                initialFocus
               />
-              <Clock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="endTime">End Time</Label>
-            <div className="relative">
-              <Input
-                id="endTime"
-                type="time"
-                value={newEvent.endTime}
-                onChange={(e) =>
-                  setNewEvent({ ...newEvent, endTime: e.target.value })
-                }
-                className="w-full pl-10"
-              />
-              <Clock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-            </div>
-          </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="zoomLink">Zoom Meeting Link</Label>
+        <Label htmlFor="zoomLink">Zoom Link (Optional)</Label>
         <Input
           id="zoomLink"
-          type="url"
-          value={newEvent.zoomLink}
-          onChange={(e) =>
-            setNewEvent({ ...newEvent, zoomLink: e.target.value })
-          }
-          placeholder="https://zoom.us/j/..."
-          className="w-full"
+          placeholder="Enter Zoom link"
+          value={zoomLink}
+          onChange={(e) => setZoomLink(e.target.value)}
         />
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="notes">Notes</Label>
+        <Label htmlFor="notes">Notes (Optional)</Label>
         <Textarea
           id="notes"
-          value={newEvent.notes}
-          onChange={(e) => setNewEvent({ ...newEvent, notes: e.target.value })}
-          placeholder="Add any notes or instructions for this class"
-          className="h-32 resize-none"
+          placeholder="Enter any additional notes"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
         />
       </div>
     </div>

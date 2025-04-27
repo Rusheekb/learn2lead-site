@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -8,13 +9,18 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import NewClassEventForm from '../NewClassEventForm';
+import { useAuth } from '@/contexts/AuthContext';
+import { fetchRelationshipsForTutor } from '@/services/relationships/fetch';
+import { fetchStudents } from '@/services/students/studentService';
+import type { Student } from '@/types/sharedTypes';
+import type { TutorStudentRelationship } from '@/services/relationships/types';
 
 interface AddClassDialogProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   newEvent: any;
   setNewEvent: (event: any) => void;
-  students: any[];
+  students: Student[];
   onCreateEvent: () => void;
   onResetForm: () => void;
 }
@@ -28,6 +34,22 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
   onCreateEvent,
   onResetForm,
 }) => {
+  const { user } = useAuth();
+  const [relationships, setRelationships] = useState<TutorStudentRelationship[]>([]);
+  const [selectedRelId, setSelectedRelId] = useState<string>('');
+
+  useEffect(() => {
+    if (!user) return;
+    
+    const loadRelationships = async () => {
+      // Load active pairings for this tutor
+      const rels = await fetchRelationshipsForTutor(user.id);
+      setRelationships(rels);
+    };
+
+    loadRelationships();
+  }, [user]);
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
@@ -41,6 +63,9 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
           newEvent={newEvent}
           setNewEvent={setNewEvent}
           students={students}
+          relationships={relationships}
+          selectedRelId={selectedRelId}
+          setSelectedRelId={setSelectedRelId}
         />
 
         <DialogFooter className="pt-2">
