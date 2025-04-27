@@ -49,3 +49,16 @@ export const formatDate = (dateString: string | Date): string => {
     return String(dateString); // Return original date if formatting fails
   }
 };
+
+export const combineDateTime = (date: Date, time: string): string => {
+  try {
+    const [hours, minutes] = time.split(':').map(Number);
+    const combined = new Date(date);
+    combined.setHours(hours);
+    combined.setMinutes(minutes);
+    return combined.toISOString();
+  } catch (error) {
+    console.error('Error combining date and time:', error);
+    throw error;
+  }
+};
