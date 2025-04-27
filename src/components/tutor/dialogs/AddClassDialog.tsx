@@ -12,6 +12,7 @@ import NewClassEventForm from '../NewClassEventForm';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchRelationshipsForTutor } from '@/services/relationships/fetch';
 import { fetchStudents } from '@/services/students/studentService';
+import { supabase } from '@/services/supabaseClient';
 import type { Student } from '@/types/sharedTypes';
 import type { TutorStudentRelationship } from '@/services/relationships/types';
 

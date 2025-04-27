@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ClassEvent } from '@/types/tutorTypes';
 import NewClassEventForm from '../NewClassEventForm';
 import type { TutorStudentRelationship } from '@/services/relationships/types';
+import type { Student } from '@/types/sharedTypes';
 
 interface EditClassFormProps {
   selectedEvent: ClassEvent;
@@ -26,6 +27,7 @@ const EditClassForm: React.FC<EditClassFormProps> = ({
   // and selectedRelId since they aren't used for editing, just for creating new events
   const [relationships, setRelationships] = useState<TutorStudentRelationship[]>([]);
   const [selectedRelId, setSelectedRelId] = useState<string>('');
+  const [assignedStudents, setAssignedStudents] = useState<Student[]>(students);
 
   return (
     <div className="py-4">
@@ -47,7 +49,7 @@ const EditClassForm: React.FC<EditClassFormProps> = ({
           recurringDays: selectedEvent.recurringDays || [],
         }}
         setNewEvent={(event) => setNewEvent({ ...selectedEvent, ...event })}
-        students={students}
+        assignedStudents={assignedStudents}
         relationships={relationships}
         selectedRelId={selectedRelId}
         setSelectedRelId={setSelectedRelId}
