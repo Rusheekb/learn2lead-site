@@ -1,18 +1,25 @@
 
 import React from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { useState, useEffect } from 'react';
-import { ClassEvent } from '@/types/tutorTypes';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { mockStudents } from './mock-data-students';
 import SchedulerHeader from './SchedulerHeader';
 import SchedulerFilter from './SchedulerFilter';
 import CalendarWithEvents from './CalendarWithEvents';
 import ClassDialogs from './ClassDialogs';
+import { useClassLogsQuery } from '@/hooks/queries/useClassLogsQuery';
+import { ClassEvent } from '@/types/tutorTypes';
 
 const TutorScheduler: React.FC = () => {
-  const queryClient = useQueryClient();
+  // Use the refactored hooks for data fetching and realtime updates
+  const {
+    classes: classList,
+    createClass,
+    updateClass,
+    deleteClass,
+    allSubjects,
+  } = useClassLogsQuery();
+
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isAddEventOpen, setIsAddEventOpen] = useState(false);
   const [isViewEventOpen, setIsViewEventOpen] = useState(false);
@@ -24,6 +31,7 @@ const TutorScheduler: React.FC = () => {
   const [studentFilter, setStudentFilter] = useState('all');
   const [studentMessages, setStudentMessages] = useState<any[]>([]);
   const [studentUploads, setStudentUploads] = useState<any[]>([]);
+  const [scheduledClasses, setScheduledClasses] = useState<ClassEvent[]>([]);
   
   // Initialize a new event form state
   const [newEvent, setNewEvent] = useState<ClassEvent>({
@@ -41,176 +49,6 @@ const TutorScheduler: React.FC = () => {
     tutorName: '',
   });
   
-  // Fetch scheduled classes
-  const { data: scheduledClasses = [], isLoading } = useQuery({
-    queryKey: ['scheduledClasses'],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('student_classes').select('*');
-      
-      if (error) {
-        throw error;
-      }
-      
-      return (data || []).map(item => ({
-        id: item.id,
-        title: item.title || '',
-        date: new Date(item.date),
-        startTime: item.start_time?.substring(0, 5) || '00:00',
-        endTime: item.end_time?.substring(0, 5) || '00:00',
-        studentId: item.student_id || '',
-        studentName: item.student_name || 'Student',
-        subject: item.subject || '',
-        zoomLink: item.zoom_link || '',
-        notes: item.notes || '',
-        tutorId: item.tutor_id || '',
-        tutorName: item.tutor_name || 'Tutor',
-      })) as ClassEvent[];
-    },
-  });
-  
-  // Create class mutation
-  const createClassMutation = useMutation({
-    mutationFn: async (classEvent: ClassEvent) => {
-      const { data, error } = await supabase.from('student_classes').insert({
-        id: classEvent.id,
-        title: classEvent.title,
-        date: classEvent.date.toISOString().split('T')[0],
-        start_time: classEvent.startTime,
-        end_time: classEvent.endTime,
-        student_id: classEvent.studentId,
-        student_name: classEvent.studentName,
-        subject: classEvent.subject,
-        zoom_link: classEvent.zoomLink,
-        notes: classEvent.notes,
-        tutor_id: classEvent.tutorId,
-        tutor_name: classEvent.tutorName,
-      }).select().single();
-      
-      if (error) {
-        throw error;
-      }
-      
-      return data;
-    },
-    onSuccess: () => {
-      toast.success('Class created successfully');
-      queryClient.invalidateQueries({ queryKey: ['scheduledClasses'] });
-    },
-    onError: (error) => {
-      toast.error(`Failed to create class: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    },
-  });
-  
-  // Update class mutation
-  const updateClassMutation = useMutation({
-    mutationFn: async (classEvent: ClassEvent) => {
-      const { data, error } = await supabase.from('student_classes')
-        .update({
-          title: classEvent.title,
-          date: classEvent.date.toISOString().split('T')[0],
-          start_time: classEvent.startTime,
-          end_time: classEvent.endTime,
-          student_id: classEvent.studentId,
-          student_name: classEvent.studentName,
-          subject: classEvent.subject,
-          zoom_link: classEvent.zoomLink,
-          notes: classEvent.notes,
-        })
-        .eq('id', classEvent.id)
-        .select()
-        .single();
-      
-      if (error) {
-        throw error;
-      }
-      
-      return data;
-    },
-    onSuccess: () => {
-      toast.success('Class updated successfully');
-      queryClient.invalidateQueries({ queryKey: ['scheduledClasses'] });
-    },
-    onError: (error) => {
-      toast.error(`Failed to update class: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    },
-  });
-  
-  // Delete class mutation
-  const deleteClassMutation = useMutation({
-    mutationFn: async (classId: string) => {
-      const { error } = await supabase.from('student_classes')
-        .delete()
-        .eq('id', classId);
-      
-      if (error) {
-        throw error;
-      }
-      
-      return classId;
-    },
-    onSuccess: () => {
-      toast.success('Class deleted successfully');
-      queryClient.invalidateQueries({ queryKey: ['scheduledClasses'] });
-    },
-    onError: (error) => {
-      toast.error(`Failed to delete class: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    },
-  });
-  
-  // Set up realtime subscription
-  useEffect(() => {
-    const channel = supabase
-      .channel('tutor-classes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'student_classes',
-        },
-        (payload) => {
-          console.log('Realtime update for classes:', payload);
-          queryClient.invalidateQueries({ queryKey: ['scheduledClasses'] });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [queryClient]);
-  
-  // Load student content (messages and uploads) when a student is selected
-  useEffect(() => {
-    const loadStudentContent = async () => {
-      if (selectedEvent?.studentName) {
-        try {
-          const [messagesResult, uploadsResult] = await Promise.all([
-            supabase.from('class_messages').select('*').eq('student_name', selectedEvent.studentName),
-            supabase.from('class_uploads').select('*').eq('student_name', selectedEvent.studentName),
-          ]);
-          
-          if (messagesResult.data) {
-            setStudentMessages(messagesResult.data);
-          }
-          
-          if (uploadsResult.data) {
-            setStudentUploads(uploadsResult.data);
-          }
-        } catch (error) {
-          console.error('Error loading student content:', error);
-        }
-      }
-    };
-    
-    loadStudentContent();
-  }, [selectedEvent]);
-
-  // Extract all subjects
-  const allSubjects = Array.from(
-    new Set(scheduledClasses.map((cls) => cls.subject || ''))
-  ).filter((subject) => subject.trim() !== '');
-
   // Apply filters
   const applyFilters = (classes: ClassEvent[]) => {
     return classes.filter((cls) => {
@@ -242,7 +80,18 @@ const TutorScheduler: React.FC = () => {
 
   const handleCreateEvent = async (event: ClassEvent) => {
     try {
-      await createClassMutation.mutateAsync(event);
+      // Fix the issue with toISOString by ensuring date is a Date object
+      const dateObject = event.date instanceof Date
+        ? event.date 
+        : new Date(event.date);
+      
+      // Create a new class with properly formatted date
+      const newClassEvent = {
+        ...event,
+        date: dateObject.toISOString().split('T')[0]
+      };
+      
+      await createClass(newClassEvent);
       return true;
     } catch (error) {
       console.error('Error creating event:', error);
@@ -252,7 +101,18 @@ const TutorScheduler: React.FC = () => {
 
   const handleEditEvent = async (event: ClassEvent) => {
     try {
-      await updateClassMutation.mutateAsync(event);
+      // Fix the issue with toISOString by ensuring date is a Date object
+      const dateObject = event.date instanceof Date
+        ? event.date 
+        : new Date(event.date);
+      
+      // Update the class with properly formatted date
+      const updatedEvent = {
+        ...event,
+        date: dateObject.toISOString().split('T')[0]
+      };
+
+      await updateClass(event.id, updatedEvent);
       setSelectedEvent(event);
       setIsEditMode(false);
       return true;
@@ -264,7 +124,7 @@ const TutorScheduler: React.FC = () => {
 
   const handleDeleteEvent = async (eventId: string) => {
     try {
-      await deleteClassMutation.mutateAsync(eventId);
+      await deleteClass(eventId);
       setIsViewEventOpen(false);
       setSelectedEvent(null);
       return true;
@@ -302,29 +162,35 @@ const TutorScheduler: React.FC = () => {
     });
   };
 
-  const handleMarkMessageRead = async (messageId: string) => {
+  const handleMarkMessageRead = async (messageId: string): Promise<void> => {
     try {
-      await supabase
-        .from('class_messages')
-        .update({ is_read: true })
-        .eq('id', messageId);
+      // Changed return type to void to match the expected signature
+      await fetch(`/api/messages/${messageId}/read`, { method: 'PUT' });
       
       setStudentMessages(prevMessages =>
         prevMessages.map(msg =>
           msg.id === messageId ? { ...msg, is_read: true, read: true } : msg
         )
       );
-      
-      return true;
     } catch (error) {
       console.error('Error marking message as read:', error);
-      return false;
+      toast.error('Failed to mark message as read');
     }
   };
 
-  const handleDownloadFile = (filePath: string) => {
-    window.open(filePath, '_blank');
-    return true;
+  const handleDownloadFile = async (uploadId: string): Promise<void> => {
+    try {
+      // Changed return type to Promise<void> to match the expected signature
+      const filePath = studentUploads.find(u => u.id === uploadId)?.file_path;
+      if (filePath) {
+        window.open(filePath, '_blank');
+      } else {
+        toast.error('File not found');
+      }
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      toast.error('Failed to download file');
+    }
   };
 
   const getUnreadMessageCount = (studentId: string): number => {
@@ -344,24 +210,18 @@ const TutorScheduler: React.FC = () => {
         setSubjectFilter={setSubjectFilter}
         studentFilter={studentFilter}
         setStudentFilter={setStudentFilter}
-        allSubjects={allSubjects}
+        allSubjects={allSubjects || []}
         students={mockStudents}
       />
 
-      {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <p>Loading classes...</p>
-        </div>
-      ) : (
-        <CalendarWithEvents
-          selectedDate={selectedDate}
-          setSelectedDate={setSelectedDate}
-          scheduledClasses={filteredClasses}
-          onSelectEvent={handleSelectEvent}
-          onAddEventClick={() => setIsAddEventOpen(true)}
-          getUnreadMessageCount={getUnreadMessageCount}
-        />
-      )}
+      <CalendarWithEvents
+        selectedDate={selectedDate}
+        setSelectedDate={setSelectedDate}
+        scheduledClasses={filteredClasses}
+        onSelectEvent={handleSelectEvent}
+        onAddEventClick={() => setIsAddEventOpen(true)}
+        getUnreadMessageCount={getUnreadMessageCount}
+      />
 
       <ClassDialogs
         isViewEventOpen={isViewEventOpen}

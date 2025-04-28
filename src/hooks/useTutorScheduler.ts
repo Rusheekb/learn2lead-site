@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { ClassEvent } from '@/types/tutorTypes';
 import useSchedulerFilters from './tutor-scheduler/useSchedulerFilters';
@@ -72,8 +73,8 @@ export function useTutorScheduler() {
   const filteredClasses = applyFilters(scheduledClasses);
 
   // Handle event creation with form reset
-  const createEvent = async () => {
-    const success = await handleCreateEvent(newEvent);
+  const createEvent = async (event: ClassEvent) => {
+    const success = await handleCreateEvent(event);
     if (success) {
       setIsAddEventOpen(false);
       resetNewEventForm();

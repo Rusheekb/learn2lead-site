@@ -41,7 +41,8 @@ export const useClassLogsQuery = () => {
 
   // Update a class log
   const updateMutation = useMutation({
-    mutationFn: updateClassLog,
+    mutationFn: (params: { id: string, classEvent: Partial<ClassEvent> }) => 
+      updateClassLog(params.id, params.classEvent),
     onSuccess: (updatedClass) => {
       toast.success('Class log updated successfully');
       queryClient.invalidateQueries({ queryKey: classLogsKeys.lists() });
@@ -107,7 +108,8 @@ export const useClassLogsQuery = () => {
     error,
     refetch: () => refetch(),
     createClass: createMutation.mutate,
-    updateClass: updateMutation.mutate,
+    updateClass: (id: string, classEvent: Partial<ClassEvent>) => 
+      updateMutation.mutate({ id, classEvent }),
     deleteClass: deleteMutation.mutate,
     allSubjects,
   };

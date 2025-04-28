@@ -47,7 +47,8 @@ export const useContentSharesQuery = () => {
 
   // Update a content share
   const updateMutation = useMutation({
-    mutationFn: updateContentShare,
+    mutationFn: (params: { id: string, updates: Partial<ContentShareItem> }) =>
+      updateContentShare(params.id, params.updates),
     onSuccess: (updatedShare) => {
       toast.success('Content share updated successfully');
       queryClient.invalidateQueries({ queryKey: contentSharesKeys.lists() });
@@ -109,7 +110,8 @@ export const useContentSharesQuery = () => {
     error,
     refetch: () => refetch(),
     createShare: createMutation.mutate,
-    updateShare: updateMutation.mutate,
+    updateShare: (id: string, updates: Partial<ContentShareItem>) => 
+      updateMutation.mutate({ id, updates }),
     deleteShare: deleteMutation.mutate,
   };
 };

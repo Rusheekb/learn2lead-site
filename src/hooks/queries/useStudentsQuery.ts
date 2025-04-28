@@ -41,7 +41,8 @@ export const useStudentsQuery = () => {
 
   // Update a student
   const updateMutation = useMutation({
-    mutationFn: updateStudent,
+    mutationFn: (params: { id: string, updates: Partial<Student> }) => 
+      updateStudent(params.id, params.updates),
     onSuccess: (updatedStudent) => {
       toast.success('Student updated successfully');
       queryClient.invalidateQueries({ queryKey: studentsKeys.lists() });
@@ -103,7 +104,8 @@ export const useStudentsQuery = () => {
     error,
     refetch: () => refetch(),
     createStudent: createMutation.mutate,
-    updateStudent: updateMutation.mutate,
+    updateStudent: (id: string, updates: Partial<Student>) => 
+      updateMutation.mutate({ id, updates }),
     deleteStudent: deleteMutation.mutate,
   };
 };

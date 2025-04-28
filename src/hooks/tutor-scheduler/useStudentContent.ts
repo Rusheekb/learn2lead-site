@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { ClassEvent } from '@/types/tutorTypes';
@@ -49,16 +50,13 @@ export const useStudentContent = (
 
   const handleMarkMessageRead = async (messageId: string): Promise<void> => {
     try {
-      const success = await markMessageAsRead(messageId);
-
-      if (success) {
-        setStudentMessages((messages) =>
-          messages.map((msg) =>
-            msg.id === messageId ? { ...msg, isRead: true } : msg
-          )
-        );
-        return;
-      }
+      await markMessageAsRead(messageId);
+      
+      setStudentMessages((messages) =>
+        messages.map((msg) =>
+          msg.id === messageId ? { ...msg, isRead: true } : msg
+        )
+      );
     } catch (error: any) {
       console.error('Error marking message as read:', error);
       toast.error('Failed to mark message as read');
@@ -67,14 +65,11 @@ export const useStudentContent = (
 
   const handleDownloadFile = async (uploadId: string): Promise<void> => {
     try {
-      const success = await downloadClassFile(uploadId);
-
-      if (success) {
-        const upload = studentUploads.find((u) => u.id === uploadId);
-        if (upload) {
-          toast.success(`Downloading ${upload.fileName}`);
-        }
-        return;
+      await downloadClassFile(uploadId);
+      
+      const upload = studentUploads.find((u) => u.id === uploadId);
+      if (upload) {
+        toast.success(`Downloading ${upload.fileName}`);
       }
     } catch (error: any) {
       console.error('Error downloading file:', error);
