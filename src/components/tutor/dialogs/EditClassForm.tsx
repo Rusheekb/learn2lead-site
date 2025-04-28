@@ -1,18 +1,17 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ClassEvent } from '@/types/tutorTypes';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
+import { editClassEventSchema } from '@/utils/classFormUtils';
+import type { z } from 'zod';
 
 interface EditClassFormProps {
   selectedEvent: ClassEvent;
@@ -23,23 +22,7 @@ interface EditClassFormProps {
   students?: any[];
 }
 
-// Define the schema for editing class event
-const editClassSchema = z.object({
-  title: z.string().min(1, { message: 'Title is required' }),
-  date: z.date({ required_error: 'Please select a date' }),
-  startTime: z.string().min(1, { message: 'Start time is required' }),
-  endTime: z.string().min(1, { message: 'End time is required' }),
-  subject: z.string().min(1, { message: 'Subject is required' }),
-  zoomLink: z.string().url({ message: 'Please enter a valid URL' }).or(z.string().length(0)),
-  notes: z.string().optional(),
-}).refine((data) => {
-  return data.startTime < data.endTime;
-}, {
-  message: 'End time must be after start time',
-  path: ['endTime'], // This specifies which field the error should be shown on
-});
-
-type EditClassFormValues = z.infer<typeof editClassSchema>;
+type EditClassFormValues = z.infer<typeof editClassEventSchema>;
 
 const EditClassForm: React.FC<EditClassFormProps> = ({
   selectedEvent,
@@ -55,7 +38,7 @@ const EditClassForm: React.FC<EditClassFormProps> = ({
     : selectedEvent.date;
 
   const form = useForm<EditClassFormValues>({
-    resolver: zodResolver(editClassSchema),
+    resolver: zodResolver(editClassEventSchema),
     defaultValues: {
       title: selectedEvent.title,
       date: eventDate,

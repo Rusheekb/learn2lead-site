@@ -14,29 +14,13 @@ import { CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import type { Student } from '@/types/sharedTypes';
 import type { TutorStudentRelationship } from '@/services/relationships/types';
+import { newClassEventSchema } from '@/utils/classFormUtils';
+import type { z } from 'zod';
 
-// Define the schema for class event validation
-const classEventSchema = z.object({
-  title: z.string().min(1, { message: 'Title is required' }),
-  relationshipId: z.string().min(1, { message: 'Please select a student' }),
-  date: z.date({ required_error: 'Please select a date' }),
-  startTime: z.string().min(1, { message: 'Start time is required' }),
-  endTime: z.string().min(1, { message: 'End time is required' }),
-  subject: z.string().min(1, { message: 'Subject is required' }),
-  zoomLink: z.string().url({ message: 'Please enter a valid URL' }).or(z.string().length(0)),
-  notes: z.string().optional(),
-}).refine((data) => {
-  return data.startTime < data.endTime;
-}, {
-  message: 'End time must be after start time',
-  path: ['endTime'],
-});
-
-type ClassEventFormValues = z.infer<typeof classEventSchema>;
+type ClassEventFormValues = z.infer<typeof newClassEventSchema>;
 
 interface NewClassEventFormProps {
   newEvent: any;
@@ -56,7 +40,7 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
   setSelectedRelId,
 }) => {
   const form = useForm<ClassEventFormValues>({
-    resolver: zodResolver(classEventSchema),
+    resolver: zodResolver(newClassEventSchema),
     defaultValues: {
       title: newEvent.title || '',
       relationshipId: selectedRelId || '',
