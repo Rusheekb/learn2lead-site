@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
 import { createRelationship, endRelationship, TutorStudentRelationship } from '@/services/relationships/relationshipService';
 import { useAuth } from '@/contexts/AuthContext';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -141,48 +141,48 @@ const RelationshipManager: React.FC<RelationshipManagerProps> = ({
               Create Relationship
             </Button>
           </form>
+        </Form>
 
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Tutor</TableHead>
-                <TableHead>Student</TableHead>
-                <TableHead>Assigned At</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Tutor</TableHead>
+              <TableHead>Student</TableHead>
+              <TableHead>Assigned At</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {relationships.map((rel) => (
+              <TableRow key={rel.id}>
+                <TableCell>
+                  {tutors.find(t => t.id === rel.tutor_id)?.name || 'Unknown'}
+                </TableCell>
+                <TableCell>
+                  {students.find(s => s.id === rel.student_id)?.name || 'Unknown'}
+                </TableCell>
+                <TableCell>
+                  {new Date(rel.assigned_at).toLocaleDateString()}
+                </TableCell>
+                <TableCell>
+                  {rel.active ? 'Active' : 'Inactive'}
+                </TableCell>
+                <TableCell>
+                  {rel.active && (
+                    <Button
+                      variant="destructive"
+                      onClick={() => handleEndRelationship(rel.id)}
+                    >
+                      End Relationship
+                    </Button>
+                  )}
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {relationships.map((rel) => (
-                <TableRow key={rel.id}>
-                  <TableCell>
-                    {tutors.find(t => t.id === rel.tutor_id)?.name || 'Unknown'}
-                  </TableCell>
-                  <TableCell>
-                    {students.find(s => s.id === rel.student_id)?.name || 'Unknown'}
-                  </TableCell>
-                  <TableCell>
-                    {new Date(rel.assigned_at).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    {rel.active ? 'Active' : 'Inactive'}
-                  </TableCell>
-                  <TableCell>
-                    {rel.active && (
-                      <Button
-                        variant="destructive"
-                        onClick={() => handleEndRelationship(rel.id)}
-                      >
-                        End Relationship
-                      </Button>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </CardHeader>
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
     </Card>
   );
 };
