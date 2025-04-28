@@ -1,7 +1,6 @@
+
 import React from 'react';
-import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
-import FilterSelect from '@/components/shared/filters/FilterSelect';
+import FilterControls from '@/components/common/FilterControls';
 
 interface StudentFiltersProps {
   searchTerm: string;
@@ -20,10 +19,6 @@ const StudentFilters: React.FC<StudentFiltersProps> = ({
   paymentFilter,
   setPaymentFilter,
 }) => {
-  const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(event.target.value);
-  };
-
   const statusOptions = [
     { value: 'active', label: 'Active' },
     { value: 'inactive', label: 'Inactive' },
@@ -36,33 +31,39 @@ const StudentFilters: React.FC<StudentFiltersProps> = ({
     { value: 'overdue', label: 'Overdue' },
   ];
 
+  const clearFilters = () => {
+    setSearchTerm('');
+    setStatusFilter('all');
+    setPaymentFilter('all');
+  };
+
   return (
-    <div className="flex flex-col sm:flex-row gap-4 mt-4">
-      <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-        <Input
-          placeholder="Search students..."
-          value={searchTerm}
-          onChange={handleSearch}
-          className="pl-10"
-        />
+    <div className="mt-4">
+      <FilterControls
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        searchPlaceholder="Search students..."
+        showStatusFilter={true}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        statusOptions={statusOptions}
+        clearFilters={clearFilters}
+      />
+      
+      {/* Since our FilterControls doesn't directly support a second type of filter,
+          we'll add the payment filter separately here */}
+      <div className="mt-2">
+        <select
+          value={paymentFilter}
+          onChange={(e) => setPaymentFilter(e.target.value)}
+          className="w-[180px] h-9 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background"
+        >
+          <option value="all">All Payments</option>
+          {paymentOptions.map(option => (
+            <option key={option.value} value={option.value}>{option.label}</option>
+          ))}
+        </select>
       </div>
-      <FilterSelect
-        value={statusFilter}
-        onValueChange={setStatusFilter}
-        options={statusOptions}
-        placeholder="Filter by status"
-        allOptionLabel="All Status"
-        className="w-[180px]"
-      />
-      <FilterSelect
-        value={paymentFilter}
-        onValueChange={setPaymentFilter}
-        options={paymentOptions}
-        placeholder="Filter by payment"
-        allOptionLabel="All Payments"
-        className="w-[180px]"
-      />
     </div>
   );
 };

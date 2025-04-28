@@ -1,12 +1,6 @@
+
 import React from 'react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import DataTable, { ColumnDefinition } from '@/components/common/DataTable';
 import { Button } from '@/components/ui/button';
 import { Student } from '@/types/sharedTypes';
 
@@ -19,39 +13,43 @@ const StudentList: React.FC<StudentListProps> = ({
   students,
   onSelectStudent,
 }) => {
+  const columns: ColumnDefinition<Student>[] = [
+    {
+      header: 'Name',
+      cell: (student) => <span className="font-medium">{student.name}</span>,
+    },
+    {
+      header: 'Subjects',
+      cell: (student) => student.subjects.join(', '),
+    },
+    {
+      header: 'Next Session',
+      cell: (student) => (
+        student.nextSession
+          ? new Date(student.nextSession).toLocaleDateString()
+          : 'Not scheduled'
+      ),
+    },
+    {
+      header: 'Actions',
+      cell: (student) => (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onSelectStudent(student)}
+        >
+          View Details
+        </Button>
+      ),
+    },
+  ];
+
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Name</TableHead>
-          <TableHead>Subjects</TableHead>
-          <TableHead>Next Session</TableHead>
-          <TableHead>Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {students.map((student) => (
-          <TableRow key={student.id}>
-            <TableCell className="font-medium">{student.name}</TableCell>
-            <TableCell>{student.subjects.join(', ')}</TableCell>
-            <TableCell>
-              {student.nextSession
-                ? new Date(student.nextSession).toLocaleDateString()
-                : 'Not scheduled'}
-            </TableCell>
-            <TableCell>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onSelectStudent(student)}
-              >
-                View Details
-              </Button>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <DataTable
+      data={students}
+      columns={columns}
+      showCard={false}
+    />
   );
 };
 

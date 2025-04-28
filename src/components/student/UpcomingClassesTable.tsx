@@ -1,12 +1,6 @@
+
 import React from 'react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import DataTable, { ColumnDefinition } from '@/components/common/DataTable';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import { formatTime } from '@/utils/dateTimeUtils';
@@ -35,49 +29,55 @@ const UpcomingClassesTable: React.FC<UpcomingClassesTableProps> = ({
   classes,
   onViewClass,
 }) => {
+  const columns: ColumnDefinition<ClassItem>[] = [
+    {
+      header: 'Class',
+      cell: (cls) => (
+        <div>
+          <p className="font-medium">{cls.title}</p>
+          <p className="text-sm text-gray-500">{cls.subject}</p>
+        </div>
+      ),
+    },
+    {
+      header: 'Date',
+      accessorKey: 'date',
+    },
+    {
+      header: 'Time',
+      cell: (cls) => (
+        `${formatTime(cls.startTime)} - ${formatTime(cls.endTime)}`
+      ),
+    },
+    {
+      header: 'Tutor',
+      accessorKey: 'tutorName',
+    },
+    {
+      header: 'Actions',
+      cell: (cls) => (
+        <div className="flex space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onViewClass(cls)}
+          >
+            View Details
+          </Button>
+          <Button size="sm" onClick={() => onViewClass(cls)}>
+            <ArrowRight className="h-4 w-4" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Class</TableHead>
-          <TableHead>Date</TableHead>
-          <TableHead>Time</TableHead>
-          <TableHead>Tutor</TableHead>
-          <TableHead>Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {classes.map((cls) => (
-          <TableRow key={cls.id}>
-            <TableCell>
-              <div>
-                <p className="font-medium">{cls.title}</p>
-                <p className="text-sm text-gray-500">{cls.subject}</p>
-              </div>
-            </TableCell>
-            <TableCell>{cls.date}</TableCell>
-            <TableCell>
-              {formatTime(cls.startTime)} - {formatTime(cls.endTime)}
-            </TableCell>
-            <TableCell>{cls.tutorName}</TableCell>
-            <TableCell>
-              <div className="flex space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onViewClass(cls)}
-                >
-                  View Details
-                </Button>
-                <Button size="sm" onClick={() => onViewClass(cls)}>
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+    <DataTable
+      data={classes}
+      columns={columns}
+      showCard={false}
+    />
   );
 };
 

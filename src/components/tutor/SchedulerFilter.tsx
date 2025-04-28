@@ -1,5 +1,6 @@
+
 import React from 'react';
-import FilterControls from '@/components/shared/FilterControls';
+import FilterControls from '@/components/common/FilterControls';
 import { Student } from '@/types/sharedTypes';
 
 interface SchedulerFilterProps {

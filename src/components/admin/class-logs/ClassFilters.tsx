@@ -1,5 +1,6 @@
+
 import React from 'react';
-import FilterControls from '@/components/shared/FilterControls';
+import FilterControls from '@/components/common/FilterControls';
 
 export interface ClassFiltersProps {
   searchTerm: string;
@@ -47,20 +48,27 @@ const ClassFilters: React.FC<ClassFiltersProps> = ({
       searchTerm={searchTerm}
       setSearchTerm={setSearchTerm}
       searchPlaceholder="Search by title, tutor, or student"
+      
       showStatusFilter={true}
       statusFilter={statusFilter}
       setStatusFilter={setStatusFilter}
       statusOptions={statusOptions}
+      
       showSubjectFilter={true}
       subjectFilter={subjectFilter}
       setSubjectFilter={setSubjectFilter}
       subjectOptions={validSubjects}
+      
       showDateFilter={true}
       dateFilter={dateFilter}
       setDateFilter={setDateFilter}
-      showCodeLogsSwitch={true}
-      showCodeLogs={showCodeLogs}
-      setShowCodeLogs={setShowCodeLogs}
+      
+      showToggle={true}
+      toggleLabel="Show code logs"
+      toggleState={showCodeLogs}
+      setToggleState={setShowCodeLogs}
+      toggleId="code-logs"
+      
       clearFilters={clearFilters}
     />
   );
