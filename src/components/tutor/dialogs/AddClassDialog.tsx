@@ -32,7 +32,7 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
   const [selectedRelId, setSelectedRelId] = useState<string>('');
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !isOpen) return;
     
     const loadRelationshipsAndStudents = async () => {
       // Load active pairings for this tutor
@@ -66,7 +66,7 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
     };
 
     loadRelationshipsAndStudents();
-  }, [user]);
+  }, [user, isOpen]);
 
   const handleCancel = () => {
     setIsOpen(false);
