@@ -199,6 +199,21 @@ const TutorScheduler: React.FC = () => {
     ).length;
   };
 
+  // Wrapper functions that take no arguments and call the actual handlers
+  const handleCreateEventWrapper = () => {
+    if (newEvent) {
+      return handleCreateEvent(newEvent);
+    }
+    return Promise.resolve(false);
+  };
+
+  const handleEditEventWrapper = () => {
+    if (selectedEvent) {
+      return handleEditEvent(selectedEvent);
+    }
+    return Promise.resolve(false);
+  };
+
   return (
     <div className="space-y-6">
       <SchedulerHeader onAddClick={() => setIsAddEventOpen(true)} />
@@ -238,8 +253,8 @@ const TutorScheduler: React.FC = () => {
         studentMessages={studentMessages}
         studentUploads={studentUploads}
         students={mockStudents}
-        onCreateEvent={handleCreateEvent}
-        onEditEvent={handleEditEvent}
+        onCreateEvent={handleCreateEventWrapper}
+        onEditEvent={handleEditEventWrapper}
         onDuplicateEvent={handleDuplicateEvent}
         onDeleteEvent={handleDeleteEvent}
         onResetForm={resetNewEventForm}
