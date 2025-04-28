@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -13,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -26,14 +25,15 @@ const classEventSchema = z.object({
   relationshipId: z.string().min(1, { message: 'Please select a student' }),
   date: z.date({ required_error: 'Please select a date' }),
   startTime: z.string().min(1, { message: 'Start time is required' }),
-  endTime: z.string().min(1, { message: 'End time is required' })
-    .refine((endTime, ctx) => {
-      const { startTime } = ctx.parent;
-      return startTime < endTime;
-    }, { message: 'End time must be after start time' }),
+  endTime: z.string().min(1, { message: 'End time is required' }),
   subject: z.string().min(1, { message: 'Subject is required' }),
   zoomLink: z.string().url({ message: 'Please enter a valid URL' }).or(z.string().length(0)),
   notes: z.string().optional(),
+}).refine((data) => {
+  return data.startTime < data.endTime;
+}, {
+  message: 'End time must be after start time',
+  path: ['endTime'],
 });
 
 type ClassEventFormValues = z.infer<typeof classEventSchema>;

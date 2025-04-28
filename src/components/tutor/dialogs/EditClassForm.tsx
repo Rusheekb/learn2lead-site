@@ -16,9 +16,11 @@ import { cn } from '@/lib/utils';
 
 interface EditClassFormProps {
   selectedEvent: ClassEvent;
+  newEvent: any;
   setNewEvent: (event: any) => void;
   onCancel: () => void;
   onSave: () => void;
+  students?: any[];
 }
 
 // Define the schema for editing class event
@@ -26,23 +28,26 @@ const editClassSchema = z.object({
   title: z.string().min(1, { message: 'Title is required' }),
   date: z.date({ required_error: 'Please select a date' }),
   startTime: z.string().min(1, { message: 'Start time is required' }),
-  endTime: z.string().min(1, { message: 'End time is required' })
-    .refine((endTime, ctx) => {
-      const { startTime } = ctx.parent;
-      return startTime < endTime;
-    }, { message: 'End time must be after start time' }),
+  endTime: z.string().min(1, { message: 'End time is required' }),
   subject: z.string().min(1, { message: 'Subject is required' }),
   zoomLink: z.string().url({ message: 'Please enter a valid URL' }).or(z.string().length(0)),
   notes: z.string().optional(),
+}).refine((data) => {
+  return data.startTime < data.endTime;
+}, {
+  message: 'End time must be after start time',
+  path: ['endTime'], // This specifies which field the error should be shown on
 });
 
 type EditClassFormValues = z.infer<typeof editClassSchema>;
 
 const EditClassForm: React.FC<EditClassFormProps> = ({
   selectedEvent,
+  newEvent,
   setNewEvent,
   onCancel,
   onSave,
+  students,
 }) => {
   // Parse the date from string if needed
   const eventDate = typeof selectedEvent.date === 'string' 
