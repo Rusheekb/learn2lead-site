@@ -1,3 +1,4 @@
+
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -17,7 +18,15 @@ const Dashboard = React.lazy(() => import('./pages/Dashboard'));
 const TutorDashboard = React.lazy(() => import('./pages/TutorDashboard'));
 const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
 
-const queryClient = new QueryClient();
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60000, // 1 minute
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => {
   useRoleSync();

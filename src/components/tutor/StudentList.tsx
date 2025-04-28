@@ -3,6 +3,7 @@ import React from 'react';
 import DataTable, { ColumnDefinition } from '@/components/common/DataTable';
 import { Button } from '@/components/ui/button';
 import { Student } from '@/types/sharedTypes';
+import { Badge } from '@/components/ui/badge';
 
 interface StudentListProps {
   students: Student[];
@@ -20,7 +21,15 @@ const StudentList: React.FC<StudentListProps> = ({
     },
     {
       header: 'Subjects',
-      cell: (student) => student.subjects.join(', '),
+      cell: (student) => (
+        <div className="flex flex-wrap gap-1">
+          {student.subjects.map((subject, index) => (
+            <Badge key={index} variant="outline">
+              {subject}
+            </Badge>
+          ))}
+        </div>
+      ),
     },
     {
       header: 'Next Session',

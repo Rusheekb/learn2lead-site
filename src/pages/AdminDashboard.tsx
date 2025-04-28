@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import ClassAnalytics from '@/components/admin/ClassAnalytics';
@@ -8,43 +9,56 @@ import TutorsManager from '@/components/admin/TutorsManager';
 import StudentsManager from '@/components/admin/StudentsManager';
 import RelationshipManager from '@/components/admin/RelationshipManager';
 import { UserDetailModal } from '@/components/admin/UserDetailModal';
-import { useStudentRecordsRealtime } from '@/hooks/realtime/useStudentRecordsRealtime';
-import { useTutorRecordsRealtime } from '@/hooks/realtime/useTutorRecordsRealtime';
+import { useTutorsQuery } from '@/hooks/queries/useTutorsQuery';
+import { useStudentsQuery } from '@/hooks/queries/useStudentsQuery';
+import { TutorStudentRelationship } from '@/services/relationships/relationshipService';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Student, Tutor } from '@/types/tutorTypes';
-import { fetchStudents } from '@/services/students/studentService';
-import { fetchTutors } from '@/services/tutors/tutorService';
-import { fetchActiveRelationshipsForAdmin, TutorStudentRelationship } from '@/services/relationships/relationshipService';
 
 type User = (Student | Tutor) & { role: 'student' | 'tutor' };
 
+const fetchRelationships = async () => {
+  const { data, error } = await supabase
+    .from('tutor_student_relationships')
+    .select('*')
+    .eq('active', true);
+
+  if (error) {
+    throw error;
+  }
+
+  return data as TutorStudentRelationship[];
+};
+
 const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('analytics');
-  const [students, setStudents] = useState<Student[]>([]);
-  const [tutors, setTutors] = useState<Tutor[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [relationships, setRelationships] = useState<TutorStudentRelationship[]>([]);
+  
+  const { 
+    tutors, 
+    isLoading: isTutorsLoading, 
+    refetch: refetchTutors 
+  } = useTutorsQuery();
+  
+  const { 
+    students, 
+    isLoading: isStudentsLoading, 
+    refetch: refetchStudents 
+  } = useStudentsQuery();
 
-  useStudentRecordsRealtime(setStudents);
-  useTutorRecordsRealtime(setTutors);
+  const { 
+    data: relationships = [], 
+    isLoading: isRelationshipsLoading,
+    refetch: refetchRelationships
+  } = useQuery({
+    queryKey: ['relationships'],
+    queryFn: fetchRelationships,
+  });
 
-  const loadAll = async () => {
-    try {
-      const [tutorsData, studentsData, relsData] = await Promise.all([
-        fetchTutors(),
-        fetchStudents(),
-        fetchActiveRelationshipsForAdmin(),
-      ]);
-      setTutors(tutorsData);
-      setStudents(studentsData);
-      setRelationships(relsData);
-    } catch (error) {
-      console.error('Error loading dashboard data:', error);
-    }
+  const handleRelationshipChange = () => {
+    refetchRelationships();
   };
-
-  useEffect(() => {
-    loadAll();
-  }, []);
 
   const handleStudentSelect = (student: Student) => {
     setSelectedUser({ ...student, role: 'student' });
@@ -94,7 +108,7 @@ const AdminDashboard: React.FC = () => {
               tutors={tutors}
               students={students}
               relationships={relationships}
-              onRelationshipChange={loadAll}
+              onRelationshipChange={handleRelationshipChange}
             />
           </TabsContent>
         </Tabs>
