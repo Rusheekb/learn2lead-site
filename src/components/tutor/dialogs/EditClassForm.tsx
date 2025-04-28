@@ -22,7 +22,8 @@ interface EditClassFormProps {
   students?: any[];
 }
 
-type EditClassFormValues = z.infer<typeof editClassEventSchema>;
+const schema = editClassEventSchema();
+type EditClassFormValues = z.infer<typeof schema>;
 
 const EditClassForm: React.FC<EditClassFormProps> = ({
   selectedEvent,
@@ -38,7 +39,7 @@ const EditClassForm: React.FC<EditClassFormProps> = ({
     : selectedEvent.date;
 
   const form = useForm<EditClassFormValues>({
-    resolver: zodResolver(editClassEventSchema),
+    resolver: zodResolver(schema),
     defaultValues: {
       title: selectedEvent.title,
       date: eventDate,
@@ -52,7 +53,7 @@ const EditClassForm: React.FC<EditClassFormProps> = ({
 
   // Watch for form changes and update parent state
   React.useEffect(() => {
-    const subscription = form.watch((value) => {
+    const subscription = form.watch((value: Partial<EditClassFormValues>) => {
       setNewEvent({
         ...selectedEvent,
         ...value,

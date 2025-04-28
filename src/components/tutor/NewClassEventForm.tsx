@@ -20,7 +20,8 @@ import type { TutorStudentRelationship } from '@/services/relationships/types';
 import { newClassEventSchema } from '@/utils/classFormUtils';
 import type { z } from 'zod';
 
-type ClassEventFormValues = z.infer<typeof newClassEventSchema>;
+const schema = newClassEventSchema();
+type ClassEventFormValues = z.infer<typeof schema>;
 
 interface NewClassEventFormProps {
   newEvent: any;
@@ -40,7 +41,7 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
   setSelectedRelId,
 }) => {
   const form = useForm<ClassEventFormValues>({
-    resolver: zodResolver(newClassEventSchema),
+    resolver: zodResolver(schema),
     defaultValues: {
       title: newEvent.title || '',
       relationshipId: selectedRelId || '',
@@ -55,7 +56,7 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
 
   // Watch for form changes and update parent state
   React.useEffect(() => {
-    const subscription = form.watch((value) => {
+    const subscription = form.watch((value: Partial<ClassEventFormValues>) => {
       const selectedRel = relationships.find(r => r.id === value.relationshipId);
       const student = assignedStudents.find(s => s.id === selectedRel?.student_id);
       

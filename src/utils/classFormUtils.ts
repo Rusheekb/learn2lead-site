@@ -20,9 +20,12 @@ export const createClassEventSchema = () => {
 };
 
 // Schema for new class events that includes relationship ID
-export const newClassEventSchema = createClassEventSchema().extend({
-  relationshipId: z.string().min(1, { message: 'Please select a student' }),
-});
+export const newClassEventSchema = () => {
+  const baseSchema = createClassEventSchema();
+  return baseSchema.extend({
+    relationshipId: z.string().min(1, { message: 'Please select a student' }),
+  });
+};
 
 // Schema for edit class events
-export const editClassEventSchema = createClassEventSchema();
+export const editClassEventSchema = createClassEventSchema;
