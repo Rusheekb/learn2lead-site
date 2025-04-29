@@ -4,14 +4,7 @@ import { Form } from '@/components/ui/form';
 import { Student } from '@/types/sharedTypes';
 import { TutorStudentRelationship } from '@/services/relationships/types';
 import StudentSelectField from './forms/StudentSelectField';
-import {
-  TitleField,
-  DateField,
-  TimeField,
-  SubjectField,
-  ZoomLinkField,
-  NotesField
-} from './forms/ClassFormFields';
+import FormFieldsGroup from './forms/FormFieldsGroup';
 import { useNewClassEventForm } from '@/hooks/tutor-scheduler/useNewClassEventForm';
 
 interface NewClassEventFormProps {
@@ -43,14 +36,12 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
   return (
     <Form {...form}>
       <form className="space-y-4">
-        <TitleField form={form} />
-        <StudentSelectField form={form} relationships={relationships} assignedStudents={assignedStudents} />
-        <DateField form={form} />
-        <TimeField form={form} name="startTime" label="Start Time" />
-        <TimeField form={form} name="endTime" label="End Time" />
-        <SubjectField form={form} />
-        <ZoomLinkField form={form} />
-        <NotesField form={form} />
+        <FormFieldsGroup form={form} />
+        <StudentSelectField 
+          form={form} 
+          relationships={relationships} 
+          assignedStudents={assignedStudents} 
+        />
       </form>
     </Form>
   );
