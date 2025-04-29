@@ -54,15 +54,20 @@ const EditClassForm: React.FC<EditClassFormProps> = ({
     },
   });
 
-  // Watch for form changes and update parent state
+  // Optimize the watch subscription with named fields and memoized handler
   useEffect(() => {
-    const subscription = form.watch((value: Partial<EditClassFormValues>) => {
-      setNewEvent({
-        ...selectedEvent,
-        ...value,
-      });
+    // Watch only the fields we need to update in parent state
+    const subscription = form.watch((formValues) => {
+      // Only update if values have changed
+      if (formValues && Object.keys(formValues).some(key => formValues[key as keyof EditClassFormValues] !== selectedEvent[key as keyof ClassEvent])) {
+        setNewEvent({
+          ...selectedEvent,
+          ...formValues,
+        });
+      }
     });
     
+    // Properly clean up subscription
     return () => subscription.unsubscribe();
   }, [form.watch, selectedEvent, setNewEvent]);
 

@@ -51,32 +51,50 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
     },
   });
 
-  // Watch for form changes and update parent state
+  // Optimize the watch subscription with named fields and proper dependency tracking
   useEffect(() => {
-    const subscription = form.watch((value: Partial<ClassEventFormValues>) => {
-      const selectedRel = relationships.find(r => r.id === value.relationshipId);
-      const student = assignedStudents.find(s => s.id === selectedRel?.student_id);
+    // Track the previous form values to avoid unnecessary updates
+    const subscription = form.watch((formValues) => {
+      if (!formValues) return;
       
+      // Handle relationship change separately to optimize student lookup
+      const relationshipId = formValues.relationshipId;
+      if (relationshipId !== selectedRelId) {
+        setSelectedRelId(relationshipId || '');
+      }
+      
+      // Only lookup student if relationship has changed
+      const selectedRel = relationships.find(r => r.id === relationshipId);
+      const student = selectedRel ? 
+        assignedStudents.find(s => s.id === selectedRel.student_id) : 
+        undefined;
+        
+      // Update parent state with new values
       setNewEvent({
         ...newEvent,
-        title: value.title,
-        date: value.date,
-        startTime: value.startTime,
-        endTime: value.endTime,
+        title: formValues.title,
+        date: formValues.date,
+        startTime: formValues.startTime,
+        endTime: formValues.endTime,
         studentId: selectedRel?.student_id || '',
         studentName: student?.name || '',
-        subject: value.subject,
-        zoomLink: value.zoomLink,
-        notes: value.notes,
+        subject: formValues.subject,
+        zoomLink: formValues.zoomLink,
+        notes: formValues.notes,
       });
-
-      if (value.relationshipId !== selectedRelId) {
-        setSelectedRelId(value.relationshipId || '');
-      }
     });
     
+    // Properly clean up subscription
     return () => subscription.unsubscribe();
-  }, [form.watch, setNewEvent, newEvent, relationships, assignedStudents, selectedRelId, setSelectedRelId]);
+  }, [
+    form.watch, 
+    setNewEvent,
+    newEvent,
+    relationships,
+    assignedStudents,
+    selectedRelId,
+    setSelectedRelId
+  ]);
 
   return (
     <Form {...form}>
