@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { ClassEvent } from '@/types/tutorTypes';
 import { format } from 'date-fns';
@@ -33,18 +34,18 @@ export const updateClassLog = async (
   if (classEvent.duration !== undefined)
     record['Time (hrs)'] = classEvent.duration.toString();
   if (classEvent.subject !== undefined) record['Subject'] = classEvent.subject;
-  if (classEvent.content !== undefined) record['Content'] = classEvent.content;
-  if (classEvent.homework !== undefined) record['HW'] = classEvent.homework;
+  if (classEvent.content !== undefined) record['Content'] = classEvent.content || null;
+  if (classEvent.homework !== undefined) record['HW'] = classEvent.homework || null;
   if (classEvent.classCost !== undefined)
-    record['Class Cost'] = classEvent.classCost.toString();
+    record['Class Cost'] = classEvent.classCost?.toString() || null;
   if (classEvent.tutorCost !== undefined)
-    record['Tutor Cost'] = classEvent.tutorCost.toString();
+    record['Tutor Cost'] = classEvent.tutorCost?.toString() || null;
   if (classEvent.studentPayment !== undefined)
     record['Student Payment'] = classEvent.studentPayment;
   if (classEvent.tutorPayment !== undefined)
     record['Tutor Payment'] = classEvent.tutorPayment;
   if (classEvent.notes !== undefined)
-    record['Additional Info'] = classEvent.notes;
+    record['Additional Info'] = classEvent.notes || null;
 
   const { data, error } = await supabase
     .from('class_logs')
@@ -58,5 +59,6 @@ export const updateClassLog = async (
     return null;
   }
 
-  return transformDbRecordToClassEvent(data);
+  // Add explicit type assertion since we know the structure
+  return transformDbRecordToClassEvent(data as any);
 };

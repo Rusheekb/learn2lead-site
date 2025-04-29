@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -32,11 +33,16 @@ const ContentShare: React.FC<ContentShareProps> = ({ role, fetchUsers }) => {
   const loadShares = useCallback(async () => {
     setIsLoading(true);
     try {
+      if (!user?.id) {
+        setShares([]);
+        setIsLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from('content_shares')
         .select('*')
-        .or(`sender_id.eq.${user?.id},receiver_id.eq.${user?.id}`)
-        .order('shared_at', { ascending: false });
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`);
 
       if (error) {
         console.error('Error fetching shares:', error);
@@ -101,7 +107,7 @@ const ContentShare: React.FC<ContentShareProps> = ({ role, fetchUsers }) => {
         sender_id: user.id,
         receiver_id: selectedUser,
         title: formData.title,
-        description: formData.description,
+        description: formData.description || null,
         file_path: filePath,
         content_type: file?.type || null,
       });
@@ -134,7 +140,7 @@ const ContentShare: React.FC<ContentShareProps> = ({ role, fetchUsers }) => {
         .from('content_shares')
         .update({ viewed_at: new Date().toISOString() })
         .eq('id', shareId)
-        .eq('receiver_id', user?.id);
+        .eq('receiver_id', user?.id || '');
 
       if (error) throw error;
 

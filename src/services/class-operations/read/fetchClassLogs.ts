@@ -19,7 +19,8 @@ export const fetchClassLogs = async (): Promise<ClassEvent[]> => {
       return [];
     }
 
-    const transformedLogs = data.map(transformDbRecordToClassEvent);
+    // Use type assertion to map the data to our internal type
+    const transformedLogs = data.map((item) => transformDbRecordToClassEvent(item as any));
     console.log('Transformed class logs:', transformedLogs);
 
     // Sort logs by date (most recent first)

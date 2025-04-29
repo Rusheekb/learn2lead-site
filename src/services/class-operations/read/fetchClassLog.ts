@@ -15,5 +15,6 @@ export const fetchClassLog = async (id: string): Promise<ClassEvent | null> => {
     return null;
   }
 
-  return transformDbRecordToClassEvent(data);
+  // Add explicit type assertion since we know the structure
+  return transformDbRecordToClassEvent(data as any);
 };

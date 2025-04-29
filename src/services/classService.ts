@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ClassEvent } from '@/types/tutorTypes';
@@ -44,20 +45,20 @@ export const fetchScheduledClasses = async (
     if (error) throw error;
 
     const classEvents: ClassEvent[] = (data || []).map((cls) => ({
-      id: cls.id,
-      title: cls.title,
+      id: cls.id || '',
+      title: cls.title || '',
       tutorName: cls.tutor_name || '',
       studentName: cls.student_name || '',
-      date: new Date(cls.date),
-      startTime: cls.start_time.substring(0, 5),
-      endTime: cls.end_time.substring(0, 5),
-      subject: cls.subject,
-      zoomLink: cls.zoom_link,
-      notes: cls.notes,
-      status: cls.status,
-      attendance: cls.attendance,
-      studentId: cls.student_id,
-      tutorId: cls.tutor_id,
+      date: cls.date ? new Date(cls.date) : new Date(),
+      startTime: cls.start_time ? cls.start_time.substring(0, 5) : '',
+      endTime: cls.end_time ? cls.end_time.substring(0, 5) : '',
+      subject: cls.subject || '',
+      zoomLink: cls.zoom_link || null,
+      notes: cls.notes || null,
+      status: cls.status || 'scheduled',
+      attendance: cls.attendance || 'pending',
+      studentId: cls.student_id || '',
+      tutorId: cls.tutor_id || '',
     }));
 
     return classEvents;

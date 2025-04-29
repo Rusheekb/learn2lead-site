@@ -10,6 +10,9 @@ export interface CreateScheduledClassInput {
   end_time: string;
   zoom_link: string;
   notes?: string | null;
+  date: string; // Added required field
+  student_id: string; // Added required field
+  tutor_id: string; // Added required field
 }
 
 export async function createScheduledClass(input: CreateScheduledClassInput) {

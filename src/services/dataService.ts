@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { ClassEvent } from '@/types/tutorTypes';
 import { Student } from '@/types/sharedTypes';
@@ -5,26 +6,26 @@ import { transformDbRecordToClassEvent } from './utils/classEventMapper';
 
 // Define types for database records to improve type safety
 interface TutorRecord {
-  'Tutor Name'?: string;
+  'Tutor Name'?: string | null;
   [key: string]: any;
 }
 
 interface StudentRecord {
-  'Student Name'?: string;
-  Subject?: string;
-  Date?: string;
+  'Student Name'?: string | null;
+  Subject?: string | null;
+  Date?: string | null;
   [key: string]: any;
 }
 
 interface PaymentRecord {
-  'Class Number'?: string;
-  'Tutor Name'?: string;
-  'Student Name'?: string;
-  Date?: string;
-  'Class Cost'?: string;
-  'Tutor Cost'?: string;
-  'Student Payment'?: string;
-  'Tutor Payment'?: string;
+  'Class Number'?: string | null;
+  'Tutor Name'?: string | null;
+  'Student Name'?: string | null;
+  Date?: string | null;
+  'Class Cost'?: string | null;
+  'Tutor Cost'?: string | null;
+  'Student Payment'?: string | null;
+  'Tutor Payment'?: string | null;
   [key: string]: any;
 }
 
@@ -142,7 +143,7 @@ export const fetchPaymentsData = async () => {
     return [];
   }
 
-  return data.map((record: PaymentRecord) => ({
+  return data.map((record) => ({
     id: `${record['Class Number'] || ''}`,
     date: record['Date'] || '',
     tutorName: record['Tutor Name'] || '',

@@ -1,3 +1,4 @@
+
 import {
   ClassEvent,
   ClassStatus,
@@ -15,20 +16,20 @@ import {
 
 interface DbRecord {
   id: string;
-  'Class Number'?: string;
-  'Tutor Name'?: string;
-  'Student Name'?: string;
-  Date?: string;
-  'Time (CST)'?: string;
-  'Time (hrs)'?: string | number;
-  Subject?: string;
-  Content?: string;
-  HW?: string;
-  'Class Cost'?: string | number;
-  'Tutor Cost'?: string | number;
-  'Student Payment'?: string;
-  'Tutor Payment'?: string;
-  'Additional Info'?: string;
+  'Class Number'?: string | null;
+  'Tutor Name'?: string | null;
+  'Student Name'?: string | null;
+  Date?: string | null;
+  'Time (CST)'?: string | null;
+  'Time (hrs)'?: string | number | null;
+  Subject?: string | null;
+  Content?: string | null;
+  HW?: string | null;
+  'Class Cost'?: string | number | null;
+  'Tutor Cost'?: string | number | null;
+  'Student Payment'?: string | null;
+  'Tutor Payment'?: string | null;
+  'Additional Info'?: string | null;
 }
 
 export const transformDbRecordToClassEvent = (record: DbRecord): ClassEvent => {
@@ -95,14 +96,14 @@ export const transformDbRecordToClassEvent = (record: DbRecord): ClassEvent => {
       subject: 'Error Loading',
       content: 'Error loading content',
       homework: '',
-      status: 'pending' as ClassStatus, // Changed from "error" to a valid ClassStatus
-      attendance: 'pending' as AttendanceStatus, // Changed from "unknown" to a valid AttendanceStatus
+      status: 'pending' as ClassStatus,
+      attendance: 'pending' as AttendanceStatus,
       zoomLink: '',
       notes: 'Error loading class data',
       classCost: 0,
       tutorCost: 0,
-      studentPayment: 'pending' as PaymentStatus, // Changed from "Error" to a valid PaymentStatus
-      tutorPayment: 'pending' as PaymentStatus, // Changed from "Error" to a valid PaymentStatus
+      studentPayment: 'pending' as PaymentStatus,
+      tutorPayment: 'pending' as PaymentStatus,
       recurring: false,
       materials: [],
     };
