@@ -8,7 +8,7 @@ export const updateClassLog = async (
   id: string,
   classEvent: Partial<ClassEvent>
 ): Promise<ClassEvent | null> => {
-  const record: any = {};
+  const record: Record<string, any> = {};
 
   if (classEvent.title !== undefined) record['Class Number'] = classEvent.title;
   if (classEvent.tutorName !== undefined) record['Tutor Name'] = classEvent.tutorName;
@@ -25,6 +25,8 @@ export const updateClassLog = async (
   if (classEvent.classCost !== undefined) record['Class Cost'] = classEvent.classCost?.toString() || null;
   if (classEvent.tutorCost !== undefined) record['Tutor Cost'] = classEvent.tutorCost?.toString() || null;
   if (classEvent.notes !== undefined) record['Additional Info'] = classEvent.notes || null;
+  if (classEvent.studentPayment !== undefined) record['Student Payment'] = classEvent.studentPayment;
+  if (classEvent.tutorPayment !== undefined) record['Tutor Payment'] = classEvent.tutorPayment;
 
   const { data, error } = await supabase
     .from('class_logs')
@@ -38,6 +40,6 @@ export const updateClassLog = async (
     return null;
   }
 
-  // Add explicit type assertion since we know the structure
+  // Transform the DB record to a ClassEvent
   return transformDbRecordToClassEvent(data as any);
 };

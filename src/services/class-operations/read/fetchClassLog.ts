@@ -15,6 +15,7 @@ export const fetchClassLog = async (id: string): Promise<ClassEvent | null> => {
     return null;
   }
 
-  // Add explicit type assertion since we know the structure
+  // Transform the data to match our ClassEvent type
+  // This casts to any first because the database types and our application types don't match exactly
   return transformDbRecordToClassEvent(data as any);
 };

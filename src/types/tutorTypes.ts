@@ -60,16 +60,16 @@ export interface DbClassLog {
   additional_info?: string;
 }
 
-// Student interface
+// Student interface - updated to match the database schema
 export interface Student {
   id: string;
   name: string;
-  email?: string;
+  email: string;
   subjects: string[];
   lastSession?: string;
   nextSession?: string;
   progress?: string;
-  grade?: string;
+  grade?: string | null; // Updated to allow null
   active?: boolean;
   enrollmentDate?: string;
   paymentStatus?: PaymentStatus;
