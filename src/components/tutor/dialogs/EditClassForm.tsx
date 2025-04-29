@@ -1,11 +1,8 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ClassEvent } from '@/types/tutorTypes';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { Form } from '@/components/ui/form';
-import { editClassEventSchema } from '@/utils/classFormUtils';
 import {
   TitleField,
   DateField,
@@ -14,7 +11,7 @@ import {
   ZoomLinkField,
   NotesField
 } from '../forms/ClassFormFields';
-import type { z } from 'zod';
+import { useEditClassForm } from '@/hooks/tutor-scheduler/useEditClassForm';
 
 interface EditClassFormProps {
   selectedEvent: ClassEvent;
@@ -25,9 +22,6 @@ interface EditClassFormProps {
   students?: any[];
 }
 
-const schema = editClassEventSchema();
-type EditClassFormValues = z.infer<typeof schema>;
-
 const EditClassForm: React.FC<EditClassFormProps> = ({
   selectedEvent,
   newEvent,
@@ -36,40 +30,7 @@ const EditClassForm: React.FC<EditClassFormProps> = ({
   onSave,
   students,
 }) => {
-  // Parse the date from string if needed
-  const eventDate = typeof selectedEvent.date === 'string' 
-    ? new Date(selectedEvent.date) 
-    : selectedEvent.date;
-
-  const form = useForm<EditClassFormValues>({
-    resolver: zodResolver(schema),
-    defaultValues: {
-      title: selectedEvent.title,
-      date: eventDate,
-      startTime: selectedEvent.startTime || '',
-      endTime: selectedEvent.endTime || '',
-      subject: selectedEvent.subject || '',
-      zoomLink: selectedEvent.zoomLink || '',
-      notes: selectedEvent.notes || '',
-    },
-  });
-
-  // Optimize the watch subscription with named fields and memoized handler
-  useEffect(() => {
-    // Watch only the fields we need to update in parent state
-    const subscription = form.watch((formValues) => {
-      // Only update if values have changed
-      if (formValues && Object.keys(formValues).some(key => formValues[key as keyof EditClassFormValues] !== selectedEvent[key as keyof ClassEvent])) {
-        setNewEvent({
-          ...selectedEvent,
-          ...formValues,
-        });
-      }
-    });
-    
-    // Properly clean up subscription
-    return () => subscription.unsubscribe();
-  }, [form.watch, selectedEvent, setNewEvent]);
+  const { form } = useEditClassForm(selectedEvent, setNewEvent);
 
   return (
     <div className="py-4">
