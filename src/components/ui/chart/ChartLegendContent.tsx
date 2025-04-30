@@ -63,4 +63,5 @@ export const ChartLegendContent = React.forwardRef<
 );
 ChartLegendContent.displayName = 'ChartLegend';
 
-export { ChartLegendContent as ChartLegend };
+// Export explicitly as ChartLegendContent only, not as ChartLegend
+export { ChartLegendContent };

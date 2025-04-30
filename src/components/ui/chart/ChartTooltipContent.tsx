@@ -159,4 +159,5 @@ export const ChartTooltipContent = React.forwardRef<
 );
 ChartTooltipContent.displayName = 'ChartTooltip';
 
-export { ChartTooltipContent as ChartTooltip };
+// Export explicitly as ChartTooltipContent only, not as ChartTooltip
+export { ChartTooltipContent };
