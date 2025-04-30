@@ -2,8 +2,7 @@
 import * as React from 'react';
 import * as RechartsPrimitive from 'recharts';
 import { cn } from '@/lib/utils';
-import { useChart } from './ChartContext';
-import { getPayloadConfigFromPayload } from './utils';
+import { LegendItem } from './legend/LegendItem';
 
 // Remove the 'export' keyword from the initial declaration
 const ChartLegendContent = React.forwardRef<
@@ -18,8 +17,6 @@ const ChartLegendContent = React.forwardRef<
     { className, hideIcon = false, payload, verticalAlign = 'bottom', nameKey },
     ref
   ) => {
-    const { config } = useChart();
-
     if (!payload?.length) {
       return null;
     }
@@ -33,31 +30,14 @@ const ChartLegendContent = React.forwardRef<
           className
         )}
       >
-        {payload.map((item) => {
-          const key = `${nameKey || item.dataKey || 'value'}`;
-          const itemConfig = getPayloadConfigFromPayload(config, item, key);
-
-          return (
-            <div
-              key={item.value}
-              className={cn(
-                'flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-muted-foreground'
-              )}
-            >
-              {itemConfig?.icon && !hideIcon ? (
-                <itemConfig.icon />
-              ) : (
-                <div
-                  className="h-2 w-2 shrink-0 rounded-[2px]"
-                  style={{
-                    backgroundColor: item.color,
-                  }}
-                />
-              )}
-              {itemConfig?.label}
-            </div>
-          );
-        })}
+        {payload.map((item) => (
+          <LegendItem 
+            key={item.value}
+            item={item}
+            hideIcon={hideIcon}
+            nameKey={nameKey}
+          />
+        ))}
       </div>
     );
   }
