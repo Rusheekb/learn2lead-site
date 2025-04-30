@@ -43,7 +43,7 @@ const ChartTooltipContent = React.forwardRef<
           labelKey={labelKey}
           hideLabel={hideLabel}
           labelClassName={labelClassName}
-          labelFormatter={labelFormatter}
+          labelFormatter={labelFormatter as (value: any, payload?: any[]) => React.ReactNode}
         />
       );
     }, [
