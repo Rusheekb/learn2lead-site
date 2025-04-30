@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useClassLogs } from '@/hooks/useClassLogs';
 import { useAnalytics } from '@/hooks/useAnalytics';
@@ -5,6 +6,7 @@ import AnalyticsMetricsGrid from './analytics/AnalyticsMetricsGrid';
 import TopPerformersGrid from './analytics/TopPerformersGrid';
 import PopularSubjectsTable from './analytics/PopularSubjectsTable';
 import MonthlyDistributionTable from './analytics/MonthlyDistributionTable';
+import WeeklyClassesChart from './analytics/WeeklyClassesChart';
 import { TopPerformer } from '@/types/sharedTypes';
 
 const ClassAnalytics: React.FC = () => {
@@ -16,6 +18,7 @@ const ClassAnalytics: React.FC = () => {
     getTopPerformingStudents,
     getRevenueByMonth,
     getSubjectPopularity,
+    weeklyClasses
   } = useAnalytics(classes);
 
   const isLoading = isLoadingClasses || isLoadingAnalytics;
@@ -45,6 +48,9 @@ const ClassAnalytics: React.FC = () => {
         isLoading={isLoading}
         businessAnalytics={businessAnalytics}
       />
+
+      {/* Weekly Classes Chart */}
+      <WeeklyClassesChart data={weeklyClasses} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <TopPerformersGrid topTutors={topTutors} topStudents={topStudents} />

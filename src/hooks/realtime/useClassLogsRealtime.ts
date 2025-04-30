@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { ClassEvent } from '@/types/tutorTypes';
 import { supabase } from '@/integrations/supabase/client';
