@@ -56,10 +56,8 @@ export const transformDbRecordToClassEvent = (record: DbRecord): ClassEvent => {
     const tutorPayment = record['Tutor Payment'] || 'pending';
 
     // Handle null values for parseNumericString
-    const classCost = record['Class Cost'] !== null ? 
-      parseNumericString(record['Class Cost']) : 0;
-    const tutorCost = record['Tutor Cost'] !== null ? 
-      parseNumericString(record['Tutor Cost']) : 0;
+    const classCost = parseNumericString(record['Class Cost']);
+    const tutorCost = parseNumericString(record['Tutor Cost']);
 
     return {
       id: record.id,

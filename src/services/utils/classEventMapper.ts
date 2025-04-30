@@ -12,7 +12,7 @@ import {
   parseNumericString,
   calculateEndTime,
   parseDateWithFormats,
-} from './dateTimeTransformers';
+} from '@/services/utils/dateTimeTransformers';
 
 interface DbRecord {
   id: string;
@@ -55,6 +55,10 @@ export const transformDbRecordToClassEvent = (record: DbRecord): ClassEvent => {
     const studentPayment = record['Student Payment'] || 'pending';
     const tutorPayment = record['Tutor Payment'] || 'pending';
 
+    // Handle null values for parseNumericString
+    const classCost = parseNumericString(record['Class Cost']);
+    const tutorCost = parseNumericString(record['Tutor Cost']);
+
     return {
       id: record.id,
       title: record['Class Number'] || '',
@@ -71,8 +75,8 @@ export const transformDbRecordToClassEvent = (record: DbRecord): ClassEvent => {
       attendance: 'present' as AttendanceStatus,
       zoomLink: '',
       notes: record['Additional Info'] || '',
-      classCost: parseNumericString(record['Class Cost']),
-      tutorCost: parseNumericString(record['Tutor Cost']),
+      classCost,
+      tutorCost,
       studentPayment: isValidPaymentStatus(studentPayment)
         ? studentPayment
         : 'pending',
