@@ -29,11 +29,14 @@ const TutorStudents: React.FC = () => {
         setRelationships(rels);
         
         // 2. Load all student profiles and filter to just your students
-        const allStudents = await fetchStudents();
+        const studentsResponse = await fetchStudents();
         const studentIds = rels.map(r => r.student_id);
-        const myStudents = allStudents.filter(s => studentIds.includes(s.id));
+        // Extract the data array from the paginated response and filter it
+        const filteredStudents = studentsResponse.data.filter((s: Student) => 
+          studentIds.includes(s.id)
+        );
         
-        setMyStudents(myStudents);
+        setMyStudents(filteredStudents);
       } catch (error) {
         console.error('Error loading students:', error);
       } finally {

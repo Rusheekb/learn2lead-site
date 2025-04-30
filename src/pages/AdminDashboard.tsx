@@ -13,6 +13,8 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Student, Tutor } from '@/types/tutorTypes';
 import { TutorStudentRelationship } from '@/services/relationships/relationshipService';
+import { fetchTutors } from '@/services/tutors/tutorService';
+import { fetchStudents } from '@/services/students/studentService';
 
 type User = (Student | Tutor) & { role: 'student' | 'tutor' };
 
@@ -41,6 +43,26 @@ const AdminDashboard: React.FC = () => {
     queryKey: ['relationships'],
     queryFn: fetchRelationships,
   });
+  
+  // Fetch tutors for the RelationshipManager
+  const { 
+    data: tutorsResponse
+  } = useQuery({
+    queryKey: ['tutors', { page: 1, pageSize: 100, search: '' }],
+    queryFn: () => fetchTutors({ page: 1, pageSize: 100 }),
+  });
+  
+  const tutors = tutorsResponse?.data || [];
+  
+  // Fetch students for the RelationshipManager
+  const { 
+    data: studentsResponse
+  } = useQuery({
+    queryKey: ['students', { page: 1, pageSize: 100, search: '' }],
+    queryFn: () => fetchStudents({ page: 1, pageSize: 100 }),
+  });
+  
+  const students = studentsResponse?.data || [];
 
   const handleRelationshipChange = () => {
     refetchRelationships();
@@ -92,6 +114,8 @@ const AdminDashboard: React.FC = () => {
           <TabsContent value="relationships" className="pt-2">
             <RelationshipManager
               relationships={relationships}
+              tutors={tutors}
+              students={students}
               onRelationshipChange={handleRelationshipChange}
             />
           </TabsContent>
