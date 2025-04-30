@@ -5,7 +5,8 @@ import { cn } from '@/lib/utils';
 import { useChart } from './ChartContext';
 import { getPayloadConfigFromPayload } from './utils';
 
-export const ChartLegendContent = React.forwardRef<
+// Remove the 'export' keyword from the initial declaration
+const ChartLegendContent = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<'div'> &
     Pick<RechartsPrimitive.LegendProps, 'payload' | 'verticalAlign'> & {
@@ -63,5 +64,5 @@ export const ChartLegendContent = React.forwardRef<
 );
 ChartLegendContent.displayName = 'ChartLegend';
 
-// Export explicitly as ChartLegendContent only, not as ChartLegend
+// Export the component
 export { ChartLegendContent };

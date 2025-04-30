@@ -5,7 +5,8 @@ import { cn } from '@/lib/utils';
 import { useChart } from './ChartContext';
 import { getPayloadConfigFromPayload } from './utils';
 
-export const ChartTooltipContent = React.forwardRef<
+// Remove the 'export' keyword from the initial declaration
+const ChartTooltipContent = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<typeof RechartsPrimitive.Tooltip> &
     React.ComponentProps<'div'> & {
@@ -159,5 +160,5 @@ export const ChartTooltipContent = React.forwardRef<
 );
 ChartTooltipContent.displayName = 'ChartTooltip';
 
-// Export explicitly as ChartTooltipContent only, not as ChartTooltip
+// Export the component
 export { ChartTooltipContent };
