@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { FileDown, Printer, RefreshCw, Download, Upload } from 'lucide-react';
+import { FileDown, Printer, RefreshCw, Download, Upload, Loader } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -100,18 +101,22 @@ const ClassLogs: React.FC = () => {
                 variant="outline"
                 size="sm"
                 className="flex items-center gap-2"
-                disabled={isLoading || Boolean(error)}
+                disabled={isLoading || isExporting || Boolean(error) || filteredClasses.length === 0}
               >
-                <FileDown className="h-4 w-4" />
-                Export
+                {isExporting ? (
+                  <Loader className="h-4 w-4 animate-spin" />
+                ) : (
+                  <FileDown className="h-4 w-4" />
+                )}
+                {isExporting ? 'Exporting...' : 'Export'}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => handleExportFormat('csv')}>
+              <DropdownMenuItem onClick={() => handleExportFormat('csv')} disabled={isExporting}>
                 <Download className="h-4 w-4 mr-2" />
                 Export as CSV
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleExportFormat('pdf')}>
+              <DropdownMenuItem onClick={() => handleExportFormat('pdf')} disabled={isExporting}>
                 <Printer className="h-4 w-4 mr-2" />
                 Export as PDF
               </DropdownMenuItem>

@@ -1,8 +1,10 @@
+
 import { useEffect, Dispatch, SetStateAction } from 'react';
 import useClassFilters from './class-logs/useClassFilters';
 import useClassActions from './class-logs/useClassActions';
 import useClassData from './class-logs/useClassData';
 import useClassRealtime from './class-logs/useClassRealtime';
+import { useExportActions } from './class-logs/hooks/useExportActions';
 
 export const useClassLogs = () => {
   const {
@@ -29,7 +31,6 @@ export const useClassLogs = () => {
     studentMessages,
     activeDetailsTab,
     setActiveDetailsTab,
-    isExporting,
     page,
     setPage,
     pageSize,
@@ -38,7 +39,6 @@ export const useClassLogs = () => {
     loadClassContent,
     handleMarkMessageRead,
     handleDownloadFile,
-    handleExport,
     getUnreadMessageCount,
     handlePageChange,
     handlePageSizeChange,
@@ -53,6 +53,8 @@ export const useClassLogs = () => {
     formatTime,
     handleRefreshData,
   } = useClassData();
+
+  const { isExporting, handleExport } = useExportActions();
 
   // Create realtime subscription
   useClassRealtime(
