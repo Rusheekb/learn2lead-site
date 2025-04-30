@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ClassEvent, ClassStatus, isValidClassStatus, AttendanceStatus, isValidAttendanceStatus } from '@/types/tutorTypes';
@@ -57,8 +58,8 @@ export const fetchScheduledClasses = async (
         startTime: cls.start_time ? cls.start_time.substring(0, 5) : '',
         endTime: cls.end_time ? cls.end_time.substring(0, 5) : '',
         subject: cls.subject || '',
-        zoomLink: cls.zoom_link || null,
-        notes: cls.notes || null,
+        zoomLink: cls.zoom_link,
+        notes: cls.notes,
         status: isValidClassStatus(status) ? status : 'scheduled',
         attendance: isValidAttendanceStatus(attendance) ? attendance : 'pending',
         studentId: cls.student_id || '',

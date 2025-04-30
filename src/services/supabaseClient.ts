@@ -6,6 +6,9 @@ import type {
   Student as TutorStudent,
   ContentShareItem,
   DbClassLog,
+  PaymentStatus,
+  ClassStatus,
+  AttendanceStatus
 } from '@/types/tutorTypes';
 import type { Profile } from '@/types/profile';
 import type {
@@ -13,6 +16,7 @@ import type {
   PostgrestResponse,
   PostgrestSingleResponse,
 } from '@supabase/supabase-js';
+import { transformDbRecordToClassEvent } from './class-operations/utils/classEventMapper';
 
 // Unified result handler for DRY error handling - Overload for single results
 function handleResult<T>(response: PostgrestSingleResponse<T>): T;
@@ -43,31 +47,8 @@ export async function fetchClassLogs(): Promise<ClassEvent[]> {
   }
   
   // We need to transform the database records to ClassEvent type
-  // This will be handled in the classEventMapper.ts file
-  return result.data ? result.data.map(record => {
-    // Basic mapping here - detailed mapping should be in a utility function
-    return {
-      id: record.id,
-      title: record["Class Number"] || "",
-      tutorName: record["Tutor Name"] || "",
-      studentName: record["Student Name"] || "",
-      date: record.Date || new Date().toISOString(),
-      startTime: record["Time (CST)"] || "",
-      endTime: "", // Calculate this or set a default
-      duration: parseInt(record["Time (hrs)"] || "0"),
-      subject: record.Subject || "",
-      content: record.Content || "",
-      homework: record.HW || "",
-      status: "completed" as any,
-      attendance: "present" as any,
-      zoomLink: null,
-      notes: record["Additional Info"] || "",
-      classCost: parseFloat(record["Class Cost"] || "0"),
-      tutorCost: parseFloat(record["Tutor Cost"] || "0"),
-      studentPayment: record["Student Payment"] as any || "pending",
-      tutorPayment: record["Tutor Payment"] as any || "pending",
-    } as ClassEvent;
-  }) : [];
+  // Using the utility function from classEventMapper
+  return result.data ? result.data.map(record => transformDbRecordToClassEvent(record as any)) : [];
 }
 
 export async function createClassLog(
@@ -85,27 +66,7 @@ export async function createClassLog(
   }
   
   // Transform the DB record to a ClassEvent
-  return {
-    id: result.data.id,
-    title: result.data["Class Number"] || "",
-    tutorName: result.data["Tutor Name"] || "",
-    studentName: result.data["Student Name"] || "",
-    date: result.data.Date || new Date().toISOString(),
-    startTime: result.data["Time (CST)"] || "",
-    endTime: "", // Calculate this or set a default
-    duration: parseInt(result.data["Time (hrs)"] || "0"),
-    subject: result.data.Subject || "",
-    content: result.data.Content || "",
-    homework: result.data.HW || "",
-    status: "completed" as any,
-    attendance: "present" as any,
-    zoomLink: null,
-    notes: result.data["Additional Info"] || "",
-    classCost: parseFloat(result.data["Class Cost"] || "0"),
-    tutorCost: parseFloat(result.data["Tutor Cost"] || "0"),
-    studentPayment: result.data["Student Payment"] as any || "pending",
-    tutorPayment: result.data["Tutor Payment"] as any || "pending",
-  } as ClassEvent;
+  return transformDbRecordToClassEvent(result.data as any);
 }
 
 export async function updateClassLog(
@@ -118,7 +79,9 @@ export async function updateClassLog(
     .eq('id', id)
     .select()
     .single();
-  return handleResult(result);
+    
+  // Transform to our application type
+  return transformDbRecordToClassEvent(handleResult(result) as any);
 }
 
 // Now delete returns the deleted row:
@@ -129,7 +92,9 @@ export async function deleteClassLog(id: string): Promise<ClassEvent> {
     .eq('id', id)
     .select()
     .single();
-  return handleResult(result);
+    
+  // Transform to our application type
+  return transformDbRecordToClassEvent(handleResult(result) as any);
 }
 
 // Student Operations

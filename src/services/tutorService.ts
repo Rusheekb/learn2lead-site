@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -9,13 +10,17 @@ export interface Tutor {
   hourly_rate: number;
   created_at: string;
   active: boolean;
+  // Add properties required by the Tutor interface
+  rating: number;
+  classes: number;
+  hourlyRate: number;
 }
 
 export interface Student {
   id: string;
   name: string;
   email: string;
-  grade: string;
+  grade: string | null; // Changed to allow null values
   subjects: string[];
   enrollment_date: string;
   payment_status: string;
@@ -28,7 +33,7 @@ export interface TutorStudent {
   tutor_name: string;
   student_id: string;
   student_name: string;
-  grade: string;
+  grade: string | null; // Changed to allow null values
   subjects: string[];
   payment_status: string;
   assigned_at: string;
@@ -43,7 +48,21 @@ export const fetchTutors = async (): Promise<Tutor[]> => {
       .order('name');
 
     if (error) throw error;
-    return data || [];
+    
+    // Transform database tutor records to match our Tutor interface
+    return (data || []).map(tutor => ({
+      id: tutor.id,
+      name: tutor.name,
+      email: tutor.email,
+      subjects: tutor.subjects || [],
+      hourly_rate: tutor.hourly_rate || 0,
+      created_at: tutor.created_at,
+      active: tutor.active,
+      // Add default values for required fields
+      rating: 5, // Default values for required fields in the Tutor interface
+      classes: 0,
+      hourlyRate: tutor.hourly_rate || 0,
+    }));
   } catch (error: any) {
     toast.error(`Error loading tutors: ${error.message}`);
     return [];
@@ -63,7 +82,19 @@ export const fetchTutorStudents = async (
     const { data, error } = await query.order('student_name');
 
     if (error) throw error;
-    return data || [];
+    
+    // Transform data to ensure it matches our TutorStudent interface
+    return (data || []).map(item => ({
+      tutor_id: item.tutor_id || '',
+      tutor_name: item.tutor_name || '',
+      student_id: item.student_id || '',
+      student_name: item.student_name || '',
+      grade: item.grade, // Allow null
+      subjects: item.subjects || [],
+      payment_status: item.payment_status || 'pending',
+      assigned_at: item.assigned_at || new Date().toISOString(),
+      active: item.active ?? true,
+    }));
   } catch (error: any) {
     toast.error(`Error loading tutor students: ${error.message}`);
     return [];
@@ -78,7 +109,19 @@ export const fetchStudents = async (): Promise<Student[]> => {
       .order('name');
 
     if (error) throw error;
-    return data || [];
+    
+    // Transform data to match our Student interface
+    return (data || []).map(student => ({
+      id: student.id,
+      name: student.name,
+      email: student.email,
+      grade: student.grade, // Allow null
+      subjects: student.subjects,
+      enrollment_date: student.enrollment_date || '',
+      payment_status: student.payment_status,
+      created_at: student.created_at,
+      active: student.active,
+    }));
   } catch (error: any) {
     toast.error(`Error loading students: ${error.message}`);
     return [];

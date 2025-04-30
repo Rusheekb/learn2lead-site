@@ -17,7 +17,7 @@ export async function fetchStudents(): Promise<Student[]> {
     name: student.name,
     email: student.email,
     subjects: student.subjects,
-    grade: student.grade,
+    grade: student.grade, // Allow null values
     active: student.active,
     enrollmentDate: student.enrollment_date,
     paymentStatus: student.payment_status as any
@@ -25,12 +25,17 @@ export async function fetchStudents(): Promise<Student[]> {
 }
 
 export async function createStudent(student: Omit<Student, 'id'>): Promise<Student> {
+  // Validate required fields
+  if (!student.name || !student.email) {
+    throw new Error('Student name and email are required');
+  }
+
   // Transform our Student type to match the database schema
   const dbStudent = {
     name: student.name,
     email: student.email, 
     subjects: student.subjects || [],
-    grade: student.grade || null,
+    grade: student.grade, // Allow null values
     active: student.active !== undefined ? student.active : true,
     payment_status: student.paymentStatus || 'pending'
   };
@@ -52,7 +57,7 @@ export async function createStudent(student: Omit<Student, 'id'>): Promise<Stude
     name: result.data.name,
     email: result.data.email,
     subjects: result.data.subjects,
-    grade: result.data.grade,
+    grade: result.data.grade, // Allow null values
     active: result.data.active,
     enrollmentDate: result.data.enrollment_date,
     paymentStatus: result.data.payment_status as any
@@ -90,7 +95,7 @@ export async function updateStudent(
     name: result.data.name,
     email: result.data.email,
     subjects: result.data.subjects,
-    grade: result.data.grade,
+    grade: result.data.grade, // Allow null values
     active: result.data.active,
     enrollmentDate: result.data.enrollment_date,
     paymentStatus: result.data.payment_status as any
@@ -116,7 +121,7 @@ export async function deleteStudent(id: string): Promise<Student> {
     name: result.data.name,
     email: result.data.email,
     subjects: result.data.subjects,
-    grade: result.data.grade,
+    grade: result.data.grade, // Allow null values
     active: result.data.active,
     enrollmentDate: result.data.enrollment_date,
     paymentStatus: result.data.payment_status as any

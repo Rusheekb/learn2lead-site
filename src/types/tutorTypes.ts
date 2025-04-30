@@ -1,3 +1,4 @@
+
 // Common status and payment types
 export type ClassStatus = 'scheduled' | 'completed' | 'cancelled' | 'pending';
 export type AttendanceStatus =
@@ -87,15 +88,15 @@ export interface Material {
   sharedWith: string[];
 }
 
-// Tutor interface
+// Tutor interface - updated to align with database fields
 export interface Tutor {
   id: string;
   name: string;
   email: string;
   subjects: string[];
-  rating: number;
-  classes: number;
-  hourlyRate: number;
+  rating?: number;
+  classes?: number;
+  hourlyRate?: number;
   active?: boolean;
 }
 

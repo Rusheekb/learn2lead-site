@@ -12,9 +12,8 @@ import {
   parseNumericString,
   calculateEndTime,
   parseDateWithFormats,
-} from './dateTimeTransformers';
+} from '@/services/utils/dateTimeTransformers';
 
-// Update the interface to match the database structure
 interface DbRecord {
   id: string;
   'Class Number'?: string | null;
@@ -31,8 +30,6 @@ interface DbRecord {
   'Student Payment'?: string | null;
   'Tutor Payment'?: string | null;
   'Additional Info'?: string | null;
-  Day?: string | null;
-  'Class ID'?: string | null;
 }
 
 export const transformDbRecordToClassEvent = (record: DbRecord): ClassEvent => {
@@ -57,8 +54,12 @@ export const transformDbRecordToClassEvent = (record: DbRecord): ClassEvent => {
     // Cast payment statuses using the validators
     const studentPayment = record['Student Payment'] || 'pending';
     const tutorPayment = record['Tutor Payment'] || 'pending';
-    const status = 'completed' as ClassStatus; // Default status
-    const attendance = 'present' as AttendanceStatus; // Default attendance
+
+    // Handle null values for parseNumericString
+    const classCost = record['Class Cost'] !== null ? 
+      parseNumericString(record['Class Cost']) : 0;
+    const tutorCost = record['Tutor Cost'] !== null ? 
+      parseNumericString(record['Tutor Cost']) : 0;
 
     return {
       id: record.id,
@@ -72,12 +73,12 @@ export const transformDbRecordToClassEvent = (record: DbRecord): ClassEvent => {
       subject: record.Subject || '',
       content: record.Content || '',
       homework: record.HW || '',
-      status,
-      attendance,
+      status: 'completed' as ClassStatus,
+      attendance: 'present' as AttendanceStatus,
       zoomLink: '',
       notes: record['Additional Info'] || '',
-      classCost: parseNumericString(record['Class Cost']),
-      tutorCost: parseNumericString(record['Tutor Cost']),
+      classCost,
+      tutorCost,
       studentPayment: isValidPaymentStatus(studentPayment)
         ? studentPayment
         : 'pending',
