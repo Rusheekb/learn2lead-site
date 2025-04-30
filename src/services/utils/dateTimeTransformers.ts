@@ -1,21 +1,6 @@
 
 import { parseISO, format, parse } from 'date-fns';
-
-// Parse a string that may have a numeric value in it
-export const parseNumericString = (value?: string | number): number => {
-  if (value === undefined || value === null) {
-    return 0;
-  }
-
-  if (typeof value === 'number') {
-    return value;
-  }
-
-  // Remove non-numeric characters except decimal point
-  const numericValue = value.replace(/[^0-9.]/g, '');
-  
-  return numericValue ? parseFloat(numericValue) : 0;
-};
+import { parseNumericString } from '@/utils/numberUtils';
 
 // Calculate end time based on start time and duration
 export const calculateEndTime = (startTime: string, duration: number): string => {

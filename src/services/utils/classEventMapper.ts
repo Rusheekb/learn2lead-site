@@ -9,10 +9,10 @@ import {
   isValidPaymentStatus,
 } from '@/types/tutorTypes';
 import {
-  parseNumericString,
   calculateEndTime,
   parseDateWithFormats,
 } from '@/services/utils/dateTimeTransformers';
+import { parseNumericString } from '@/utils/numberUtils';
 
 interface DbRecord {
   id: string;
