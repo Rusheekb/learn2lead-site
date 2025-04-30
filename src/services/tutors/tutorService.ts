@@ -1,21 +1,39 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Tutor } from '@/types/tutorTypes';
 import { toast } from 'sonner';
+import { PaginatedResponse } from '@/services/students/studentService';
 
-export async function fetchTutors(): Promise<Tutor[]> {
-  const { data, error } = await supabase.from('tutors').select('*');
-  console.log('[fetchTutors]', data, error); // Debug log as requested
+interface FetchTutorsOptions {
+  page?: number;
+  pageSize?: number;
+  searchTerm?: string;
+}
+
+export async function fetchTutors(options: FetchTutorsOptions = {}): Promise<PaginatedResponse<Tutor>> {
+  const { page = 1, pageSize = 10, searchTerm = '' } = options;
+  const offset = (page - 1) * pageSize;
   
-  if (error) {
-    console.error('Error fetching tutors:', error);
-    throw error;
+  // Start with the base query
+  let query = supabase.from('tutors').select('*', { count: 'exact' });
+
+  // Add search condition if provided
+  if (searchTerm) {
+    query = query.or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
   }
 
-  console.log('Tutor service fetched data:', data);
+  // Add pagination
+  query = query.range(offset, offset + pageSize - 1).order('name');
+
+  const result = await query;
+  console.log('[fetchTutors]', result); // Debug log
+  
+  if (result.error) {
+    console.error('Error fetching tutors:', result.error);
+    throw result.error;
+  }
   
   // Transform the data to match our Tutor interface
-  return (data || []).map(tutor => ({
+  const tutors = (result.data || []).map(tutor => ({
     id: tutor.id,
     name: tutor.name,
     email: tutor.email,
@@ -25,6 +43,14 @@ export async function fetchTutors(): Promise<Tutor[]> {
     hourlyRate: tutor.hourly_rate || 0,
     active: tutor.active,
   }));
+
+  return {
+    data: tutors,
+    count: result.count || 0,
+    page,
+    pageSize,
+    hasMore: offset + tutors.length < (result.count || 0)
+  };
 }
 
 export async function createTutor(tutor: Omit<Tutor, 'id'>): Promise<Tutor> {

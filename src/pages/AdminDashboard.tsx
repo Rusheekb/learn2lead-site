@@ -9,12 +9,10 @@ import TutorsManager from '@/components/admin/TutorsManager';
 import StudentsManager from '@/components/admin/StudentsManager';
 import RelationshipManager from '@/components/admin/RelationshipManager';
 import { UserDetailModal } from '@/components/admin/UserDetailModal';
-import { useTutorsQuery } from '@/hooks/queries/useTutorsQuery';
-import { useStudentsQuery } from '@/hooks/queries/useStudentsQuery';
-import { TutorStudentRelationship } from '@/services/relationships/relationshipService';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Student, Tutor } from '@/types/tutorTypes';
+import { TutorStudentRelationship } from '@/services/relationships/relationshipService';
 
 type User = (Student | Tutor) & { role: 'student' | 'tutor' };
 
@@ -34,18 +32,6 @@ const fetchRelationships = async () => {
 const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('analytics');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  
-  const { 
-    tutors, 
-    isLoading: isTutorsLoading, 
-    refetch: refetchTutors 
-  } = useTutorsQuery();
-  
-  const { 
-    students, 
-    isLoading: isStudentsLoading, 
-    refetch: refetchStudents 
-  } = useStudentsQuery();
 
   const { 
     data: relationships = [], 
@@ -96,17 +82,15 @@ const AdminDashboard: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="tutors" className="pt-2">
-            <TutorsManager tutors={tutors} onSelect={handleTutorSelect} />
+            <TutorsManager onSelect={handleTutorSelect} />
           </TabsContent>
 
           <TabsContent value="students" className="pt-2">
-            <StudentsManager students={students} onSelect={handleStudentSelect} />
+            <StudentsManager onSelect={handleStudentSelect} />
           </TabsContent>
 
           <TabsContent value="relationships" className="pt-2">
             <RelationshipManager
-              tutors={tutors}
-              students={students}
               relationships={relationships}
               onRelationshipChange={handleRelationshipChange}
             />

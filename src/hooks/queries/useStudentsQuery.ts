@@ -4,28 +4,50 @@ import { supabase } from '@/integrations/supabase/client';
 import { fetchStudents, createStudent, updateStudent, deleteStudent } from '@/services/students/studentService';
 import { Student } from '@/types/tutorTypes';
 import { toast } from 'sonner';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useDebounce } from '@/hooks/useDebounce';
 
 // Query keys
 export const studentsKeys = {
   all: ['students'] as const,
   lists: () => [...studentsKeys.all, 'list'] as const,
+  paginated: (page: number, pageSize: number, search: string) => 
+    [...studentsKeys.lists(), { page, pageSize, search }] as const,
   detail: (id: string) => [...studentsKeys.all, 'detail', id] as const,
 };
 
-export const useStudentsQuery = () => {
+interface UseStudentsQueryOptions {
+  initialPage?: number;
+  initialPageSize?: number;
+}
+
+export const useStudentsQuery = (options: UseStudentsQueryOptions = {}) => {
   const queryClient = useQueryClient();
+  const [page, setPage] = useState(options.initialPage || 1);
+  const [pageSize, setPageSize] = useState(options.initialPageSize || 10);
+  const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   // Fetch all students
   const { 
-    data: students = [], 
+    data: studentResponse,
     isLoading, 
     error, 
     refetch 
   } = useQuery({
-    queryKey: studentsKeys.lists(),
-    queryFn: fetchStudents,
+    queryKey: studentsKeys.paginated(page, pageSize, debouncedSearchTerm),
+    queryFn: () => fetchStudents({
+      page,
+      pageSize,
+      searchTerm: debouncedSearchTerm
+    }),
   });
+
+  const students = studentResponse?.data || [];
+  const totalCount = studentResponse?.count || 0;
+  const hasNextPage = studentResponse?.hasMore || false;
+  const hasPrevPage = page > 1;
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   // Create a new student
   const createMutation = useMutation({
@@ -98,6 +120,29 @@ export const useStudentsQuery = () => {
     };
   }, [queryClient]);
 
+  const nextPage = () => {
+    if (hasNextPage) {
+      setPage(prevPage => prevPage + 1);
+    }
+  };
+
+  const prevPage = () => {
+    if (hasPrevPage) {
+      setPage(prevPage => prevPage - 1);
+    }
+  };
+
+  const goToPage = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setPage(newPage);
+    }
+  };
+
+  const changePageSize = (newPageSize: number) => {
+    setPageSize(newPageSize);
+    setPage(1); // Reset to first page
+  };
+
   return {
     students,
     isLoading,
@@ -107,5 +152,19 @@ export const useStudentsQuery = () => {
     updateStudent: (id: string, updates: Partial<Student>) => 
       updateMutation.mutate({ id, updates }),
     deleteStudent: deleteMutation.mutate,
+    // Pagination controls
+    page,
+    pageSize,
+    totalCount,
+    totalPages,
+    hasNextPage,
+    hasPrevPage,
+    nextPage,
+    prevPage,
+    goToPage,
+    changePageSize,
+    // Search controls
+    searchTerm,
+    setSearchTerm,
   };
 };

@@ -1,18 +1,45 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Student } from '@/types/tutorTypes';
 import { toast } from 'sonner';
 
-export async function fetchStudents(): Promise<Student[]> {
-  const result = await supabase.from('students').select('*');
+interface FetchStudentsOptions {
+  page?: number;
+  pageSize?: number;
+  searchTerm?: string;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  count: number;
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
+}
+
+export async function fetchStudents(options: FetchStudentsOptions = {}): Promise<PaginatedResponse<Student>> {
+  const { page = 1, pageSize = 10, searchTerm = '' } = options;
+  const offset = (page - 1) * pageSize;
+  
+  // Start with the base query
+  let query = supabase.from('students').select('*', { count: 'exact' });
+
+  // Add search condition if provided
+  if (searchTerm) {
+    query = query.or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
+  }
+
+  // Add pagination
+  query = query.range(offset, offset + pageSize - 1).order('name');
+
+  const result = await query;
 
   if (result.error) {
     console.error('Error fetching students:', result.error);
     throw result.error;
   }
-
+  
   // Transform the data to match our Student type
-  return (result.data || []).map(student => ({
+  const students = (result.data || []).map(student => ({
     id: student.id,
     name: student.name,
     email: student.email,
@@ -22,6 +49,14 @@ export async function fetchStudents(): Promise<Student[]> {
     enrollmentDate: student.enrollment_date,
     paymentStatus: student.payment_status as any
   }));
+
+  return {
+    data: students,
+    count: result.count || 0,
+    page,
+    pageSize,
+    hasMore: offset + students.length < (result.count || 0)
+  };
 }
 
 export async function createStudent(student: Omit<Student, 'id'>): Promise<Student> {

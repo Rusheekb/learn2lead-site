@@ -4,28 +4,50 @@ import { supabase } from '@/integrations/supabase/client';
 import { fetchTutors, createTutor, updateTutor, deleteTutor } from '@/services/tutors/tutorService';
 import { Tutor } from '@/types/tutorTypes';
 import { toast } from 'sonner';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useDebounce } from '@/hooks/useDebounce';
 
 // Query keys
 export const tutorsKeys = {
   all: ['tutors'] as const,
   lists: () => [...tutorsKeys.all, 'list'] as const,
+  paginated: (page: number, pageSize: number, search: string) => 
+    [...tutorsKeys.lists(), { page, pageSize, search }] as const,
   detail: (id: string) => [...tutorsKeys.all, 'detail', id] as const,
 };
 
-export const useTutorsQuery = () => {
+interface UseTutorsQueryOptions {
+  initialPage?: number;
+  initialPageSize?: number;
+}
+
+export const useTutorsQuery = (options: UseTutorsQueryOptions = {}) => {
   const queryClient = useQueryClient();
+  const [page, setPage] = useState(options.initialPage || 1);
+  const [pageSize, setPageSize] = useState(options.initialPageSize || 10);
+  const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   // Fetch all tutors
   const { 
-    data: tutors = [], 
+    data: tutorsResponse, 
     isLoading, 
     error, 
     refetch 
   } = useQuery({
-    queryKey: tutorsKeys.lists(),
-    queryFn: fetchTutors,
+    queryKey: tutorsKeys.paginated(page, pageSize, debouncedSearchTerm),
+    queryFn: () => fetchTutors({
+      page,
+      pageSize,
+      searchTerm: debouncedSearchTerm
+    }),
   });
+
+  const tutors = tutorsResponse?.data || [];
+  const totalCount = tutorsResponse?.count || 0;
+  const hasNextPage = tutorsResponse?.hasMore || false;
+  const hasPrevPage = page > 1;
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   // Create a new tutor
   const createMutation = useMutation({
@@ -98,6 +120,29 @@ export const useTutorsQuery = () => {
     };
   }, [queryClient]);
 
+  const nextPage = () => {
+    if (hasNextPage) {
+      setPage(prevPage => prevPage + 1);
+    }
+  };
+
+  const prevPage = () => {
+    if (hasPrevPage) {
+      setPage(prevPage => prevPage - 1);
+    }
+  };
+
+  const goToPage = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setPage(newPage);
+    }
+  };
+
+  const changePageSize = (newPageSize: number) => {
+    setPageSize(newPageSize);
+    setPage(1); // Reset to first page
+  };
+
   return {
     tutors,
     isLoading,
@@ -107,5 +152,19 @@ export const useTutorsQuery = () => {
     updateTutor: (id: string, updates: Partial<Tutor>) => 
       updateMutation.mutate({ id, updates }),
     deleteTutor: deleteMutation.mutate,
+    // Pagination controls
+    page,
+    pageSize,
+    totalCount,
+    totalPages,
+    hasNextPage,
+    hasPrevPage,
+    nextPage,
+    prevPage,
+    goToPage,
+    changePageSize,
+    // Search controls
+    searchTerm,
+    setSearchTerm,
   };
 };
