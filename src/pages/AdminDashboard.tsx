@@ -1,13 +1,7 @@
 
-import React, { useState } from 'react';
+import React, { useState, Suspense, lazy } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import ClassAnalytics from '@/components/admin/ClassAnalytics';
-import ClassLogs from '@/components/admin/ClassLogs';
-import PaymentsManager from '@/components/admin/PaymentsManager';
-import TutorsManager from '@/components/admin/TutorsManager';
-import StudentsManager from '@/components/admin/StudentsManager';
-import RelationshipManager from '@/components/admin/RelationshipManager';
 import { UserDetailModal } from '@/components/admin/UserDetailModal';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,6 +9,15 @@ import { Student, Tutor } from '@/types/tutorTypes';
 import { TutorStudentRelationship } from '@/services/relationships/relationshipService';
 import { fetchTutors } from '@/services/tutors/tutorService';
 import { fetchStudents } from '@/services/students/studentService';
+import LoadingSpinner from '@/components/shared/LoadingSpinner';
+
+// Dynamically import heavy components
+const ClassAnalytics = lazy(() => import('@/components/admin/ClassAnalytics'));
+const ClassLogs = lazy(() => import('@/components/admin/ClassLogs'));
+const PaymentsManager = lazy(() => import('@/components/admin/PaymentsManager'));
+const TutorsManager = lazy(() => import('@/components/admin/TutorsManager'));
+const StudentsManager = lazy(() => import('@/components/admin/StudentsManager'));
+const RelationshipManager = lazy(() => import('@/components/admin/RelationshipManager'));
 
 type User = (Student | Tutor) & { role: 'student' | 'tutor' };
 
@@ -92,32 +95,44 @@ const AdminDashboard: React.FC = () => {
           </TabsList>
 
           <TabsContent value="analytics" className="pt-2">
-            <ClassAnalytics />
+            <Suspense fallback={<LoadingSpinner />}>
+              <ClassAnalytics />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="schedule" className="pt-2">
-            <ClassLogs />
+            <Suspense fallback={<LoadingSpinner />}>
+              <ClassLogs />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="payments" className="pt-2">
-            <PaymentsManager />
+            <Suspense fallback={<LoadingSpinner />}>
+              <PaymentsManager />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="tutors" className="pt-2">
-            <TutorsManager onSelect={handleTutorSelect} />
+            <Suspense fallback={<LoadingSpinner />}>
+              <TutorsManager onSelect={handleTutorSelect} />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="students" className="pt-2">
-            <StudentsManager onSelect={handleStudentSelect} />
+            <Suspense fallback={<LoadingSpinner />}>
+              <StudentsManager onSelect={handleStudentSelect} />
+            </Suspense>
           </TabsContent>
 
           <TabsContent value="relationships" className="pt-2">
-            <RelationshipManager
-              relationships={relationships}
-              tutors={tutors}
-              students={students}
-              onRelationshipChange={handleRelationshipChange}
-            />
+            <Suspense fallback={<LoadingSpinner />}>
+              <RelationshipManager
+                relationships={relationships}
+                tutors={tutors}
+                students={students}
+                onRelationshipChange={handleRelationshipChange}
+              />
+            </Suspense>
           </TabsContent>
         </Tabs>
       </div>

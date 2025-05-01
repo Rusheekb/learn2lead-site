@@ -1,13 +1,20 @@
 
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { useDashboardData } from '@/hooks/useDashboardData';
-import DashboardContent from './dashboard/DashboardContent';
+import LoadingSpinner from '@/components/shared/LoadingSpinner';
+
+// Dynamically import the heavy dashboard content component
+const DashboardContent = lazy(() => import('./dashboard/DashboardContent'));
 
 const Dashboard: React.FC = () => {
   const dashboardData = useDashboardData();
   console.log('Dashboard data:', dashboardData);
 
-  return <DashboardContent {...dashboardData} />;
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <DashboardContent {...dashboardData} />
+    </Suspense>
+  );
 };
 
 Dashboard.displayName = 'AdminDashboard';
