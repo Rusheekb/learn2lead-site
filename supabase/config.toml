@@ -1,1 +1,6 @@
+
 project_id = "lnhtlbatcufmsyoujuqh"
+
+[functions.send-class-reminders]
+verify_jwt = false
+

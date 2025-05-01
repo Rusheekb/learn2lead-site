@@ -229,6 +229,7 @@ export type Database = {
           id: string
           notes: string | null
           relationship_id: string | null
+          reminder_sent: boolean | null
           start_time: string
           status: string
           student_id: string
@@ -246,6 +247,7 @@ export type Database = {
           id?: string
           notes?: string | null
           relationship_id?: string | null
+          reminder_sent?: boolean | null
           start_time: string
           status?: string
           student_id: string
@@ -263,6 +265,7 @@ export type Database = {
           id?: string
           notes?: string | null
           relationship_id?: string | null
+          reminder_sent?: boolean | null
           start_time?: string
           status?: string
           student_id?: string
@@ -497,6 +500,10 @@ export type Database = {
       }
     }
     Functions: {
+      check_upcoming_classes: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       get_auth_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
