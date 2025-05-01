@@ -1,16 +1,18 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { ChevronLeft, ChevronRight, LogOut } from 'lucide-react';
 import SidebarLinks from './SidebarLinks';
+import { AppRole } from '@/types/profile';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
   title: string;
-  role?: 'student' | 'tutor' | 'admin';
+  role?: AppRole;
 }
 
-const DashboardLayout = ({ children, title, role = 'student' }) => {
+const DashboardLayout = ({ children, title, role = 'student' }: DashboardLayoutProps) => {
   const navigate = useNavigate();
   const { user, userRole, signOut } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -106,63 +108,6 @@ const DashboardLayout = ({ children, title, role = 'student' }) => {
         </main>
       </div>
     </div>
-  );
-};
-
-interface SidebarLinksProps {
-  role: 'student' | 'tutor' | 'admin';
-  expanded: boolean;
-}
-
-const SidebarLinks: React.FC<SidebarLinksProps> = ({ role, expanded }) => {
-  const baseClasses =
-    'flex items-center px-4 py-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-200';
-  const expandedClasses = expanded ? 'justify-start' : 'justify-center';
-
-  return (
-    <nav className="space-y-1">
-      {role === 'student' && (
-        <>
-          <Link to="/dashboard" className={`${baseClasses} ${expandedClasses}`}>
-            <LayoutDashboard className="h-5 w-5" />
-            {expanded && <span className="ml-3">Dashboard</span>}
-          </Link>
-          <Link to="/profile" className={`${baseClasses} ${expandedClasses}`}>
-            <User className="h-5 w-5" />
-            {expanded && <span className="ml-3">Profile</span>}
-          </Link>
-        </>
-      )}
-
-      {role === 'tutor' && (
-        <>
-          <Link
-            to="/tutor-dashboard"
-            className={`${baseClasses} ${expandedClasses}`}
-          >
-            <LayoutDashboard className="h-5 w-5" />
-            {expanded && <span className="ml-3">Dashboard</span>}
-          </Link>
-          <Link
-            to="/tutor-profile"
-            className={`${baseClasses} ${expandedClasses}`}
-          >
-            <User className="h-5 w-5" />
-            {expanded && <span className="ml-3">Profile</span>}
-          </Link>
-        </>
-      )}
-
-      {role === 'admin' && (
-        <Link
-          to="/admin-dashboard"
-          className={`${baseClasses} ${expandedClasses}`}
-        >
-          <LayoutDashboard className="h-5 w-5" />
-          {expanded && <span className="ml-3">Dashboard</span>}
-        </Link>
-      )}
-    </nav>
   );
 };
 
