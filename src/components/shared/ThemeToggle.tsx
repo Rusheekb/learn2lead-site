@@ -7,9 +7,10 @@ import { Moon, Sun } from 'lucide-react';
 
 interface ThemeToggleProps {
   className?: string;
+  showLabel?: boolean;
 }
 
-const ThemeToggle: React.FC<ThemeToggleProps> = ({ className }) => {
+const ThemeToggle: React.FC<ThemeToggleProps> = ({ className, showLabel = true }) => {
   const { theme, toggleTheme } = useTheme();
 
   return (
@@ -19,11 +20,14 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ className }) => {
         id="theme-toggle" 
         checked={theme === 'dark'}
         onCheckedChange={toggleTheme}
+        className="data-[state=checked]:bg-tutoring-teal"
       />
       <Moon className="h-5 w-5 text-gray-500 dark:text-gray-400" />
-      <Label htmlFor="theme-toggle" className="cursor-pointer">
-        {theme === 'dark' ? 'Dark Mode' : 'Light Mode'}
-      </Label>
+      {showLabel && (
+        <Label htmlFor="theme-toggle" className="cursor-pointer">
+          {theme === 'dark' ? 'Dark Mode' : 'Light Mode'}
+        </Label>
+      )}
     </div>
   );
 };

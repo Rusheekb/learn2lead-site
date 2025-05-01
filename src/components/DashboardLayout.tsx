@@ -2,9 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { ChevronLeft, ChevronRight, LogOut } from 'lucide-react';
+import { ChevronLeft, ChevronRight, LogOut, Sun, Moon } from 'lucide-react';
 import SidebarLinks from './SidebarLinks';
 import { AppRole } from '@/types/profile';
+import { useTheme } from '@/contexts/ThemeContext';
+import { Switch } from '@/components/ui/switch';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -16,6 +18,7 @@ const DashboardLayout = ({ children, title, role = 'student' }: DashboardLayoutP
   const navigate = useNavigate();
   const { user, userRole, signOut } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     if (!user) {
@@ -38,10 +41,10 @@ const DashboardLayout = ({ children, title, role = 'student' }: DashboardLayoutP
       <div
         className={`${
           isSidebarOpen ? 'w-64' : 'w-20'
-        } transition-all duration-300 ease-in-out bg-white dark:bg-gray-800 shadow-md`}
+        } transition-all duration-300 ease-in-out bg-sidebar dark:bg-sidebar shadow-md`}
       >
         <div className="flex flex-col h-full">
-          <div className="p-4 flex items-center justify-between border-b dark:border-gray-700">
+          <div className="p-4 flex items-center justify-between border-b dark:border-sidebar-border">
             <Link
               to="/"
               className={`${
@@ -58,7 +61,7 @@ const DashboardLayout = ({ children, title, role = 'student' }: DashboardLayoutP
             </Link>
             <button
               onClick={toggleSidebar}
-              className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+              className="text-sidebar-foreground hover:text-sidebar-accent-foreground"
             >
               {isSidebarOpen ? (
                 <ChevronLeft className="h-5 w-5" />
@@ -70,13 +73,40 @@ const DashboardLayout = ({ children, title, role = 'student' }: DashboardLayoutP
           <div className="p-4 flex-grow">
             <SidebarLinks role={role} expanded={isSidebarOpen} />
           </div>
-          <div className="p-4 border-t dark:border-gray-700">
+          
+          {/* Theme toggle in sidebar footer */}
+          <div className="p-4 border-t dark:border-sidebar-border">
+            {isSidebarOpen ? (
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-sidebar-foreground">
+                  {theme === 'dark' ? 'Dark Mode' : 'Light Mode'}
+                </span>
+                <Switch 
+                  checked={theme === 'dark'} 
+                  onCheckedChange={toggleTheme}
+                  className="data-[state=checked]:bg-tutoring-teal"
+                />
+              </div>
+            ) : (
+              <button
+                onClick={toggleTheme}
+                className="flex justify-center w-full text-sidebar-foreground hover:text-sidebar-accent-foreground py-2"
+              >
+                {theme === 'dark' ? (
+                  <Sun className="h-5 w-5" />
+                ) : (
+                  <Moon className="h-5 w-5" />
+                )}
+              </button>
+            )}
+            
+            {/* Logout button */}
             <button
               onClick={handleSignOut}
               className={`${
                 isSidebarOpen
-                  ? 'flex items-center w-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-                  : 'flex justify-center w-full text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                  ? 'flex items-center w-full text-sidebar-foreground hover:text-sidebar-accent-foreground'
+                  : 'flex justify-center w-full text-sidebar-foreground hover:text-sidebar-accent-foreground'
               }`}
             >
               <LogOut className="h-5 w-5" />
