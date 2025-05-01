@@ -1,120 +1,122 @@
-import { useEffect, useCallback } from 'react';
+
+import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { createRealtimeSubscription } from '@/utils/realtimeSubscription';
-import { dbIdToNumeric } from '@/utils/realtimeUtils';
-import { DbClassLog } from '@/services/logs/types';
+import { ClassEvent } from '@/types/tutorTypes';
+import { StudentMessage } from '@/types/classTypes';
+import { subscribeToAllClassMessages } from '@/services/classMessagesRealtimeService';
+import { toast } from 'sonner';
 
-// Alias DbClassLog as ClassLogRecord for compatibility with existing code
-type ClassLogRecord = DbClassLog;
+type ClassItemDispatch = React.Dispatch<React.SetStateAction<ClassEvent[]>>;
+type SelectedClassDispatch = React.Dispatch<React.SetStateAction<ClassEvent | null>>;
+type IsDetailsOpenDispatch = React.Dispatch<React.SetStateAction<boolean>>;
+type StudentMessagesDispatch = React.Dispatch<React.SetStateAction<StudentMessage[]>>;
 
-export const useClassRealtime = (
-  classes: any[],
-  setClasses: React.Dispatch<React.SetStateAction<any[]>>,
-  selectedClass: any | null,
-  setSelectedClass: React.Dispatch<React.SetStateAction<any | null>>,
-  setIsDetailsOpen: React.Dispatch<React.SetStateAction<boolean>>
+/**
+ * Hook to setup realtime subscriptions for class logs
+ */
+const useClassRealtime = (
+  classes: ClassEvent[],
+  setClasses: ClassItemDispatch,
+  selectedClass: ClassEvent | null,
+  setSelectedClass: SelectedClassDispatch,
+  setIsDetailsOpen: IsDetailsOpenDispatch,
+  studentMessages: StudentMessage[] = [],
+  setStudentMessages?: StudentMessagesDispatch
 ) => {
-  const handleClassInserted = useCallback(
-    (newClass: ClassLogRecord) => {
-      const transformedClass = {
-        id: dbIdToNumeric(newClass.id),
-        title: newClass['Class Number'] || '',
-        subject: newClass['Subject'] || '',
-        tutorName: newClass['Tutor Name'] || '',
-        studentName: newClass['Student Name'] || '',
-        date: newClass['Date'] || '',
-        startTime: newClass['Time (CST)']
-          ? newClass['Time (CST)'].substring(0, 5)
-          : '',
-        endTime: newClass['Time (CST)']
-          ? newClass['Time (CST)'].substring(0, 5)
-          : '', // Using same time for now
-        status: 'completed', // Default status since it's not in the DB
-        attendance: 'present', // Default attendance since it's not in the DB
-        zoomLink: '', // Default empty since it's not in the DB
-        notes: newClass['Additional Info'] || '',
-      };
-
-      setClasses((prevClasses) => [...prevClasses, transformedClass]);
-    },
-    [setClasses]
-  );
-
-  const handleClassUpdated = useCallback(
-    (updatedClass: ClassLogRecord) => {
-      const transformedClass = {
-        id: dbIdToNumeric(updatedClass.id),
-        title: updatedClass['Class Number'] || '',
-        subject: updatedClass['Subject'] || '',
-        tutorName: updatedClass['Tutor Name'] || '',
-        studentName: updatedClass['Student Name'] || '',
-        date: updatedClass['Date'] || '',
-        startTime: updatedClass['Time (CST)']
-          ? updatedClass['Time (CST)'].substring(0, 5)
-          : '',
-        endTime: updatedClass['Time (CST)']
-          ? updatedClass['Time (CST)'].substring(0, 5)
-          : '', // Using same time for now
-        status: 'completed', // Default status since it's not in the DB
-        attendance: 'present', // Default attendance since it's not in the DB
-        zoomLink: '', // Default empty since it's not in the DB
-        notes: updatedClass['Additional Info'] || '',
-      };
-
-      setClasses((prevClasses) =>
-        prevClasses.map((cls) =>
-          cls.id === transformedClass.id ? transformedClass : cls
-        )
-      );
-
-      if (selectedClass && selectedClass.id === transformedClass.id) {
-        setSelectedClass(transformedClass);
-      }
-    },
-    [setClasses, selectedClass, setSelectedClass]
-  );
-
-  const handleClassDeleted = useCallback(
-    (deletedClass: ClassLogRecord) => {
-      const classId = dbIdToNumeric(deletedClass.id);
-
-      setClasses((prevClasses) =>
-        prevClasses.filter((cls) => cls.id !== classId)
-      );
-
-      if (selectedClass && selectedClass.id === classId) {
-        setIsDetailsOpen(false);
-        setSelectedClass(null);
-      }
-    },
-    [setClasses, selectedClass, setSelectedClass, setIsDetailsOpen]
-  );
-
+  // Subscribe to changes in database
   useEffect(() => {
-    const channel = createRealtimeSubscription({
-      channelName: 'class-logs-changes',
-      tableName: 'class_logs',
-      onData: (payload) => {
-        if (payload.eventType === 'INSERT' && payload.new) {
-          handleClassInserted(payload.new);
-        } else if (payload.eventType === 'UPDATE' && payload.new) {
-          handleClassUpdated(payload.new);
-        } else if (payload.eventType === 'DELETE' && payload.old) {
-          handleClassDeleted(payload.old);
+    // Only set up subscription if we have the set function
+    if (!setStudentMessages) return;
+
+    // Set up the realtime subscription
+    console.log('Setting up realtime subscriptions for class logs');
+
+    const classChannel = supabase
+      .channel('class-logs-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'class_logs',
+        },
+        (payload) => {
+          console.log('Realtime update received for class logs:', payload);
+
+          // Handle different types of changes
+          if (payload.eventType === 'INSERT') {
+            const newClass = payload.new as ClassEvent;
+            console.log('New class added:', newClass);
+
+            setClasses((prev) => [...prev, newClass]);
+            toast.success(`New class "${newClass.title}" has been added`);
+          } else if (payload.eventType === 'UPDATE') {
+            const updatedClass = payload.new as ClassEvent;
+            console.log('Class updated:', updatedClass);
+
+            setClasses((prev) =>
+              prev.map((cls) =>
+                cls.id === updatedClass.id ? updatedClass : cls
+              )
+            );
+
+            // If this is the currently selected class, update it
+            if (selectedClass && selectedClass.id === updatedClass.id) {
+              setSelectedClass(updatedClass);
+            }
+          } else if (payload.eventType === 'DELETE') {
+            const deletedClass = payload.old as ClassEvent;
+            console.log('Class deleted:', deletedClass);
+
+            setClasses((prev) => prev.filter((cls) => cls.id !== deletedClass.id));
+
+            // If this is the currently selected class, close the details panel
+            if (selectedClass && selectedClass.id === deletedClass.id) {
+              setSelectedClass(null);
+              setIsDetailsOpen(false);
+            }
+          }
         }
-      },
+      )
+      .subscribe();
+
+    // Setup messages subscription
+    const unsubscribeMessages = subscribeToAllClassMessages((newMessage) => {
+      console.log('Received message via realtime:', newMessage);
+      
+      // Update the messages if they're for the currently selected class
+      setStudentMessages((prevMessages) => {
+        // Check if the message already exists in the list
+        const messageExists = prevMessages.some((msg) => msg.id === newMessage.id);
+        
+        if (messageExists) {
+          // If it exists, update it
+          return prevMessages.map((msg) => 
+            msg.id === newMessage.id ? newMessage : msg
+          );
+        } else {
+          // If it doesn't exist, add it
+          return [...prevMessages, newMessage];
+        }
+      });
+
+      // If the new message is for the currently selected class, show a toast
+      if (selectedClass && newMessage.classId === selectedClass.id) {
+        if (newMessage.sender === 'student') {
+          toast.info(`New message from ${newMessage.studentName || 'student'}`);
+        }
+      }
     });
 
+    // Clean up subscriptions
     return () => {
-      supabase.removeChannel(channel);
+      console.log('Cleaning up realtime subscriptions');
+      supabase.removeChannel(classChannel);
+      unsubscribeMessages();
     };
-  }, [handleClassInserted, handleClassUpdated, handleClassDeleted]);
+  }, [classes, selectedClass, setClasses, setSelectedClass, setIsDetailsOpen, setStudentMessages]);
 
-  return {
-    handleClassInserted,
-    handleClassUpdated,
-    handleClassDeleted,
-  };
+  return null;
 };
 
 export default useClassRealtime;

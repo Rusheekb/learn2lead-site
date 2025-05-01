@@ -29,6 +29,7 @@ export const useClassLogs = () => {
     setSelectedClass,
     studentUploads,
     studentMessages,
+    setStudentMessages, // Add this to use in realtime updates
     activeDetailsTab,
     setActiveDetailsTab,
     page,
@@ -62,7 +63,9 @@ export const useClassLogs = () => {
     setClasses,
     selectedClass,
     setSelectedClass,
-    setIsDetailsOpen as Dispatch<SetStateAction<boolean>> // Fix the type here
+    setIsDetailsOpen as Dispatch<SetStateAction<boolean>>, // Fix the type here
+    studentMessages,
+    setStudentMessages // Pass the setStudentMessages to the hook
   );
 
   // Load class content when a class is selected

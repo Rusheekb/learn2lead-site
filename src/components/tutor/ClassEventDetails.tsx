@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Video, FileText } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -5,6 +6,7 @@ import { ClassEvent } from '@/types/tutorTypes';
 import { StudentMessage, StudentUpload } from '@/types/classTypes';
 import { StudentContent } from '@/components/shared/StudentContent';
 import { MessageCountBadge } from '@/components/shared/ClassBadges';
+import ChatWindow from '@/components/shared/ChatWindow';
 
 interface ClassEventDetailsProps {
   selectedEvent: ClassEvent;
@@ -29,11 +31,14 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
 }) => {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab}>
-      <TabsList className="grid w-full grid-cols-2">
+      <TabsList className="grid w-full grid-cols-3">
         <TabsTrigger value="details">Class Details</TabsTrigger>
         <TabsTrigger value="student-content">
           Student Content
           <MessageCountBadge count={unreadMessageCount} />
+        </TabsTrigger>
+        <TabsTrigger value="messages">
+          Messages
         </TabsTrigger>
       </TabsList>
 
@@ -109,6 +114,16 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
           uploads={studentUploads}
           messages={studentMessages}
           onDownload={onDownloadFile}
+          onMarkAsRead={onMarkAsRead}
+        />
+      </TabsContent>
+
+      <TabsContent value="messages" className="space-y-4 pt-4">
+        <ChatWindow
+          classId={selectedEvent.id}
+          tutorName="Tutor"
+          studentName={selectedEvent.studentName}
+          messages={studentMessages}
           onMarkAsRead={onMarkAsRead}
         />
       </TabsContent>
