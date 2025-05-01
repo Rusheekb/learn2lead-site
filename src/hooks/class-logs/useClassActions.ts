@@ -59,6 +59,7 @@ const useClassActions = () => {
     setSelectedClass,
     studentUploads,
     studentMessages,
+    setStudentMessages, // Make sure to include this in the returned object
     activeDetailsTab,
     setActiveDetailsTab,
     isExporting,

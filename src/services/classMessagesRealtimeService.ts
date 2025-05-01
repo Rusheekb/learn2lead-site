@@ -1,7 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { StudentMessage } from '@/types/classTypes';
-import { mapToStudentMessage } from './classMessagesService';
+import { ClassMessageRecord, mapToStudentMessage } from './classMessagesService';
 
 // Set up a realtime subscription for messages for a specific class
 export const subscribeToClassMessages = (
@@ -21,7 +21,18 @@ export const subscribeToClassMessages = (
       (payload) => {
         console.log('New message received:', payload);
         if (payload.new) {
-          const newMessage = mapToStudentMessage(payload.new);
+          // Cast to ClassMessageRecord to ensure type safety
+          const messageRecord = {
+            id: payload.new.id,
+            class_id: payload.new.class_id,
+            student_name: payload.new.student_name,
+            message: payload.new.message,
+            timestamp: payload.new.timestamp || new Date().toISOString(),
+            is_read: payload.new.is_read || false,
+            created_at: payload.new.created_at
+          } as ClassMessageRecord;
+          
+          const newMessage = mapToStudentMessage(messageRecord);
           onNewMessage(newMessage);
         }
       }
@@ -37,7 +48,18 @@ export const subscribeToClassMessages = (
       (payload) => {
         console.log('Message updated:', payload);
         if (payload.new) {
-          const updatedMessage = mapToStudentMessage(payload.new);
+          // Cast to ClassMessageRecord to ensure type safety
+          const messageRecord = {
+            id: payload.new.id,
+            class_id: payload.new.class_id,
+            student_name: payload.new.student_name,
+            message: payload.new.message,
+            timestamp: payload.new.timestamp || new Date().toISOString(),
+            is_read: payload.new.is_read || false,
+            created_at: payload.new.created_at
+          } as ClassMessageRecord;
+          
+          const updatedMessage = mapToStudentMessage(messageRecord);
           onNewMessage(updatedMessage);
         }
       }
@@ -67,7 +89,18 @@ export const subscribeToAllClassMessages = (
       (payload) => {
         console.log('New message received (all):', payload);
         if (payload.new) {
-          const newMessage = mapToStudentMessage(payload.new);
+          // Cast to ClassMessageRecord to ensure type safety
+          const messageRecord = {
+            id: payload.new.id,
+            class_id: payload.new.class_id,
+            student_name: payload.new.student_name,
+            message: payload.new.message,
+            timestamp: payload.new.timestamp || new Date().toISOString(),
+            is_read: payload.new.is_read || false,
+            created_at: payload.new.created_at
+          } as ClassMessageRecord;
+          
+          const newMessage = mapToStudentMessage(messageRecord);
           onNewMessage(newMessage);
         }
       }
@@ -82,7 +115,18 @@ export const subscribeToAllClassMessages = (
       (payload) => {
         console.log('Message updated (all):', payload);
         if (payload.new) {
-          const updatedMessage = mapToStudentMessage(payload.new);
+          // Cast to ClassMessageRecord to ensure type safety
+          const messageRecord = {
+            id: payload.new.id,
+            class_id: payload.new.class_id,
+            student_name: payload.new.student_name,
+            message: payload.new.message,
+            timestamp: payload.new.timestamp || new Date().toISOString(),
+            is_read: payload.new.is_read || false,
+            created_at: payload.new.created_at
+          } as ClassMessageRecord;
+          
+          const updatedMessage = mapToStudentMessage(messageRecord);
           onNewMessage(updatedMessage);
         }
       }

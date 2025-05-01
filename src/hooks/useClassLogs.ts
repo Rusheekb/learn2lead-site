@@ -29,7 +29,7 @@ export const useClassLogs = () => {
     setSelectedClass,
     studentUploads,
     studentMessages,
-    setStudentMessages, // Add this to use in realtime updates
+    setStudentMessages, // Ensure this is destructured from useClassActions
     activeDetailsTab,
     setActiveDetailsTab,
     page,
@@ -103,6 +103,7 @@ export const useClassLogs = () => {
     selectedClass,
     studentUploads,
     studentMessages,
+    setStudentMessages, // Make sure to include this in the returned object
     activeDetailsTab,
     setActiveDetailsTab,
     isExporting,
