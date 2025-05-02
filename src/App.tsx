@@ -62,7 +62,6 @@ function App() {
   useRoleSync();
 
   return (
-    // Fix: remove defaultTheme and enableSystem from the outer ThemeProvider
     <ThemeProvider>
       <LanguageProvider>
         <QueryClientProvider client={queryClient}>
@@ -70,42 +69,40 @@ function App() {
             <TooltipProvider>
               <BrowserRouter>
                 <AuthProvider>
-                  <ThemeProvider>
-                    <SidebarProvider>
-                      {/* All routes are rendered inside the ThemeProvider */}
-                      <Routes>
-                        {/* Public routes - ThemeProvider will ensure they're always in light mode */}
-                        <Route path="/" element={<Index />} />
-                        <Route path="/login" element={<Login />} />
-                        <Route path="/pricing" element={<Pricing />} />
-                        
-                        {/* Private routes - can toggle between dark/light mode */}
-                        <Route element={
-                          <>
-                            <Toaster />
-                            <Sonner />
-                            <PrivateRoute />
-                          </>
-                        }>
-                          <Route element={<PrivateRoute allowedRoles={['student']} />}>
-                            <Route path="/dashboard/*" element={<StudentDashboardWrapper />} />
-                            <Route path="/profile/*" element={<StudentDashboardWrapper />} />
-                          </Route>
-
-                          <Route element={<PrivateRoute allowedRoles={['tutor']} />}>
-                            <Route path="/tutor-dashboard/*" element={<TutorDashboardWrapper />} />
-                            <Route path="/tutor-profile/*" element={<TutorDashboardWrapper />} />
-                          </Route>
-
-                          <Route element={<PrivateRoute allowedRoles={['admin']} />}>
-                            <Route path="/admin-dashboard/*" element={<AdminDashboardWrapper />} />
-                          </Route>
+                  <SidebarProvider>
+                    {/* All routes are rendered inside the ThemeProvider */}
+                    <Routes>
+                      {/* Public routes - ThemeProvider will ensure they're always in light mode */}
+                      <Route path="/" element={<Index />} />
+                      <Route path="/login" element={<Login />} />
+                      <Route path="/pricing" element={<Pricing />} />
+                      
+                      {/* Private routes - can toggle between dark/light mode */}
+                      <Route element={
+                        <>
+                          <Toaster />
+                          <Sonner />
+                          <PrivateRoute />
+                        </>
+                      }>
+                        <Route element={<PrivateRoute allowedRoles={['student']} />}>
+                          <Route path="/dashboard/*" element={<StudentDashboardWrapper />} />
+                          <Route path="/profile/*" element={<StudentDashboardWrapper />} />
                         </Route>
 
-                        <Route path="*" element={<NotFound />} />
-                      </Routes>
-                    </SidebarProvider>
-                  </ThemeProvider>
+                        <Route element={<PrivateRoute allowedRoles={['tutor']} />}>
+                          <Route path="/tutor-dashboard/*" element={<TutorDashboardWrapper />} />
+                          <Route path="/tutor-profile/*" element={<TutorDashboardWrapper />} />
+                        </Route>
+
+                        <Route element={<PrivateRoute allowedRoles={['admin']} />}>
+                          <Route path="/admin-dashboard/*" element={<AdminDashboardWrapper />} />
+                        </Route>
+                      </Route>
+
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </SidebarProvider>
                 </AuthProvider>
               </BrowserRouter>
             </TooltipProvider>

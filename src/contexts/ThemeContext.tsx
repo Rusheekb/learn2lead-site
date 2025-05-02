@@ -21,10 +21,21 @@ const isDashboardRoute = (pathname: string): boolean => {
          pathname.startsWith('/tutor-profile');
 };
 
+// Custom hook to safely get location, returning null if not in a Router context
+const useSafeLocation = () => {
+  try {
+    // Attempt to use the location hook
+    return useLocation();
+  } catch (error) {
+    // Return a default object if not in Router context
+    return { pathname: '/' };
+  }
+};
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>('light');
   const [mounted, setMounted] = useState(false);
-  const location = useLocation();
+  const location = useSafeLocation();
   
   // Check if current route is a dashboard route
   const isCurrentRouteDashboard = isDashboardRoute(location.pathname);
