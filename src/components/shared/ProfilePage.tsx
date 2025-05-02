@@ -1,16 +1,12 @@
 
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useProfile } from '@/hooks/useProfile';
-import ProfileEditor from './ProfileEditor';
-import ProfileView from './ProfileView';
-import ContentShare from './ContentShare';
-import ThemeToggle from './ThemeToggle';
-import LanguageSwitcher from './LanguageSwitcher';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Card, CardContent } from '@/components/ui/card';
+import ProfileTabs from './profile/ProfileTabs';
+import LoadingState from './profile/LoadingState';
+import ProfileNotFound from './profile/ProfileNotFound';
 
 const ProfilePage: React.FC = () => {
   const { t } = useTranslation();
@@ -54,77 +50,26 @@ const ProfilePage: React.FC = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <p>{t('common.loading')}</p>
-      </div>
-    );
+    return <LoadingState />;
   }
 
   if (!profile) {
-    return (
-      <div className="text-center py-8 border rounded-md">
-        <p className="text-lg font-medium text-gray-600 dark:text-gray-300">
-          {t('profile.profileNotFound')}
-        </p>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-          {t('profile.pleaseSignIn')}
-        </p>
-      </div>
-    );
+    return <ProfileNotFound />;
   }
 
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">{t('profile.myProfile')}</h2>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="profile">{t('profile.myProfile')}</TabsTrigger>
-          <TabsTrigger value="shared">{t('profile.sharedContent')}</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="profile" className="pt-6">
-          {isEditMode ? (
-            <ProfileEditor
-              profile={profile}
-              onSave={async (updates) => {
-                const result = await updateProfile(updates);
-                if (result) setIsEditMode(false);
-                return result;
-              }}
-              onCancel={() => setIsEditMode(false)}
-            />
-          ) : (
-            <div className="space-y-6">
-              <ProfileView profile={profile} />
-              
-              <Card>
-                <CardContent className="pt-6">
-                  <h3 className="text-lg font-medium mb-4">{t('profile.appearance')}</h3>
-                  <ThemeToggle />
-                </CardContent>
-              </Card>
-              
-              {/* Add the language switcher */}
-              <LanguageSwitcher />
-              
-              <div className="flex justify-end">
-                <button
-                  onClick={() => setIsEditMode(true)}
-                  className="text-tutoring-blue hover:text-tutoring-blue/80 dark:text-tutoring-teal dark:hover:text-tutoring-teal/80"
-                >
-                  {t('profile.editProfile')}
-                </button>
-              </div>
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="shared" className="pt-6">
-          <ContentShare role={profile.role} fetchUsers={fetchRelevantUsers} />
-        </TabsContent>
-      </Tabs>
+      <ProfileTabs
+        profile={profile}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        isEditMode={isEditMode}
+        setIsEditMode={setIsEditMode}
+        updateProfile={updateProfile}
+        fetchRelevantUsers={fetchRelevantUsers}
+      />
     </div>
   );
 };
