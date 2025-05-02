@@ -1,3 +1,4 @@
+
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -35,16 +36,22 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <HelmetProvider>
         <TooltipProvider>
-          <ThemeProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <AuthProvider>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/pricing" element={<Pricing />} />
-
+          <BrowserRouter>
+            <AuthProvider>
+              {/* Public routes - always light mode */}
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/pricing" element={<Pricing />} />
+                
+                {/* Private routes - can toggle between dark/light mode */}
+                <Route element={
+                  <ThemeProvider>
+                    <Toaster />
+                    <Sonner />
+                    <PrivateRoute />
+                  </ThemeProvider>
+                }>
                   <Route element={<PrivateRoute allowedRoles={['student']} />}>
                     <Route
                       path="/dashboard"
@@ -93,12 +100,12 @@ const App = () => {
                       }
                     />
                   </Route>
+                </Route>
 
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </AuthProvider>
-            </BrowserRouter>
-          </ThemeProvider>
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </AuthProvider>
+          </BrowserRouter>
         </TooltipProvider>
       </HelmetProvider>
     </QueryClientProvider>
