@@ -6,12 +6,25 @@ import useEventHandlers from './tutor-scheduler/useEventHandlers';
 import useSchedulerRealtime from './tutor-scheduler/useSchedulerRealtime';
 import useStudentContent from './tutor-scheduler/useStudentContent';
 import useSchedulerData from './tutor-scheduler/useSchedulerData';
+import { useClassLogsQuery } from './queries/useClassLogsQuery';
+import { toast } from 'sonner';
 
 export function useTutorScheduler() {
+  // Load class data from backend
+  const {
+    classes: classList,
+    createClass,
+    updateClass,
+    deleteClass,
+    allSubjects,
+    isLoading: isClassLoading
+  } = useClassLogsQuery();
+
+  // Get basic scheduler state
   const {
     selectedDate,
     setSelectedDate,
-    isLoading,
+    isLoading: isDataLoading,
     scheduledClasses,
     setScheduledClasses,
     isAddEventOpen,
@@ -20,10 +33,10 @@ export function useTutorScheduler() {
     setIsViewEventOpen,
     newEvent,
     setNewEvent,
-    allSubjects,
     resetNewEventForm,
   } = useSchedulerData();
 
+  // Use filter hook
   const {
     searchTerm,
     setSearchTerm,
@@ -34,6 +47,7 @@ export function useTutorScheduler() {
     applyFilters,
   } = useSchedulerFilters();
 
+  // Use event handlers hook
   const {
     isEditMode,
     setIsEditMode,
@@ -42,9 +56,9 @@ export function useTutorScheduler() {
     activeEventTab,
     setActiveEventTab,
     handleSelectEvent,
-    handleCreateEvent,
-    handleEditEvent,
-    handleDeleteEvent,
+    handleCreateEvent: baseCreateEvent,
+    handleEditEvent: baseEditEvent,
+    handleDeleteEvent: baseDeleteEvent,
     handleDuplicateEvent,
   } = useEventHandlers(
     scheduledClasses,
@@ -61,6 +75,14 @@ export function useTutorScheduler() {
     setIsViewEventOpen
   );
 
+  // Sync with classList when it changes
+  useEffect(() => {
+    if (classList && classList.length > 0) {
+      setScheduledClasses(classList);
+    }
+  }, [classList, setScheduledClasses]);
+
+  // Hook for accessing student content
   const {
     studentUploads,
     studentMessages,
@@ -71,8 +93,77 @@ export function useTutorScheduler() {
 
   // Apply filters to create filtered list
   const filteredClasses = applyFilters(scheduledClasses);
+  const isLoading = isClassLoading || isDataLoading;
 
-  // Handle event creation with form reset
+  // Wrap backend operations
+  const handleCreateEvent = async (event: ClassEvent) => {
+    try {
+      // Fix the issue with toISOString by ensuring date is a Date object
+      const dateObject = event.date instanceof Date
+        ? event.date 
+        : new Date(event.date);
+      
+      // Create a new class with properly formatted date
+      const newClassEvent = {
+        ...event,
+        date: dateObject.toISOString().split('T')[0]
+      };
+      
+      const success = await createClass(newClassEvent);
+      if (success) {
+        resetNewEventForm();
+        setIsAddEventOpen(false);
+      }
+      return success;
+    } catch (error) {
+      console.error('Error creating event:', error);
+      toast.error('Failed to create class');
+      return false;
+    }
+  };
+
+  const handleEditEvent = async (event: ClassEvent) => {
+    try {
+      // Fix the issue with toISOString by ensuring date is a Date object
+      const dateObject = event.date instanceof Date
+        ? event.date 
+        : new Date(event.date);
+      
+      // Update the class with properly formatted date
+      const updatedEvent = {
+        ...event,
+        date: dateObject.toISOString().split('T')[0]
+      };
+
+      const success = await updateClass(event.id, updatedEvent);
+      if (success) {
+        setSelectedEvent(event);
+        setIsEditMode(false);
+      }
+      return success;
+    } catch (error) {
+      console.error('Error updating event:', error);
+      toast.error('Failed to update class');
+      return false;
+    }
+  };
+
+  const handleDeleteEvent = async (eventId: string) => {
+    try {
+      const success = await deleteClass(eventId);
+      if (success) {
+        setIsViewEventOpen(false);
+        setSelectedEvent(null);
+      }
+      return success;
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      toast.error('Failed to delete class');
+      return false;
+    }
+  };
+
+  // Create event with form reset
   const createEvent = async (event: ClassEvent) => {
     const success = await handleCreateEvent(event);
     if (success) {
