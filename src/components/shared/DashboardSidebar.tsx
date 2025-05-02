@@ -1,10 +1,11 @@
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Calendar, Book, User, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { AppRole } from '@/types/profile';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Switch } from '@/components/ui/switch';
+import SidebarLinks from '@/components/SidebarLinks';
 
 interface DashboardSidebarProps {
   role: AppRole;
@@ -19,68 +20,7 @@ const DashboardSidebar = ({
   toggleSidebar,
   signOut
 }: DashboardSidebarProps) => {
-  const location = useLocation();
   const { theme, toggleTheme } = useTheme();
-  
-  const getDashboardPath = () => {
-    switch (role) {
-      case 'student':
-        return '/dashboard';
-      case 'tutor':
-        return '/tutor-dashboard';
-      case 'admin':
-        return '/admin-dashboard';
-      default:
-        return '/';
-    }
-  };
-  
-  const isActive = (path: string) => {
-    return location.pathname === path;
-  };
-
-  // Menu items based on role
-  const getMenuItems = () => {
-    const basePath = getDashboardPath();
-    
-    const commonItems = [
-      {
-        label: 'Dashboard',
-        path: basePath,
-        icon: <LayoutDashboard className="h-5 w-5" />,
-        value: 'dashboard'
-      },
-      {
-        label: 'Profile',
-        path: role === 'student' ? '/profile' : `/${role}-profile`,
-        icon: <User className="h-5 w-5" />,
-        value: 'profile'
-      }
-    ];
-    
-    if (role === 'student' || role === 'tutor') {
-      return [
-        ...commonItems.slice(0, 1),
-        {
-          label: 'My Schedule',
-          path: basePath, // Will add query param or state to show schedule tab
-          icon: <Calendar className="h-5 w-5" />,
-          value: 'schedule'
-        },
-        {
-          label: 'Resources',
-          path: basePath, // Will add query param or state to show resources tab
-          icon: <Book className="h-5 w-5" />,
-          value: 'resources'
-        },
-        ...commonItems.slice(1)
-      ];
-    }
-    
-    return commonItems;
-  };
-
-  const menuItems = getMenuItems();
 
   return (
     <div className={`${
@@ -115,24 +55,7 @@ const DashboardSidebar = ({
       </div>
 
       <div className="flex-grow p-4">
-        <nav className="space-y-2">
-          {menuItems.map((item) => (
-            <Link
-              key={item.value}
-              to={item.path}
-              className={`flex ${
-                expanded ? 'justify-start' : 'justify-center'
-              } items-center px-4 py-2 rounded-md transition-colors ${
-                isActive(item.path)
-                  ? 'bg-gray-200 dark:bg-gray-700 text-tutoring-blue dark:text-tutoring-teal font-medium'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-              }`}
-            >
-              {item.icon}
-              {expanded && <span className="ml-3">{item.label}</span>}
-            </Link>
-          ))}
-        </nav>
+        <SidebarLinks role={role} expanded={expanded} />
       </div>
 
       {/* Theme toggle and logout in sidebar footer */}

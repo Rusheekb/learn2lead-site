@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import DashboardLayout from '@/components/shared/DashboardLayout';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
@@ -12,8 +12,9 @@ import StudentContent from '@/components/shared/StudentContent';
 const Dashboard = () => {
   const [selectedSubject, setSelectedSubject] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [activeTab, setActiveTab] = useState<string>('dashboard');
   const { userRole, user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'dashboard';
 
   // Redirect based on user role
   if (userRole && userRole !== 'student') {

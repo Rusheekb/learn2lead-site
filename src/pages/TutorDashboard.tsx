@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import React from 'react';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import DashboardLayout from '@/components/shared/DashboardLayout';
 import TutorScheduler from '@/components/tutor/TutorScheduler';
@@ -10,7 +10,8 @@ import ProfilePage from '@/components/shared/ProfilePage';
 import TutorOverviewSection from '@/components/tutor/dashboard/TutorOverviewSection';
 
 const TutorDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<string>('overview');
+  const [searchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'overview';
   const { userRole } = useAuth();
 
   // Redirect if not a tutor
