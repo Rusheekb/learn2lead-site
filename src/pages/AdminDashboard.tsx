@@ -1,5 +1,5 @@
 
-import React, { useState, Suspense, lazy } from 'react';
+import React, { useState, Suspense, lazy, useEffect } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { UserDetailModal } from '@/components/admin/UserDetailModal';
 import { useQuery } from '@tanstack/react-query';
@@ -9,6 +9,8 @@ import { TutorStudentRelationship } from '@/services/relationships/relationshipS
 import { fetchTutors } from '@/services/tutors/tutorService';
 import { fetchStudents } from '@/services/students/studentService';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
+import { useAnalyticsTracker } from '@/hooks/useAnalyticsTracker';
+import { EventName } from '@/services/analytics/analyticsService';
 
 // Dynamically import heavy components
 const ClassAnalytics = lazy(() => import('@/components/admin/ClassAnalytics'));
@@ -36,6 +38,17 @@ const fetchRelationships = async () => {
 const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('analytics');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const { trackNavigation, trackPageView } = useAnalyticsTracker();
+
+  // Track page view on initial render
+  useEffect(() => {
+    trackPageView('admin-dashboard');
+  }, [trackPageView]);
+
+  // Track tab changes
+  useEffect(() => {
+    trackNavigation(EventName.TAB_CHANGE, { tab: activeTab, dashboard: 'admin' });
+  }, [activeTab, trackNavigation]);
 
   const { 
     data: relationships = [], 
@@ -82,7 +95,13 @@ const AdminDashboard: React.FC = () => {
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Admin Dashboard</h2>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs 
+        value={activeTab} 
+        onValueChange={(value) => {
+          setActiveTab(value);
+        }}
+        className="w-full"
+      >
         <TabsList className="grid grid-cols-6 mb-6">
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
           <TabsTrigger value="schedule">Class Logs</TabsTrigger>

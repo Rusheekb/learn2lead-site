@@ -8,6 +8,7 @@ import {
   updateScheduledClass,
   deleteScheduledClass,
 } from '@/services/classService';
+import { analytics, EventName } from '@/services/analytics/analyticsService';
 
 export const useEventHandlers = (
   scheduledClasses: ClassEvent[],
@@ -63,6 +64,20 @@ export const useEventHandlers = (
         };
 
         setScheduledClasses([...scheduledClasses, createdClass]);
+        
+        // Track class creation event
+        analytics.track({
+          category: 'class_management',
+          name: EventName.CLASS_CREATED,
+          properties: {
+            classId: newClassId,
+            title: newEvent.title,
+            subject: newEvent.subject,
+            studentId: newEvent.studentId,
+            date: format(newEvent.date, 'yyyy-MM-dd'),
+          }
+        });
+        
         return true;
       }
 
@@ -103,6 +118,21 @@ export const useEventHandlers = (
           )
         );
         setIsEditMode(false);
+        
+        // Track class edited event
+        analytics.track({
+          category: 'class_management',
+          name: EventName.CLASS_EDITED,
+          properties: {
+            classId: selectedEvent.id,
+            title: selectedEvent.title,
+            subject: selectedEvent.subject,
+            date: typeof selectedEvent.date === 'string'
+              ? selectedEvent.date
+              : format(selectedEvent.date, 'yyyy-MM-dd'),
+          }
+        });
+        
         return true;
       }
 
@@ -116,6 +146,9 @@ export const useEventHandlers = (
 
   const handleDeleteEvent = async (eventId: string) => {
     try {
+      // Save the event before deletion for analytics tracking
+      const eventToDelete = scheduledClasses.find(event => event.id === eventId);
+      
       const success = await deleteScheduledClass(eventId);
 
       if (success) {
@@ -123,6 +156,23 @@ export const useEventHandlers = (
           scheduledClasses.filter((event) => event.id !== eventId)
         );
         setIsViewEventOpen(false);
+        
+        // Track class deleted event
+        if (eventToDelete) {
+          analytics.track({
+            category: 'class_management',
+            name: EventName.CLASS_DELETED,
+            properties: {
+              classId: eventId,
+              title: eventToDelete.title,
+              subject: eventToDelete.subject,
+              date: typeof eventToDelete.date === 'string'
+                ? eventToDelete.date
+                : format(eventToDelete.date, 'yyyy-MM-dd'),
+            }
+          });
+        }
+        
         return true;
       }
 

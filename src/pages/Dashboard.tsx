@@ -7,6 +7,8 @@ import DashboardContent from '@/components/student/DashboardContent';
 import ProfilePage from '@/components/shared/ProfilePage';
 import ClassCalendar from '@/components/ClassCalendar';
 import StudentContent from '@/components/shared/StudentContent';
+import { useAnalyticsTracker } from '@/hooks/useAnalyticsTracker';
+import { EventName } from '@/services/analytics/analyticsService';
 
 const Dashboard = () => {
   const [selectedSubject, setSelectedSubject] = useState<number | null>(null);
@@ -14,6 +16,17 @@ const Dashboard = () => {
   const { userRole, user } = useAuth();
   const [searchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'dashboard';
+  const { trackNavigation, trackPageView } = useAnalyticsTracker();
+  
+  // Track page view on initial render
+  useEffect(() => {
+    trackPageView('student-dashboard');
+  }, [trackPageView]);
+  
+  // Track tab changes
+  useEffect(() => {
+    trackNavigation(EventName.TAB_CHANGE, { tab: activeTab, dashboard: 'student' });
+  }, [activeTab, trackNavigation]);
 
   // Redirect based on user role
   if (userRole && userRole !== 'student') {

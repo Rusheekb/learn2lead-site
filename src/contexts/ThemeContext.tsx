@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import { analytics, EventName, EventCategory } from '@/services/analytics/analyticsService';
 
 type Theme = 'dark' | 'light';
 
@@ -58,6 +59,17 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setTheme((prevTheme) => {
       const newTheme = prevTheme === 'light' ? 'dark' : 'light';
       localStorage.setItem('theme', newTheme);
+      
+      // Track theme toggle analytics event
+      analytics.track({
+        category: EventCategory.UI,
+        name: EventName.TOGGLE_DARK_MODE,
+        properties: { 
+          from: prevTheme,
+          to: newTheme,
+          location: location.pathname
+        }
+      });
       
       if (isCurrentRouteDashboard) {
         document.documentElement.classList.toggle('dark', newTheme === 'dark');
