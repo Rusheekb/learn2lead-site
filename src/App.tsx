@@ -1,4 +1,3 @@
-
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -11,7 +10,7 @@ import NotFound from './pages/NotFound';
 import Login from './pages/Login';
 import Pricing from './pages/Pricing';
 import { AuthProvider } from './contexts/AuthContext';
-import { ThemeProvider } from './contexts/ThemeContext';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 import PrivateRoute from './components/PrivateRoute';
 import { useRoleSync } from './hooks/useRoleSync';
 
