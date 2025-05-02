@@ -8,7 +8,7 @@ import {
   updateScheduledClass,
   deleteScheduledClass,
 } from '@/services/classService';
-import { analytics, EventName } from '@/services/analytics/analyticsService';
+import { analytics, EventName, EventCategory } from '@/services/analytics/analyticsService';
 
 export const useEventHandlers = (
   scheduledClasses: ClassEvent[],
@@ -65,9 +65,9 @@ export const useEventHandlers = (
 
         setScheduledClasses([...scheduledClasses, createdClass]);
         
-        // Track class creation event
+        // Track class creation event - fixed to use EventCategory enum
         analytics.track({
-          category: 'class_management',
+          category: EventCategory.CLASS,
           name: EventName.CLASS_CREATED,
           properties: {
             classId: newClassId,
@@ -119,9 +119,9 @@ export const useEventHandlers = (
         );
         setIsEditMode(false);
         
-        // Track class edited event
+        // Track class edited event - fixed to use EventCategory enum
         analytics.track({
-          category: 'class_management',
+          category: EventCategory.CLASS,
           name: EventName.CLASS_EDITED,
           properties: {
             classId: selectedEvent.id,
@@ -157,10 +157,10 @@ export const useEventHandlers = (
         );
         setIsViewEventOpen(false);
         
-        // Track class deleted event
+        // Track class deleted event - fixed to use EventCategory enum
         if (eventToDelete) {
           analytics.track({
-            category: 'class_management',
+            category: EventCategory.CLASS,
             name: EventName.CLASS_DELETED,
             properties: {
               classId: eventId,
