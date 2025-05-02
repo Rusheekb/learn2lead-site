@@ -4,6 +4,7 @@ import { ClassEvent } from '@/types/tutorTypes';
 import { StudentMessage, StudentUpload } from '@/types/classTypes';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { mapToStudentMessage, mapToStudentUpload } from '@/services/utils/classMappers';
 
 export default function useStudentContent(selectedEvent: ClassEvent | null) {
   const [studentMessages, setStudentMessages] = useState<StudentMessage[]>([]);
@@ -23,7 +24,10 @@ export default function useStudentContent(selectedEvent: ClassEvent | null) {
           .order('timestamp', { ascending: false });
 
         if (messagesError) throw messagesError;
-        setStudentMessages(messagesData || []);
+        
+        // Map database records to application types
+        const mappedMessages = (messagesData || []).map(msg => mapToStudentMessage(msg));
+        setStudentMessages(mappedMessages);
 
         // Fetch uploads
         const { data: uploadsData, error: uploadsError } = await supabase
@@ -33,7 +37,10 @@ export default function useStudentContent(selectedEvent: ClassEvent | null) {
           .order('upload_date', { ascending: false });
 
         if (uploadsError) throw uploadsError;
-        setStudentUploads(uploadsData || []);
+        
+        // Map database records to application types
+        const mappedUploads = (uploadsData || []).map(upload => mapToStudentUpload(upload));
+        setStudentUploads(mappedUploads);
       } catch (error: any) {
         console.error('Error fetching student content:', error.message);
         toast.error('Failed to load student messages and uploads');
@@ -55,6 +62,7 @@ export default function useStudentContent(selectedEvent: ClassEvent | null) {
             filter: `class_id=eq.${selectedEvent.id}`,
           },
           () => {
+            // Refetch data when changes are detected
             fetchStudentContent();
           }
         )
@@ -71,6 +79,7 @@ export default function useStudentContent(selectedEvent: ClassEvent | null) {
             filter: `class_id=eq.${selectedEvent.id}`,
           },
           () => {
+            // Refetch data when changes are detected
             fetchStudentContent();
           }
         )
@@ -96,7 +105,7 @@ export default function useStudentContent(selectedEvent: ClassEvent | null) {
       // Update local state to reflect the change
       setStudentMessages((prev) =>
         prev.map((msg) =>
-          msg.id === messageId ? { ...msg, is_read: true } : msg
+          msg.id === messageId ? { ...msg, isRead: true, read: true } : msg
         )
       );
     } catch (error: any) {
@@ -109,21 +118,30 @@ export default function useStudentContent(selectedEvent: ClassEvent | null) {
   const handleDownloadFile = async (uploadId: string) => {
     try {
       const upload = studentUploads.find((u) => u.id === uploadId);
-      if (!upload || !upload.file_path) {
+      if (!upload) {
         throw new Error('File not found');
       }
+      
+      // Get original file data from database to get file_path
+      const { data, error } = await supabase
+        .from('class_uploads')
+        .select('file_path')
+        .eq('id', uploadId)
+        .single();
+        
+      if (error || !data) throw error || new Error('File path not found');
 
-      const { data, error } = await supabase.storage
+      const { data: fileData, error: downloadError } = await supabase.storage
         .from('student-uploads')
-        .download(upload.file_path);
+        .download(data.file_path);
 
-      if (error) throw error;
+      if (downloadError) throw downloadError;
 
       // Create a download link
-      const url = URL.createObjectURL(data);
+      const url = URL.createObjectURL(fileData);
       const link = document.createElement('a');
       link.href = url;
-      link.download = upload.file_name || 'download';
+      link.download = upload.fileName || 'download';
       link.click();
       URL.revokeObjectURL(url);
     } catch (error: any) {
@@ -136,7 +154,7 @@ export default function useStudentContent(selectedEvent: ClassEvent | null) {
   const getUnreadMessageCount = useCallback(
     (classId: string) => {
       if (selectedEvent?.id !== classId) return 0;
-      return studentMessages.filter((msg) => !msg.is_read).length;
+      return studentMessages.filter((msg) => !msg.isRead && !msg.read).length;
     },
     [studentMessages, selectedEvent?.id]
   );
