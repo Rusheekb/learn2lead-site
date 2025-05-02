@@ -113,8 +113,9 @@ export function useTutorScheduler() {
       if (success) {
         resetNewEventForm();
         setIsAddEventOpen(false);
+        return true;
       }
-      return success;
+      return false;
     } catch (error) {
       console.error('Error creating event:', error);
       toast.error('Failed to create class');
@@ -124,6 +125,8 @@ export function useTutorScheduler() {
 
   const handleEditEvent = async (event: ClassEvent) => {
     try {
+      if (!event) return false;
+      
       // Fix the issue with toISOString by ensuring date is a Date object
       const dateObject = event.date instanceof Date
         ? event.date 
@@ -139,8 +142,9 @@ export function useTutorScheduler() {
       if (success) {
         setSelectedEvent(event);
         setIsEditMode(false);
+        return true;
       }
-      return success;
+      return false;
     } catch (error) {
       console.error('Error updating event:', error);
       toast.error('Failed to update class');
@@ -154,8 +158,9 @@ export function useTutorScheduler() {
       if (success) {
         setIsViewEventOpen(false);
         setSelectedEvent(null);
+        return true;
       }
-      return success;
+      return false;
     } catch (error) {
       console.error('Error deleting event:', error);
       toast.error('Failed to delete class');

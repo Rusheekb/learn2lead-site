@@ -103,8 +103,8 @@ const TutorScheduler: React.FC = () => {
         studentMessages={studentMessages}
         studentUploads={studentUploads}
         students={mockStudents}
-        onCreateEvent={handleCreateEvent}
-        onEditEvent={handleEditEvent}
+        onCreateEvent={() => handleCreateEvent(newEvent as any)}
+        onEditEvent={() => handleEditEvent(selectedEvent as any)}
         onDuplicateEvent={handleDuplicateEvent}
         onDeleteEvent={handleDeleteEvent}
         onResetForm={resetNewEventForm}
