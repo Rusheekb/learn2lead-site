@@ -47,7 +47,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     
     const storedTheme = localStorage.getItem('theme') as Theme;
     
-    // If user has previously selected a theme, use it (only for dashboard routes)
+    // If user has previously selected a theme, use it
     if (storedTheme) {
       setTheme(storedTheme);
     } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
@@ -71,7 +71,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       const newTheme = prevTheme === 'light' ? 'dark' : 'light';
       localStorage.setItem('theme', newTheme);
       
-      // Track theme toggle analytics event - Fixed TOGGLE_DARK_MODE to TOGGLE_THEME
+      // Track theme toggle analytics event
       analytics.track({
         category: EventCategory.UI,
         name: EventName.TOGGLE_THEME,

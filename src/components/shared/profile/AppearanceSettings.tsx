@@ -10,12 +10,22 @@ const AppearanceSettings: React.FC = () => {
 
   return (
     <>
-      <Card>
+      <Card className="mb-6">
         <CardHeader>
           <CardTitle>{t('profile.appearance')}</CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
-          <ThemeToggle />
+          <div className="flex flex-col space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-medium text-gray-900 dark:text-gray-100">
+                {t('profile.colorTheme')}
+              </h3>
+              <ThemeToggle showLabel={true} />
+            </div>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {t('profile.themeDescription')}
+            </p>
+          </div>
         </CardContent>
       </Card>
       

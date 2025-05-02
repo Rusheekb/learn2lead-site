@@ -26,7 +26,7 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ className, showLabel = true }
       />
       <Moon className="h-5 w-5 text-gray-500 dark:text-gray-400" aria-hidden="true" />
       {showLabel && (
-        <Label htmlFor="theme-toggle" className="cursor-pointer">
+        <Label htmlFor="theme-toggle" className="cursor-pointer text-gray-700 dark:text-gray-300">
           {theme === 'dark' ? 'Dark Mode' : 'Light Mode'}
         </Label>
       )}

@@ -1,13 +1,11 @@
 
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, User, Calendar, Book, LogOut } from 'lucide-react';
 import { AppRole } from '@/types/profile';
 import { useAuth } from '@/contexts/AuthContext';
-import { useTheme } from '@/contexts/ThemeContext';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Moon, Sun } from 'lucide-react';
-import { Switch } from '@/components/ui/switch';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSidebar } from '@/hooks/useSidebar';
 
 interface AppSidebarProps {
@@ -17,7 +15,7 @@ interface AppSidebarProps {
 const AppSidebar: React.FC<AppSidebarProps> = ({ className = '' }) => {
   const { userRole, signOut } = useAuth();
   const { isExpanded, toggleSidebar } = useSidebar();
-  const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
   
   if (!userRole) return null;
   
@@ -148,37 +146,8 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ className = '' }) => {
         {renderNavLinks()}
       </div>
 
-      {/* Theme toggle and logout in sidebar footer */}
+      {/* Footer with just logout - theme toggle has been removed */}
       <div className="p-4 border-t dark:border-gray-700 mt-auto">
-        {/* Theme toggle */}
-        {isExpanded ? (
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-gray-600 dark:text-gray-300">
-              {theme === 'dark' ? 'Dark Mode' : 'Light Mode'}
-            </span>
-            <Switch 
-              id="theme-toggle"
-              checked={theme === 'dark'} 
-              onCheckedChange={toggleTheme}
-              className="focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-tutoring-blue dark:focus-visible:ring-tutoring-teal"
-              aria-label={theme === 'dark' ? "Switch to light mode" : "Switch to dark mode"}
-            />
-          </div>
-        ) : (
-          <button
-            onClick={toggleTheme}
-            className="flex justify-center w-full text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 py-2 focus:outline-none focus:ring-2 focus:ring-tutoring-blue dark:focus:ring-tutoring-teal rounded-md"
-            aria-label={theme === 'dark' ? "Switch to light mode" : "Switch to dark mode"}
-          >
-            {theme === 'dark' ? (
-              <Sun className="h-5 w-5" aria-hidden="true" />
-            ) : (
-              <Moon className="h-5 w-5" aria-hidden="true" />
-            )}
-            <span className="sr-only">{theme === 'dark' ? "Switch to light mode" : "Switch to dark mode"}</span>
-          </button>
-        )}
-        
         {/* Logout button */}
         <button
           onClick={signOut}
