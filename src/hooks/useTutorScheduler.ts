@@ -110,7 +110,6 @@ export function useTutorScheduler() {
       };
       
       // Call the createClass function and handle the response
-      // Don't compare its return value with true/false directly
       await createClass(newClassEvent);
       
       // Since we've reached this point without errors, consider it a success
@@ -139,7 +138,7 @@ export function useTutorScheduler() {
         date: dateObject.toISOString().split('T')[0]
       };
 
-      // Call the updateClass function without comparing return value to boolean
+      // Call the updateClass function
       await updateClass(event.id, updatedEvent);
       
       // Since we've reached this point without errors, consider it a success
@@ -155,7 +154,7 @@ export function useTutorScheduler() {
 
   const handleDeleteEvent = async (eventId: string) => {
     try {
-      // Call the deleteClass function without comparing return value to boolean
+      // Call the deleteClass function
       await deleteClass(eventId);
       
       // Since we've reached this point without errors, consider it a success
