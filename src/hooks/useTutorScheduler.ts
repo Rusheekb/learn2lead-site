@@ -109,7 +109,10 @@ export function useTutorScheduler() {
         date: dateObject.toISOString().split('T')[0]
       };
       
-      const success = await createClass(newClassEvent);
+      // Explicitly check for boolean return value from createClass
+      const result = await createClass(newClassEvent);
+      const success = result === true;
+      
       if (success) {
         resetNewEventForm();
         setIsAddEventOpen(false);
@@ -138,7 +141,10 @@ export function useTutorScheduler() {
         date: dateObject.toISOString().split('T')[0]
       };
 
-      const success = await updateClass(event.id, updatedEvent);
+      // Explicitly check for boolean return value
+      const result = await updateClass(event.id, updatedEvent);
+      const success = result === true;
+      
       if (success) {
         setSelectedEvent(event);
         setIsEditMode(false);
@@ -154,7 +160,10 @@ export function useTutorScheduler() {
 
   const handleDeleteEvent = async (eventId: string) => {
     try {
-      const success = await deleteClass(eventId);
+      // Explicitly check for boolean return value
+      const result = await deleteClass(eventId);
+      const success = result === true;
+      
       if (success) {
         setIsViewEventOpen(false);
         setSelectedEvent(null);
