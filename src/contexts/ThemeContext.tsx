@@ -1,5 +1,6 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 
 type Theme = 'dark' | 'light';
 
@@ -10,9 +11,22 @@ type ThemeContextType = {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+// Helper to determine if a path is a dashboard path
+const isDashboardRoute = (pathname: string): boolean => {
+  return pathname.startsWith('/dashboard') || 
+         pathname.startsWith('/tutor-dashboard') || 
+         pathname.startsWith('/admin-dashboard') ||
+         pathname.startsWith('/profile') ||
+         pathname.startsWith('/tutor-profile');
+};
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>('light');
   const [mounted, setMounted] = useState(false);
+  const location = useLocation();
+  
+  // Check if current route is a dashboard route
+  const isCurrentRouteDashboard = isDashboardRoute(location.pathname);
 
   // Initialize theme from localStorage or system preference
   useEffect(() => {
@@ -21,30 +35,39 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     
     const storedTheme = localStorage.getItem('theme') as Theme;
     
-    // If user has previously selected a theme, use it
+    // If user has previously selected a theme, use it (only for dashboard routes)
     if (storedTheme) {
       setTheme(storedTheme);
-      document.documentElement.classList.toggle('dark', storedTheme === 'dark');
-      return;
-    }
-    
-    // Otherwise, check system preference
-    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      // Or check system preference
       setTheme('dark');
-      document.documentElement.classList.add('dark');
     }
   }, []);
+
+  // Apply dark class to document element only on dashboard routes
+  useEffect(() => {
+    if (isCurrentRouteDashboard) {
+      document.documentElement.classList.toggle('dark', theme === 'dark');
+    } else {
+      // Always remove dark class on public routes
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme, isCurrentRouteDashboard, location.pathname]);
 
   const toggleTheme = () => {
     setTheme((prevTheme) => {
       const newTheme = prevTheme === 'light' ? 'dark' : 'light';
       localStorage.setItem('theme', newTheme);
-      document.documentElement.classList.toggle('dark', newTheme === 'dark');
+      
+      if (isCurrentRouteDashboard) {
+        document.documentElement.classList.toggle('dark', newTheme === 'dark');
+      }
+      
       return newTheme;
     });
   };
 
-  // If not mounted yet, return a minimal div to prevent hydration mismatch
+  // If not mounted yet, return children to prevent hydration mismatch
   if (!mounted) {
     return <>{children}</>;
   }

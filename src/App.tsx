@@ -38,72 +38,75 @@ const App = () => {
         <TooltipProvider>
           <BrowserRouter>
             <AuthProvider>
-              {/* Public routes - always light mode */}
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/pricing" element={<Pricing />} />
-                
-                {/* Private routes - can toggle between dark/light mode */}
-                <Route element={
-                  <ThemeProvider>
-                    <Toaster />
-                    <Sonner />
-                    <PrivateRoute />
-                  </ThemeProvider>
-                }>
-                  <Route element={<PrivateRoute allowedRoles={['student']} />}>
-                    <Route
-                      path="/dashboard"
-                      element={
-                        <Suspense fallback={<div>Loading...</div>}>
-                          <Dashboard />
-                        </Suspense>
-                      }
-                    />
-                    <Route
-                      path="/profile"
-                      element={
-                        <Suspense fallback={<div>Loading...</div>}>
-                          <Dashboard />
-                        </Suspense>
-                      }
-                    />
+              <ThemeProvider>
+                {/* All routes are rendered inside the ThemeProvider */}
+                <Routes>
+                  {/* Public routes - ThemeProvider will ensure they're always in light mode */}
+                  <Route path="/" element={<Index />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/pricing" element={<Pricing />} />
+                  
+                  {/* Private routes - can toggle between dark/light mode */}
+                  <Route element={
+                    <>
+                      <Toaster />
+                      <Sonner />
+                      <PrivateRoute />
+                    </>
+                  }>
+                    <Route element={<PrivateRoute allowedRoles={['student']} />}>
+                      <Route
+                        path="/dashboard"
+                        element={
+                          <Suspense fallback={<div>Loading...</div>}>
+                            <Dashboard />
+                          </Suspense>
+                        }
+                      />
+                      <Route
+                        path="/profile"
+                        element={
+                          <Suspense fallback={<div>Loading...</div>}>
+                            <Dashboard />
+                          </Suspense>
+                        }
+                      />
+                    </Route>
+
+                    <Route element={<PrivateRoute allowedRoles={['tutor']} />}>
+                      <Route
+                        path="/tutor-dashboard"
+                        element={
+                          <Suspense fallback={<div>Loading...</div>}>
+                            <TutorDashboard />
+                          </Suspense>
+                        }
+                      />
+                      <Route
+                        path="/tutor-profile"
+                        element={
+                          <Suspense fallback={<div>Loading...</div>}>
+                            <TutorDashboard />
+                          </Suspense>
+                        }
+                      />
+                    </Route>
+
+                    <Route element={<PrivateRoute allowedRoles={['admin']} />}>
+                      <Route
+                        path="/admin-dashboard"
+                        element={
+                          <Suspense fallback={<div>Loading...</div>}>
+                            <AdminDashboard />
+                          </Suspense>
+                        }
+                      />
+                    </Route>
                   </Route>
 
-                  <Route element={<PrivateRoute allowedRoles={['tutor']} />}>
-                    <Route
-                      path="/tutor-dashboard"
-                      element={
-                        <Suspense fallback={<div>Loading...</div>}>
-                          <TutorDashboard />
-                        </Suspense>
-                      }
-                    />
-                    <Route
-                      path="/tutor-profile"
-                      element={
-                        <Suspense fallback={<div>Loading...</div>}>
-                          <TutorDashboard />
-                        </Suspense>
-                      }
-                    />
-                  </Route>
-
-                  <Route element={<PrivateRoute allowedRoles={['admin']} />}>
-                    <Route
-                      path="/admin-dashboard"
-                      element={
-                        <Suspense fallback={<div>Loading...</div>}>
-                          <AdminDashboard />
-                        </Suspense>
-                      }
-                    />
-                  </Route>
-                </Route>
-
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </ThemeProvider>
             </AuthProvider>
           </BrowserRouter>
         </TooltipProvider>
