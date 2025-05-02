@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -41,25 +42,45 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <DashboardNav />
+    <div className="min-h-screen bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+      <DashboardNav activeTab={activeTab} setActiveTab={setActiveTab} />
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {isLoading ? (
           <LoadingSpinner />
         ) : (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold">Student Dashboard</h2>
+            <h2 className="text-2xl font-bold dark:text-gray-100">Student Dashboard</h2>
 
             <Tabs
               value={activeTab}
               onValueChange={setActiveTab}
               className="w-full"
             >
-              <TabsList className="grid grid-cols-4 mb-6">
-                <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-                <TabsTrigger value="schedule">My Schedule</TabsTrigger>
-                <TabsTrigger value="resources">Resources</TabsTrigger>
-                <TabsTrigger value="profile">Profile</TabsTrigger>
+              <TabsList className="grid grid-cols-4 mb-6 bg-gray-100 dark:bg-gray-800">
+                <TabsTrigger 
+                  value="dashboard" 
+                  className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-700"
+                >
+                  Dashboard
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="schedule"
+                  className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-700"
+                >
+                  My Schedule
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="resources"
+                  className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-700"
+                >
+                  Resources
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="profile"
+                  className="data-[state=active]:bg-white dark:data-[state=active]:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-700"
+                >
+                  Profile
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="dashboard" className="pt-2">
@@ -72,14 +93,14 @@ const Dashboard = () => {
 
               <TabsContent value="schedule" className="pt-2">
                 <div className="py-4">
-                  <h3 className="text-xl font-bold mb-6">My Schedule</h3>
+                  <h3 className="text-xl font-bold mb-6 dark:text-gray-100">My Schedule</h3>
                   <ClassCalendar studentId={user?.id || null} />
                 </div>
               </TabsContent>
 
               <TabsContent value="resources" className="pt-2">
                 <div className="py-4">
-                  <h3 className="text-xl font-bold mb-6">Learning Resources</h3>
+                  <h3 className="text-xl font-bold mb-6 dark:text-gray-100">Learning Resources</h3>
                   <StudentContent
                     classId={user?.id || ''}
                     showUploadControls={false}

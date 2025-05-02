@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Dialog,
@@ -48,16 +49,24 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="sm:max-w-2xl dark:bg-gray-800 dark:border-gray-700 dark:text-gray-100">
         <DialogHeader>
-          <DialogTitle>{selectedClass?.title || 'Class Details'}</DialogTitle>
+          <DialogTitle className="dark:text-gray-100">{selectedClass?.title || 'Class Details'}</DialogTitle>
         </DialogHeader>
 
         {selectedClass && (
           <Tabs defaultValue="details">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="details">Class Details</TabsTrigger>
-              <TabsTrigger value="materials">
+            <TabsList className="grid w-full grid-cols-2 bg-gray-100 dark:bg-gray-700">
+              <TabsTrigger 
+                value="details"
+                className="dark:data-[state=active]:bg-gray-600 dark:text-gray-200 dark:data-[state=active]:text-gray-100"
+              >
+                Class Details
+              </TabsTrigger>
+              <TabsTrigger 
+                value="materials"
+                className="dark:data-[state=active]:bg-gray-600 dark:text-gray-200 dark:data-[state=active]:text-gray-100"
+              >
                 Materials & Communication
               </TabsTrigger>
             </TabsList>
@@ -84,7 +93,11 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
         )}
 
         <div className="flex justify-end mt-4">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button 
+            variant="outline" 
+            onClick={() => onOpenChange(false)}
+            className="dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+          >
             Close
           </Button>
         </div>

@@ -1,3 +1,4 @@
+
 import React, { memo } from 'react';
 import SubjectCards from './SubjectCards';
 import ClassCalendar from '@/components/ClassCalendar';
@@ -13,7 +14,7 @@ const DashboardContent: React.FC<DashboardContentProps> = memo(
   ({ studentId, selectedSubject, onSubjectClick }) => {
     return (
       <>
-        <h2 className="text-2xl font-bold mb-6">My Learning Portal</h2>
+        <h2 className="text-2xl font-bold mb-6 dark:text-gray-100">My Learning Portal</h2>
         <SubjectCards
           subjects={subjects}
           selectedSubject={selectedSubject}

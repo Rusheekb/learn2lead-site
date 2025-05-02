@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { LayoutDashboard, Calendar, Book, User } from 'lucide-react';
@@ -41,7 +42,9 @@ const StudentMenubar: React.FC<StudentMenubarProps> = ({
           key={item.label}
           variant={activeTab === item.value ? 'default' : 'ghost'}
           className={`flex items-center ${
-            activeTab === item.value ? 'bg-tutoring-blue text-white' : ''
+            activeTab === item.value 
+              ? 'bg-tutoring-blue text-white dark:bg-tutoring-teal' 
+              : 'dark:text-gray-300 dark:hover:bg-gray-700'
           }`}
           onClick={() => setActiveTab(item.value)}
         >

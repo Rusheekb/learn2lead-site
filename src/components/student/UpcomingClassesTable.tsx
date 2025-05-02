@@ -34,8 +34,8 @@ const UpcomingClassesTable: React.FC<UpcomingClassesTableProps> = ({
       header: 'Class',
       cell: (cls) => (
         <div>
-          <p className="font-medium">{cls.title}</p>
-          <p className="text-sm text-gray-500">{cls.subject}</p>
+          <p className="font-medium dark:text-gray-100">{cls.title}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{cls.subject}</p>
         </div>
       ),
     },
@@ -60,11 +60,16 @@ const UpcomingClassesTable: React.FC<UpcomingClassesTableProps> = ({
           <Button
             variant="outline"
             size="sm"
+            className="dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
             onClick={() => onViewClass(cls)}
           >
             View Details
           </Button>
-          <Button size="sm" onClick={() => onViewClass(cls)}>
+          <Button 
+            size="sm"
+            className="dark:bg-tutoring-teal dark:text-gray-900"
+            onClick={() => onViewClass(cls)}
+          >
             <ArrowRight className="h-4 w-4" />
           </Button>
         </div>
