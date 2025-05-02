@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate, useSearchParams } from 'react-router-dom';
@@ -5,7 +6,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import TutorScheduler from '@/components/tutor/TutorScheduler';
 import TutorStudents from '@/components/tutor/TutorStudents';
 import TutorMaterials from '@/components/tutor/TutorMaterials';
-import ProfilePage from '@/components/shared/ProfilePage';
 import TutorOverviewSection from '@/components/tutor/dashboard/TutorOverviewSection';
 import { useAnalyticsTracker } from '@/hooks/useAnalyticsTracker';
 import { EventName } from '@/services/analytics/analyticsService';
@@ -50,8 +50,6 @@ const TutorDashboard: React.FC = () => {
         return <TutorStudents />;
       case 'resources':
         return <TutorMaterials />;
-      case 'profile':
-        return <ProfilePage />;
       default:
         return <TutorOverviewSection />;
     }

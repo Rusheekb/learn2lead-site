@@ -44,9 +44,24 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ className = '' }) => {
     }
   };
   
+  // Get appropriate profile path based on role
+  const getProfilePath = () => {
+    switch (userRole) {
+      case 'student':
+        return '/profile';
+      case 'tutor':
+        return '/tutor-profile';
+      case 'admin':
+        return '/admin-profile';
+      default:
+        return '/';
+    }
+  };
+  
   // Role-specific navigation items
   const renderNavLinks = () => {
     const dashboardPath = getDashboardPath();
+    const profilePath = getProfilePath();
     
     switch (userRole) {
       case 'student':
@@ -64,7 +79,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ className = '' }) => {
               <Book className="h-5 w-5" aria-hidden="true" />
               {isExpanded && <span className="ml-3">Resources</span>}
             </NavLink>
-            <NavLink to="/profile" className={getNavLinkClass} aria-label="Profile">
+            <NavLink to={profilePath} className={getNavLinkClass} aria-label="Profile">
               <User className="h-5 w-5" aria-hidden="true" />
               {isExpanded && <span className="ml-3">Profile</span>}
             </NavLink>
@@ -85,7 +100,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ className = '' }) => {
               <Book className="h-5 w-5" aria-hidden="true" />
               {isExpanded && <span className="ml-3">Resources</span>}
             </NavLink>
-            <NavLink to="/tutor-profile" className={getNavLinkClass} aria-label="Profile">
+            <NavLink to={profilePath} className={getNavLinkClass} aria-label="Profile">
               <User className="h-5 w-5" aria-hidden="true" />
               {isExpanded && <span className="ml-3">Profile</span>}
             </NavLink>
@@ -97,6 +112,10 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ className = '' }) => {
             <NavLink to="/admin-dashboard" className={getNavLinkClass} aria-label="Dashboard">
               <LayoutDashboard className="h-5 w-5" aria-hidden="true" />
               {isExpanded && <span className="ml-3">Dashboard</span>}
+            </NavLink>
+            <NavLink to={profilePath} className={getNavLinkClass} aria-label="Profile">
+              <User className="h-5 w-5" aria-hidden="true" />
+              {isExpanded && <span className="ml-3">Profile</span>}
             </NavLink>
           </nav>
         );

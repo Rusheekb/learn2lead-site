@@ -22,6 +22,7 @@ import { LanguageProvider } from './contexts/LanguageContext';
 const Dashboard = React.lazy(() => import('./pages/Dashboard'));
 const TutorDashboard = React.lazy(() => import('./pages/TutorDashboard'));
 const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
+const Profile = React.lazy(() => import('./pages/Profile'));
 
 // Create a client
 const queryClient = new QueryClient({
@@ -34,26 +35,26 @@ const queryClient = new QueryClient({
 });
 
 // Wrapper for dashboard routes that adds the DashboardShell
-const StudentDashboardWrapper = () => (
+const StudentDashboardWrapper = ({ children }: { children: React.ReactNode }) => (
   <DashboardShell title="Student Portal">
     <Suspense fallback={<div>Loading...</div>}>
-      <Dashboard />
+      {children}
     </Suspense>
   </DashboardShell>
 );
 
-const TutorDashboardWrapper = () => (
+const TutorDashboardWrapper = ({ children }: { children: React.ReactNode }) => (
   <DashboardShell title="Tutor Portal">
     <Suspense fallback={<div>Loading...</div>}>
-      <TutorDashboard />
+      {children}
     </Suspense>
   </DashboardShell>
 );
 
-const AdminDashboardWrapper = () => (
+const AdminDashboardWrapper = ({ children }: { children: React.ReactNode }) => (
   <DashboardShell title="Admin Portal">
     <Suspense fallback={<div>Loading...</div>}>
-      <AdminDashboard />
+      {children}
     </Suspense>
   </DashboardShell>
 );
@@ -86,17 +87,42 @@ function App() {
                         </>
                       }>
                         <Route element={<PrivateRoute allowedRoles={['student']} />}>
-                          <Route path="/dashboard/*" element={<StudentDashboardWrapper />} />
-                          <Route path="/profile/*" element={<StudentDashboardWrapper />} />
+                          <Route path="/dashboard/*" element={
+                            <StudentDashboardWrapper>
+                              <Dashboard />
+                            </StudentDashboardWrapper>
+                          } />
+                          <Route path="/profile/*" element={
+                            <StudentDashboardWrapper>
+                              <Profile />
+                            </StudentDashboardWrapper>
+                          } />
                         </Route>
 
                         <Route element={<PrivateRoute allowedRoles={['tutor']} />}>
-                          <Route path="/tutor-dashboard/*" element={<TutorDashboardWrapper />} />
-                          <Route path="/tutor-profile/*" element={<TutorDashboardWrapper />} />
+                          <Route path="/tutor-dashboard/*" element={
+                            <TutorDashboardWrapper>
+                              <TutorDashboard />
+                            </TutorDashboardWrapper>
+                          } />
+                          <Route path="/tutor-profile/*" element={
+                            <TutorDashboardWrapper>
+                              <Profile />
+                            </TutorDashboardWrapper>
+                          } />
                         </Route>
 
                         <Route element={<PrivateRoute allowedRoles={['admin']} />}>
-                          <Route path="/admin-dashboard/*" element={<AdminDashboardWrapper />} />
+                          <Route path="/admin-dashboard/*" element={
+                            <AdminDashboardWrapper>
+                              <AdminDashboard />
+                            </AdminDashboardWrapper>
+                          } />
+                          <Route path="/admin-profile/*" element={
+                            <AdminDashboardWrapper>
+                              <Profile />
+                            </AdminDashboardWrapper>
+                          } />
                         </Route>
                       </Route>
 

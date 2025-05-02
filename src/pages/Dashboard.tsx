@@ -1,10 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import DashboardContent from '@/components/student/DashboardContent';
-import ProfilePage from '@/components/shared/ProfilePage';
 import ClassCalendar from '@/components/ClassCalendar';
 import StudentContent from '@/components/shared/StudentContent';
 import { useAnalyticsTracker } from '@/hooks/useAnalyticsTracker';
@@ -88,8 +88,6 @@ const Dashboard = () => {
             />
           </div>
         );
-      case 'profile':
-        return <ProfilePage />;
       default:
         return <DashboardContent 
           studentId={user?.id || null}
