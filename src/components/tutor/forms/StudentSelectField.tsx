@@ -26,6 +26,7 @@ const StudentSelectField: React.FC<StudentSelectFieldProps> = ({
         <Select 
           onValueChange={field.onChange}
           defaultValue={field.value}
+          value={field.value}
         >
           <FormControl>
             <SelectTrigger className="bg-white dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700">
@@ -33,14 +34,20 @@ const StudentSelectField: React.FC<StudentSelectFieldProps> = ({
             </SelectTrigger>
           </FormControl>
           <SelectContent className="bg-white dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700">
-            {relationships.map(rel => {
-              const student = assignedStudents.find(s => s.id === rel.student_id);
-              return (
-                <SelectItem key={rel.id} value={rel.id} className="dark:text-gray-100 dark:hover:bg-gray-700 dark:focus:bg-gray-700">
-                  {student?.name ?? 'Loading...'}
-                </SelectItem>
-              );
-            })}
+            {relationships.length > 0 ? (
+              relationships.map(rel => {
+                const student = assignedStudents.find(s => s.id === rel.student_id);
+                return (
+                  <SelectItem key={rel.id} value={rel.id} className="dark:text-gray-100 dark:hover:bg-gray-700 dark:focus:bg-gray-700">
+                    {student?.name ?? 'Loading...'}
+                  </SelectItem>
+                );
+              })
+            ) : (
+              <SelectItem value="none" disabled className="text-gray-400">
+                No students available
+              </SelectItem>
+            )}
           </SelectContent>
         </Select>
         <FormMessage className="text-red-500 dark:text-red-400 text-xs" />

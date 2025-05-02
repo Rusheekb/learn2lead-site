@@ -1,6 +1,6 @@
 
 import * as z from 'zod';
-import { addMinutes } from 'date-fns';
+import { addMinutes, isFuture, parse, set } from 'date-fns';
 
 // Define the base schema without refinement
 const createBaseSchema = () => {
@@ -21,7 +21,7 @@ const createBaseSchema = () => {
 export const createClassEventSchema = () => {
   const baseSchema = createBaseSchema();
   
-  // Return the schema with refinement
+  // Return the schema with refinements
   return baseSchema.refine((data) => {
     return data.startTime < data.endTime;
   }, {

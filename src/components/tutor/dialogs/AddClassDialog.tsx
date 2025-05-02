@@ -30,38 +30,46 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
   const [relationships, setRelationships] = useState<TutorStudentRelationship[]>([]);
   const [assignedStudents, setAssignedStudents] = useState<Student[]>([]);
   const [selectedRelId, setSelectedRelId] = useState<string>('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
     if (!user || !isOpen) return;
     
     const loadRelationshipsAndStudents = async () => {
-      // Load active pairings for this tutor
-      const rels = await fetchRelationshipsForTutor(user.id);
-      setRelationships(rels);
+      setIsLoading(true);
+      try {
+        // Load active pairings for this tutor
+        const rels = await fetchRelationshipsForTutor(user.id);
+        setRelationships(rels);
 
-      // Get unique student IDs from relationships
-      const studentIds = Array.from(new Set(rels.map(rel => rel.student_id)));
+        // Get unique student IDs from relationships
+        const studentIds = Array.from(new Set(rels.map(rel => rel.student_id)));
 
-      // Fetch student details if we have relationships
-      if (studentIds.length > 0) {
-        const { data: studentsData, error } = await supabase
-          .from('students')
-          .select('id, name, subjects')
-          .in('id', studentIds);
-        
-        if (error) {
-          console.error('Error fetching students:', error);
-          return;
+        // Fetch student details if we have relationships
+        if (studentIds.length > 0) {
+          const { data: studentsData, error } = await supabase
+            .from('students')
+            .select('id, name, subjects')
+            .in('id', studentIds);
+          
+          if (error) {
+            console.error('Error fetching students:', error);
+            return;
+          }
+          
+          // Ensure the data conforms to the Student type
+          const typedStudents: Student[] = studentsData.map(student => ({
+            id: student.id,
+            name: student.name,
+            subjects: student.subjects || []
+          }));
+          
+          setAssignedStudents(typedStudents);
         }
-        
-        // Ensure the data conforms to the Student type
-        const typedStudents: Student[] = studentsData.map(student => ({
-          id: student.id,
-          name: student.name,
-          subjects: student.subjects || []
-        }));
-        
-        setAssignedStudents(typedStudents);
+      } catch (error) {
+        console.error('Error loading data:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -93,15 +101,19 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
         </div>
       }
     >
-      <NewClassEventForm
-        newEvent={newEvent}
-        setNewEvent={setNewEvent}
-        assignedStudents={assignedStudents}
-        relationships={relationships}
-        selectedRelId={selectedRelId}
-        setSelectedRelId={setSelectedRelId}
-        onSubmit={onCreateEvent}
-      />
+      {isLoading ? (
+        <div className="py-8 text-center">Loading student data...</div>
+      ) : (
+        <NewClassEventForm
+          newEvent={newEvent}
+          setNewEvent={setNewEvent}
+          assignedStudents={assignedStudents}
+          relationships={relationships}
+          selectedRelId={selectedRelId}
+          setSelectedRelId={setSelectedRelId}
+          onSubmit={onCreateEvent}
+        />
+      )}
     </Modal>
   );
 };
