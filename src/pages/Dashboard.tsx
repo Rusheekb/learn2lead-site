@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import DashboardLayout from '@/components/shared/DashboardLayout';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import DashboardContent from '@/components/student/DashboardContent';
 import ProfilePage from '@/components/shared/ProfilePage';
@@ -87,12 +86,10 @@ const Dashboard = () => {
   };
 
   return (
-    <DashboardLayout title="Student Portal" role="student">
-      <div className="space-y-6">
-        <h2 className="text-2xl font-bold dark:text-gray-100">Student Dashboard</h2>
-        {renderContent()}
-      </div>
-    </DashboardLayout>
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold dark:text-gray-100">Student Dashboard</h2>
+      {renderContent()}
+    </div>
   );
 };
 

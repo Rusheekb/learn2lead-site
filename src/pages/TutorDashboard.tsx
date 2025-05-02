@@ -2,7 +2,6 @@
 import React from 'react';
 import { Navigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import DashboardLayout from '@/components/shared/DashboardLayout';
 import TutorScheduler from '@/components/tutor/TutorScheduler';
 import TutorStudents from '@/components/tutor/TutorStudents';
 import TutorMaterials from '@/components/tutor/TutorMaterials';
@@ -45,12 +44,10 @@ const TutorDashboard: React.FC = () => {
   };
 
   return (
-    <DashboardLayout title="Tutor Portal" role="tutor">
-      <div className="space-y-6">
-        <h2 className="text-2xl font-bold dark:text-gray-100">Tutor Dashboard</h2>
-        {renderContent()}
-      </div>
-    </DashboardLayout>
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold dark:text-gray-100">Tutor Dashboard</h2>
+      {renderContent()}
+    </div>
   );
 };
 

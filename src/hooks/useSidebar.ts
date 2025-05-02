@@ -1,7 +1,14 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, createContext, useContext } from 'react';
 
-export function useSidebar() {
+interface SidebarContextType {
+  isExpanded: boolean;
+  toggleSidebar: () => void;
+}
+
+const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
+
+export function SidebarProvider({ children }: { children: React.ReactNode }) {
   const [isSidebarExpanded, setSidebarExpanded] = useState(() => {
     const saved = localStorage.getItem('sidebar-expanded');
     return saved !== null ? JSON.parse(saved) : true; // Default to expanded
@@ -15,8 +22,17 @@ export function useSidebar() {
     localStorage.setItem('sidebar-expanded', JSON.stringify(isSidebarExpanded));
   }, [isSidebarExpanded]);
 
-  return {
-    isExpanded: isSidebarExpanded,
-    toggleSidebar
-  };
+  return (
+    <SidebarContext.Provider value={{ isExpanded: isSidebarExpanded, toggleSidebar }}>
+      {children}
+    </SidebarContext.Provider>
+  );
+}
+
+export function useSidebar() {
+  const context = useContext(SidebarContext);
+  if (context === undefined) {
+    throw new Error('useSidebar must be used within a SidebarProvider');
+  }
+  return context;
 }

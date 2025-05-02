@@ -1,6 +1,5 @@
 
 import React, { useState, Suspense, lazy } from 'react';
-import DashboardLayout from '@/components/DashboardLayout';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { UserDetailModal } from '@/components/admin/UserDetailModal';
 import { useQuery } from '@tanstack/react-query';
@@ -80,64 +79,63 @@ const AdminDashboard: React.FC = () => {
   };
 
   return (
-    <DashboardLayout title="Admin Portal" role="admin">
-      <div className="space-y-6">
-        <h2 className="text-2xl font-bold">Admin Dashboard</h2>
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold">Admin Dashboard</h2>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-6 mb-6">
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="schedule">Class Logs</TabsTrigger>
-            <TabsTrigger value="payments">Payments</TabsTrigger>
-            <TabsTrigger value="tutors">Tutors</TabsTrigger>
-            <TabsTrigger value="students">Students</TabsTrigger>
-            <TabsTrigger value="relationships">Relationships</TabsTrigger>
-          </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid grid-cols-6 mb-6">
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="schedule">Class Logs</TabsTrigger>
+          <TabsTrigger value="payments">Payments</TabsTrigger>
+          <TabsTrigger value="tutors">Tutors</TabsTrigger>
+          <TabsTrigger value="students">Students</TabsTrigger>
+          <TabsTrigger value="relationships">Relationships</TabsTrigger>
+        </TabsList>
 
-          <TabsContent value="analytics" className="pt-2">
-            <Suspense fallback={<LoadingSpinner />}>
-              <ClassAnalytics />
-            </Suspense>
-          </TabsContent>
+        <TabsContent value="analytics" className="pt-2">
+          <Suspense fallback={<LoadingSpinner />}>
+            <ClassAnalytics />
+          </Suspense>
+        </TabsContent>
 
-          <TabsContent value="schedule" className="pt-2">
-            <Suspense fallback={<LoadingSpinner />}>
-              <ClassLogs />
-            </Suspense>
-          </TabsContent>
+        <TabsContent value="schedule" className="pt-2">
+          <Suspense fallback={<LoadingSpinner />}>
+            <ClassLogs />
+          </Suspense>
+        </TabsContent>
 
-          <TabsContent value="payments" className="pt-2">
-            <Suspense fallback={<LoadingSpinner />}>
-              <PaymentsManager />
-            </Suspense>
-          </TabsContent>
+        <TabsContent value="payments" className="pt-2">
+          <Suspense fallback={<LoadingSpinner />}>
+            <PaymentsManager />
+          </Suspense>
+        </TabsContent>
 
-          <TabsContent value="tutors" className="pt-2">
-            <Suspense fallback={<LoadingSpinner />}>
-              <TutorsManager onSelect={handleTutorSelect} />
-            </Suspense>
-          </TabsContent>
+        <TabsContent value="tutors" className="pt-2">
+          <Suspense fallback={<LoadingSpinner />}>
+            <TutorsManager onSelect={handleTutorSelect} />
+          </Suspense>
+        </TabsContent>
 
-          <TabsContent value="students" className="pt-2">
-            <Suspense fallback={<LoadingSpinner />}>
-              <StudentsManager onSelect={handleStudentSelect} />
-            </Suspense>
-          </TabsContent>
+        <TabsContent value="students" className="pt-2">
+          <Suspense fallback={<LoadingSpinner />}>
+            <StudentsManager onSelect={handleStudentSelect} />
+          </Suspense>
+        </TabsContent>
 
-          <TabsContent value="relationships" className="pt-2">
-            <Suspense fallback={<LoadingSpinner />}>
-              <RelationshipManager
-                relationships={relationships}
-                tutors={tutors}
-                students={students}
-                onRelationshipChange={handleRelationshipChange}
-              />
-            </Suspense>
-          </TabsContent>
-        </Tabs>
-      </div>
+        <TabsContent value="relationships" className="pt-2">
+          <Suspense fallback={<LoadingSpinner />}>
+            <RelationshipManager
+              relationships={relationships}
+              tutors={tutors}
+              students={students}
+              onRelationshipChange={handleRelationshipChange}
+            />
+          </Suspense>
+        </TabsContent>
+      </Tabs>
+      
       <UserDetailModal user={selectedUser} onClose={() => setSelectedUser(null)} />
-    </DashboardLayout>
+    </div>
   );
 };
 
