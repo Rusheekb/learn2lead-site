@@ -1,3 +1,4 @@
+
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -61,8 +62,8 @@ function App() {
   useRoleSync();
 
   return (
-    // Add LanguageProvider to the provider tree
-    <ThemeProvider defaultTheme="system" enableSystem>
+    // Fix: remove defaultTheme and enableSystem from the outer ThemeProvider
+    <ThemeProvider>
       <LanguageProvider>
         <QueryClientProvider client={queryClient}>
           <HelmetProvider>

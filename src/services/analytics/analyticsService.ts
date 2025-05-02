@@ -1,3 +1,4 @@
+
 // Extend the EventName enum to include language change event
 export enum EventName {
   PAGE_VIEW = 'page_view',

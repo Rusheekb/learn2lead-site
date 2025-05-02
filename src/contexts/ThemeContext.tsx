@@ -60,10 +60,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       const newTheme = prevTheme === 'light' ? 'dark' : 'light';
       localStorage.setItem('theme', newTheme);
       
-      // Track theme toggle analytics event
+      // Track theme toggle analytics event - Fixed TOGGLE_DARK_MODE to TOGGLE_THEME
       analytics.track({
         category: EventCategory.UI,
-        name: EventName.TOGGLE_DARK_MODE,
+        name: EventName.TOGGLE_THEME,
         properties: { 
           from: prevTheme,
           to: newTheme,

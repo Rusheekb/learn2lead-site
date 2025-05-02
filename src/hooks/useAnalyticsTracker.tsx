@@ -12,7 +12,16 @@ export function useAnalyticsTracker() {
   // Initialize analytics with user data when available
   useEffect(() => {
     if (user) {
-      analytics.init(user.id, userRole);
+      // Instead of calling a non-existent init method, we'll track a user identification event
+      analytics.track({
+        category: EventCategory.AUTH,
+        name: EventName.PAGE_VIEW,
+        properties: {
+          userId: user.id,
+          userRole: userRole,
+          event: 'user_identified'
+        }
+      });
     }
   }, [user, userRole]);
   
