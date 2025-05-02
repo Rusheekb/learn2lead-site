@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -22,6 +23,7 @@ import { Search, RefreshCw, FileDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { fetchPaymentsData } from '@/services/dataService';
 import { useClassLogs } from '@/hooks/useClassLogs';
+import PaginationControls from '@/components/common/Pagination';
 
 interface Payment {
   id: string;
@@ -41,7 +43,11 @@ const PaymentsManager: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
   const { classes } = useClassLogs();
-
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  
   useEffect(() => {
     const loadPayments = async () => {
       setIsLoading(true);
@@ -79,6 +85,7 @@ const PaymentsManager: React.FC = () => {
     });
 
     setFilteredPayments(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
   }, [searchTerm, statusFilter, payments]);
 
   const formatDate = (dateStr: string) => {
@@ -148,6 +155,29 @@ const PaymentsManager: React.FC = () => {
     // Download file
     link.click();
     document.body.removeChild(link);
+  };
+
+  // Calculate paginated data
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = filteredPayments.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.max(1, Math.ceil(filteredPayments.length / itemsPerPage));
+
+  // Pagination handlers
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
   };
 
   const calculateTotals = () => {
@@ -286,43 +316,63 @@ const PaymentsManager: React.FC = () => {
               <p>No payment records found.</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Class ID</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Tutor</TableHead>
-                  <TableHead>Student</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Student Payment</TableHead>
-                  <TableHead>Tutor Payment</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredPayments.map((payment) => (
-                  <TableRow key={payment.id}>
-                    <TableCell>{payment.id}</TableCell>
-                    <TableCell>{formatDate(payment.date)}</TableCell>
-                    <TableCell>{payment.tutorName}</TableCell>
-                    <TableCell>{payment.studentName}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-col">
-                        <div>${payment.classCost.toFixed(2)}</div>
-                        <div className="text-sm text-muted-foreground">
-                          Tutor: ${payment.tutorCost.toFixed(2)}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {getStatusBadge(payment.studentPaymentStatus)}
-                    </TableCell>
-                    <TableCell>
-                      {getStatusBadge(payment.tutorPaymentStatus)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Class ID</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Tutor</TableHead>
+                      <TableHead>Student</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Student Payment</TableHead>
+                      <TableHead>Tutor Payment</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {currentItems.map((payment) => (
+                      <TableRow key={payment.id}>
+                        <TableCell>{payment.id}</TableCell>
+                        <TableCell>{formatDate(payment.date)}</TableCell>
+                        <TableCell>{payment.tutorName}</TableCell>
+                        <TableCell>{payment.studentName}</TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <div>${payment.classCost.toFixed(2)}</div>
+                            <div className="text-sm text-muted-foreground">
+                              Tutor: ${payment.tutorCost.toFixed(2)}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {getStatusBadge(payment.studentPaymentStatus)}
+                        </TableCell>
+                        <TableCell>
+                          {getStatusBadge(payment.tutorPaymentStatus)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              
+              {/* Pagination Controls */}
+              <PaginationControls 
+                currentPage={currentPage}
+                totalPages={totalPages}
+                hasNextPage={currentPage < totalPages}
+                hasPrevPage={currentPage > 1}
+                onNextPage={handleNextPage}
+                onPrevPage={handlePrevPage}
+                onPageChange={handlePageChange}
+                className="mt-4"
+              />
+              
+              <div className="text-sm text-muted-foreground text-center mt-2">
+                Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredPayments.length)} of {filteredPayments.length} entries
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
