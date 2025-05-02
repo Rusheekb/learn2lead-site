@@ -7,6 +7,7 @@ interface TutorOverviewCardProps {
   value: string;
   description: string;
   link: string;
+  ariaLabel?: string;
 }
 
 const TutorOverviewCard: React.FC<TutorOverviewCardProps> = ({
@@ -14,6 +15,7 @@ const TutorOverviewCard: React.FC<TutorOverviewCardProps> = ({
   value,
   description,
   link,
+  ariaLabel,
 }) => {
   return (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-sm border dark:border-gray-700 hover:shadow-md transition-shadow">
@@ -23,6 +25,7 @@ const TutorOverviewCard: React.FC<TutorOverviewCardProps> = ({
       <Link
         to={link}
         className="text-tutoring-blue hover:text-tutoring-teal dark:text-tutoring-teal dark:hover:text-tutoring-blue text-sm mt-4 inline-block"
+        aria-label={ariaLabel || `View details for ${title}`}
       >
         View Details →
       </Link>
