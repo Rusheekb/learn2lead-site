@@ -22,28 +22,28 @@ const StudentSelectField: React.FC<StudentSelectFieldProps> = ({
     name="relationshipId"
     render={({ field }) => (
       <FormItem>
-        <FormLabel>Student</FormLabel>
+        <FormLabel className="dark:text-gray-100">Student</FormLabel>
         <Select 
           onValueChange={field.onChange}
           defaultValue={field.value}
         >
           <FormControl>
-            <SelectTrigger>
+            <SelectTrigger className="bg-white dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700">
               <SelectValue placeholder="Select student" />
             </SelectTrigger>
           </FormControl>
-          <SelectContent>
+          <SelectContent className="bg-white dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700">
             {relationships.map(rel => {
               const student = assignedStudents.find(s => s.id === rel.student_id);
               return (
-                <SelectItem key={rel.id} value={rel.id}>
+                <SelectItem key={rel.id} value={rel.id} className="dark:text-gray-100 dark:hover:bg-gray-700 dark:focus:bg-gray-700">
                   {student?.name ?? 'Loading...'}
                 </SelectItem>
               );
             })}
           </SelectContent>
         </Select>
-        <FormMessage />
+        <FormMessage className="dark:text-red-400" />
       </FormItem>
     )}
   />

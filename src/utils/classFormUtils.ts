@@ -9,7 +9,7 @@ const createBaseSchema = () => {
     startTime: z.string().min(1, { message: 'Start time is required' }),
     endTime: z.string().min(1, { message: 'End time is required' }),
     subject: z.string().min(1, { message: 'Subject is required' }),
-    zoomLink: z.string().url({ message: 'Please enter a valid URL' }).or(z.string().length(0)),
+    zoomLink: z.string().url({ message: 'Please enter a valid URL' }).min(1, { message: 'Zoom link is required' }),
     notes: z.string().optional(),
   });
 };

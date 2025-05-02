@@ -20,11 +20,15 @@ export const TitleField: React.FC<FormFieldsProps> = ({ form }) => (
     name="title"
     render={({ field }) => (
       <FormItem>
-        <FormLabel>Class Title</FormLabel>
+        <FormLabel className="dark:text-gray-100">Class Title</FormLabel>
         <FormControl>
-          <Input placeholder="Enter class title" {...field} />
+          <Input 
+            placeholder="Enter class title" 
+            className="bg-white dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700"
+            {...field} 
+          />
         </FormControl>
-        <FormMessage />
+        <FormMessage className="dark:text-red-400" />
       </FormItem>
     )}
   />
@@ -36,15 +40,15 @@ export const DateField: React.FC<FormFieldsProps> = ({ form }) => (
     name="date"
     render={({ field }) => (
       <FormItem className="flex flex-col">
-        <FormLabel>Date</FormLabel>
+        <FormLabel className="dark:text-gray-100">Date</FormLabel>
         <Popover>
           <PopoverTrigger asChild>
             <FormControl>
               <Button
                 variant="outline"
                 className={cn(
-                  'w-full justify-start text-left font-normal',
-                  !field.value && 'text-muted-foreground'
+                  'w-full justify-start text-left font-normal bg-white dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700',
+                  !field.value && 'text-muted-foreground dark:text-gray-400'
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
@@ -52,7 +56,7 @@ export const DateField: React.FC<FormFieldsProps> = ({ form }) => (
               </Button>
             </FormControl>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
+          <PopoverContent className="w-auto p-0 bg-white dark:bg-gray-800 dark:border-gray-700" align="start">
             <Calendar
               mode="single"
               selected={field.value}
@@ -62,7 +66,7 @@ export const DateField: React.FC<FormFieldsProps> = ({ form }) => (
             />
           </PopoverContent>
         </Popover>
-        <FormMessage />
+        <FormMessage className="dark:text-red-400" />
       </FormItem>
     )}
   />
@@ -74,11 +78,15 @@ export const TimeField: React.FC<FormFieldsProps & { name: "startTime" | "endTim
     name={name}
     render={({ field }) => (
       <FormItem>
-        <FormLabel>{label}</FormLabel>
+        <FormLabel className="dark:text-gray-100">{label}</FormLabel>
         <FormControl>
-          <Input type="time" {...field} />
+          <Input 
+            type="time" 
+            className="bg-white dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700"
+            {...field} 
+          />
         </FormControl>
-        <FormMessage />
+        <FormMessage className="dark:text-red-400" />
       </FormItem>
     )}
   />
@@ -90,11 +98,15 @@ export const SubjectField: React.FC<FormFieldsProps> = ({ form }) => (
     name="subject"
     render={({ field }) => (
       <FormItem>
-        <FormLabel>Subject</FormLabel>
+        <FormLabel className="dark:text-gray-100">Subject</FormLabel>
         <FormControl>
-          <Input placeholder="Enter subject" {...field} />
+          <Input 
+            placeholder="Enter subject" 
+            className="bg-white dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700"
+            {...field} 
+          />
         </FormControl>
-        <FormMessage />
+        <FormMessage className="dark:text-red-400" />
       </FormItem>
     )}
   />
@@ -106,11 +118,15 @@ export const ZoomLinkField: React.FC<FormFieldsProps> = ({ form }) => (
     name="zoomLink"
     render={({ field }) => (
       <FormItem>
-        <FormLabel>Zoom Meeting Link</FormLabel>
+        <FormLabel className="dark:text-gray-100">Zoom Meeting Link</FormLabel>
         <FormControl>
-          <Input placeholder="Enter Zoom meeting link" {...field} />
+          <Input 
+            placeholder="Enter Zoom meeting link" 
+            className="bg-white dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700"
+            {...field} 
+          />
         </FormControl>
-        <FormMessage />
+        <FormMessage className="dark:text-red-400" />
       </FormItem>
     )}
   />
@@ -122,11 +138,15 @@ export const NotesField: React.FC<FormFieldsProps> = ({ form }) => (
     name="notes"
     render={({ field }) => (
       <FormItem>
-        <FormLabel>Notes</FormLabel>
+        <FormLabel className="dark:text-gray-100">Notes</FormLabel>
         <FormControl>
-          <Input placeholder="Add any notes (optional)" {...field} />
+          <Input 
+            placeholder="Add any notes (optional)" 
+            className="bg-white dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700"
+            {...field} 
+          />
         </FormControl>
-        <FormMessage />
+        <FormMessage className="dark:text-red-400" />
       </FormItem>
     )}
   />
