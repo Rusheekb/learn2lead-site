@@ -1,8 +1,25 @@
-import React from 'react';
+
+import React, { useState, useEffect } from 'react';
 import TutorOverviewCard from './TutorOverviewCard';
 import TutorQuickAccessCard from './TutorQuickAccessCard';
+import TutorOverviewSkeleton from './TutorOverviewSkeleton';
 
 const TutorOverviewSection: React.FC = () => {
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate loading data
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return <TutorOverviewSkeleton />;
+  }
+
   return (
     <div className="space-y-8">
       <h2 className="text-2xl font-bold">Tutor Dashboard</h2>

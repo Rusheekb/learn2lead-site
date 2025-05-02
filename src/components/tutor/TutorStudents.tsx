@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import StudentList from './StudentList';
+import StudentListSkeleton from './StudentListSkeleton';
 import StudentDetailsDialog from './StudentDetailsDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchRelationshipsForTutor } from '@/services/relationships/fetch';
@@ -76,9 +77,7 @@ const TutorStudents: React.FC = () => {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="flex justify-center items-center py-8">
-              <p>Loading students...</p>
-            </div>
+            <StudentListSkeleton />
           ) : myStudents.length > 0 ? (
             <StudentList
               students={myStudents}
