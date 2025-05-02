@@ -1,4 +1,6 @@
+
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -26,6 +28,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
   onSave,
   onCancel,
 }) => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     first_name: profile.first_name || '',
     last_name: profile.last_name || '',
@@ -97,7 +100,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Edit Profile</CardTitle>
+        <CardTitle>{t('profile.editProfile')}</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -114,7 +117,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
                 htmlFor="avatar"
                 className="cursor-pointer px-4 py-2 border rounded-md bg-gray-100 hover:bg-gray-200"
               >
-                {isUploading ? 'Uploading...' : 'Change Avatar'}
+                {isUploading ? t('profile.uploading') : t('profile.changeAvatar')}
               </Label>
               <Input
                 id="avatar"
@@ -129,49 +132,49 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
 
           <div className="space-y-4">
             <div>
-              <Label htmlFor="first_name">First Name</Label>
+              <Label htmlFor="first_name">{t('profile.firstName')}</Label>
               <Input
                 id="first_name"
                 name="first_name"
                 value={formData.first_name}
                 onChange={handleInputChange}
-                placeholder="Enter your first name"
+                placeholder={t('profile.firstName')}
               />
             </div>
 
             <div>
-              <Label htmlFor="last_name">Last Name</Label>
+              <Label htmlFor="last_name">{t('profile.lastName')}</Label>
               <Input
                 id="last_name"
                 name="last_name"
                 value={formData.last_name}
                 onChange={handleInputChange}
-                placeholder="Enter your last name"
+                placeholder={t('profile.lastName')}
               />
             </div>
 
             <div>
-              <Label htmlFor="bio">Bio</Label>
+              <Label htmlFor="bio">{t('profile.bio')}</Label>
               <Textarea
                 id="bio"
                 name="bio"
                 value={formData.bio}
                 onChange={handleInputChange}
-                placeholder="Tell us about yourself"
+                placeholder={t('profile.bio')}
                 className="resize-none h-32"
               />
             </div>
 
             <div>
-              <Label>Email</Label>
+              <Label>{t('auth.email')}</Label>
               <Input value={profile.email} disabled className="bg-gray-100" />
               <p className="text-sm text-gray-500 mt-1">
-                Email cannot be changed
+                {t('profile.emailCannotBeChanged')}
               </p>
             </div>
 
             <div>
-              <Label>Role</Label>
+              <Label>{t('profile.role')}</Label>
               <Input
                 value={
                   profile.role.charAt(0).toUpperCase() + profile.role.slice(1)
@@ -180,7 +183,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
                 className="bg-gray-100"
               />
               <p className="text-sm text-gray-500 mt-1">
-                Role is assigned by administrators
+                {t('profile.roleAssignedByAdmin')}
               </p>
             </div>
           </div>
@@ -189,11 +192,11 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
       <CardFooter className="flex justify-end space-x-2">
         {onCancel && (
           <Button variant="ghost" onClick={onCancel}>
-            Cancel
+            {t('common.cancel')}
           </Button>
         )}
         <Button onClick={handleSubmit} disabled={isSaving}>
-          {isSaving ? 'Saving...' : 'Save Changes'}
+          {isSaving ? t('profile.saving') : t('profile.saveChanges')}
         </Button>
       </CardFooter>
     </Card>

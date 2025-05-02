@@ -1,5 +1,6 @@
 
 import { useState, useEffect, createContext, useContext } from 'react';
+import { useTranslation } from 'react-i18next';
 import { analytics, EventName, EventCategory } from '@/services/analytics/analyticsService';
 
 interface SidebarContextType {
@@ -10,6 +11,7 @@ interface SidebarContextType {
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
 
 export function SidebarProvider({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation();
   const [isSidebarExpanded, setSidebarExpanded] = useState(() => {
     const saved = localStorage.getItem('sidebar-expanded');
     return saved !== null ? JSON.parse(saved) : true; // Default to expanded

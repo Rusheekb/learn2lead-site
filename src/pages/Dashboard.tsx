@@ -1,5 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Navigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
@@ -11,6 +11,7 @@ import { useAnalyticsTracker } from '@/hooks/useAnalyticsTracker';
 import { EventName } from '@/services/analytics/analyticsService';
 
 const Dashboard = () => {
+  const { t } = useTranslation();
   const [selectedSubject, setSelectedSubject] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { userRole, user } = useAuth();
@@ -100,7 +101,7 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold dark:text-gray-100">Student Dashboard</h2>
+      <h2 className="text-2xl font-bold dark:text-gray-100">{t('dashboard.studentDashboard')}</h2>
       {renderContent()}
     </div>
   );

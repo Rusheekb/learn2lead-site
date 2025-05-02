@@ -1,5 +1,5 @@
-
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { FileDown, Printer, RefreshCw, Download, Upload, Loader } from 'lucide-react';
 import {
@@ -24,6 +24,7 @@ import useClassLogs from '@/hooks/useClassLogs';
 import { ExportFormat } from '@/types/classTypes';
 
 const ClassLogs: React.FC = () => {
+  const { t } = useTranslation();
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const {
     searchTerm,
@@ -74,7 +75,7 @@ const ClassLogs: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Class Logs</h2>
+        <h2 className="text-2xl font-bold">{t('classLogs.title')}</h2>
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
@@ -83,7 +84,7 @@ const ClassLogs: React.FC = () => {
             className="flex items-center gap-2"
           >
             <Upload className="h-4 w-4" />
-            Import CSV
+            {t('classLogs.importCSV')}
           </Button>
           <Button
             variant="outline"
@@ -93,7 +94,7 @@ const ClassLogs: React.FC = () => {
             disabled={isLoading}
           >
             <RefreshCw className="h-4 w-4" />
-            {isLoading ? 'Refreshing...' : 'Refresh'}
+            {isLoading ? t('classLogs.refreshing') : t('classLogs.refresh')}
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -108,17 +109,17 @@ const ClassLogs: React.FC = () => {
                 ) : (
                   <FileDown className="h-4 w-4" />
                 )}
-                {isExporting ? 'Exporting...' : 'Export'}
+                {isExporting ? t('classLogs.exporting') : t('classLogs.export')}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuItem onClick={() => handleExportFormat('csv')} disabled={isExporting}>
                 <Download className="h-4 w-4 mr-2" />
-                Export as CSV
+                {t('classLogs.exportAsCSV')}
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleExportFormat('pdf')} disabled={isExporting}>
                 <Printer className="h-4 w-4 mr-2" />
-                Export as PDF
+                {t('classLogs.exportAsPDF')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

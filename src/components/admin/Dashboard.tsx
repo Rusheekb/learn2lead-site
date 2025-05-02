@@ -1,5 +1,6 @@
 
 import React, { Suspense, lazy } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 
@@ -7,6 +8,7 @@ import LoadingSpinner from '@/components/shared/LoadingSpinner';
 const DashboardContent = lazy(() => import('./dashboard/DashboardContent'));
 
 const Dashboard: React.FC = () => {
+  const { t } = useTranslation();
   const dashboardData = useDashboardData();
   console.log('Dashboard data:', dashboardData);
 

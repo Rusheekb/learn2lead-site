@@ -1,4 +1,3 @@
-
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -16,6 +15,8 @@ import PrivateRoute from './components/PrivateRoute';
 import { useRoleSync } from './hooks/useRoleSync';
 import { SidebarProvider } from '@/hooks/useSidebar';
 import DashboardShell from './components/shared/DashboardShell';
+import './i18n';
+import { LanguageProvider } from './contexts/LanguageContext';
 
 const Dashboard = React.lazy(() => import('./pages/Dashboard'));
 const TutorDashboard = React.lazy(() => import('./pages/TutorDashboard'));
@@ -56,57 +57,62 @@ const AdminDashboardWrapper = () => (
   </DashboardShell>
 );
 
-const App = () => {
+function App() {
   useRoleSync();
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <HelmetProvider>
-        <TooltipProvider>
-          <BrowserRouter>
-            <AuthProvider>
-              <ThemeProvider>
-                <SidebarProvider>
-                  {/* All routes are rendered inside the ThemeProvider */}
-                  <Routes>
-                    {/* Public routes - ThemeProvider will ensure they're always in light mode */}
-                    <Route path="/" element={<Index />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/pricing" element={<Pricing />} />
-                    
-                    {/* Private routes - can toggle between dark/light mode */}
-                    <Route element={
-                      <>
-                        <Toaster />
-                        <Sonner />
-                        <PrivateRoute />
-                      </>
-                    }>
-                      <Route element={<PrivateRoute allowedRoles={['student']} />}>
-                        <Route path="/dashboard/*" element={<StudentDashboardWrapper />} />
-                        <Route path="/profile/*" element={<StudentDashboardWrapper />} />
-                      </Route>
+    // Add LanguageProvider to the provider tree
+    <ThemeProvider defaultTheme="system" enableSystem>
+      <LanguageProvider>
+        <QueryClientProvider client={queryClient}>
+          <HelmetProvider>
+            <TooltipProvider>
+              <BrowserRouter>
+                <AuthProvider>
+                  <ThemeProvider>
+                    <SidebarProvider>
+                      {/* All routes are rendered inside the ThemeProvider */}
+                      <Routes>
+                        {/* Public routes - ThemeProvider will ensure they're always in light mode */}
+                        <Route path="/" element={<Index />} />
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/pricing" element={<Pricing />} />
+                        
+                        {/* Private routes - can toggle between dark/light mode */}
+                        <Route element={
+                          <>
+                            <Toaster />
+                            <Sonner />
+                            <PrivateRoute />
+                          </>
+                        }>
+                          <Route element={<PrivateRoute allowedRoles={['student']} />}>
+                            <Route path="/dashboard/*" element={<StudentDashboardWrapper />} />
+                            <Route path="/profile/*" element={<StudentDashboardWrapper />} />
+                          </Route>
 
-                      <Route element={<PrivateRoute allowedRoles={['tutor']} />}>
-                        <Route path="/tutor-dashboard/*" element={<TutorDashboardWrapper />} />
-                        <Route path="/tutor-profile/*" element={<TutorDashboardWrapper />} />
-                      </Route>
+                          <Route element={<PrivateRoute allowedRoles={['tutor']} />}>
+                            <Route path="/tutor-dashboard/*" element={<TutorDashboardWrapper />} />
+                            <Route path="/tutor-profile/*" element={<TutorDashboardWrapper />} />
+                          </Route>
 
-                      <Route element={<PrivateRoute allowedRoles={['admin']} />}>
-                        <Route path="/admin-dashboard/*" element={<AdminDashboardWrapper />} />
-                      </Route>
-                    </Route>
+                          <Route element={<PrivateRoute allowedRoles={['admin']} />}>
+                            <Route path="/admin-dashboard/*" element={<AdminDashboardWrapper />} />
+                          </Route>
+                        </Route>
 
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </SidebarProvider>
-              </ThemeProvider>
-            </AuthProvider>
-          </BrowserRouter>
-        </TooltipProvider>
-      </HelmetProvider>
-    </QueryClientProvider>
+                        <Route path="*" element={<NotFound />} />
+                      </Routes>
+                    </SidebarProvider>
+                  </ThemeProvider>
+                </AuthProvider>
+              </BrowserRouter>
+            </TooltipProvider>
+          </HelmetProvider>
+        </QueryClientProvider>
+      </LanguageProvider>
+    </ThemeProvider>
   );
-};
+}
 
 export default App;

@@ -1,5 +1,5 @@
-
 import React, { useState, Suspense, lazy, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { UserDetailModal } from '@/components/admin/UserDetailModal';
 import { useQuery } from '@tanstack/react-query';
@@ -36,6 +36,7 @@ const fetchRelationships = async () => {
 };
 
 const AdminDashboard: React.FC = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<string>('analytics');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const { trackNavigation, trackPageView } = useAnalyticsTracker();
@@ -93,7 +94,7 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Admin Dashboard</h2>
+      <h2 className="text-2xl font-bold">{t('dashboard.adminDashboard')}</h2>
 
       <Tabs 
         value={activeTab} 
@@ -103,12 +104,12 @@ const AdminDashboard: React.FC = () => {
         className="w-full"
       >
         <TabsList className="grid grid-cols-6 mb-6">
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          <TabsTrigger value="schedule">Class Logs</TabsTrigger>
-          <TabsTrigger value="payments">Payments</TabsTrigger>
-          <TabsTrigger value="tutors">Tutors</TabsTrigger>
-          <TabsTrigger value="students">Students</TabsTrigger>
-          <TabsTrigger value="relationships">Relationships</TabsTrigger>
+          <TabsTrigger value="analytics">{t('navigation.analytics')}</TabsTrigger>
+          <TabsTrigger value="schedule">{t('navigation.classLogs')}</TabsTrigger>
+          <TabsTrigger value="payments">{t('navigation.payments')}</TabsTrigger>
+          <TabsTrigger value="tutors">{t('navigation.tutors')}</TabsTrigger>
+          <TabsTrigger value="students">{t('navigation.students')}</TabsTrigger>
+          <TabsTrigger value="relationships">{t('navigation.relationships')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="analytics" className="pt-2">
