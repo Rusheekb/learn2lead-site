@@ -8,7 +8,7 @@ export function useSidebar() {
   });
 
   const toggleSidebar = () => {
-    setSidebarExpanded(prev => !prev);
+    setSidebarExpanded((prev: boolean) => !prev);
   };
 
   useEffect(() => {
