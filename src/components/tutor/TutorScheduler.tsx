@@ -1,12 +1,10 @@
 
 import React from 'react';
-import { toast } from 'sonner';
-import { mockStudents } from './mock-data-students';
-import SchedulerHeader from './SchedulerHeader';
-import SchedulerFilter from './SchedulerFilter';
-import CalendarWithEvents from './CalendarWithEvents';
-import ClassDialogs from './ClassDialogs';
 import { useTutorScheduler } from '@/hooks/useTutorScheduler';
+import TutorSchedulerHeader from './scheduler/TutorSchedulerHeader';
+import TutorSchedulerFilters from './scheduler/TutorSchedulerFilters';
+import TutorSchedulerCalendar from './scheduler/TutorSchedulerCalendar';
+import TutorSchedulerDialogs from './scheduler/TutorSchedulerDialogs';
 import TableSkeleton from '../common/TableSkeleton';
 
 const TutorScheduler: React.FC = () => {
@@ -54,7 +52,7 @@ const TutorScheduler: React.FC = () => {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <SchedulerHeader onAddClick={() => setIsAddEventOpen(true)} />
+        <TutorSchedulerHeader onAddClick={() => setIsAddEventOpen(true)} />
         <TableSkeleton 
           columns={['Date', 'Time', 'Student', 'Subject', 'Actions']} 
           rowCount={5} 
@@ -66,9 +64,9 @@ const TutorScheduler: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <SchedulerHeader onAddClick={() => setIsAddEventOpen(true)} />
-
-      <SchedulerFilter
+      <TutorSchedulerHeader onAddClick={() => setIsAddEventOpen(true)} />
+      
+      <TutorSchedulerFilters
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         subjectFilter={subjectFilter}
@@ -76,10 +74,9 @@ const TutorScheduler: React.FC = () => {
         studentFilter={studentFilter}
         setStudentFilter={setStudentFilter}
         allSubjects={allSubjects || []}
-        students={mockStudents}
       />
-
-      <CalendarWithEvents
+      
+      <TutorSchedulerCalendar
         selectedDate={selectedDate}
         setSelectedDate={setSelectedDate}
         scheduledClasses={filteredClasses}
@@ -87,8 +84,8 @@ const TutorScheduler: React.FC = () => {
         onAddEventClick={() => setIsAddEventOpen(true)}
         getUnreadMessageCount={getUnreadMessageCount}
       />
-
-      <ClassDialogs
+      
+      <TutorSchedulerDialogs
         isViewEventOpen={isViewEventOpen}
         setIsViewEventOpen={setIsViewEventOpen}
         isAddEventOpen={isAddEventOpen}
@@ -102,9 +99,8 @@ const TutorScheduler: React.FC = () => {
         setActiveEventTab={setActiveEventTab}
         studentMessages={studentMessages}
         studentUploads={studentUploads}
-        students={mockStudents}
-        onCreateEvent={() => handleCreateEvent(newEvent as any)}
-        onEditEvent={() => handleEditEvent(selectedEvent as any)}
+        onCreateEvent={handleCreateEvent}
+        onEditEvent={handleEditEvent}
         onDuplicateEvent={handleDuplicateEvent}
         onDeleteEvent={handleDeleteEvent}
         onResetForm={resetNewEventForm}
