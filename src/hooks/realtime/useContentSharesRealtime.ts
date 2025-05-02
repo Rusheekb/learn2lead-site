@@ -1,5 +1,6 @@
+
 import { useEffect } from 'react';
-import { ContentShareItem } from '@/types/tutorTypes';
+import { ContentShareItem } from '@/types/sharedTypes';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
