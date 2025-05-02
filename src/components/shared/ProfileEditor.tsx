@@ -117,7 +117,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
                 htmlFor="avatar"
                 className="cursor-pointer px-4 py-2 border rounded-md bg-gray-100 hover:bg-gray-200"
               >
-                {isUploading ? t('profile.uploading') : t('profile.changeAvatar')}
+                {isUploading ? String(t('profile.uploading')) : String(t('profile.changeAvatar'))}
               </Label>
               <Input
                 id="avatar"
@@ -138,7 +138,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
                 name="first_name"
                 value={formData.first_name}
                 onChange={handleInputChange}
-                placeholder={t('profile.firstName')}
+                placeholder={String(t('profile.firstName'))}
               />
             </div>
 
@@ -149,7 +149,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
                 name="last_name"
                 value={formData.last_name}
                 onChange={handleInputChange}
-                placeholder={t('profile.lastName')}
+                placeholder={String(t('profile.lastName'))}
               />
             </div>
 
@@ -160,7 +160,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
                 name="bio"
                 value={formData.bio}
                 onChange={handleInputChange}
-                placeholder={t('profile.bio')}
+                placeholder={String(t('profile.bio'))}
                 className="resize-none h-32"
               />
             </div>
