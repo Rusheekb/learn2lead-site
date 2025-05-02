@@ -90,12 +90,6 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
           >
             Cancel
           </Button>
-          <Button
-            onClick={onCreateEvent}
-            className="bg-tutoring-blue hover:bg-tutoring-blue/90 dark:bg-tutoring-teal dark:hover:bg-tutoring-teal/90"
-          >
-            Schedule Class
-          </Button>
         </div>
       }
     >
@@ -106,6 +100,7 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
         relationships={relationships}
         selectedRelId={selectedRelId}
         setSelectedRelId={setSelectedRelId}
+        onSubmit={onCreateEvent}
       />
     </Modal>
   );

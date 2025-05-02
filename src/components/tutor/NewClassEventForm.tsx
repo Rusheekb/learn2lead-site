@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Form } from '@/components/ui/form';
+import { Button } from '@/components/ui/button';
 import { Student } from '@/types/sharedTypes';
 import { TutorStudentRelationship } from '@/services/relationships/types';
 import StudentSelectField from './forms/StudentSelectField';
@@ -14,6 +15,7 @@ interface NewClassEventFormProps {
   relationships: TutorStudentRelationship[];
   selectedRelId: string;
   setSelectedRelId: (id: string) => void;
+  onSubmit?: () => void;
 }
 
 const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
@@ -23,6 +25,7 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
   relationships,
   selectedRelId,
   setSelectedRelId,
+  onSubmit,
 }) => {
   const { form } = useNewClassEventForm(
     newEvent, 
@@ -33,15 +36,39 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
     setSelectedRelId
   );
 
+  // Handle form submission
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    form.handleSubmit(() => {
+      if (onSubmit) onSubmit();
+    })();
+  };
+
+  // Check if form is valid for button state
+  const isFormValid = form.formState.isValid;
+  const isDirty = form.formState.isDirty;
+
   return (
     <Form {...form}>
-      <form className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <FormFieldsGroup form={form} />
         <StudentSelectField 
           form={form} 
           relationships={relationships} 
           assignedStudents={assignedStudents} 
         />
+
+        {onSubmit && (
+          <div className="flex justify-end mt-6">
+            <Button 
+              type="submit" 
+              disabled={!isFormValid || !isDirty}
+              className="bg-tutoring-blue hover:bg-tutoring-blue/90 text-white"
+            >
+              Schedule Class
+            </Button>
+          </div>
+        )}
       </form>
     </Form>
   );

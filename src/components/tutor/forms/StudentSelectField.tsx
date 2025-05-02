@@ -22,7 +22,7 @@ const StudentSelectField: React.FC<StudentSelectFieldProps> = ({
     name="relationshipId"
     render={({ field }) => (
       <FormItem>
-        <FormLabel className="dark:text-gray-100">Student</FormLabel>
+        <FormLabel className="dark:text-gray-100">Student <span className="text-red-500">*</span></FormLabel>
         <Select 
           onValueChange={field.onChange}
           defaultValue={field.value}
@@ -43,7 +43,7 @@ const StudentSelectField: React.FC<StudentSelectFieldProps> = ({
             })}
           </SelectContent>
         </Select>
-        <FormMessage className="dark:text-red-400" />
+        <FormMessage className="text-red-500 dark:text-red-400 text-xs" />
       </FormItem>
     )}
   />

@@ -30,6 +30,7 @@ export const useNewClassEventForm = (
       zoomLink: newEvent.zoomLink || '',
       notes: newEvent.notes || '',
     },
+    mode: 'onChange', // Validate on change for more immediate feedback
   });
 
   // Subscribe to form changes
@@ -79,4 +80,3 @@ export const useNewClassEventForm = (
 
   return { form };
 };
-
