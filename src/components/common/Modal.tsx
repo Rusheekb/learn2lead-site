@@ -28,6 +28,7 @@ export interface ModalProps {
   className?: string;
   maxWidth?: string;
   maxHeight?: string;
+  ariaLabel?: string;
 }
 
 const Modal: React.FC<ModalProps> = ({
@@ -48,7 +49,10 @@ const Modal: React.FC<ModalProps> = ({
   className = "",
   maxWidth = "max-w-xl",
   maxHeight = "max-h-[80vh]",
+  ariaLabel,
 }) => {
+  const titleId = React.useId();
+  const descriptionId = React.useId();
   const handleCancel = () => {
     if (onCancel) {
       onCancel();
@@ -58,12 +62,20 @@ const Modal: React.FC<ModalProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className={`${maxWidth} ${maxHeight} overflow-y-auto mx-4 w-[calc(100vw-2rem)] sm:w-auto ${className}`}>
+    <Dialog 
+      open={isOpen} 
+      onOpenChange={onOpenChange}
+      aria-labelledby={title ? titleId : undefined}
+      aria-describedby={description ? descriptionId : undefined}
+    >
+      <DialogContent 
+        className={`${maxWidth} ${maxHeight} overflow-y-auto mx-4 w-[calc(100vw-2rem)] sm:w-auto ${className}`}
+        aria-label={ariaLabel}
+      >
         {(title || description) && (
           <DialogHeader>
-            {title && <DialogTitle className="text-xl break-words">{title}</DialogTitle>}
-            {description && <DialogDescription className="break-words">{description}</DialogDescription>}
+            {title && <DialogTitle id={titleId} className="text-xl break-words">{title}</DialogTitle>}
+            {description && <DialogDescription id={descriptionId} className="break-words">{description}</DialogDescription>}
           </DialogHeader>
         )}
         
@@ -76,7 +88,12 @@ const Modal: React.FC<ModalProps> = ({
             {footer || (
               <>
                 {showCancel && (
-                  <Button variant="outline" onClick={handleCancel} className="w-full sm:w-auto">
+                  <Button 
+                    variant="outline" 
+                    onClick={handleCancel} 
+                    className="w-full sm:w-auto focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-tutoring-blue dark:focus-visible:ring-tutoring-teal"
+                    aria-label={cancelText}
+                  >
                     {cancelText}
                   </Button>
                 )}
@@ -85,7 +102,8 @@ const Modal: React.FC<ModalProps> = ({
                     variant={confirmVariant} 
                     onClick={onConfirm}
                     disabled={isConfirmLoading}
-                    className="w-full sm:w-auto"
+                    className="w-full sm:w-auto focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-tutoring-blue dark:focus-visible:ring-tutoring-teal"
+                    aria-label={isConfirmLoading ? "Loading..." : confirmText}
                   >
                     {isConfirmLoading ? "Loading..." : confirmText}
                   </Button>

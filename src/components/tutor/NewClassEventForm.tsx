@@ -50,7 +50,11 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
 
   return (
     <Form {...form}>
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form 
+        onSubmit={handleSubmit} 
+        className="space-y-4"
+        aria-label="Schedule new class form"
+      >
         <FormFieldsGroup form={form} />
         <StudentSelectField 
           form={form} 
@@ -63,7 +67,9 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
             <Button 
               type="submit" 
               disabled={!isFormValid || !isDirty}
-              className="bg-tutoring-blue hover:bg-tutoring-blue/90 text-white w-full sm:w-auto"
+              className="bg-tutoring-blue hover:bg-tutoring-blue/90 text-white w-full sm:w-auto focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-tutoring-blue"
+              aria-disabled={!isFormValid || !isDirty}
+              aria-label="Schedule class"
             >
               Schedule Class
             </Button>
