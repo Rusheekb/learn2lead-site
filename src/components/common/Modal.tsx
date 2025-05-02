@@ -59,22 +59,24 @@ const Modal: React.FC<ModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className={`${maxWidth} ${maxHeight} overflow-y-auto ${className}`}>
+      <DialogContent className={`${maxWidth} ${maxHeight} overflow-y-auto mx-4 w-[calc(100vw-2rem)] sm:w-auto ${className}`}>
         {(title || description) && (
           <DialogHeader>
-            {title && <DialogTitle>{title}</DialogTitle>}
-            {description && <DialogDescription>{description}</DialogDescription>}
+            {title && <DialogTitle className="text-xl break-words">{title}</DialogTitle>}
+            {description && <DialogDescription className="break-words">{description}</DialogDescription>}
           </DialogHeader>
         )}
         
-        {children}
+        <div className="overflow-y-auto">
+          {children}
+        </div>
         
         {(footer || showCancel || showConfirm) && (
-          <DialogFooter>
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0 mt-4">
             {footer || (
               <>
                 {showCancel && (
-                  <Button variant="outline" onClick={handleCancel}>
+                  <Button variant="outline" onClick={handleCancel} className="w-full sm:w-auto">
                     {cancelText}
                   </Button>
                 )}
@@ -83,6 +85,7 @@ const Modal: React.FC<ModalProps> = ({
                     variant={confirmVariant} 
                     onClick={onConfirm}
                     disabled={isConfirmLoading}
+                    className="w-full sm:w-auto"
                   >
                     {isConfirmLoading ? "Loading..." : confirmText}
                   </Button>

@@ -10,18 +10,20 @@ interface DashboardSidebarProps {
   expanded: boolean;
   toggleSidebar: () => void;
   signOut: () => Promise<void>;
+  className?: string;
 }
 
 const DashboardSidebar = ({ 
   role, 
   expanded, 
   toggleSidebar,
-  signOut
+  signOut,
+  className = ''
 }: DashboardSidebarProps) => {
   return (
     <div className={`${
       expanded ? 'w-64' : 'w-20'
-    } transition-all duration-300 ease-in-out bg-gray-100 dark:bg-gray-800 shadow-md h-screen overflow-auto flex flex-col`}>
+    } transition-all duration-300 ease-in-out bg-gray-100 dark:bg-gray-800 shadow-md h-screen overflow-auto flex flex-col z-30 ${className}`}>
       <div className="p-4 flex items-center justify-between border-b dark:border-gray-700">
         <Link
           to="/"
@@ -39,7 +41,7 @@ const DashboardSidebar = ({
         </Link>
         <button
           onClick={toggleSidebar}
-          className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
+          className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 md:block hidden"
           aria-label="Toggle sidebar"
         >
           {expanded ? (

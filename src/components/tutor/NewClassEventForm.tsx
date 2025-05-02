@@ -63,7 +63,7 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
             <Button 
               type="submit" 
               disabled={!isFormValid || !isDirty}
-              className="bg-tutoring-blue hover:bg-tutoring-blue/90 text-white"
+              className="bg-tutoring-blue hover:bg-tutoring-blue/90 text-white w-full sm:w-auto"
             >
               Schedule Class
             </Button>

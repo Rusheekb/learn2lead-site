@@ -21,7 +21,7 @@ const StudentSelectField: React.FC<StudentSelectFieldProps> = ({
     control={form.control}
     name="relationshipId"
     render={({ field }) => (
-      <FormItem>
+      <FormItem className="w-full">
         <FormLabel className="dark:text-gray-100">Student <span className="text-red-500">*</span></FormLabel>
         <Select 
           onValueChange={field.onChange}
@@ -29,11 +29,11 @@ const StudentSelectField: React.FC<StudentSelectFieldProps> = ({
           value={field.value}
         >
           <FormControl>
-            <SelectTrigger className="bg-white dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700">
+            <SelectTrigger className="bg-white dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700 w-full">
               <SelectValue placeholder="Select student" />
             </SelectTrigger>
           </FormControl>
-          <SelectContent className="bg-white dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700">
+          <SelectContent className="bg-white dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700 max-h-60 overflow-y-auto">
             {relationships.length > 0 ? (
               relationships.map(rel => {
                 const student = assignedStudents.find(s => s.id === rel.student_id);

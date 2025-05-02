@@ -24,7 +24,7 @@ const TutorOverviewSection: React.FC = () => {
     <div className="space-y-8">
       <h2 className="text-2xl font-bold">Tutor Dashboard</h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
         <TutorOverviewCard
           title="Upcoming Classes"
           value="5"
@@ -46,7 +46,7 @@ const TutorOverviewSection: React.FC = () => {
       </div>
 
       <h3 className="text-xl font-medium mt-8 mb-4">Quick Access</h3>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
         <TutorQuickAccessCard
           title="Schedule a New Class"
           description="Create a new class session with a student"
