@@ -109,16 +109,14 @@ export function useTutorScheduler() {
         date: dateObject.toISOString().split('T')[0]
       };
       
-      // Explicitly check for boolean return value from createClass
-      const result = await createClass(newClassEvent);
-      const success = result === true;
+      // Call the createClass function and handle the response
+      // Don't compare its return value with true/false directly
+      await createClass(newClassEvent);
       
-      if (success) {
-        resetNewEventForm();
-        setIsAddEventOpen(false);
-        return true;
-      }
-      return false;
+      // Since we've reached this point without errors, consider it a success
+      resetNewEventForm();
+      setIsAddEventOpen(false);
+      return true;
     } catch (error) {
       console.error('Error creating event:', error);
       toast.error('Failed to create class');
@@ -141,16 +139,13 @@ export function useTutorScheduler() {
         date: dateObject.toISOString().split('T')[0]
       };
 
-      // Explicitly check for boolean return value
-      const result = await updateClass(event.id, updatedEvent);
-      const success = result === true;
+      // Call the updateClass function without comparing return value to boolean
+      await updateClass(event.id, updatedEvent);
       
-      if (success) {
-        setSelectedEvent(event);
-        setIsEditMode(false);
-        return true;
-      }
-      return false;
+      // Since we've reached this point without errors, consider it a success
+      setSelectedEvent(event);
+      setIsEditMode(false);
+      return true;
     } catch (error) {
       console.error('Error updating event:', error);
       toast.error('Failed to update class');
@@ -160,16 +155,13 @@ export function useTutorScheduler() {
 
   const handleDeleteEvent = async (eventId: string) => {
     try {
-      // Explicitly check for boolean return value
-      const result = await deleteClass(eventId);
-      const success = result === true;
+      // Call the deleteClass function without comparing return value to boolean
+      await deleteClass(eventId);
       
-      if (success) {
-        setIsViewEventOpen(false);
-        setSelectedEvent(null);
-        return true;
-      }
-      return false;
+      // Since we've reached this point without errors, consider it a success
+      setIsViewEventOpen(false);
+      setSelectedEvent(null);
+      return true;
     } catch (error) {
       console.error('Error deleting event:', error);
       toast.error('Failed to delete class');
