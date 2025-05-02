@@ -4,9 +4,11 @@ import { useTranslation } from 'react-i18next';
 import ThemeToggle from '../ThemeToggle';
 import LanguageSwitcher from '../LanguageSwitcher';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const AppearanceSettings: React.FC = () => {
   const { t } = useTranslation();
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <>
