@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -31,7 +32,7 @@ const TutorDashboard: React.FC = () => {
         <h2 className="text-2xl font-bold">Tutor Dashboard</h2>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid grid-cols-5 mb-6">
+          <TabsList className="grid grid-cols-5 mb-6 bg-white dark:bg-gray-800 dark:text-gray-100">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="schedule">Schedule</TabsTrigger>
             <TabsTrigger value="students">Students</TabsTrigger>

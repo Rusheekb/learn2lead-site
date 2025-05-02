@@ -32,12 +32,16 @@ const EditClassForm: React.FC<EditClassFormProps> = ({
           <FormFieldsGroup form={form} />
 
           <div className="flex justify-end gap-2 mt-6">
-            <Button variant="outline" onClick={onCancel}>
+            <Button 
+              variant="outline" 
+              onClick={onCancel}
+              className="dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"
+            >
               Cancel
             </Button>
             <Button
               onClick={onSave}
-              className="bg-tutoring-blue hover:bg-tutoring-blue/90"
+              className="bg-tutoring-blue hover:bg-tutoring-blue/90 dark:bg-tutoring-teal dark:hover:bg-tutoring-teal/90"
             >
               Save Changes
             </Button>
