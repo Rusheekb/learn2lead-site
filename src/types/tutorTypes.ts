@@ -1,4 +1,3 @@
-
 // Common status and payment types
 export type ClassStatus = 'scheduled' | 'completed' | 'cancelled' | 'pending';
 export type AttendanceStatus =
@@ -100,17 +99,17 @@ export interface Tutor {
   active?: boolean;
 }
 
-// Content sharing interface
+// Content sharing interface - updated to match sharedTypes.ts
 export interface ContentShareItem {
   id: string;
   sender_id: string;
   receiver_id: string;
   title: string;
-  description?: string | null;
-  file_path?: string | null;
-  content_type?: string | null;
+  description: string | null;
+  file_path: string | null;
+  content_type: string | null;
   shared_at: string;
-  viewed_at?: string | null;
+  viewed_at: string | null;
 }
 
 // Type guards

@@ -14,11 +14,8 @@ export const useContentShareData = (
   const [isLoading, setIsLoading] = useState(true);
   const [users, setUsers] = useState<Profile[]>([]);
   
-  // We need to cast the setter function to match the expected type in the realtime hook
-  const typedSetShares = setShares as React.Dispatch<React.SetStateAction<any[]>>;
-  
-  // Set up realtime subscription with the cast setter
-  useContentSharesRealtime(typedSetShares);
+  // Set up realtime subscription with explicit typing
+  useContentSharesRealtime(setShares);
 
   const loadShares = useCallback(async () => {
     setIsLoading(true);

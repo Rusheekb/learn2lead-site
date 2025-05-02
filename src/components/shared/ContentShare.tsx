@@ -2,9 +2,10 @@
 import React from 'react';
 import { Profile } from '@/hooks/useProfile';
 import ContentShareContainer from './content-share/ContentShareContainer';
+import { AppRole } from '@/types/profile';
 
 interface ContentShareProps {
-  role: 'student' | 'tutor' | 'admin';
+  role: AppRole;
   fetchUsers: () => Promise<Profile[]>;
 }
 

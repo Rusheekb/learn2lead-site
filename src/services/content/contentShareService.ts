@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { ContentShareItem } from '@/types/tutorTypes';
+import { ContentShareItem } from '@/types/sharedTypes';
 
 export async function fetchContentShares(): Promise<ContentShareItem[]> {
   const result = await supabase.from('content_shares').select('*');
