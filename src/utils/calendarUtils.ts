@@ -29,8 +29,8 @@ export const createGoogleCalendarUrl = (event: {
   date: string | Date;
   startTime: string;
   endTime: string;
-  zoomLink?: string;
-  notes?: string;
+  zoomLink?: string | null;
+  notes?: string | null;
 }): string => {
   try {
     // Format the date and times for Google Calendar
@@ -83,8 +83,8 @@ export const createOutlookCalendarUrl = (event: {
   date: string | Date;
   startTime: string;
   endTime: string;
-  zoomLink?: string;
-  notes?: string;
+  zoomLink?: string | null;
+  notes?: string | null;
 }): string => {
   try {
     // Format the date and times for Outlook Calendar
@@ -138,8 +138,8 @@ export const createIcsDownloadUrl = (event: {
   date: string | Date;
   startTime: string;
   endTime: string;
-  zoomLink?: string;
-  notes?: string;
+  zoomLink?: string | null;
+  notes?: string | null;
 }): string => {
   try {
     // Format the date and times for ICS file

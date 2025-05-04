@@ -42,7 +42,10 @@ const CalendarLinks: React.FC<CalendarLinksProps> = ({
     }
     
     // Generate download URL and trigger download
-    const downloadUrl = createIcsDownloadUrl(classEvent);
+    const downloadUrl = createIcsDownloadUrl({
+      ...classEvent,
+      zoomLink: classEvent.zoomLink || undefined
+    });
     
     // Create a link element and trigger download
     const link = document.createElement('a');
@@ -58,8 +61,15 @@ const CalendarLinks: React.FC<CalendarLinksProps> = ({
     });
   };
   
-  const googleUrl = createGoogleCalendarUrl(classEvent);
-  const outlookUrl = createOutlookCalendarUrl(classEvent);
+  // Prepare event data with proper types for calendar functions
+  const eventForCalendar = {
+    ...classEvent,
+    zoomLink: classEvent.zoomLink || undefined,
+    notes: classEvent.notes || undefined
+  };
+  
+  const googleUrl = createGoogleCalendarUrl(eventForCalendar);
+  const outlookUrl = createOutlookCalendarUrl(eventForCalendar);
   
   const calendarDropdown = (
     <DropdownMenu>
