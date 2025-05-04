@@ -2,42 +2,14 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { format } from 'date-fns';
-import { AlertTriangle, Database, Download, Save, UploadCloud } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { useAnalyticsTracker } from '@/hooks/useAnalyticsTracker';
-
-interface BackupLog {
-  id: string;
-  name: string;
-  file_path: string;
-  size_bytes: number;
-  status: string;
-  created_by: string;
-  created_at: string;
-}
+import { BackupLog } from '@/types/backup';
+import BackupCard from '@/components/admin/backup/BackupCard';
+import CreateBackupDialog from '@/components/admin/backup/CreateBackupDialog';
+import RestoreBackupDialog from '@/components/admin/backup/RestoreBackupDialog';
+import RestoreConfirmDialog from '@/components/admin/backup/RestoreConfirmDialog';
 
 const AdminSettings: React.FC = () => {
   const { t } = useTranslation();
@@ -86,7 +58,7 @@ const AdminSettings: React.FC = () => {
       if (data.success) {
         toast({
           title: "Backup created successfully",
-          description: `Backup "${data.name}" was created at ${format(new Date(data.timestamp), 'PPpp')}`,
+          description: `Backup "${data.name}" was created`,
         });
         refetchBackups();
       } else {
@@ -178,179 +150,41 @@ const AdminSettings: React.FC = () => {
       
       <div className="grid md:grid-cols-2 gap-6">
         {/* Database Backup Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Database className="h-5 w-5" />
-              {t('admin.databaseBackup')}
-            </CardTitle>
-            <CardDescription>
-              {t('admin.manageBackups')}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium">{t('admin.availableBackups')}</h3>
-                <Badge variant="secondary">
-                  {isLoadingBackups ? 'Loading...' : `${backups.length} backups`}
-                </Badge>
-              </div>
-              
-              <div className="border rounded-md">
-                {isLoadingBackups ? (
-                  <div className="p-4 text-center text-muted-foreground">
-                    {t('loading')}...
-                  </div>
-                ) : backups.length > 0 ? (
-                  <div className="divide-y">
-                    {backups.map((backup: BackupLog) => (
-                      <div key={backup.id} className="p-3 flex justify-between items-center hover:bg-muted/50">
-                        <div>
-                          <p className="font-medium">{backup.name}</p>
-                          <div className="text-sm text-muted-foreground flex flex-col gap-1">
-                            <span>{format(new Date(backup.created_at), 'PPpp')}</span>
-                            {backup.size_bytes && <span>{formatBytes(backup.size_bytes)}</span>}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="p-4 text-center text-muted-foreground">
-                    {t('admin.noBackupsAvailable')}
-                  </div>
-                )}
-              </div>
-            </div>
-          </CardContent>
-          <CardFooter className="flex justify-between">
-            <Button 
-              variant="outline" 
-              onClick={handleRestoreSelect}
-              disabled={backups.length === 0}
-            >
-              <Download className="mr-2 h-4 w-4" />
-              {t('admin.restoreBackup')}
-            </Button>
-            <Button onClick={handleCreateBackup}>
-              <Save className="mr-2 h-4 w-4" />
-              {t('admin.createBackup')}
-            </Button>
-          </CardFooter>
-        </Card>
+        <BackupCard 
+          backups={backups}
+          isLoadingBackups={isLoadingBackups}
+          onCreateBackup={handleCreateBackup}
+          onRestoreBackup={handleRestoreSelect}
+          formatBytes={formatBytes}
+        />
       </div>
 
       {/* Create Backup Dialog */}
-      <Dialog open={isBackupDialogOpen} onOpenChange={setIsBackupDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('admin.createBackup')}</DialogTitle>
-            <DialogDescription>
-              {t('admin.createBackupDescription')}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="flex items-center p-3 border rounded-md bg-muted/50">
-              <Save className="h-8 w-8 mr-3 text-primary" />
-              <div>
-                <h4 className="font-medium">{t('admin.createBackupNow')}</h4>
-                <p className="text-sm text-muted-foreground">
-                  {t('admin.backupProcessDescription')}
-                </p>
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsBackupDialogOpen(false)}>
-              {t('cancel')}
-            </Button>
-            <Button 
-              onClick={() => createBackup()}
-              disabled={isCreatingBackup}
-            >
-              {isCreatingBackup ? `${t('creating')}...` : t('admin.createBackup')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <CreateBackupDialog 
+        isOpen={isBackupDialogOpen}
+        onOpenChange={setIsBackupDialogOpen}
+        onConfirm={() => createBackup()}
+        isCreating={isCreatingBackup}
+      />
 
       {/* Restore Backup Dialog */}
-      <Dialog open={isRestoreDialogOpen} onOpenChange={setIsRestoreDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{t('admin.restoreBackup')}</DialogTitle>
-            <DialogDescription>
-              {t('admin.selectBackupToRestore')}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
-            {isLoadingBackups ? (
-              <div className="p-4 text-center text-muted-foreground">
-                {t('loading')}...
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {backups.map((backup: BackupLog) => (
-                  <div 
-                    key={backup.id}
-                    className="p-4 border rounded-md flex justify-between items-center hover:bg-muted/50 cursor-pointer"
-                    onClick={() => confirmRestore(backup)}
-                  >
-                    <div className="flex items-center">
-                      <Database className="h-10 w-10 mr-4 text-primary" />
-                      <div>
-                        <h4 className="font-medium">{backup.name}</h4>
-                        <div className="text-sm text-muted-foreground">
-                          <p>{format(new Date(backup.created_at), 'PPpp')}</p>
-                          {backup.size_bytes && <p>{formatBytes(backup.size_bytes)}</p>}
-                        </div>
-                      </div>
-                    </div>
-                    <Button variant="ghost">
-                      <Download className="h-5 w-5" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsRestoreDialogOpen(false)}>
-              {t('cancel')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <RestoreBackupDialog 
+        isOpen={isRestoreDialogOpen}
+        onOpenChange={setIsRestoreDialogOpen}
+        backups={backups}
+        isLoading={isLoadingBackups}
+        onSelectBackup={confirmRestore}
+        formatBytes={formatBytes}
+      />
 
       {/* Restore Confirmation Dialog */}
-      <AlertDialog open={isRestoreConfirmOpen} onOpenChange={setIsRestoreConfirmOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-destructive" />
-              {t('admin.confirmRestore')}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('admin.restoreWarning')}
-              <br/><br/>
-              <strong>{t('admin.selectedBackup')}:</strong> {selectedBackup?.name}
-              <br/>
-              <strong>{t('admin.createdAt')}:</strong> {selectedBackup ? format(new Date(selectedBackup.created_at), 'PPpp') : ''}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={executeRestore}
-              disabled={isRestoring}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {isRestoring ? `${t('restoring')}...` : t('admin.confirmRestore')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <RestoreConfirmDialog 
+        isOpen={isRestoreConfirmOpen}
+        onOpenChange={setIsRestoreConfirmOpen}
+        selectedBackup={selectedBackup}
+        onConfirm={executeRestore}
+        isRestoring={isRestoring}
+      />
     </div>
   );
 };
