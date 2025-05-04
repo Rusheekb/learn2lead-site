@@ -1,7 +1,7 @@
 
 import { useEffect, useState } from 'react';
 import { Notification } from '@/types/notificationTypes';
-import { fetchNotifications, markNotificationRead, markAllNotificationsRead } from '@/services/notificationService';
+import { fetchNotifications, markNotificationAsRead, markAllNotificationsAsRead } from '@/services/notificationService';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -25,7 +25,7 @@ export const useNotifications = () => {
 
   // Mark notification as read
   const markAsRead = async (id: string) => {
-    const success = await markNotificationRead(id);
+    const success = await markNotificationAsRead(id);
     if (success) {
       setNotifications(prev => 
         prev.map(notification => 
@@ -40,7 +40,7 @@ export const useNotifications = () => {
 
   // Mark all notifications as read
   const markAllAsRead = async () => {
-    const success = await markAllNotificationsRead();
+    const success = await markAllNotificationsAsRead();
     if (success) {
       setNotifications(prev => 
         prev.map(notification => ({ ...notification, read: true }))
