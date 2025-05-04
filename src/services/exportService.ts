@@ -10,15 +10,15 @@ import 'jspdf-autotable';
 interface ExportableClassData {
   Title: string;
   Subject: string;
-  'Tutor Name': string;
-  'Student Name': string;
+  'Tutor Name': string;  // Changed from string | undefined to string
+  'Student Name': string;  // Changed from string | undefined to string
   Date: string;
   'Start Time': string;
   'End Time': string;
-  Status: string | undefined;
-  Attendance: string | undefined;
-  'Zoom Link': string | null;
-  Notes: string | null;
+  Status: string;  // Changed from string | undefined to string
+  Attendance: string;  // Changed from string | undefined to string
+  'Zoom Link': string;  // Changed from string | null | undefined to string
+  Notes: string;  // Changed from string | null | undefined to string
 }
 
 // Helper function to format class data for export
@@ -28,18 +28,18 @@ const prepareClassDataForExport = (
   return classes.map((cls) => ({
     Title: cls.title,
     Subject: cls.subject,
-    'Tutor Name': cls.tutorName,
-    'Student Name': cls.studentName,
+    'Tutor Name': cls.tutorName || '',  // Added fallback empty string
+    'Student Name': cls.studentName || '',  // Added fallback empty string
     Date:
       cls.date instanceof Date
         ? cls.date.toISOString().split('T')[0]
         : String(cls.date),
     'Start Time': cls.startTime,
     'End Time': cls.endTime,
-    Status: cls.status,
-    Attendance: cls.attendance,
-    'Zoom Link': cls.zoomLink,
-    Notes: cls.notes,
+    Status: cls.status || '',  // Added fallback empty string
+    Attendance: cls.attendance || '',  // Added fallback empty string
+    'Zoom Link': cls.zoomLink || '',  // Added fallback empty string
+    Notes: cls.notes || '',  // Added fallback empty string
   }));
 };
 

@@ -194,7 +194,7 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
                       className="text-tutoring-blue hover:underline dark:text-tutoring-teal flex items-center"
                     >
                       <FileText className="h-4 w-4 mr-2" />
-                      <span>{getFilenameFromUrl(url)}</span>
+                      <span>{getFilenameFromUrl(url || '')}</span>
                     </a>
                     <Button 
                       variant="ghost" 
@@ -227,7 +227,7 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
         <ChatWindow
           classId={selectedEvent.id}
           tutorName="Tutor"
-          studentName={selectedEvent.studentName}
+          studentName={selectedEvent.studentName || ''}
           messages={studentMessages}
           onMarkAsRead={onMarkAsRead}
         />

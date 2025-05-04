@@ -28,7 +28,7 @@ export interface ClassEvent extends BaseEvent {
   endTime: string;
   subject: string;
   zoomLink?: string | null;
-  notes?: string | null;
+  notes: string | null; // Changed from string | null | undefined to match BaseEvent
   status?: ClassStatus;
   attendance?: AttendanceStatus;
   materials?: string[] | null;
