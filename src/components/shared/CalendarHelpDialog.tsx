@@ -141,7 +141,7 @@ const CalendarHelpDialog: React.FC<CalendarHelpDialogProps> = ({
                   <h4 className="font-medium">Apple Calendar</h4>
                   <ol className="text-sm list-decimal list-inside ml-2 space-y-1 mt-1">
                     <li>Open Calendar app</li>
-                    <li>Go to File > New Calendar Subscription</li>
+                    <li>Go to File {'>'}{'>'} New Calendar Subscription</li>
                     <li>Paste your calendar feed URL</li>
                     <li>Click "Subscribe"</li>
                   </ol>
@@ -152,7 +152,7 @@ const CalendarHelpDialog: React.FC<CalendarHelpDialogProps> = ({
                   <ol className="text-sm list-decimal list-inside ml-2 space-y-1 mt-1">
                     <li>Open Outlook</li>
                     <li>Go to Calendar view</li>
-                    <li>Click "Add calendar" > "Subscribe from web"</li>
+                    <li>Click "Add calendar" {'>'}{'>'} "Subscribe from web"</li>
                     <li>Paste your calendar feed URL</li>
                     <li>Click "Import"</li>
                   </ol>
