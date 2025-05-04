@@ -9,6 +9,10 @@ project_id = "lnhtlbatcufmsyoujuqh"
 [functions]
   [functions.check-upcoming-classes]
   verify_jwt = true
+  [functions.db-operations]
+  verify_jwt = true
+  [functions.auto-backup]
+  verify_jwt = false
 
 [auth]
   enabled = true

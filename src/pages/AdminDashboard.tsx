@@ -1,3 +1,4 @@
+
 import React, { useState, Suspense, lazy, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -19,6 +20,7 @@ const PaymentsManager = lazy(() => import('@/components/admin/PaymentsManager'))
 const TutorsManager = lazy(() => import('@/components/admin/TutorsManager'));
 const StudentsManager = lazy(() => import('@/components/admin/StudentsManager'));
 const RelationshipManager = lazy(() => import('@/components/admin/RelationshipManager'));
+const AdminSettings = lazy(() => import('@/pages/AdminSettings'));
 
 type User = (Student | Tutor) & { role: 'student' | 'tutor' };
 
@@ -103,13 +105,14 @@ const AdminDashboard: React.FC = () => {
         }}
         className="w-full"
       >
-        <TabsList className="grid grid-cols-6 mb-6">
+        <TabsList className="grid grid-cols-7 mb-6">
           <TabsTrigger value="analytics">{t('navigation.analytics')}</TabsTrigger>
           <TabsTrigger value="schedule">{t('navigation.classLogs')}</TabsTrigger>
           <TabsTrigger value="payments">{t('navigation.payments')}</TabsTrigger>
           <TabsTrigger value="tutors">{t('navigation.tutors')}</TabsTrigger>
           <TabsTrigger value="students">{t('navigation.students')}</TabsTrigger>
           <TabsTrigger value="relationships">{t('navigation.relationships')}</TabsTrigger>
+          <TabsTrigger value="settings">{t('navigation.settings')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="analytics" className="pt-2">
@@ -150,6 +153,12 @@ const AdminDashboard: React.FC = () => {
               students={students}
               onRelationshipChange={handleRelationshipChange}
             />
+          </Suspense>
+        </TabsContent>
+        
+        <TabsContent value="settings" className="pt-2">
+          <Suspense fallback={<LoadingSpinner />}>
+            <AdminSettings />
           </Suspense>
         </TabsContent>
       </Tabs>
