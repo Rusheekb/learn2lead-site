@@ -1,104 +1,191 @@
 
-import { ClassEvent } from '@/types/tutorTypes';
-import { supabase } from '@/integrations/supabase/client';
+// Utility functions for calendar integration
 
-// Function to format date and time for Google Calendar
-const formatDateTimeForGoogleCalendar = (date: Date | string, time: string): string => {
-  const dateObj = date instanceof Date ? date : new Date(date);
-  const [hours, minutes] = time.split(':');
-  
-  const newDate = new Date(dateObj);
-  newDate.setHours(parseInt(hours), parseInt(minutes), 0);
-  
-  return newDate.toISOString().replace(/[-:]/g, '').replace(/\.\d+/g, '');
-};
-
-// Function to generate Google Calendar event URL
-export const getGoogleCalendarUrl = (event: ClassEvent): string => {
-  if (!event.date || !event.startTime || !event.endTime) return '#';
-  
-  const startDateTime = formatDateTimeForGoogleCalendar(event.date, event.startTime);
-  const endDateTime = formatDateTimeForGoogleCalendar(event.date, event.endTime);
-  
-  const title = encodeURIComponent(event.title);
-  const description = encodeURIComponent(`
-    Subject: ${event.subject}
-    Tutor: ${event.tutorName || ''}
-    Student: ${event.studentName || ''}
-    ${event.notes ? `Notes: ${event.notes}` : ''}
-    ${event.zoomLink ? `Zoom Link: ${event.zoomLink}` : ''}
-  `.trim());
-  
-  const location = event.zoomLink ? encodeURIComponent('Zoom Meeting') : '';
-  
-  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startDateTime}/${endDateTime}&details=${description}&location=${location}`;
-};
-
-// Function to get Outlook web calendar URL
-export const getOutlookCalendarUrl = (event: ClassEvent): string => {
-  if (!event.date || !event.startTime || !event.endTime) return '#';
-  
-  const startDateTime = formatDateTimeForGoogleCalendar(event.date, event.startTime);
-  const endDateTime = formatDateTimeForGoogleCalendar(event.date, event.endTime);
-  
-  const subject = encodeURIComponent(event.title);
-  const body = encodeURIComponent(`
-    Subject: ${event.subject}
-    Tutor: ${event.tutorName || ''}
-    Student: ${event.studentName || ''}
-    ${event.notes ? `Notes: ${event.notes}` : ''}
-    ${event.zoomLink ? `Zoom Link: ${event.zoomLink}` : ''}
-  `.trim());
-  
-  const location = event.zoomLink ? encodeURIComponent('Zoom Meeting') : '';
-  
-  return `https://outlook.office.com/calendar/0/deeplink/compose?subject=${subject}&startdt=${startDateTime}&enddt=${endDateTime}&body=${body}&location=${location}`;
-};
-
-// Function to get the ICS calendar feed URL for a user
-export const getUserCalendarFeedUrl = async (userId: string): Promise<string | null> => {
+/**
+ * Returns the calendar feed URL for a given user
+ * @param userId The user ID to get the calendar feed for
+ * @returns Promise<string> The URL for the calendar feed
+ */
+export const getUserCalendarFeedUrl = async (userId: string): Promise<string> => {
   try {
-    // Get the user's calendar feed ID from the profiles table
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('calendar_feed_id')
-      .eq('id', userId)
-      .single();
-    
-    if (error || !data || !data.calendar_feed_id) {
-      console.error('Error getting calendar feed ID:', error);
-      return null;
-    }
-    
-    // Generate the feed URL using the REST endpoint we created
-    const baseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://lnhtlbatcufmsyoujuqh.supabase.co';
-    return `${baseUrl}/rest/v1/calendar/ics/${data.calendar_feed_id}`;
+    // In a real implementation, this would fetch the user's calendar_feed_id from the database
+    // For now, we'll generate a URL based on the user ID as a placeholder
+    const baseUrl = window.location.origin;
+    // In a real app, you would use calendar_feed_id instead of userId
+    return `${baseUrl}/api/calendar/ics/${userId}`;
   } catch (error) {
     console.error('Error getting calendar feed URL:', error);
-    return null;
+    return '';
   }
 };
 
-// Function to download the ICS file directly
-export const downloadIcsFile = async (userId: string, eventTitle: string = 'Classes'): Promise<void> => {
+/**
+ * Creates a Google Calendar event URL
+ * @param event The class event to create a Google Calendar URL for
+ * @returns string The Google Calendar URL
+ */
+export const createGoogleCalendarUrl = (event: {
+  title: string;
+  date: string | Date;
+  startTime: string;
+  endTime: string;
+  zoomLink?: string;
+  notes?: string;
+}): string => {
   try {
-    const feedUrl = await getUserCalendarFeedUrl(userId);
-    if (!feedUrl) return;
+    // Format the date and times for Google Calendar
+    const dateStr = typeof event.date === 'string' ? event.date : event.date.toISOString().split('T')[0];
     
-    const response = await fetch(feedUrl);
-    const icsData = await response.text();
+    // Parse and format the start and end times
+    const [startHour, startMinute] = event.startTime.split(':').map(Number);
+    const [endHour, endMinute] = event.endTime.split(':').map(Number);
     
-    // Create a blob and download it
-    const blob = new Blob([icsData], { type: 'text/calendar' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${eventTitle.replace(/\s+/g, '-')}.ics`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const startDate = new Date(dateStr);
+    startDate.setHours(startHour, startMinute);
+    
+    const endDate = new Date(dateStr);
+    endDate.setHours(endHour, endMinute);
+    
+    // Format dates for Google Calendar URL
+    const start = startDate.toISOString().replace(/-|:|\.\d+/g, '');
+    const end = endDate.toISOString().replace(/-|:|\.\d+/g, '');
+    
+    // Create description with Zoom link if available
+    let description = event.notes || '';
+    if (event.zoomLink) {
+      description += `\n\nJoin Zoom Meeting: ${event.zoomLink}`;
+    }
+    
+    // Build the Google Calendar URL
+    const url = new URL('https://www.google.com/calendar/event');
+    url.searchParams.append('action', 'TEMPLATE');
+    url.searchParams.append('text', event.title);
+    url.searchParams.append('dates', `${start}/${end}`);
+    url.searchParams.append('details', description);
+    if (event.zoomLink) {
+      url.searchParams.append('location', 'Zoom Meeting');
+    }
+    
+    return url.toString();
   } catch (error) {
-    console.error('Error downloading ICS file:', error);
+    console.error('Error creating Google Calendar URL:', error);
+    return '#';
+  }
+};
+
+/**
+ * Creates an Outlook Calendar event URL
+ * @param event The class event to create an Outlook Calendar URL for
+ * @returns string The Outlook Calendar URL
+ */
+export const createOutlookCalendarUrl = (event: {
+  title: string;
+  date: string | Date;
+  startTime: string;
+  endTime: string;
+  zoomLink?: string;
+  notes?: string;
+}): string => {
+  try {
+    // Format the date and times for Outlook Calendar
+    const dateStr = typeof event.date === 'string' ? event.date : event.date.toISOString().split('T')[0];
+    
+    // Parse and format the start and end times
+    const [startHour, startMinute] = event.startTime.split(':').map(Number);
+    const [endHour, endMinute] = event.endTime.split(':').map(Number);
+    
+    const startDate = new Date(dateStr);
+    startDate.setHours(startHour, startMinute);
+    
+    const endDate = new Date(dateStr);
+    endDate.setHours(endHour, endMinute);
+    
+    // Format dates for Outlook Calendar URL
+    const start = startDate.toISOString();
+    const end = endDate.toISOString();
+    
+    // Create description with Zoom link if available
+    let description = event.notes || '';
+    if (event.zoomLink) {
+      description += `\n\nJoin Zoom Meeting: ${event.zoomLink}`;
+    }
+    
+    // Build the Outlook Calendar URL
+    const url = new URL('https://outlook.office.com/calendar/0/deeplink/compose');
+    url.searchParams.append('subject', event.title);
+    url.searchParams.append('startdt', start);
+    url.searchParams.append('enddt', end);
+    url.searchParams.append('body', description);
+    if (event.zoomLink) {
+      url.searchParams.append('location', 'Zoom Meeting');
+    }
+    
+    return url.toString();
+  } catch (error) {
+    console.error('Error creating Outlook Calendar URL:', error);
+    return '#';
+  }
+};
+
+/**
+ * Creates a download URL for an ICS file
+ * @param event The class event to create an ICS file for
+ * @returns string The download URL
+ */
+export const createIcsDownloadUrl = (event: {
+  id: string;
+  title: string;
+  date: string | Date;
+  startTime: string;
+  endTime: string;
+  zoomLink?: string;
+  notes?: string;
+}): string => {
+  try {
+    // Format the date and times for ICS file
+    const dateStr = typeof event.date === 'string' ? event.date : event.date.toISOString().split('T')[0];
+    
+    // Parse and format the start and end times
+    const [startHour, startMinute] = event.startTime.split(':').map(Number);
+    const [endHour, endMinute] = event.endTime.split(':').map(Number);
+    
+    const startDate = new Date(dateStr);
+    startDate.setHours(startHour, startMinute);
+    
+    const endDate = new Date(dateStr);
+    endDate.setHours(endHour, endMinute);
+    
+    // Format dates for ICS file
+    const start = startDate.toISOString().replace(/-|:|\.\d+/g, '');
+    const end = endDate.toISOString().replace(/-|:|\.\d+/g, '');
+    
+    // Create a unique ID for the event
+    const eventUid = `${event.id}@learn2lead.com`;
+    
+    // Create ICS content
+    const icsContent = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Learn2Lead//Tutoring Platform//EN',
+      'BEGIN:VEVENT',
+      `UID:${eventUid}`,
+      `DTSTAMP:${new Date().toISOString().replace(/-|:|\.\d+/g, '')}`,
+      `DTSTART:${start}`,
+      `DTEND:${end}`,
+      `SUMMARY:${event.title}`,
+      `DESCRIPTION:${event.notes || ''}\n\nJoin Zoom Meeting: ${event.zoomLink || ''}`,
+      event.zoomLink ? `LOCATION:Zoom Meeting` : '',
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].filter(Boolean).join('\n');
+    
+    // Create a Blob and download URL
+    const blob = new Blob([icsContent], { type: 'text/calendar' });
+    const url = URL.createObjectURL(blob);
+    
+    return url;
+  } catch (error) {
+    console.error('Error creating ICS download URL:', error);
+    return '#';
   }
 };

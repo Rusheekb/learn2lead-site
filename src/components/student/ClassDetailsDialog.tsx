@@ -18,26 +18,35 @@ interface ClassDetailsDialogProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
   selectedClass: ClassItem | null;
-  activeTab: string;
-  setActiveTab: (tab: string) => void;
+  activeTab?: string;
+  setActiveTab?: (tab: string) => void;
+  studentUploads?: any[];
+  studentMessages?: any[];
+  onFileUpload?: (classId: string, file: File, note: string) => Promise<void>;
+  onSendMessage?: (classId: string, messageText: string) => Promise<void>;
 }
 
 const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
   isOpen,
   setIsOpen,
   selectedClass,
-  activeTab,
-  setActiveTab,
+  activeTab = "details",
+  setActiveTab = () => {},
+  studentUploads = [],
+  studentMessages = [],
+  onFileUpload,
+  onSendMessage,
 }) => {
   if (!selectedClass) return null;
 
-  // Convert ClassItem to ClassEvent format for CalendarLinks compatibility
+  // Convert ClassItem to compatible format for CalendarLinks
   const classEventFormat = {
     ...selectedClass,
     id: selectedClass.id,
     tutorId: '',
     studentId: '',
-    notes: selectedClass.notes || null
+    notes: selectedClass.notes || null,
+    status: selectedClass.status as any  // This type conversion addresses the ClassStatus issue
   };
 
   // Helper function to get filename from URL

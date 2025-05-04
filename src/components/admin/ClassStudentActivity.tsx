@@ -26,6 +26,7 @@ const ClassStudentActivity: React.FC = () => {
   const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false);
   const [classes, setClasses] = useState<ClassItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("details");
   const currentStudentName = 'Current Student'; // This would come from auth context in a real app
 
   // Setup realtime subscriptions
@@ -171,11 +172,13 @@ const ClassStudentActivity: React.FC = () => {
       </Card>
 
       <ClassDetailsDialog
-        open={isDetailsOpen}
-        onOpenChange={setIsDetailsOpen}
+        isOpen={isDetailsOpen}
+        setIsOpen={setIsDetailsOpen}
         selectedClass={selectedClass}
         studentUploads={studentUploads}
         studentMessages={studentMessages}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
         onFileUpload={handleFileUpload}
         onSendMessage={handleSendMessage}
       />
