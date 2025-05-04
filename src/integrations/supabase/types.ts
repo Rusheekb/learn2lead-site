@@ -218,6 +218,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           bio: string | null
+          calendar_feed_id: string | null
           created_at: string
           email: string
           first_name: string | null
@@ -229,6 +230,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           bio?: string | null
+          calendar_feed_id?: string | null
           created_at?: string
           email: string
           first_name?: string | null
@@ -240,6 +242,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           bio?: string | null
+          calendar_feed_id?: string | null
           created_at?: string
           email?: string
           first_name?: string | null
@@ -544,6 +547,18 @@ export type Database = {
       get_auth_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_ics_feed: {
+        Args: { feed_id: string }
+        Returns: string
+      }
+      get_user_calendar_events: {
+        Args: { user_id: string }
+        Returns: string
+      }
+      handle_rest_get_ics: {
+        Args: { request: Json }
+        Returns: Json
       }
     }
     Enums: {

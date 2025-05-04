@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Video, FileText, Upload, Trash2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -9,6 +10,7 @@ import { StudentMessage, StudentUpload } from '@/types/classTypes';
 import { StudentContent } from '@/components/shared/StudentContent';
 import { MessageCountBadge } from '@/components/shared/ClassBadges';
 import ChatWindow from '@/components/shared/ChatWindow';
+import CalendarLinks from '@/components/shared/CalendarLinks';
 import { uploadMaterial, addMaterialToClass, removeMaterialFromClass } from '@/services/materialsService';
 import { toast } from 'sonner';
 
@@ -143,6 +145,14 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
             <Video className="h-4 w-4 mr-1" />
             <span>Join Meeting</span>
           </a>
+        </div>
+
+        {/* Add Calendar Integration Section */}
+        <div>
+          <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">Calendar Integration</h4>
+          <div className="mt-2">
+            <CalendarLinks classEvent={selectedEvent} />
+          </div>
         </div>
 
         {selectedEvent.notes && (
