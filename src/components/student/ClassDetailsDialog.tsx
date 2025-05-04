@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -12,6 +12,7 @@ import ClassSessionDetail from './ClassSessionDetail';
 import { StudentContent } from '@/components/shared/StudentContent';
 import { StudentMessage, StudentUpload } from '@/types/classTypes';
 import { ClassItem, ClassSession } from '@/types/classTypes';
+import { FileText, ExternalLink } from 'lucide-react';
 
 interface ClassDetailsDialogProps {
   open: boolean;
@@ -32,6 +33,8 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
   onFileUpload,
   onSendMessage,
 }) => {
+  const [activeTab, setActiveTab] = useState('details');
+  
   if (!selectedClass) return null;
 
   const classSession: ClassSession = {
@@ -46,6 +49,17 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
     recurring: selectedClass.recurring || false,
     studentName: selectedClass.studentName,
   };
+  
+  // Helper function to get filename from URL
+  const getFilenameFromUrl = (url: string) => {
+    const parts = url.split('/');
+    const filename = parts[parts.length - 1].split('?')[0];
+    // Decode URI components
+    const decodedFilename = decodeURIComponent(filename);
+    // Get everything after the last slash and before any query params
+    const matches = decodedFilename.match(/[^\/]+\.[^\/\.]+$/);
+    return matches ? matches[0] : decodedFilename;
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -55,8 +69,8 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
         </DialogHeader>
 
         {selectedClass && (
-          <Tabs defaultValue="details">
-            <TabsList className="grid w-full grid-cols-2 bg-gray-100 dark:bg-gray-700">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-3 bg-gray-100 dark:bg-gray-700">
               <TabsTrigger 
                 value="details"
                 className="dark:data-[state=active]:bg-gray-600 dark:text-gray-200 dark:data-[state=active]:text-gray-100"
@@ -67,15 +81,47 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
                 value="materials"
                 className="dark:data-[state=active]:bg-gray-600 dark:text-gray-200 dark:data-[state=active]:text-gray-100"
               >
-                Materials & Communication
+                Materials
+              </TabsTrigger>
+              <TabsTrigger 
+                value="communication"
+                className="dark:data-[state=active]:bg-gray-600 dark:text-gray-200 dark:data-[state=active]:text-gray-100"
+              >
+                Communication
               </TabsTrigger>
             </TabsList>
 
             <TabsContent value="details">
               <ClassSessionDetail session={classSession} />
             </TabsContent>
+            
+            <TabsContent value="materials">
+              <div className="space-y-4 py-4">
+                <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">Class Materials</h4>
+                {selectedClass.materialsUrl && selectedClass.materialsUrl.length > 0 ? (
+                  <ul className="mt-2 space-y-2">
+                    {selectedClass.materialsUrl.map((url: string, index: number) => (
+                      <li key={index} className="flex items-center p-2 border rounded-md dark:border-gray-600">
+                        <FileText className="h-4 w-4 mr-2 text-tutoring-blue dark:text-tutoring-teal" />
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-tutoring-blue hover:underline dark:text-tutoring-teal flex items-center"
+                        >
+                          <span className="mr-1">{getFilenameFromUrl(url)}</span>
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-gray-500 dark:text-gray-400 mt-2">No materials uploaded for this class.</p>
+                )}
+              </div>
+            </TabsContent>
 
-            <TabsContent value="materials" className="space-y-4">
+            <TabsContent value="communication" className="space-y-4">
               <StudentContent
                 classId={selectedClass.id}
                 uploads={studentUploads}

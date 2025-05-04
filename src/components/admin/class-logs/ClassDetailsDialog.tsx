@@ -14,6 +14,7 @@ import { StatusBadge, AttendanceBadge } from './BadgeComponents';
 import { MessageCountBadge } from '@/components/shared/ClassBadges';
 import ChatWindow from '@/components/shared/ChatWindow';
 import { format } from 'date-fns';
+import { FileText, ExternalLink } from 'lucide-react';
 
 interface ClassDetailsDialogProps {
   isDetailsOpen: boolean;
@@ -55,6 +56,17 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
       return String(date);
     }
   };
+  
+  // Helper function to get filename from URL
+  const getFilenameFromUrl = (url: string) => {
+    const parts = url.split('/');
+    const filename = parts[parts.length - 1].split('?')[0];
+    // Decode URI components
+    const decodedFilename = decodeURIComponent(filename);
+    // Get everything after the last slash and before any query params
+    const matches = decodedFilename.match(/[^\/]+\.[^\/\.]+$/);
+    return matches ? matches[0] : decodedFilename;
+  };
 
   return (
     <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
@@ -64,8 +76,9 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
         </DialogHeader>
 
         <Tabs value={activeDetailsTab} onValueChange={setActiveDetailsTab}>
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="details">Class Details</TabsTrigger>
+            <TabsTrigger value="materials">Materials</TabsTrigger>
             <TabsTrigger value="student-content">
               Student Content
               <MessageCountBadge
@@ -135,6 +148,32 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
               <p className="mt-1 text-gray-700">
                 {selectedClass.notes || 'No notes recorded for this class.'}
               </p>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="materials" className="space-y-4 pt-4">
+            <div>
+              <h4 className="text-sm font-medium text-gray-500">Class Materials</h4>
+              {selectedClass.materialsUrl && selectedClass.materialsUrl.length > 0 ? (
+                <ul className="mt-2 space-y-2">
+                  {selectedClass.materialsUrl.map((url: string, index: number) => (
+                    <li key={index} className="flex items-center p-2 border rounded-md">
+                      <FileText className="h-4 w-4 mr-2 text-tutoring-blue" />
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-tutoring-blue hover:underline flex items-center"
+                      >
+                        <span className="mr-1">{getFilenameFromUrl(url)}</span>
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-gray-500 mt-2">No materials uploaded for this class.</p>
+              )}
             </div>
           </TabsContent>
 

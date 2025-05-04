@@ -257,6 +257,7 @@ export type Database = {
           date: string
           end_time: string
           id: string
+          materials_url: string[] | null
           notes: string | null
           relationship_id: string | null
           reminder_sent: boolean | null
@@ -275,6 +276,7 @@ export type Database = {
           date: string
           end_time: string
           id?: string
+          materials_url?: string[] | null
           notes?: string | null
           relationship_id?: string | null
           reminder_sent?: boolean | null
@@ -293,6 +295,7 @@ export type Database = {
           date?: string
           end_time?: string
           id?: string
+          materials_url?: string[] | null
           notes?: string | null
           relationship_id?: string | null
           reminder_sent?: boolean | null

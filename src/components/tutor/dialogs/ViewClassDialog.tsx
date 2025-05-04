@@ -34,6 +34,7 @@ interface ViewClassDialogProps {
   onMarkAsRead: (messageId: string) => Promise<void>;
   onDownloadFile: (uploadId: string) => Promise<void>;
   getUnreadMessageCount: (classId: string) => number;
+  refreshEvent?: () => Promise<void>;
 }
 
 const ViewClassDialog: React.FC<ViewClassDialogProps> = ({
@@ -50,6 +51,7 @@ const ViewClassDialog: React.FC<ViewClassDialogProps> = ({
   onMarkAsRead,
   onDownloadFile,
   getUnreadMessageCount,
+  refreshEvent,
 }) => {
   if (!selectedEvent) return null;
 
@@ -121,6 +123,7 @@ const ViewClassDialog: React.FC<ViewClassDialogProps> = ({
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           unreadMessageCount={getUnreadMessageCount(selectedEvent.id)}
+          refreshEvent={refreshEvent}
         />
 
         <DialogFooter>

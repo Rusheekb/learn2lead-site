@@ -27,6 +27,7 @@ interface TutorSchedulerDialogsProps {
   onMarkAsRead: (messageId: string) => Promise<void>;
   onDownloadFile: (uploadId: string) => Promise<void>;
   getUnreadMessageCount: (classId: string) => number;
+  refreshEvent?: () => Promise<void>;
 }
 
 const TutorSchedulerDialogs: React.FC<TutorSchedulerDialogsProps> = ({
@@ -51,6 +52,7 @@ const TutorSchedulerDialogs: React.FC<TutorSchedulerDialogsProps> = ({
   onMarkAsRead,
   onDownloadFile,
   getUnreadMessageCount,
+  refreshEvent,
 }) => {
   return (
     <ClassDialogs
@@ -76,6 +78,7 @@ const TutorSchedulerDialogs: React.FC<TutorSchedulerDialogsProps> = ({
       onMarkAsRead={onMarkAsRead}
       onDownloadFile={onDownloadFile}
       getUnreadMessageCount={getUnreadMessageCount}
+      refreshEvent={refreshEvent}
     />
   );
 };

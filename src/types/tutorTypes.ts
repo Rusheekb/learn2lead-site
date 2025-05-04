@@ -18,27 +18,22 @@ interface BaseEvent {
 
 // Class event interface
 export interface ClassEvent extends BaseEvent {
-  tutorName: string;
-  studentName: string;
+  tutorId?: string;
+  tutorName?: string;
+  studentId?: string;
+  studentName?: string;
+  date: Date | string;
   startTime: string;
   endTime: string;
-  duration?: number;
   subject: string;
-  content?: string;
-  homework?: string;
+  zoomLink?: string | null;
+  notes?: string | null;
   status?: ClassStatus;
   attendance?: AttendanceStatus;
-  zoomLink: string | null;
-  classCost?: number;
-  tutorCost?: number;
-  studentPayment?: PaymentStatus;
-  tutorPayment?: PaymentStatus;
-  isCodeLog?: boolean;
+  materials?: string[] | null;
+  materialsUrl?: string[] | null;
   recurring?: boolean;
   recurringDays?: string[];
-  studentId?: string;
-  tutorId?: string;
-  materials?: string[];
 }
 
 // Database class log record

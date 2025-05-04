@@ -46,6 +46,7 @@ const TutorScheduler: React.FC = () => {
     handleMarkMessageRead,
     handleDownloadFile,
     getUnreadMessageCount,
+    refreshEvent,
   } = useTutorScheduler();
 
   // Display loading state while data is being fetched
@@ -107,6 +108,7 @@ const TutorScheduler: React.FC = () => {
         onMarkAsRead={handleMarkMessageRead}
         onDownloadFile={handleDownloadFile}
         getUnreadMessageCount={getUnreadMessageCount}
+        refreshEvent={refreshEvent}
       />
     </div>
   );

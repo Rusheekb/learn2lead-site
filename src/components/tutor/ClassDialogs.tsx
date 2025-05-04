@@ -35,6 +35,7 @@ interface ClassDialogsProps {
   onMarkAsRead: (messageId: string) => Promise<void>;
   onDownloadFile: (uploadId: string) => Promise<void>;
   getUnreadMessageCount: (classId: string) => number;
+  refreshEvent?: () => Promise<void>;
 }
 
 const ClassDialogs: React.FC<ClassDialogsProps> = ({
@@ -60,6 +61,7 @@ const ClassDialogs: React.FC<ClassDialogsProps> = ({
   onMarkAsRead,
   onDownloadFile,
   getUnreadMessageCount,
+  refreshEvent,
 }) => {
   return (
     <>
@@ -94,6 +96,7 @@ const ClassDialogs: React.FC<ClassDialogsProps> = ({
           onMarkAsRead={onMarkAsRead}
           onDownloadFile={onDownloadFile}
           getUnreadMessageCount={getUnreadMessageCount}
+          refreshEvent={refreshEvent}
         />
       )}
 
