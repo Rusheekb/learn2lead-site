@@ -9,6 +9,53 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      backup_logs: {
+        Row: {
+          created_at: string
+          created_by: string
+          error_message: string | null
+          file_path: string | null
+          id: string
+          name: string
+          restored_from: string | null
+          size_bytes: number | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          error_message?: string | null
+          file_path?: string | null
+          id?: string
+          name: string
+          restored_from?: string | null
+          size_bytes?: number | null
+          status: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          error_message?: string | null
+          file_path?: string | null
+          id?: string
+          name?: string
+          restored_from?: string | null
+          size_bytes?: number | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "backup_logs_restored_from_fkey"
+            columns: ["restored_from"]
+            isOneToOne: false
+            referencedRelation: "backup_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       class_logs: {
         Row: {
           "Additional Info": string | null
