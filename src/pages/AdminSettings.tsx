@@ -204,7 +204,7 @@ const AdminSettings: React.FC = () => {
                   </div>
                 ) : backups.length > 0 ? (
                   <div className="divide-y">
-                    {backups.map((backup) => (
+                    {backups.map((backup: BackupLog) => (
                       <div key={backup.id} className="p-3 flex justify-between items-center hover:bg-muted/50">
                         <div>
                           <p className="font-medium">{backup.name}</p>
@@ -291,7 +291,7 @@ const AdminSettings: React.FC = () => {
               </div>
             ) : (
               <div className="space-y-2">
-                {backups.map((backup) => (
+                {backups.map((backup: BackupLog) => (
                   <div 
                     key={backup.id}
                     className="p-4 border rounded-md flex justify-between items-center hover:bg-muted/50 cursor-pointer"
