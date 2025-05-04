@@ -72,6 +72,28 @@ export const signUpWithEmail = async (email: string, password: string) => {
 };
 
 /**
+ * Signs in a user using OAuth provider (Google, etc.)
+ */
+export const signInWithProvider = async (provider: 'google') => {
+  try {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/login`,
+      },
+    });
+    if (error) {
+      toast.error(error.message);
+      throw error;
+    }
+    // No success toast here since we're redirecting away
+  } catch (error) {
+    console.error(`Error signing in with ${provider}:`, error);
+    throw error;
+  }
+};
+
+/**
  * Signs out the current user.
  */
 export const signOut = async () => {

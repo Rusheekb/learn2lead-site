@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { signInWithEmail, signUpWithEmail, signOut } from '@/utils/authActions';
+import { signInWithEmail, signUpWithEmail, signOut, signInWithProvider } from '@/utils/authActions';
 import { fetchUserRole } from '@/hooks/useUserRole';
 import { getDashboardPath } from '@/utils/authNavigation';
 import { AppRole } from '@/hooks/useProfile';
@@ -19,6 +19,7 @@ interface AuthContextType {
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
+  signInWithOAuth: (provider: 'google') => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -129,6 +130,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await signUpWithEmail(email, password);
   };
 
+  const handleSignInWithOAuth = async (provider: 'google') => {
+    await signInWithProvider(provider);
+  };
+
   const handleSignOut = async () => {
     await signOut();
     setUser(null);
@@ -144,6 +149,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isLoading,
     signIn: handleSignIn,
     signUp: handleSignUp,
+    signInWithOAuth: handleSignInWithOAuth,
     signOut: handleSignOut,
   };
 
