@@ -1,6 +1,11 @@
 
 project_id = "lnhtlbatcufmsyoujuqh"
 
-[functions.send-class-reminders]
-verify_jwt = false
+[api]
+  enabled = true
+  port = 54321
+  schemas = ["public", "storage"]
 
+[functions]
+  [functions.check-upcoming-classes]
+  verify_jwt = true

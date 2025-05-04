@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSidebar } from '@/hooks/useSidebar';
+import NotificationBell from './NotificationBell';
 
 interface AppSidebarProps {
   className?: string;
@@ -165,8 +166,13 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ className = '' }) => {
         {renderNavLinks()}
       </div>
 
-      {/* Footer with just logout - theme toggle has been removed */}
+      {/* Footer with logout and notification bell */}
       <div className="p-4 border-t dark:border-gray-700 mt-auto">
+        <div className="flex items-center justify-between mb-2">
+          <NotificationBell />
+          {isExpanded && <span className="text-sm text-gray-600 dark:text-gray-400">Notifications</span>}
+        </div>
+        
         {/* Logout button */}
         <button
           onClick={signOut}
