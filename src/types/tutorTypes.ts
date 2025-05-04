@@ -1,3 +1,4 @@
+
 // Common status and payment types
 export type ClassStatus = 'scheduled' | 'completed' | 'cancelled' | 'pending';
 export type AttendanceStatus =
@@ -34,6 +35,15 @@ export interface ClassEvent extends BaseEvent {
   materialsUrl?: string[] | null;
   recurring?: boolean;
   recurringDays?: string[];
+  // Add missing properties to fix type errors
+  duration?: number;
+  content?: string;
+  homework?: string;
+  classCost?: number;
+  tutorCost?: number;
+  studentPayment?: PaymentStatus;
+  tutorPayment?: PaymentStatus;
+  isCodeLog?: boolean;
 }
 
 // Database class log record

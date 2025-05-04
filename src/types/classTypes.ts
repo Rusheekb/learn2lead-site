@@ -1,3 +1,4 @@
+
 export interface ClassSession {
   id: string;
   title: string;
@@ -51,6 +52,7 @@ export interface ClassItem {
   zoomLink: string;
   notes?: string;
   recurring?: boolean;
+  materialsUrl?: string[];
 }
 
 export type ExportFormat = 'csv' | 'pdf';

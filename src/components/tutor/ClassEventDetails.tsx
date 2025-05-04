@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Video, FileText, Upload, Trash2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -84,7 +83,7 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
   const getFilenameFromUrl = (url: string) => {
     const parts = url.split('/');
     const filename = parts[parts.length - 1].split('?')[0];
-    // Decode URI components and remove the UUID prefix if present
+    // Decode URI components
     const decodedFilename = decodeURIComponent(filename);
     // Get everything after the last slash and before any query params
     const matches = decodedFilename.match(/[^\/]+\.[^\/\.]+$/);
