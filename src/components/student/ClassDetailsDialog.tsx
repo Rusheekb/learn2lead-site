@@ -13,6 +13,7 @@ import { Video, FileText, ExternalLink } from 'lucide-react';
 import { ClassItem } from '@/types/classTypes';
 import CalendarLinks from '@/components/shared/CalendarLinks';
 import { format } from 'date-fns';
+import { AttendanceStatus, ClassStatus, ClassEvent } from '@/types/tutorTypes';
 
 interface ClassDetailsDialogProps {
   isOpen: boolean;
@@ -40,13 +41,15 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
   if (!selectedClass) return null;
 
   // Convert ClassItem to compatible format for CalendarLinks
-  const classEventFormat = {
+  const classEventFormat: ClassEvent = {
     ...selectedClass,
     id: selectedClass.id,
     tutorId: '',
     studentId: '',
     notes: selectedClass.notes || null,
-    status: selectedClass.status as any  // This type conversion addresses the ClassStatus issue
+    // Ensure these are properly cast to the expected enum types
+    status: (selectedClass.status as ClassStatus) || 'scheduled',
+    attendance: (selectedClass.attendance as AttendanceStatus) || 'pending'
   };
 
   // Helper function to get filename from URL

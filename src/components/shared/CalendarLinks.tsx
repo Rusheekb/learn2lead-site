@@ -9,7 +9,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { getGoogleCalendarUrl, getOutlookCalendarUrl, downloadIcsFile } from '@/utils/calendarUtils';
+import { 
+  createGoogleCalendarUrl, 
+  createOutlookCalendarUrl, 
+  createIcsDownloadUrl 
+} from '@/utils/calendarUtils';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -37,15 +41,25 @@ const CalendarLinks: React.FC<CalendarLinksProps> = ({
       return;
     }
     
-    await downloadIcsFile(user.id, classEvent.title);
+    // Generate download URL and trigger download
+    const downloadUrl = createIcsDownloadUrl(classEvent);
+    
+    // Create a link element and trigger download
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = `${classEvent.title.replace(/\s+/g, '-')}.ics`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
     toast({
       title: 'Calendar file downloaded',
       description: 'Import this .ics file into your calendar application',
     });
   };
   
-  const googleUrl = getGoogleCalendarUrl(classEvent);
-  const outlookUrl = getOutlookCalendarUrl(classEvent);
+  const googleUrl = createGoogleCalendarUrl(classEvent);
+  const outlookUrl = createOutlookCalendarUrl(classEvent);
   
   const calendarDropdown = (
     <DropdownMenu>
