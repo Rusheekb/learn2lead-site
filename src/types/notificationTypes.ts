@@ -4,7 +4,7 @@ export interface Notification {
   user_id: string;
   message: string;
   type: string;
-  related_id?: string;
+  related_id?: string | null;
   read: boolean;
   created_at: string;
 }
