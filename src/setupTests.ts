@@ -6,7 +6,7 @@
 import '@testing-library/jest-dom';
 
 // Mock the supabase client
-jest.mock('./services/supabaseClient', () => ({
+jest.mock('./integrations/supabase/client', () => ({
   supabase: {
     from: jest.fn().mockReturnThis(),
     select: jest.fn().mockReturnThis(),
@@ -17,3 +17,27 @@ jest.mock('./services/supabaseClient', () => ({
     single: jest.fn().mockReturnThis(),
   },
 }));
+
+// Mock the i18next
+jest.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    i18n: {
+      changeLanguage: jest.fn(),
+    },
+  }),
+  Trans: ({ children }: { children: React.ReactNode }) => children,
+  initReactI18next: {
+    type: '3rdParty',
+    init: () => {},
+  },
+  I18nextProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
+// Mock window navigation
+Object.defineProperty(window, 'navigator', {
+  value: {
+    language: 'en-US',
+  },
+  writable: true,
+});
