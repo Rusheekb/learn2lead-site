@@ -166,7 +166,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ className = '' }) => {
         {renderNavLinks()}
       </div>
 
-      {/* Footer with logout and notification bell */}
+      {/* Footer with notification bell and logout */}
       <div className="p-4 border-t dark:border-gray-700 mt-auto">
         <div className="flex items-center justify-between mb-2">
           <NotificationBell />
