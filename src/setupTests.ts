@@ -41,3 +41,13 @@ Object.defineProperty(window, 'navigator', {
   },
   writable: true,
 });
+
+// Mock document.documentElement.classList for theme testing
+Object.defineProperty(document.documentElement, 'classList', {
+  value: {
+    add: jest.fn(),
+    remove: jest.fn(),
+    toggle: jest.fn(),
+  },
+  writable: false
+});

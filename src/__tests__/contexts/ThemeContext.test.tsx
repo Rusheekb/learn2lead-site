@@ -62,13 +62,6 @@ describe('ThemeProvider', () => {
         dispatchEvent: jest.fn(),
       })),
     });
-    
-    // Mock document.documentElement.classList
-    document.documentElement.classList = {
-      toggle: jest.fn(),
-      remove: jest.fn(),
-      add: jest.fn(),
-    } as unknown as DOMTokenList;
   });
   
   beforeEach(() => {
