@@ -18,11 +18,11 @@ import { SidebarProvider } from '@/hooks/useSidebar';
 import DashboardShell from './components/shared/DashboardShell';
 import './i18n';
 import { LanguageProvider } from './contexts/LanguageContext';
+import Profile from './pages/Profile';
 
 const Dashboard = React.lazy(() => import('./pages/Dashboard'));
 const TutorDashboard = React.lazy(() => import('./pages/TutorDashboard'));
 const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
-const Profile = React.lazy(() => import('./pages/Profile'));
 
 // Create a client
 const queryClient = new QueryClient({
@@ -92,7 +92,7 @@ function App() {
                               <Dashboard />
                             </StudentDashboardWrapper>
                           } />
-                          <Route path="/profile/*" element={
+                          <Route path="/profile" element={
                             <StudentDashboardWrapper>
                               <Profile />
                             </StudentDashboardWrapper>
@@ -105,7 +105,7 @@ function App() {
                               <TutorDashboard />
                             </TutorDashboardWrapper>
                           } />
-                          <Route path="/tutor-profile/*" element={
+                          <Route path="/tutor-profile" element={
                             <TutorDashboardWrapper>
                               <Profile />
                             </TutorDashboardWrapper>
@@ -118,7 +118,7 @@ function App() {
                               <AdminDashboard />
                             </AdminDashboardWrapper>
                           } />
-                          <Route path="/admin-profile/*" element={
+                          <Route path="/admin-profile" element={
                             <AdminDashboardWrapper>
                               <Profile />
                             </AdminDashboardWrapper>
