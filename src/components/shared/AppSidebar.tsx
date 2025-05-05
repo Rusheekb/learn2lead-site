@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSidebar } from '@/hooks/useSidebar';
 import NotificationBell from './NotificationBell';
+import { getDashboardPath } from '@/utils/authNavigation';
 
 interface AppSidebarProps {
   className?: string;
@@ -24,26 +25,8 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ className = '' }) => {
     'flex items-center px-4 py-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-200 rounded-md focus:outline-none focus:ring-2 focus:ring-tutoring-blue dark:focus:ring-tutoring-teal';
   const expandedClasses = isExpanded ? 'justify-start' : 'justify-center';
   
-  // Function to get active class for NavLink
-  const getNavLinkClass = ({ isActive }: { isActive: boolean }) => {
-    return isActive 
-      ? `${baseClasses} ${expandedClasses} bg-gray-200 dark:bg-gray-700 text-tutoring-blue dark:text-tutoring-teal font-medium`
-      : `${baseClasses} ${expandedClasses}`;
-  };
-
   // Get appropriate dashboard path based on role
-  const getDashboardPath = () => {
-    switch (userRole) {
-      case 'student':
-        return '/dashboard';
-      case 'tutor':
-        return '/tutor-dashboard';
-      case 'admin':
-        return '/admin-dashboard';
-      default:
-        return '/';
-    }
-  };
+  const dashboardPath = getDashboardPath(userRole);
   
   // Get appropriate profile path based on role
   const getProfilePath = () => {
@@ -59,28 +42,60 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ className = '' }) => {
     }
   };
   
+  const profilePath = getProfilePath();
+  
   // Role-specific navigation items
   const renderNavLinks = () => {
-    const dashboardPath = getDashboardPath();
-    const profilePath = getProfilePath();
-    
     switch (userRole) {
       case 'student':
         return (
           <nav className="space-y-1" aria-label="Student navigation">
-            <NavLink to="/dashboard" className={getNavLinkClass} end aria-label="Dashboard">
+            <NavLink 
+              to="/dashboard" 
+              className={({ isActive }) => 
+                isActive 
+                  ? `${baseClasses} ${expandedClasses} bg-gray-200 dark:bg-gray-700 text-tutoring-blue dark:text-tutoring-teal font-medium`
+                  : `${baseClasses} ${expandedClasses}`
+              }
+              end
+              aria-label="Dashboard"
+            >
               <LayoutDashboard className="h-5 w-5" aria-hidden="true" />
               {isExpanded && <span className="ml-3">Dashboard</span>}
             </NavLink>
-            <NavLink to="/dashboard?tab=schedule" className={getNavLinkClass} aria-label="My Schedule">
+            <NavLink 
+              to="/dashboard?tab=schedule" 
+              className={({ isActive }) => 
+                isActive 
+                  ? `${baseClasses} ${expandedClasses} bg-gray-200 dark:bg-gray-700 text-tutoring-blue dark:text-tutoring-teal font-medium`
+                  : `${baseClasses} ${expandedClasses}`
+              }
+              aria-label="My Schedule"
+            >
               <Calendar className="h-5 w-5" aria-hidden="true" />
               {isExpanded && <span className="ml-3">My Schedule</span>}
             </NavLink>
-            <NavLink to="/dashboard?tab=resources" className={getNavLinkClass} aria-label="Resources">
+            <NavLink 
+              to="/dashboard?tab=resources" 
+              className={({ isActive }) => 
+                isActive 
+                  ? `${baseClasses} ${expandedClasses} bg-gray-200 dark:bg-gray-700 text-tutoring-blue dark:text-tutoring-teal font-medium`
+                  : `${baseClasses} ${expandedClasses}`
+              }
+              aria-label="Resources"
+            >
               <Book className="h-5 w-5" aria-hidden="true" />
               {isExpanded && <span className="ml-3">Resources</span>}
             </NavLink>
-            <NavLink to={profilePath} className={getNavLinkClass} aria-label="Profile">
+            <NavLink 
+              to={profilePath} 
+              className={({ isActive }) => 
+                isActive 
+                  ? `${baseClasses} ${expandedClasses} bg-gray-200 dark:bg-gray-700 text-tutoring-blue dark:text-tutoring-teal font-medium`
+                  : `${baseClasses} ${expandedClasses}`
+              }
+              aria-label="Profile"
+            >
               <User className="h-5 w-5" aria-hidden="true" />
               {isExpanded && <span className="ml-3">Profile</span>}
             </NavLink>
@@ -89,19 +104,52 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ className = '' }) => {
       case 'tutor':
         return (
           <nav className="space-y-1" aria-label="Tutor navigation">
-            <NavLink to="/tutor-dashboard" className={getNavLinkClass} end aria-label="Dashboard">
+            <NavLink 
+              to="/tutor-dashboard" 
+              className={({ isActive }) => 
+                isActive 
+                  ? `${baseClasses} ${expandedClasses} bg-gray-200 dark:bg-gray-700 text-tutoring-blue dark:text-tutoring-teal font-medium`
+                  : `${baseClasses} ${expandedClasses}`
+              }
+              end
+              aria-label="Dashboard"
+            >
               <LayoutDashboard className="h-5 w-5" aria-hidden="true" />
               {isExpanded && <span className="ml-3">Dashboard</span>}
             </NavLink>
-            <NavLink to="/tutor-dashboard?tab=schedule" className={getNavLinkClass} aria-label="My Schedule">
+            <NavLink 
+              to="/tutor-dashboard?tab=schedule" 
+              className={({ isActive }) => 
+                isActive 
+                  ? `${baseClasses} ${expandedClasses} bg-gray-200 dark:bg-gray-700 text-tutoring-blue dark:text-tutoring-teal font-medium`
+                  : `${baseClasses} ${expandedClasses}`
+              }
+              aria-label="My Schedule"
+            >
               <Calendar className="h-5 w-5" aria-hidden="true" />
               {isExpanded && <span className="ml-3">My Schedule</span>}
             </NavLink>
-            <NavLink to="/tutor-dashboard?tab=resources" className={getNavLinkClass} aria-label="Resources">
+            <NavLink 
+              to="/tutor-dashboard?tab=resources" 
+              className={({ isActive }) => 
+                isActive 
+                  ? `${baseClasses} ${expandedClasses} bg-gray-200 dark:bg-gray-700 text-tutoring-blue dark:text-tutoring-teal font-medium`
+                  : `${baseClasses} ${expandedClasses}`
+              }
+              aria-label="Resources"
+            >
               <Book className="h-5 w-5" aria-hidden="true" />
               {isExpanded && <span className="ml-3">Resources</span>}
             </NavLink>
-            <NavLink to={profilePath} className={getNavLinkClass} aria-label="Profile">
+            <NavLink 
+              to={profilePath} 
+              className={({ isActive }) => 
+                isActive 
+                  ? `${baseClasses} ${expandedClasses} bg-gray-200 dark:bg-gray-700 text-tutoring-blue dark:text-tutoring-teal font-medium`
+                  : `${baseClasses} ${expandedClasses}`
+              }
+              aria-label="Profile"
+            >
               <User className="h-5 w-5" aria-hidden="true" />
               {isExpanded && <span className="ml-3">Profile</span>}
             </NavLink>
@@ -110,11 +158,27 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ className = '' }) => {
       case 'admin':
         return (
           <nav className="space-y-1" aria-label="Admin navigation">
-            <NavLink to="/admin-dashboard" className={getNavLinkClass} aria-label="Dashboard">
+            <NavLink 
+              to="/admin-dashboard" 
+              className={({ isActive }) => 
+                isActive 
+                  ? `${baseClasses} ${expandedClasses} bg-gray-200 dark:bg-gray-700 text-tutoring-blue dark:text-tutoring-teal font-medium`
+                  : `${baseClasses} ${expandedClasses}`
+              }
+              aria-label="Dashboard"
+            >
               <LayoutDashboard className="h-5 w-5" aria-hidden="true" />
               {isExpanded && <span className="ml-3">Dashboard</span>}
             </NavLink>
-            <NavLink to={profilePath} className={getNavLinkClass} aria-label="Profile">
+            <NavLink 
+              to={profilePath} 
+              className={({ isActive }) => 
+                isActive 
+                  ? `${baseClasses} ${expandedClasses} bg-gray-200 dark:bg-gray-700 text-tutoring-blue dark:text-tutoring-teal font-medium`
+                  : `${baseClasses} ${expandedClasses}`
+              }
+              aria-label="Profile"
+            >
               <User className="h-5 w-5" aria-hidden="true" />
               {isExpanded && <span className="ml-3">Profile</span>}
             </NavLink>
