@@ -1,247 +1,103 @@
 
-import { ClassEvent, PaymentStatus } from '@/types/tutorTypes';
-import { supabase } from '@/integrations/supabase/client';
+import { ClassEvent } from '@/types/tutorTypes';
+import { parseNumericString } from '@/utils/numberUtils';
 
-export interface TutorAnalytics {
-  totalClasses: number;
-  totalHours: number;
-  totalEarnings: number;
-  averageClassDuration: number;
-  subjectBreakdown: Record<string, number>;
-  studentCount: number;
-  paymentRate: number;
+// Extend the EventName enum to include language change event
+export enum EventName {
+  PAGE_VIEW = 'page_view',
+  BUTTON_CLICK = 'button_click',
+  LINK_CLICK = 'link_click',
+  FORM_SUBMIT = 'form_submit',
+  TOGGLE_SIDEBAR = 'toggle_sidebar',
+  TOGGLE_THEME = 'toggle_theme',
+  LANGUAGE_CHANGE = 'language_change',
+  TAB_CHANGE = 'tab_change',
+  CLASS_CREATED = 'class_created',
+  CLASS_EDITED = 'class_edited',
+  CLASS_DELETED = 'class_deleted'
 }
 
-export interface StudentAnalytics {
-  totalClasses: number;
-  totalHours: number;
-  totalSpent: number;
-  averageClassDuration: number;
-  subjectBreakdown: Record<string, number>;
-  completedHomeworkRate: number;
-  attendanceRate: number;
+export enum EventCategory {
+  NAVIGATION = 'navigation',
+  INTERACTION = 'interaction',
+  UI = 'ui',
+  CLASS = 'class',
+  AUTH = 'auth'
+}
+
+export interface AnalyticsEvent {
+  category: EventCategory;
+  name: EventName;
+  properties?: Record<string, any>;
 }
 
 export interface BusinessAnalytics {
   totalRevenue: number;
-  totalCosts: number;
   netIncome: number;
-  averageClassCost: number;
-  mostPopularSubjects: Array<{ subject: string; count: number }>;
   studentRetentionRate: number;
-  classesPerMonth: Record<string, number>;
+  averageClassCost: number;
 }
 
-const safeNumber = (value: number | undefined | null): number => {
-  return typeof value === 'number' && !isNaN(value) ? value : 0;
-};
+class AnalyticsService {
+  track(event: AnalyticsEvent): void {
+    console.log(`[Analytics] ${event.category} - ${event.name}`, event.properties);
+    
+    // Implement actual analytics tracking here (e.g., Segment, Google Analytics)
+    // Example: window.analytics.track(event.name, { category: event.category, ...event.properties });
+  }
 
-export const calculateTutorAnalytics = (
-  classes: ClassEvent[],
-  tutorName: string
-): TutorAnalytics => {
-  const tutorClasses = classes.filter((cls) => cls.tutorName === tutorName);
+  page(pageName: string, properties?: Record<string, any>): void {
+    console.log(`[Analytics] Page View: ${pageName}`, properties);
+    
+    // Example: window.analytics.page(pageName, properties);
+  }
 
-  const totalClasses = tutorClasses.length;
-  const totalHours = tutorClasses.reduce(
-    (sum, cls) => sum + safeNumber(cls.duration),
-    0
-  );
-  const totalEarnings = tutorClasses.reduce(
-    (sum, cls) => sum + safeNumber(cls.tutorCost),
-    0
-  );
+  calculateBusinessAnalytics(classes: ClassEvent[]): BusinessAnalytics {
+    if (!classes || classes.length === 0) {
+      return {
+        totalRevenue: 0,
+        netIncome: 0,
+        studentRetentionRate: 0,
+        averageClassCost: 0
+      };
+    }
 
-  const subjectBreakdown = tutorClasses.reduce(
-    (acc, cls) => {
-      if (cls.subject) {
-        acc[cls.subject] = (acc[cls.subject] || 0) + 1;
+    // Calculate total revenue (sum of all class costs)
+    const totalRevenue = classes.reduce((sum, classEvent) => {
+      return sum + (classEvent.classCost || 0);
+    }, 0);
+
+    // Calculate total tutor costs
+    const totalTutorCosts = classes.reduce((sum, classEvent) => {
+      return sum + (classEvent.tutorCost || 0);
+    }, 0);
+
+    // Net income is revenue minus tutor costs
+    const netIncome = totalRevenue - totalTutorCosts;
+
+    // Calculate average class cost
+    const averageClassCost = classes.length > 0 ? totalRevenue / classes.length : 0;
+
+    // Calculate student retention rate (percentage of students who attended more than one class)
+    const studentCounts = new Map<string, number>();
+    classes.forEach(classEvent => {
+      if (classEvent.studentName) {
+        const count = studentCounts.get(classEvent.studentName) || 0;
+        studentCounts.set(classEvent.studentName, count + 1);
       }
-      return acc;
-    },
-    {} as Record<string, number>
-  );
+    });
 
-  const uniqueStudents = new Set(tutorClasses.map((cls) => cls.studentName))
-    .size;
-  const paidClasses = tutorClasses.filter(
-    (cls) => cls.tutorPayment === 'paid'
-  ).length;
+    const totalStudents = studentCounts.size;
+    const returningStudents = Array.from(studentCounts.values()).filter(count => count > 1).length;
+    const studentRetentionRate = totalStudents > 0 ? (returningStudents / totalStudents) * 100 : 0;
 
-  return {
-    totalClasses,
-    totalHours,
-    totalEarnings,
-    averageClassDuration: totalClasses > 0 ? totalHours / totalClasses : 0,
-    subjectBreakdown,
-    studentCount: uniqueStudents,
-    paymentRate: totalClasses > 0 ? (paidClasses / totalClasses) * 100 : 0,
-  };
-};
-
-export const calculateStudentAnalytics = (
-  classes: ClassEvent[],
-  studentName: string
-): StudentAnalytics => {
-  const studentClasses = classes.filter(
-    (cls) => cls.studentName === studentName
-  );
-
-  const totalClasses = studentClasses.length;
-  const totalHours = studentClasses.reduce(
-    (sum, cls) => sum + safeNumber(cls.duration),
-    0
-  );
-  const totalSpent = studentClasses.reduce(
-    (sum, cls) => sum + safeNumber(cls.classCost),
-    0
-  );
-
-  const subjectBreakdown = studentClasses.reduce(
-    (acc, cls) => {
-      if (cls.subject) {
-        acc[cls.subject] = (acc[cls.subject] || 0) + 1;
-      }
-      return acc;
-    },
-    {} as Record<string, number>
-  );
-
-  const completedHomework = studentClasses.filter(
-    (cls) =>
-      cls.homework?.toLowerCase().includes('completed') ||
-      cls.notes?.toLowerCase().includes('homework completed')
-  ).length;
-
-  const attendedClasses = studentClasses.filter(
-    (cls) =>
-      cls.status === 'completed' ||
-      (cls.notes?.toLowerCase().includes('attended') &&
-        !cls.notes?.toLowerCase().includes('not attended'))
-  ).length;
-
-  return {
-    totalClasses,
-    totalHours,
-    totalSpent,
-    averageClassDuration: totalClasses > 0 ? totalHours / totalClasses : 0,
-    subjectBreakdown,
-    completedHomeworkRate:
-      totalClasses > 0 ? (completedHomework / totalClasses) * 100 : 0,
-    attendanceRate:
-      totalClasses > 0 ? (attendedClasses / totalClasses) * 100 : 0,
-  };
-};
-
-export const calculateBusinessAnalytics = (
-  classes: ClassEvent[]
-): BusinessAnalytics => {
-  const totalRevenue = classes.reduce(
-    (sum, cls) => sum + safeNumber(cls.classCost),
-    0
-  );
-  const totalCosts = classes.reduce(
-    (sum, cls) => sum + safeNumber(cls.tutorCost),
-    0
-  );
-
-  const subjectCounts = classes.reduce(
-    (acc, cls) => {
-      if (cls.subject) {
-        acc[cls.subject] = (acc[cls.subject] || 0) + 1;
-      }
-      return acc;
-    },
-    {} as Record<string, number>
-  );
-
-  const mostPopularSubjects = Object.entries(subjectCounts)
-    .map(([subject, count]) => ({ subject, count }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 5);
-
-  const classesPerMonth = classes.reduce(
-    (acc, cls) => {
-      if (cls.date) {
-        const month = new Date(cls.date).toLocaleString('default', {
-          month: 'long',
-          year: 'numeric',
-        });
-        acc[month] = (acc[month] || 0) + 1;
-      }
-      return acc;
-    },
-    {} as Record<string, number>
-  );
-
-  // Calculate student retention (students with more than one class)
-  const studentClassCounts = classes.reduce(
-    (acc, cls) => {
-      if (cls.studentName) {
-        acc[cls.studentName] = (acc[cls.studentName] || 0) + 1;
-      }
-      return acc;
-    },
-    {} as Record<string, number>
-  );
-
-  const retainedStudents = Object.values(studentClassCounts).filter(
-    (count) => count > 1
-  ).length;
-  const totalStudents = Object.keys(studentClassCounts).length;
-
-  return {
-    totalRevenue,
-    totalCosts,
-    netIncome: totalRevenue - totalCosts,
-    averageClassCost: classes.length > 0 ? totalRevenue / classes.length : 0,
-    mostPopularSubjects,
-    studentRetentionRate:
-      totalStudents > 0 ? (retainedStudents / totalStudents) * 100 : 0,
-    classesPerMonth,
-  };
-};
-
-export async function fetchStudentAnalytics(studentId: string) {
-  const { data, error, count } = await supabase
-    .from('class_logs')
-    .select('Time (hrs)', { count: 'exact' })
-    .eq('Student Name', studentId);
-
-  if (error) throw error;
-
-  const totalSessions = count || 0;
-  const avgDuration = data && data.length
-    ? Math.round(data.reduce((sum: number, row: any) => {
-        // Convert the time value to number safely
-        const timeValue = typeof row['Time (hrs)'] === 'string' 
-          ? parseFloat(row['Time (hrs)']) || 0 
-          : (row['Time (hrs)'] || 0);
-        return sum + timeValue;
-      }, 0) / data.length * 60)
-    : 0;
-
-  return { totalSessions, avgDuration };
+    return {
+      totalRevenue,
+      netIncome,
+      studentRetentionRate,
+      averageClassCost
+    };
+  }
 }
 
-export async function fetchTutorAnalytics(tutorId: string) {
-  const { data, error, count } = await supabase
-    .from('class_logs')
-    .select('Time (hrs)', { count: 'exact' })
-    .eq('Tutor Name', tutorId);
-
-  if (error) throw error;
-
-  const totalSessions = count || 0;
-  const avgDuration = data && data.length
-    ? Math.round(data.reduce((sum: number, row: any) => {
-        // Convert the time value to number safely
-        const timeValue = typeof row['Time (hrs)'] === 'string' 
-          ? parseFloat(row['Time (hrs)']) || 0 
-          : (row['Time (hrs)'] || 0);
-        return sum + timeValue;
-      }, 0) / data.length * 60)
-    : 0;
-
-  return { totalSessions, avgDuration };
-}
+export const analytics = new AnalyticsService();

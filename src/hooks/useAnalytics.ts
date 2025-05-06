@@ -1,177 +1,149 @@
 
-import { useState, useEffect } from 'react';
-import {
-  calculateTutorAnalytics,
-  calculateStudentAnalytics,
-  calculateBusinessAnalytics,
-  TutorAnalytics,
-  StudentAnalytics,
-  BusinessAnalytics,
-} from '@/services/analyticsService';
+import { useMemo } from 'react';
 import { ClassEvent } from '@/types/tutorTypes';
+import { TopPerformer } from '@/types/sharedTypes';
+import { analytics, BusinessAnalytics } from '@/services/analyticsService';
+import { parseNumericString } from '@/utils/numberUtils';
+import { subDays, addDays, format, isWithinInterval } from 'date-fns';
+
+type PerformanceCriteria = 'totalClasses' | 'revenue' | 'rating';
 
 export const useAnalytics = (classes: ClassEvent[]) => {
-  const [businessAnalytics, setBusinessAnalytics] =
-    useState<BusinessAnalytics | null>(null);
-  const [tutorAnalytics, setTutorAnalytics] = useState<
-    Record<string, TutorAnalytics>
-  >({});
-  const [studentAnalytics, setStudentAnalytics] = useState<
-    Record<string, StudentAnalytics>
-  >({});
-  const [isLoading, setIsLoading] = useState(true);
-  const [weeklyClasses, setWeeklyClasses] = useState<{name: string, classes: number}[]>([]);
-
-  useEffect(() => {
-    if (!classes.length) {
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      console.log('Calculating analytics from', classes.length, 'classes');
-
-      // Calculate business analytics
-      const business = calculateBusinessAnalytics(classes);
-      setBusinessAnalytics(business);
-
-      // Calculate analytics for each tutor
-      const tutors = new Set(classes.map((cls) => cls.tutorName));
-      const tutorStats = Array.from(tutors).reduce(
-        (acc, tutor) => {
-          if (tutor) {
-            acc[tutor] = calculateTutorAnalytics(classes, tutor);
-          }
-          return acc;
-        },
-        {} as Record<string, TutorAnalytics>
-      );
-      setTutorAnalytics(tutorStats);
-
-      // Calculate analytics for each student
-      const students = new Set(classes.map((cls) => cls.studentName));
-      const studentStats = Array.from(students).reduce(
-        (acc, student) => {
-          if (student) {
-            acc[student] = calculateStudentAnalytics(classes, student);
-          }
-          return acc;
-        },
-        {} as Record<string, StudentAnalytics>
-      );
-      setStudentAnalytics(studentStats);
-
-      // Calculate weekly classes for the last 12 weeks
-      calculateWeeklyClasses(classes);
-    } catch (error) {
-      console.error('Error calculating analytics:', error);
-    } finally {
-      setIsLoading(false);
-    }
+  const isLoading = classes.length === 0;
+  
+  // Calculate business analytics using the analytics service
+  const businessAnalytics = useMemo<BusinessAnalytics>(() => {
+    return analytics.calculateBusinessAnalytics(classes);
   }, [classes]);
-
-  // Calculate weekly classes for chart
-  const calculateWeeklyClasses = (classes: ClassEvent[]) => {
-    // Generate the last 12 weeks
-    const now = new Date();
-    const weeks: { [key: string]: number } = {};
+  
+  // Calculate weekly class distribution for the chart
+  const weeklyClasses = useMemo(() => {
+    const today = new Date();
+    const oneWeekAgo = subDays(today, 7);
     
-    // Initialize the last 12 weeks with 0 classes
-    for (let i = 11; i >= 0; i--) {
-      const weekDate = new Date(now);
-      weekDate.setDate(now.getDate() - (i * 7));
-      const weekNumber = getWeekNumber(weekDate);
-      const weekLabel = `Week ${weekNumber}`;
-      weeks[weekLabel] = 0;
-    }
+    // Initialize an array for each day of the week
+    const days = Array.from({ length: 7 }).map((_, i) => {
+      const date = addDays(oneWeekAgo, i + 1);
+      return {
+        name: format(date, 'EEE'),
+        date: format(date, 'yyyy-MM-dd'),
+        classes: 0,
+        revenue: 0
+      };
+    });
     
-    // Count classes per week
-    classes.forEach((cls) => {
-      if (!cls.date) return;
-      
-      const classDate = new Date(cls.date);
-      // Only count classes from the last 12 weeks
-      const weeksDiff = getWeeksDiff(classDate, now);
-      if (weeksDiff <= 12 && weeksDiff >= 0) {
-        const weekNumber = getWeekNumber(classDate);
-        const weekLabel = `Week ${weekNumber}`;
-        weeks[weekLabel] = (weeks[weekLabel] || 0) + 1;
+    // Count classes for each day
+    classes.forEach(classEvent => {
+      const classDate = new Date(classEvent.date);
+      if (isWithinInterval(classDate, { start: oneWeekAgo, end: today })) {
+        const dayIndex = days.findIndex(d => d.date === format(classDate, 'yyyy-MM-dd'));
+        if (dayIndex >= 0) {
+          days[dayIndex].classes += 1;
+          days[dayIndex].revenue += classEvent.classCost || 0;
+        }
       }
     });
     
-    // Convert to array for recharts
-    const weeklyData = Object.entries(weeks).map(([name, classes]) => ({
-      name,
-      classes,
+    return days;
+  }, [classes]);
+  
+  // Get top performing tutors based on criteria
+  const getTopPerformingTutors = (criteria: PerformanceCriteria = 'totalClasses'): TopPerformer[] => {
+    const tutorStats = new Map<string, { name: string, classes: number, revenue: number }>();
+    
+    classes.forEach(classEvent => {
+      if (!classEvent.tutorName) return;
+      
+      const stats = tutorStats.get(classEvent.tutorName) || { 
+        name: classEvent.tutorName, 
+        classes: 0, 
+        revenue: 0 
+      };
+      
+      stats.classes += 1;
+      stats.revenue += classEvent.classCost || 0;
+      
+      tutorStats.set(classEvent.tutorName, stats);
+    });
+    
+    const tutors = Array.from(tutorStats.values()).map(stats => ({
+      name: stats.name,
+      value: criteria === 'revenue' ? stats.revenue : stats.classes,
+      metric: criteria === 'revenue' ? 'revenue' : 'classes'
     }));
     
-    setWeeklyClasses(weeklyData);
+    return tutors.sort((a, b) => b.value - a.value).slice(0, 5);
   };
   
-  // Helper function to get week number
-  const getWeekNumber = (date: Date) => {
-    const startOfYear = new Date(date.getFullYear(), 0, 1);
-    const pastDaysOfYear = (date.getTime() - startOfYear.getTime()) / 86400000;
-    return Math.ceil((pastDaysOfYear + startOfYear.getDay() + 1) / 7);
+  // Get top performing students based on criteria
+  const getTopPerformingStudents = (criteria: PerformanceCriteria = 'totalClasses'): TopPerformer[] => {
+    const studentStats = new Map<string, { name: string, classes: number, spending: number }>();
+    
+    classes.forEach(classEvent => {
+      if (!classEvent.studentName) return;
+      
+      const stats = studentStats.get(classEvent.studentName) || { 
+        name: classEvent.studentName, 
+        classes: 0, 
+        spending: 0 
+      };
+      
+      stats.classes += 1;
+      stats.spending += classEvent.classCost || 0;
+      
+      studentStats.set(classEvent.studentName, stats);
+    });
+    
+    const students = Array.from(studentStats.values()).map(stats => ({
+      name: stats.name,
+      value: criteria === 'revenue' ? stats.spending : stats.classes,
+      metric: criteria === 'revenue' ? 'spending' : 'classes'
+    }));
+    
+    return students.sort((a, b) => b.value - a.value).slice(0, 5);
   };
   
-  // Helper function to get number of weeks between two dates
-  const getWeeksDiff = (startDate: Date, endDate: Date) => {
-    const millisecondsPerWeek = 1000 * 60 * 60 * 24 * 7;
-    return Math.floor((endDate.getTime() - startDate.getTime()) / millisecondsPerWeek);
-  };
-
-  // Ensure this returns number only for value, not objects
-  const getTopPerformingTutors = (
-    metric: keyof TutorAnalytics = 'totalClasses',
-    limit: number = 5
-  ) => {
-    return Object.entries(tutorAnalytics)
-      .map(([name, stats]) => {
-        const value = stats[metric];
-        return {
-          name,
-          value: typeof value === 'number' ? value : 0,
-        };
-      })
-      .sort((a, b) => b.value - a.value)
-      .slice(0, limit);
-  };
-
-  // Ensure this returns number only for value, not objects
-  const getTopPerformingStudents = (
-    metric: keyof StudentAnalytics = 'totalClasses',
-    limit: number = 5
-  ) => {
-    return Object.entries(studentAnalytics)
-      .map(([name, stats]) => {
-        const value = stats[metric];
-        return {
-          name,
-          value: typeof value === 'number' ? value : 0,
-        };
-      })
-      .sort((a, b) => b.value - a.value)
-      .slice(0, limit);
-  };
-
+  // Get monthly revenue distribution
   const getRevenueByMonth = () => {
-    return businessAnalytics?.classesPerMonth || {};
+    const monthlyData: Record<string, number> = {};
+    
+    classes.forEach(classEvent => {
+      if (!classEvent.date) return;
+      
+      const date = new Date(classEvent.date);
+      const monthKey = format(date, 'MMM yyyy');
+      
+      monthlyData[monthKey] = (monthlyData[monthKey] || 0) + 1;
+    });
+    
+    return monthlyData;
   };
-
+  
+  // Get subject popularity
   const getSubjectPopularity = () => {
-    return businessAnalytics?.mostPopularSubjects || [];
+    const subjects = new Map<string, number>();
+    
+    classes.forEach(classEvent => {
+      if (!classEvent.subject) return;
+      
+      const count = subjects.get(classEvent.subject) || 0;
+      subjects.set(classEvent.subject, count + 1);
+    });
+    
+    return Array.from(subjects.entries())
+      .map(([subject, count]) => ({ subject, count }))
+      .sort((a, b) => b.count - a.count);
   };
-
+  
   return {
     isLoading,
     businessAnalytics,
-    tutorAnalytics,
-    studentAnalytics,
     weeklyClasses,
     getTopPerformingTutors,
     getTopPerformingStudents,
     getRevenueByMonth,
-    getSubjectPopularity,
+    getSubjectPopularity
   };
 };
+
+export default useAnalytics;

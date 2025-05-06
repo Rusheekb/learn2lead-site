@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Card,
@@ -7,6 +8,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { BusinessAnalytics } from '@/services/analyticsService';
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('en-US', {
@@ -27,7 +29,7 @@ const formatPercent = (value: number) => {
 
 interface AnalyticsMetricsGridProps {
   isLoading: boolean;
-  businessAnalytics: any | null;
+  businessAnalytics: BusinessAnalytics | null;
 }
 
 const AnalyticsMetricsGrid: React.FC<AnalyticsMetricsGridProps> = ({
