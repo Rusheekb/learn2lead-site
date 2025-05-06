@@ -38,6 +38,12 @@ export interface BusinessAnalytics {
   averageClassCost: number;
 }
 
+// New interface for user analytics
+export interface UserAnalytics {
+  totalSessions: number;
+  avgDuration: number;
+}
+
 class AnalyticsService {
   track(event: AnalyticsEvent): void {
     console.log(`[Analytics] ${event.category} - ${event.name}`, event.properties);
@@ -98,6 +104,29 @@ class AnalyticsService {
       averageClassCost
     };
   }
+
+  // Add the missing functions that are imported in UserDetailModal.tsx
+  async fetchStudentAnalytics(studentId: string): Promise<UserAnalytics> {
+    console.log(`Fetching analytics for student: ${studentId}`);
+    // This would normally fetch data from an API or database
+    // For now, return mock data
+    return {
+      totalSessions: Math.floor(Math.random() * 20) + 1, // 1-20 sessions
+      avgDuration: Math.floor(Math.random() * 60) + 30 // 30-90 minutes
+    };
+  }
+
+  async fetchTutorAnalytics(tutorId: string): Promise<UserAnalytics> {
+    console.log(`Fetching analytics for tutor: ${tutorId}`);
+    // This would normally fetch data from an API or database
+    // For now, return mock data
+    return {
+      totalSessions: Math.floor(Math.random() * 50) + 10, // 10-60 sessions
+      avgDuration: Math.floor(Math.random() * 45) + 45 // 45-90 minutes
+    };
+  }
 }
 
 export const analytics = new AnalyticsService();
+export const fetchStudentAnalytics = (studentId: string) => analytics.fetchStudentAnalytics(studentId);
+export const fetchTutorAnalytics = (tutorId: string) => analytics.fetchTutorAnalytics(tutorId);
