@@ -2,27 +2,27 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, User, Calendar, Book } from 'lucide-react';
+import { useSidebarStyles } from './useSidebarStyles';
 
 interface TutorNavLinksProps {
   isExpanded: boolean;
-  baseClasses: string;
-  expandedClasses: string;
   profilePath: string;
 }
 
 const TutorNavLinks: React.FC<TutorNavLinksProps> = ({ 
   isExpanded, 
-  baseClasses, 
-  expandedClasses, 
   profilePath 
 }) => {
+  const { baseClasses, activeClasses, isLinkActive } = useSidebarStyles();
+  const expandedClasses = isExpanded ? 'justify-start' : 'justify-center';
+  
   return (
     <nav className="space-y-1" aria-label="Tutor navigation">
       <NavLink 
         to="/tutor-dashboard" 
         className={({ isActive }) => 
-          isActive 
-            ? `${baseClasses} ${expandedClasses} bg-gray-200 dark:bg-gray-700 text-tutoring-blue dark:text-tutoring-teal font-medium`
+          isActive || isLinkActive('/tutor-dashboard')
+            ? `${baseClasses} ${expandedClasses} ${activeClasses}`
             : `${baseClasses} ${expandedClasses}`
         }
         end
@@ -33,9 +33,9 @@ const TutorNavLinks: React.FC<TutorNavLinksProps> = ({
       </NavLink>
       <NavLink 
         to="/tutor-dashboard?tab=schedule" 
-        className={({ isActive }) => 
-          isActive 
-            ? `${baseClasses} ${expandedClasses} bg-gray-200 dark:bg-gray-700 text-tutoring-blue dark:text-tutoring-teal font-medium`
+        className={() => 
+          isLinkActive('/tutor-dashboard', { key: 'tab', value: 'schedule' })
+            ? `${baseClasses} ${expandedClasses} ${activeClasses}`
             : `${baseClasses} ${expandedClasses}`
         }
         aria-label="My Schedule"
@@ -45,9 +45,9 @@ const TutorNavLinks: React.FC<TutorNavLinksProps> = ({
       </NavLink>
       <NavLink 
         to="/tutor-dashboard?tab=resources" 
-        className={({ isActive }) => 
-          isActive 
-            ? `${baseClasses} ${expandedClasses} bg-gray-200 dark:bg-gray-700 text-tutoring-blue dark:text-tutoring-teal font-medium`
+        className={() => 
+          isLinkActive('/tutor-dashboard', { key: 'tab', value: 'resources' })
+            ? `${baseClasses} ${expandedClasses} ${activeClasses}`
             : `${baseClasses} ${expandedClasses}`
         }
         aria-label="Resources"
@@ -59,7 +59,7 @@ const TutorNavLinks: React.FC<TutorNavLinksProps> = ({
         to={profilePath} 
         className={({ isActive }) => 
           isActive 
-            ? `${baseClasses} ${expandedClasses} bg-gray-200 dark:bg-gray-700 text-tutoring-blue dark:text-tutoring-teal font-medium`
+            ? `${baseClasses} ${expandedClasses} ${activeClasses}`
             : `${baseClasses} ${expandedClasses}`
         }
         aria-label="Profile"

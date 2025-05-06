@@ -1,30 +1,30 @@
 
 import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { BarChart3, FileText, LayoutDashboard, Settings, User, UserRound, Users, UsersRound } from 'lucide-react';
+import { useSidebarStyles } from './useSidebarStyles';
 
 interface AdminNavLinksProps {
   isExpanded: boolean;
-  baseClasses: string;
-  expandedClasses: string;
   profilePath: string;
 }
 
 const AdminNavLinks: React.FC<AdminNavLinksProps> = ({ 
   isExpanded, 
-  baseClasses, 
-  expandedClasses, 
   profilePath 
 }) => {
-  const location = useLocation();
+  const { baseClasses, activeClasses, isLinkActive } = useSidebarStyles();
+  const expandedClasses = isExpanded ? 'justify-start' : 'justify-center';
   
   return (
     <nav className="space-y-1" aria-label="Admin navigation">
       <NavLink 
         to="/admin-dashboard?tab=analytics" 
-        className={({ isActive }) => 
-          isActive || location.pathname === '/admin-dashboard' 
-            ? `${baseClasses} ${expandedClasses} bg-gray-200 dark:bg-gray-700 text-tutoring-blue dark:text-tutoring-teal font-medium`
+        className={() => 
+          isLinkActive('/admin-dashboard', { key: 'tab', value: 'analytics' }) || 
+          isLinkActive('/admin-dashboard') || 
+          isLinkActive('/admin-dashboard', { key: 'tab' })
+            ? `${baseClasses} ${expandedClasses} ${activeClasses}`
             : `${baseClasses} ${expandedClasses}`
         }
         aria-label="Analytics"
@@ -34,9 +34,9 @@ const AdminNavLinks: React.FC<AdminNavLinksProps> = ({
       </NavLink>
       <NavLink 
         to="/admin-dashboard?tab=schedule" 
-        className={({ isActive }) => 
-          isActive 
-            ? `${baseClasses} ${expandedClasses} bg-gray-200 dark:bg-gray-700 text-tutoring-blue dark:text-tutoring-teal font-medium`
+        className={() => 
+          isLinkActive('/admin-dashboard', { key: 'tab', value: 'schedule' })
+            ? `${baseClasses} ${expandedClasses} ${activeClasses}`
             : `${baseClasses} ${expandedClasses}`
         }
         aria-label="Class Logs"
@@ -46,9 +46,9 @@ const AdminNavLinks: React.FC<AdminNavLinksProps> = ({
       </NavLink>
       <NavLink 
         to="/admin-dashboard?tab=payments" 
-        className={({ isActive }) => 
-          isActive 
-            ? `${baseClasses} ${expandedClasses} bg-gray-200 dark:bg-gray-700 text-tutoring-blue dark:text-tutoring-teal font-medium`
+        className={() => 
+          isLinkActive('/admin-dashboard', { key: 'tab', value: 'payments' })
+            ? `${baseClasses} ${expandedClasses} ${activeClasses}`
             : `${baseClasses} ${expandedClasses}`
         }
         aria-label="Payments"
@@ -58,9 +58,9 @@ const AdminNavLinks: React.FC<AdminNavLinksProps> = ({
       </NavLink>
       <NavLink 
         to="/admin-dashboard?tab=tutors" 
-        className={({ isActive }) => 
-          isActive 
-            ? `${baseClasses} ${expandedClasses} bg-gray-200 dark:bg-gray-700 text-tutoring-blue dark:text-tutoring-teal font-medium`
+        className={() => 
+          isLinkActive('/admin-dashboard', { key: 'tab', value: 'tutors' })
+            ? `${baseClasses} ${expandedClasses} ${activeClasses}`
             : `${baseClasses} ${expandedClasses}`
         }
         aria-label="Tutors"
@@ -70,9 +70,9 @@ const AdminNavLinks: React.FC<AdminNavLinksProps> = ({
       </NavLink>
       <NavLink 
         to="/admin-dashboard?tab=students" 
-        className={({ isActive }) => 
-          isActive 
-            ? `${baseClasses} ${expandedClasses} bg-gray-200 dark:bg-gray-700 text-tutoring-blue dark:text-tutoring-teal font-medium`
+        className={() => 
+          isLinkActive('/admin-dashboard', { key: 'tab', value: 'students' })
+            ? `${baseClasses} ${expandedClasses} ${activeClasses}`
             : `${baseClasses} ${expandedClasses}`
         }
         aria-label="Students"
@@ -82,9 +82,9 @@ const AdminNavLinks: React.FC<AdminNavLinksProps> = ({
       </NavLink>
       <NavLink 
         to="/admin-dashboard?tab=relationships" 
-        className={({ isActive }) => 
-          isActive 
-            ? `${baseClasses} ${expandedClasses} bg-gray-200 dark:bg-gray-700 text-tutoring-blue dark:text-tutoring-teal font-medium`
+        className={() => 
+          isLinkActive('/admin-dashboard', { key: 'tab', value: 'relationships' })
+            ? `${baseClasses} ${expandedClasses} ${activeClasses}`
             : `${baseClasses} ${expandedClasses}`
         }
         aria-label="Relationships"
@@ -94,9 +94,9 @@ const AdminNavLinks: React.FC<AdminNavLinksProps> = ({
       </NavLink>
       <NavLink 
         to="/admin-dashboard?tab=settings" 
-        className={({ isActive }) => 
-          isActive 
-            ? `${baseClasses} ${expandedClasses} bg-gray-200 dark:bg-gray-700 text-tutoring-blue dark:text-tutoring-teal font-medium`
+        className={() => 
+          isLinkActive('/admin-dashboard', { key: 'tab', value: 'settings' })
+            ? `${baseClasses} ${expandedClasses} ${activeClasses}`
             : `${baseClasses} ${expandedClasses}`
         }
         aria-label="Settings"
@@ -108,7 +108,7 @@ const AdminNavLinks: React.FC<AdminNavLinksProps> = ({
         to={profilePath} 
         className={({ isActive }) => 
           isActive 
-            ? `${baseClasses} ${expandedClasses} bg-gray-200 dark:bg-gray-700 text-tutoring-blue dark:text-tutoring-teal font-medium`
+            ? `${baseClasses} ${expandedClasses} ${activeClasses}`
             : `${baseClasses} ${expandedClasses}`
         }
         aria-label="Profile"
