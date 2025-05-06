@@ -10,7 +10,6 @@ import SidebarFooter from './sidebar/SidebarFooter';
 import StudentNavLinks from './sidebar/StudentNavLinks';
 import TutorNavLinks from './sidebar/TutorNavLinks';
 import AdminNavLinks from './sidebar/AdminNavLinks';
-import { useSidebarStyles } from './sidebar/useSidebarStyles';
 
 interface AppSidebarProps {
   className?: string;
@@ -20,11 +19,8 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ className = '' }) => {
   const { userRole, signOut } = useAuth();
   const { isExpanded, toggleSidebar } = useSidebar();
   const navigate = useNavigate();
-  const { baseClasses } = useSidebarStyles();
   
   if (!userRole) return null;
-  
-  const expandedClasses = isExpanded ? 'justify-start' : 'justify-center';
   
   // Get appropriate profile path based on role
   const getProfilePath = () => {
@@ -49,8 +45,6 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ className = '' }) => {
         return (
           <StudentNavLinks 
             isExpanded={isExpanded}
-            baseClasses={baseClasses}
-            expandedClasses={expandedClasses}
             profilePath={profilePath}
           />
         );
@@ -58,8 +52,6 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ className = '' }) => {
         return (
           <TutorNavLinks 
             isExpanded={isExpanded}
-            baseClasses={baseClasses}
-            expandedClasses={expandedClasses}
             profilePath={profilePath}
           />
         );
@@ -67,8 +59,6 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ className = '' }) => {
         return (
           <AdminNavLinks 
             isExpanded={isExpanded}
-            baseClasses={baseClasses}
-            expandedClasses={expandedClasses}
             profilePath={profilePath}
           />
         );
