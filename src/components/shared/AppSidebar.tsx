@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, User, Calendar, Book, LogOut } from 'lucide-react';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { LayoutDashboard, User, Calendar, Book, LogOut, BarChart3, FileText, Users, UserRound, UsersRound, Settings } from 'lucide-react';
 import { AppRole } from '@/types/profile';
 import { useAuth } from '@/contexts/AuthContext';
 import { Link } from 'react-router-dom';
@@ -18,6 +18,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ className = '' }) => {
   const { userRole, signOut } = useAuth();
   const { isExpanded, toggleSidebar } = useSidebar();
   const navigate = useNavigate();
+  const location = useLocation();
   
   if (!userRole) return null;
   
@@ -43,6 +44,12 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ className = '' }) => {
   };
   
   const profilePath = getProfilePath();
+
+  // Check if a path is active (for admin dashboard tabs)
+  const isActive = (path: string) => {
+    return location.pathname.includes(path) || 
+           (location.pathname.includes('admin-dashboard') && location.search.includes(`tab=${path}`));
+  };
   
   // Role-specific navigation items
   const renderNavLinks = () => {
@@ -159,16 +166,88 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ className = '' }) => {
         return (
           <nav className="space-y-1" aria-label="Admin navigation">
             <NavLink 
-              to="/admin-dashboard" 
+              to="/admin-dashboard?tab=analytics" 
+              className={({ isActive }) => 
+                isActive || location.pathname === '/admin-dashboard' 
+                  ? `${baseClasses} ${expandedClasses} bg-gray-200 dark:bg-gray-700 text-tutoring-blue dark:text-tutoring-teal font-medium`
+                  : `${baseClasses} ${expandedClasses}`
+              }
+              aria-label="Analytics"
+            >
+              <BarChart3 className="h-5 w-5" aria-hidden="true" />
+              {isExpanded && <span className="ml-3">Analytics</span>}
+            </NavLink>
+            <NavLink 
+              to="/admin-dashboard?tab=schedule" 
               className={({ isActive }) => 
                 isActive 
                   ? `${baseClasses} ${expandedClasses} bg-gray-200 dark:bg-gray-700 text-tutoring-blue dark:text-tutoring-teal font-medium`
                   : `${baseClasses} ${expandedClasses}`
               }
-              aria-label="Dashboard"
+              aria-label="Class Logs"
+            >
+              <FileText className="h-5 w-5" aria-hidden="true" />
+              {isExpanded && <span className="ml-3">Class Logs</span>}
+            </NavLink>
+            <NavLink 
+              to="/admin-dashboard?tab=payments" 
+              className={({ isActive }) => 
+                isActive 
+                  ? `${baseClasses} ${expandedClasses} bg-gray-200 dark:bg-gray-700 text-tutoring-blue dark:text-tutoring-teal font-medium`
+                  : `${baseClasses} ${expandedClasses}`
+              }
+              aria-label="Payments"
             >
               <LayoutDashboard className="h-5 w-5" aria-hidden="true" />
-              {isExpanded && <span className="ml-3">Dashboard</span>}
+              {isExpanded && <span className="ml-3">Payments</span>}
+            </NavLink>
+            <NavLink 
+              to="/admin-dashboard?tab=tutors" 
+              className={({ isActive }) => 
+                isActive 
+                  ? `${baseClasses} ${expandedClasses} bg-gray-200 dark:bg-gray-700 text-tutoring-blue dark:text-tutoring-teal font-medium`
+                  : `${baseClasses} ${expandedClasses}`
+              }
+              aria-label="Tutors"
+            >
+              <UserRound className="h-5 w-5" aria-hidden="true" />
+              {isExpanded && <span className="ml-3">Tutors</span>}
+            </NavLink>
+            <NavLink 
+              to="/admin-dashboard?tab=students" 
+              className={({ isActive }) => 
+                isActive 
+                  ? `${baseClasses} ${expandedClasses} bg-gray-200 dark:bg-gray-700 text-tutoring-blue dark:text-tutoring-teal font-medium`
+                  : `${baseClasses} ${expandedClasses}`
+              }
+              aria-label="Students"
+            >
+              <Users className="h-5 w-5" aria-hidden="true" />
+              {isExpanded && <span className="ml-3">Students</span>}
+            </NavLink>
+            <NavLink 
+              to="/admin-dashboard?tab=relationships" 
+              className={({ isActive }) => 
+                isActive 
+                  ? `${baseClasses} ${expandedClasses} bg-gray-200 dark:bg-gray-700 text-tutoring-blue dark:text-tutoring-teal font-medium`
+                  : `${baseClasses} ${expandedClasses}`
+              }
+              aria-label="Relationships"
+            >
+              <UsersRound className="h-5 w-5" aria-hidden="true" />
+              {isExpanded && <span className="ml-3">Relationships</span>}
+            </NavLink>
+            <NavLink 
+              to="/admin-dashboard?tab=settings" 
+              className={({ isActive }) => 
+                isActive 
+                  ? `${baseClasses} ${expandedClasses} bg-gray-200 dark:bg-gray-700 text-tutoring-blue dark:text-tutoring-teal font-medium`
+                  : `${baseClasses} ${expandedClasses}`
+              }
+              aria-label="Settings"
+            >
+              <Settings className="h-5 w-5" aria-hidden="true" />
+              {isExpanded && <span className="ml-3">Settings</span>}
             </NavLink>
             <NavLink 
               to={profilePath} 

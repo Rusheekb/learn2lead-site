@@ -1,7 +1,7 @@
 
 import React, { useState, Suspense, lazy, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { useSearchParams } from 'react-router-dom';
 import { UserDetailModal } from '@/components/admin/UserDetailModal';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -39,7 +39,8 @@ const fetchRelationships = async () => {
 
 const AdminDashboard: React.FC = () => {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<string>('analytics');
+  const [searchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'analytics';
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const { trackNavigation, trackPageView } = useAnalyticsTracker();
 
@@ -94,58 +95,41 @@ const AdminDashboard: React.FC = () => {
     setSelectedUser({ ...tutor, role: 'tutor' });
   };
 
-  return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold">{t('dashboard.adminDashboard')}</h2>
-
-      <Tabs 
-        value={activeTab} 
-        onValueChange={(value) => {
-          setActiveTab(value);
-        }}
-        className="w-full"
-      >
-        <TabsList className="grid grid-cols-7 mb-6">
-          <TabsTrigger value="analytics">{t('navigation.analytics')}</TabsTrigger>
-          <TabsTrigger value="schedule">{t('navigation.classLogs')}</TabsTrigger>
-          <TabsTrigger value="payments">{t('navigation.payments')}</TabsTrigger>
-          <TabsTrigger value="tutors">{t('navigation.tutors')}</TabsTrigger>
-          <TabsTrigger value="students">{t('navigation.students')}</TabsTrigger>
-          <TabsTrigger value="relationships">{t('navigation.relationships')}</TabsTrigger>
-          <TabsTrigger value="settings">{t('navigation.settings')}</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="analytics" className="pt-2">
+  // Render the appropriate content based on the active tab
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'analytics':
+        return (
           <Suspense fallback={<LoadingSpinner />}>
             <ClassAnalytics />
           </Suspense>
-        </TabsContent>
-
-        <TabsContent value="schedule" className="pt-2">
+        );
+      case 'schedule':
+        return (
           <Suspense fallback={<LoadingSpinner />}>
             <ClassLogs />
           </Suspense>
-        </TabsContent>
-
-        <TabsContent value="payments" className="pt-2">
+        );
+      case 'payments':
+        return (
           <Suspense fallback={<LoadingSpinner />}>
             <PaymentsManager />
           </Suspense>
-        </TabsContent>
-
-        <TabsContent value="tutors" className="pt-2">
+        );
+      case 'tutors':
+        return (
           <Suspense fallback={<LoadingSpinner />}>
             <TutorsManager onSelect={handleTutorSelect} />
           </Suspense>
-        </TabsContent>
-
-        <TabsContent value="students" className="pt-2">
+        );
+      case 'students':
+        return (
           <Suspense fallback={<LoadingSpinner />}>
             <StudentsManager onSelect={handleStudentSelect} />
           </Suspense>
-        </TabsContent>
-
-        <TabsContent value="relationships" className="pt-2">
+        );
+      case 'relationships':
+        return (
           <Suspense fallback={<LoadingSpinner />}>
             <RelationshipManager
               relationships={relationships}
@@ -154,14 +138,27 @@ const AdminDashboard: React.FC = () => {
               onRelationshipChange={handleRelationshipChange}
             />
           </Suspense>
-        </TabsContent>
-        
-        <TabsContent value="settings" className="pt-2">
+        );
+      case 'settings':
+        return (
           <Suspense fallback={<LoadingSpinner />}>
             <AdminSettings />
           </Suspense>
-        </TabsContent>
-      </Tabs>
+        );
+      default:
+        return (
+          <Suspense fallback={<LoadingSpinner />}>
+            <ClassAnalytics />
+          </Suspense>
+        );
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold">{t('dashboard.adminDashboard')}</h2>
+      
+      {renderContent()}
       
       <UserDetailModal user={selectedUser} onClose={() => setSelectedUser(null)} />
     </div>
