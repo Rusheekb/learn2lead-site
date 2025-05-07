@@ -26,12 +26,12 @@ const EditClassForm: React.FC<EditClassFormProps> = ({
   const { form } = useEditClassForm(selectedEvent, setNewEvent);
 
   return (
-    <div className="py-4">
+    <div className="py-4 space-y-6 w-full">
       <Form {...form}>
-        <form className="space-y-4">
+        <form className="space-y-6 w-full">
           <FormFieldsGroup form={form} />
 
-          <div className="flex justify-end gap-2 mt-6">
+          <div className="flex justify-end gap-3 mt-8">
             <Button 
               variant="outline" 
               onClick={onCancel}

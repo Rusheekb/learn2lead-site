@@ -67,7 +67,7 @@ const ClassDialogs: React.FC<ClassDialogsProps> = ({
     <>
       {isEditMode && selectedEvent ? (
         <Dialog open={isViewEventOpen} onOpenChange={setIsViewEventOpen}>
-          <DialogContent className="max-w-2xl bg-white text-gray-900 border">
+          <DialogContent className="max-w-3xl px-8 bg-white text-gray-900 border">
             <DialogHeader>
               <DialogTitle className="text-gray-900">{selectedEvent.title}</DialogTitle>
             </DialogHeader>

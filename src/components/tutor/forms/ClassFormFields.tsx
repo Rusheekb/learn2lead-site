@@ -19,12 +19,12 @@ export const TitleField: React.FC<FormFieldsProps> = ({ form }) => (
     control={form.control}
     name="title"
     render={({ field }) => (
-      <FormItem>
+      <FormItem className="w-full">
         <FormLabel>Class Title <span className="text-red-500">*</span></FormLabel>
         <FormControl>
           <Input 
             placeholder="Enter class title (min 3 characters)" 
-            className="bg-white"
+            className="w-full bg-white"
             {...field} 
           />
         </FormControl>
@@ -39,7 +39,7 @@ export const DateField: React.FC<FormFieldsProps> = ({ form }) => (
     control={form.control}
     name="date"
     render={({ field }) => (
-      <FormItem className="flex flex-col">
+      <FormItem className="flex flex-col w-full">
         <FormLabel>Date <span className="text-red-500">*</span></FormLabel>
         <Popover>
           <PopoverTrigger asChild>
@@ -78,12 +78,12 @@ export const TimeField: React.FC<FormFieldsProps & { name: "startTime" | "endTim
     control={form.control}
     name={name}
     render={({ field }) => (
-      <FormItem>
+      <FormItem className="w-full">
         <FormLabel>{label} <span className="text-red-500">*</span></FormLabel>
         <FormControl>
           <Input 
             type="time" 
-            className="bg-white"
+            className="w-full bg-white"
             {...field} 
           />
         </FormControl>
@@ -98,12 +98,12 @@ export const SubjectField: React.FC<FormFieldsProps> = ({ form }) => (
     control={form.control}
     name="subject"
     render={({ field }) => (
-      <FormItem>
+      <FormItem className="w-full">
         <FormLabel>Subject <span className="text-red-500">*</span></FormLabel>
         <FormControl>
           <Input 
             placeholder="Enter subject" 
-            className="bg-white"
+            className="w-full bg-white"
             {...field} 
           />
         </FormControl>
@@ -118,12 +118,12 @@ export const ZoomLinkField: React.FC<FormFieldsProps> = ({ form }) => (
     control={form.control}
     name="zoomLink"
     render={({ field }) => (
-      <FormItem>
+      <FormItem className="w-full">
         <FormLabel>Zoom Meeting Link <span className="text-red-500">*</span></FormLabel>
         <FormControl>
           <Input 
             placeholder="Enter Zoom meeting URL (https://...)" 
-            className="bg-white"
+            className="w-full bg-white"
             {...field} 
           />
         </FormControl>
@@ -138,12 +138,12 @@ export const NotesField: React.FC<FormFieldsProps> = ({ form }) => (
     control={form.control}
     name="notes"
     render={({ field }) => (
-      <FormItem>
+      <FormItem className="w-full">
         <FormLabel>Notes</FormLabel>
         <FormControl>
           <Input 
             placeholder="Add any notes (optional)" 
-            className="bg-white"
+            className="w-full bg-white"
             {...field} 
           />
         </FormControl>

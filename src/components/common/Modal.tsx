@@ -69,7 +69,7 @@ const Modal: React.FC<ModalProps> = ({
       aria-describedby={description ? descriptionId : undefined}
     >
       <DialogContent 
-        className={`${maxWidth} ${maxHeight} overflow-y-auto mx-4 w-[calc(100vw-2rem)] sm:w-auto bg-white ${className}`}
+        className={`${maxWidth} ${maxHeight} overflow-y-auto mx-4 w-[calc(100vw-2rem)] sm:w-auto bg-white px-8 ${className}`}
         aria-label={ariaLabel}
       >
         {(title || description) && (
@@ -84,7 +84,7 @@ const Modal: React.FC<ModalProps> = ({
         </div>
         
         {(footer || showCancel || showConfirm) && (
-          <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0 mt-4">
+          <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0 mt-6">
             {footer || (
               <>
                 {showCancel && (

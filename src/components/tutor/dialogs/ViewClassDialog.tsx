@@ -76,7 +76,7 @@ const ViewClassDialog: React.FC<ViewClassDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-3xl px-8">
         <DialogHeader className="flex flex-row items-center justify-between">
           <DialogTitle>{selectedEvent?.title}</DialogTitle>
           <DropdownMenu>
