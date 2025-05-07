@@ -25,7 +25,7 @@ const StudentSelectField: React.FC<StudentSelectFieldProps> = ({
       name="relationshipId"
       render={({ field }) => (
         <FormItem className="w-full">
-          <FormLabel htmlFor={selectId} className="dark:text-gray-100">
+          <FormLabel htmlFor={selectId} className="text-gray-900">
             Student <span className="text-red-500" aria-hidden="true">*</span>
             <span className="sr-only">required</span>
           </FormLabel>
@@ -39,18 +39,18 @@ const StudentSelectField: React.FC<StudentSelectFieldProps> = ({
             <FormControl>
               <SelectTrigger 
                 id={selectId}
-                className="bg-white dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700 w-full focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-tutoring-blue dark:focus-visible:ring-tutoring-teal"
+                className="bg-white text-gray-900 border-gray-300 w-full focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-tutoring-blue"
                 aria-label="Select student"
               >
                 <SelectValue placeholder="Select student" />
               </SelectTrigger>
             </FormControl>
-            <SelectContent className="bg-white dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700 max-h-60 overflow-y-auto">
+            <SelectContent className="bg-white text-gray-900 border-gray-300 max-h-60 overflow-y-auto">
               {relationships.length > 0 ? (
                 relationships.map(rel => {
                   const student = assignedStudents.find(s => s.id === rel.student_id);
                   return (
-                    <SelectItem key={rel.id} value={rel.id} className="dark:text-gray-100 dark:hover:bg-gray-700 dark:focus:bg-gray-700">
+                    <SelectItem key={rel.id} value={rel.id} className="text-gray-900 hover:bg-gray-100 focus:bg-gray-100">
                       {student?.name ?? 'Loading...'}
                     </SelectItem>
                   );
@@ -62,7 +62,7 @@ const StudentSelectField: React.FC<StudentSelectFieldProps> = ({
               )}
             </SelectContent>
           </Select>
-          <FormMessage className="text-red-500 dark:text-red-400 text-xs" role="alert" />
+          <FormMessage className="text-red-500 text-xs" role="alert" />
         </FormItem>
       )}
     />

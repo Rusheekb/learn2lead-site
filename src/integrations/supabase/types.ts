@@ -63,7 +63,7 @@ export type Database = {
           "Class ID": string | null
           "Class Number": string | null
           Content: string | null
-          Date: string | null
+          Date: string
           Day: string | null
           HW: string | null
           id: string
@@ -82,7 +82,7 @@ export type Database = {
           "Class ID"?: string | null
           "Class Number"?: string | null
           Content?: string | null
-          Date?: string | null
+          Date: string
           Day?: string | null
           HW?: string | null
           id?: string
@@ -101,7 +101,7 @@ export type Database = {
           "Class ID"?: string | null
           "Class Number"?: string | null
           Content?: string | null
-          Date?: string | null
+          Date?: string
           Day?: string | null
           HW?: string | null
           id?: string

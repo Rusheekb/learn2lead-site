@@ -74,12 +74,12 @@ const Modal: React.FC<ModalProps> = ({
       >
         {(title || description) && (
           <DialogHeader>
-            {title && <DialogTitle id={titleId} className="text-xl break-words">{title}</DialogTitle>}
-            {description && <DialogDescription id={descriptionId} className="break-words">{description}</DialogDescription>}
+            {title && <DialogTitle id={titleId} className="text-xl text-gray-900 break-words">{title}</DialogTitle>}
+            {description && <DialogDescription id={descriptionId} className="text-gray-600 break-words">{description}</DialogDescription>}
           </DialogHeader>
         )}
         
-        <div className="overflow-y-auto">
+        <div className="overflow-y-auto text-gray-900">
           {children}
         </div>
         
@@ -91,7 +91,7 @@ const Modal: React.FC<ModalProps> = ({
                   <Button 
                     variant="outline" 
                     onClick={handleCancel} 
-                    className="w-full sm:w-auto focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-tutoring-blue"
+                    className="w-full sm:w-auto bg-white text-gray-900 border-gray-300 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-tutoring-blue"
                     aria-label={cancelText}
                   >
                     {cancelText}
@@ -102,7 +102,7 @@ const Modal: React.FC<ModalProps> = ({
                     variant={confirmVariant} 
                     onClick={onConfirm}
                     disabled={isConfirmLoading}
-                    className="w-full sm:w-auto focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-tutoring-blue"
+                    className="w-full sm:w-auto bg-tutoring-blue hover:bg-tutoring-blue/90 text-white focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-tutoring-blue"
                     aria-label={isConfirmLoading ? "Loading..." : confirmText}
                   >
                     {isConfirmLoading ? "Loading..." : confirmText}
