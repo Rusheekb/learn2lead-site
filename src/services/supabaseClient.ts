@@ -55,20 +55,25 @@ export async function fetchClassLogs(): Promise<ClassEvent[]> {
 export async function createClassLog(
   classLog: Record<string, any>
 ): Promise<ClassEvent> {
+  // First, format the date correctly
+  const dateValue = classLog.Date || classLog.date;
+  const formattedDate = dateValue ? 
+    (typeof dateValue === 'string' ? 
+      dateValue : 
+      new Date(dateValue).toISOString().split('T')[0]) : 
+    new Date().toISOString().split('T')[0];
+    
+  // Then calculate day based on the formatted date
+  const dayValue = classLog.day || classLog.Day || 
+    new Date(formattedDate).toLocaleDateString('en-US', { weekday: 'long' });
+    
   // Create a properly formatted object that matches the database schema
-  const dbRecord: Record<string, any> = {
-    // Required field with appropriate format
-    'Date': classLog.Date || (classLog.date ? 
-      (typeof classLog.date === 'string' ? 
-        classLog.date : 
-        new Date(classLog.date).toISOString().split('T')[0]) : 
-      new Date().toISOString().split('T')[0]),
-      
-    // Map other fields from the input
+  const dbRecord = {
+    'Date': formattedDate,
     'Class Number': classLog.title || classLog['Class Number'] || null,
     'Tutor Name': classLog.tutorName || classLog['Tutor Name'] || null,
     'Student Name': classLog.studentName || classLog['Student Name'] || null,
-    'Day': classLog.day || classLog.Day || new Date(dbRecord['Date']).toLocaleDateString('en-US', { weekday: 'long' }),
+    'Day': dayValue,
     'Time (CST)': classLog.startTime || classLog['Time (CST)'] || null,
     'Time (hrs)': classLog.duration?.toString() || classLog['Time (hrs)'] || null,
     'Subject': classLog.subject || classLog.Subject || null,
