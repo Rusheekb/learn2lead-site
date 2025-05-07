@@ -1,4 +1,3 @@
-
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { ClassItem, StudentMessage, StudentUpload } from '@/types/classTypes';
@@ -8,13 +7,14 @@ import { toast } from 'sonner';
 // Query keys
 export const studentKeys = {
   all: ['student'] as const,
-  classes: (studentName: string) => [...studentKeys.all, 'classes', studentName] as const,
+  classes: (studentId: string) => [...studentKeys.all, 'classes', studentId] as const,
   messages: (studentName: string) => [...studentKeys.all, 'messages', studentName] as const,
   uploads: (studentName: string) => [...studentKeys.all, 'uploads', studentName] as const,
+  scheduledClasses: (studentId: string) => ['studentClasses', studentId] as const,
 };
 
 // Fetch student classes
-export const useStudentClassesQuery = (studentName: string) => {
+export const useStudentClassesQuery = (studentName: string, studentId?: string) => {
   const queryClient = useQueryClient();
 
   const fetchStudentClasses = async () => {
@@ -51,7 +51,7 @@ export const useStudentClassesQuery = (studentName: string) => {
     enabled: !!studentName,
   });
 
-  // Setup realtime subscription
+  // Setup realtime subscription for class_logs
   useEffect(() => {
     if (!studentName) return;
     
@@ -83,6 +83,39 @@ export const useStudentClassesQuery = (studentName: string) => {
       supabase.removeChannel(channel);
     };
   }, [queryClient, studentName]);
+
+  // Setup realtime subscription for scheduled_classes if studentId is provided
+  useEffect(() => {
+    if (!studentId) return;
+    
+    const channel = supabase
+      .channel('student-scheduled-classes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'scheduled_classes',
+          filter: `student_id=eq.${studentId}`,
+        },
+        (payload) => {
+          console.log('Realtime update for student scheduled classes:', payload);
+          
+          // Invalidate the query to refetch data
+          queryClient.invalidateQueries({ queryKey: studentKeys.scheduledClasses(studentId) });
+          
+          // Show toast based on the event type
+          if (payload.eventType === 'INSERT') {
+            toast.success('New class scheduled');
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient, studentId]);
 
   return {
     classes,

@@ -30,13 +30,19 @@ export const fetchScheduledClasses = async (
   try {
     let query = supabase.from('student_classes').select('*');
 
-    // Always filter by tutor_id if provided, this ensures we only get classes for the current tutor
+    // Filter by tutor_id if provided
     if (tutorId) {
       query = query.eq('tutor_id', tutorId);
     }
 
+    // Filter by student_id if provided
     if (studentId) {
       query = query.eq('student_id', studentId);
+    }
+
+    // If neither filter is provided, we'll show them a message
+    if (!tutorId && !studentId) {
+      console.warn('No filter provided to fetchScheduledClasses - this will return all classes');
     }
 
     const { data, error } = await query
@@ -45,7 +51,7 @@ export const fetchScheduledClasses = async (
 
     if (error) throw error;
 
-    console.log('Fetched classes for tutor ID:', tutorId, 'Count:', data?.length || 0);
+    console.log(`Fetched classes for ${studentId ? 'student' : 'tutor'} ID: ${studentId || tutorId}, Count: ${data?.length || 0}`);
 
     const classEvents: ClassEvent[] = (data || []).map((cls) => {
       // Safely handle potentially null values

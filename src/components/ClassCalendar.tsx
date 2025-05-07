@@ -9,6 +9,7 @@ import { ClassSession } from '@/types/classTypes';
 import { fetchScheduledClasses } from '@/services/classService';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface ClassCalendarProps {
   studentId: string | null;
@@ -18,6 +19,7 @@ const ClassCalendar: React.FC<ClassCalendarProps> = ({ studentId }) => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [sessions, setSessions] = useState<ClassSession[]>([]);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!studentId) return;
@@ -55,6 +57,7 @@ const ClassCalendar: React.FC<ClassCalendarProps> = ({ studentId }) => {
   useEffect(() => {
     if (!studentId) return;
 
+    // Listen for any changes to scheduled classes for this student
     const channel = supabase
       .channel('student-classes')
       .on(
@@ -62,10 +65,11 @@ const ClassCalendar: React.FC<ClassCalendarProps> = ({ studentId }) => {
         {
           event: '*',
           schema: 'public',
-          table: 'student_classes',
+          table: 'scheduled_classes',
           filter: `student_id=eq.${studentId}`,
         },
         () => {
+          // Refetch the classes when a change occurs
           fetchScheduledClasses(undefined, studentId)
             .then((classEvents) => {
               const classSessions = classEvents.map((cls) => ({
@@ -82,6 +86,9 @@ const ClassCalendar: React.FC<ClassCalendarProps> = ({ studentId }) => {
               }));
 
               setSessions(classSessions);
+              
+              // Also invalidate any React Query caches
+              queryClient.invalidateQueries({ queryKey: ['studentClasses', studentId] });
             })
             .catch((error) => {
               console.error('Error updating sessions:', error);
@@ -93,7 +100,7 @@ const ClassCalendar: React.FC<ClassCalendarProps> = ({ studentId }) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [studentId]);
+  }, [studentId, queryClient]);
 
   const getSessionsForDate = (date: Date) => {
     return sessions.filter((session) => {

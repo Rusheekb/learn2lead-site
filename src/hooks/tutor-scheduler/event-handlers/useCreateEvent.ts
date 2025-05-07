@@ -5,11 +5,14 @@ import { toast } from 'sonner';
 import { ClassEvent } from '@/types/tutorTypes';
 import { createScheduledClass } from '@/services/classService';
 import { analytics, EventName, EventCategory } from '@/services/analytics/analyticsService';
+import { useQueryClient } from '@tanstack/react-query';
 
 export const useCreateEvent = (
   scheduledClasses: ClassEvent[],
   setScheduledClasses: React.Dispatch<React.SetStateAction<ClassEvent[]>>
 ) => {
+  const queryClient = useQueryClient();
+
   const handleCreateEvent = async (newEvent: any) => {
     try {
       if (!newEvent.title || !newEvent.studentId || !newEvent.subject) {
@@ -61,6 +64,11 @@ export const useCreateEvent = (
             date: format(newEvent.date, 'yyyy-MM-dd'),
           }
         });
+        
+        // Invalidate student classes query
+        if (newEvent.studentId) {
+          queryClient.invalidateQueries({ queryKey: ['studentClasses', newEvent.studentId] });
+        }
         
         return true;
       }
