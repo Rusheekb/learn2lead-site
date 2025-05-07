@@ -11,7 +11,6 @@ import NotFound from './pages/NotFound';
 import Login from './pages/Login';
 import Pricing from './pages/Pricing';
 import { AuthProvider } from './contexts/AuthContext';
-import { ThemeProvider } from '@/contexts/ThemeContext';
 import PrivateRoute from './components/PrivateRoute';
 import { useRoleSync } from './hooks/useRoleSync';
 import { SidebarProvider } from '@/hooks/useSidebar';
@@ -63,79 +62,76 @@ function App() {
   useRoleSync();
 
   return (
-    <ThemeProvider>
-      <LanguageProvider>
-        <QueryClientProvider client={queryClient}>
-          <HelmetProvider>
-            <TooltipProvider>
-              <BrowserRouter>
-                <AuthProvider>
-                  <SidebarProvider>
-                    {/* All routes are rendered inside the ThemeProvider */}
-                    <Routes>
-                      {/* Public routes - ThemeProvider will ensure they're always in light mode */}
-                      <Route path="/" element={<Index />} />
-                      <Route path="/login" element={<Login />} />
-                      <Route path="/pricing" element={<Pricing />} />
-                      
-                      {/* Private routes - can toggle between dark/light mode */}
-                      <Route element={
-                        <>
-                          <Toaster />
-                          <Sonner />
-                          <PrivateRoute />
-                        </>
-                      }>
-                        <Route element={<PrivateRoute allowedRoles={['student']} />}>
-                          <Route path="/dashboard/*" element={
-                            <StudentDashboardWrapper>
-                              <Dashboard />
-                            </StudentDashboardWrapper>
-                          } />
-                          <Route path="/profile" element={
-                            <StudentDashboardWrapper>
-                              <Profile />
-                            </StudentDashboardWrapper>
-                          } />
-                        </Route>
-
-                        <Route element={<PrivateRoute allowedRoles={['tutor']} />}>
-                          <Route path="/tutor-dashboard/*" element={
-                            <TutorDashboardWrapper>
-                              <TutorDashboard />
-                            </TutorDashboardWrapper>
-                          } />
-                          <Route path="/tutor-profile" element={
-                            <TutorDashboardWrapper>
-                              <Profile />
-                            </TutorDashboardWrapper>
-                          } />
-                        </Route>
-
-                        <Route element={<PrivateRoute allowedRoles={['admin']} />}>
-                          <Route path="/admin-dashboard/*" element={
-                            <AdminDashboardWrapper>
-                              <AdminDashboard />
-                            </AdminDashboardWrapper>
-                          } />
-                          <Route path="/admin-profile" element={
-                            <AdminDashboardWrapper>
-                              <Profile />
-                            </AdminDashboardWrapper>
-                          } />
-                        </Route>
+    <LanguageProvider>
+      <QueryClientProvider client={queryClient}>
+        <HelmetProvider>
+          <TooltipProvider>
+            <BrowserRouter>
+              <AuthProvider>
+                <SidebarProvider>
+                  <Routes>
+                    {/* Public routes */}
+                    <Route path="/" element={<Index />} />
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/pricing" element={<Pricing />} />
+                    
+                    {/* Private routes */}
+                    <Route element={
+                      <>
+                        <Toaster />
+                        <Sonner />
+                        <PrivateRoute />
+                      </>
+                    }>
+                      <Route element={<PrivateRoute allowedRoles={['student']} />}>
+                        <Route path="/dashboard/*" element={
+                          <StudentDashboardWrapper>
+                            <Dashboard />
+                          </StudentDashboardWrapper>
+                        } />
+                        <Route path="/profile" element={
+                          <StudentDashboardWrapper>
+                            <Profile />
+                          </StudentDashboardWrapper>
+                        } />
                       </Route>
 
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                  </SidebarProvider>
-                </AuthProvider>
-              </BrowserRouter>
-            </TooltipProvider>
-          </HelmetProvider>
-        </QueryClientProvider>
-      </LanguageProvider>
-    </ThemeProvider>
+                      <Route element={<PrivateRoute allowedRoles={['tutor']} />}>
+                        <Route path="/tutor-dashboard/*" element={
+                          <TutorDashboardWrapper>
+                            <TutorDashboard />
+                          </TutorDashboardWrapper>
+                        } />
+                        <Route path="/tutor-profile" element={
+                          <TutorDashboardWrapper>
+                            <Profile />
+                          </TutorDashboardWrapper>
+                        } />
+                      </Route>
+
+                      <Route element={<PrivateRoute allowedRoles={['admin']} />}>
+                        <Route path="/admin-dashboard/*" element={
+                          <AdminDashboardWrapper>
+                            <AdminDashboard />
+                          </AdminDashboardWrapper>
+                        } />
+                        <Route path="/admin-profile" element={
+                          <AdminDashboardWrapper>
+                            <Profile />
+                          </AdminDashboardWrapper>
+                        } />
+                      </Route>
+                    </Route>
+
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </SidebarProvider>
+              </AuthProvider>
+            </BrowserRouter>
+          </TooltipProvider>
+        </HelmetProvider>
+      </QueryClientProvider>
+    </LanguageProvider>
   );
 }
 

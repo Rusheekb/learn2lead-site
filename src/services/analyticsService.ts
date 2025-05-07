@@ -9,7 +9,6 @@ export enum EventName {
   LINK_CLICK = 'link_click',
   FORM_SUBMIT = 'form_submit',
   TOGGLE_SIDEBAR = 'toggle_sidebar',
-  TOGGLE_THEME = 'toggle_theme',
   LANGUAGE_CHANGE = 'language_change',
   TAB_CHANGE = 'tab_change',
   CLASS_CREATED = 'class_created',

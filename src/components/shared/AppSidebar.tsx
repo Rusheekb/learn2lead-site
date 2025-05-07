@@ -71,7 +71,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ className = '' }) => {
     <aside 
       className={`${
         isExpanded ? 'w-64' : 'w-20'
-      } transition-all duration-300 ease-in-out bg-gray-100 dark:bg-gray-800 shadow-md h-screen overflow-auto flex flex-col z-30 ${className}`}
+      } transition-all duration-300 ease-in-out bg-gray-100 shadow-md h-screen overflow-auto flex flex-col z-30 ${className}`}
       aria-label="Dashboard sidebar"
     >
       <SidebarLogo isExpanded={isExpanded} toggleSidebar={toggleSidebar} />
