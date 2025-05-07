@@ -1,13 +1,14 @@
+
 import { useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 
 export const useSidebarStyles = () => {
   const baseClasses = useMemo(() => 
-    'flex items-center px-4 py-2 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-200 rounded-md focus:outline-none focus:ring-2 focus:ring-tutoring-blue dark:focus:ring-tutoring-teal',
+    'flex items-center px-4 py-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors duration-200 rounded-md focus:outline-none focus:ring-2 focus:ring-tutoring-blue',
   []);
   
   const activeClasses = useMemo(() => 
-    'bg-gray-200 dark:bg-gray-700 text-tutoring-blue dark:text-tutoring-teal font-medium',
+    'bg-gray-200 text-tutoring-blue font-medium',
   []);
 
   const isLinkActive = (path: string, queryParam?: { key: string, value?: string }) => {
