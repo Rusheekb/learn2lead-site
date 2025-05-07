@@ -53,7 +53,7 @@ export default function useSchedulerData() {
     if (user?.id) {
       loadClasses();
       // Also invalidate any cached queries to ensure fresh data
-      queryClient.invalidateQueries(['scheduledClasses', user.id]);
+      queryClient.invalidateQueries({ queryKey: ['scheduledClasses', user.id] });
     }
   }, [loadClasses, user?.id, queryClient]);
 

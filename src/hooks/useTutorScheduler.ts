@@ -86,7 +86,7 @@ export function useTutorScheduler() {
   useEffect(() => {
     if (user?.id) {
       refetchClasses();
-      queryClient.invalidateQueries(['scheduledClasses', user.id]);
+      queryClient.invalidateQueries({ queryKey: ['scheduledClasses', user.id] });
     }
   }, [user?.id, refetchClasses, queryClient]);
 

@@ -59,7 +59,7 @@ const TutorScheduler: React.FC = () => {
   useEffect(() => {
     if (user?.id) {
       refetchClasses();
-      queryClient.invalidateQueries(['scheduledClasses', user.id]);
+      queryClient.invalidateQueries({ queryKey: ['scheduledClasses', user.id] });
     }
   }, [user?.id, refetchClasses, queryClient]);
 
