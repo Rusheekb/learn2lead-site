@@ -68,8 +68,9 @@ export const useClassLogsQuery = () => {
       if (classEvent.notes !== undefined) dbUpdates['Additional Info'] = classEvent.notes;
       if (classEvent.studentPayment !== undefined) dbUpdates['Student Payment'] = classEvent.studentPayment;
       if (classEvent.tutorPayment !== undefined) dbUpdates['Tutor Payment'] = classEvent.tutorPayment;
-      if (classEvent.status !== undefined) dbUpdates['Status'] = classEvent.status;
-      if (classEvent.attendance !== undefined) dbUpdates['Attendance'] = classEvent.attendance;
+      
+      // Remove Status and Attendance fields as they don't exist in the class_logs table
+      // (removing these two lines that were causing the error)
       
       return updateClassLog(id, dbUpdates);
     },

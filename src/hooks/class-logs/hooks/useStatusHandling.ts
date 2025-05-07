@@ -15,8 +15,8 @@ export const useStatusHandling = () => {
         return false;
       }
       
-      // Use the database field name format - "Status" instead of "status"
-      await updateClassLog(classId, { "Status": validStatus });
+      // Store in Additional Info instead since Status field doesn't exist
+      await updateClassLog(classId, { "Additional Info": `Status: ${validStatus}` });
       toast.success('Class status updated');
       return true;
     } catch (error) {
@@ -37,8 +37,8 @@ export const useStatusHandling = () => {
         return false;
       }
       
-      // Use the database field name format - "Attendance" instead of "attendance"
-      await updateClassLog(classId, { "Attendance": validAttendance });
+      // Store in Additional Info instead since Attendance field doesn't exist
+      await updateClassLog(classId, { "Additional Info": `Attendance: ${validAttendance}` });
       toast.success('Attendance updated');
       return true;
     } catch (error) {
