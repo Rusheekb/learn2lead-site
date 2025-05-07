@@ -73,7 +73,7 @@ export function useTutorScheduler() {
     setIsViewEventOpen
   );
 
-  // Create realtime subscription
+  // Create realtime subscription - this will be scoped to the current tutor
   useSchedulerRealtime(
     scheduledClasses,
     setScheduledClasses,
@@ -82,10 +82,11 @@ export function useTutorScheduler() {
     setIsViewEventOpen
   );
 
-  // Ensure we refetch classes when component mounts
+  // Ensure we refetch classes when component mounts and user ID changes
   useEffect(() => {
     if (user?.id) {
       refetchClasses();
+      // Enhanced invalidation to be more specific
       queryClient.invalidateQueries({ queryKey: ['scheduledClasses', user.id] });
     }
   }, [user?.id, refetchClasses, queryClient]);
@@ -130,6 +131,12 @@ export function useTutorScheduler() {
       // Since we've reached this point without errors, consider it a success
       resetNewEventForm();
       setIsAddEventOpen(false);
+      
+      // Make sure to invalidate the tutor's classes query
+      if (user?.id) {
+        queryClient.invalidateQueries({ queryKey: ['scheduledClasses', user.id] });
+      }
+      
       return true;
     } catch (error) {
       console.error('Error creating event:', error);
@@ -159,6 +166,17 @@ export function useTutorScheduler() {
       // Since we've reached this point without errors, consider it a success
       setSelectedEvent(event);
       setIsEditMode(false);
+      
+      // Make sure to invalidate the tutor's classes query
+      if (user?.id) {
+        queryClient.invalidateQueries({ queryKey: ['scheduledClasses', user.id] });
+        
+        // Also invalidate the specific student's classes if student ID is available
+        if (event.studentId) {
+          queryClient.invalidateQueries({ queryKey: ['studentClasses', event.studentId] });
+        }
+      }
+      
       return true;
     } catch (error) {
       console.error('Error updating event:', error);
@@ -169,12 +187,27 @@ export function useTutorScheduler() {
 
   const handleDeleteEvent = async (eventId: string) => {
     try {
+      // Save student ID before deleting for invalidation
+      const eventToDelete = scheduledClasses.find(event => event.id === eventId);
+      const studentId = eventToDelete?.studentId;
+      
       // Call the deleteClass function
       await deleteClass(eventId);
       
       // Since we've reached this point without errors, consider it a success
       setIsViewEventOpen(false);
       setSelectedEvent(null);
+      
+      // Make sure to invalidate the tutor's classes query
+      if (user?.id) {
+        queryClient.invalidateQueries({ queryKey: ['scheduledClasses', user.id] });
+        
+        // Also invalidate the specific student's classes if student ID was captured
+        if (studentId) {
+          queryClient.invalidateQueries({ queryKey: ['studentClasses', studentId] });
+        }
+      }
+      
       return true;
     } catch (error) {
       console.error('Error deleting event:', error);

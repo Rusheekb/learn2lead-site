@@ -1,138 +1,142 @@
 
-import { useEffect, useCallback } from 'react';
+import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { ClassEvent } from '@/types/tutorTypes';
+import { useAuth } from '@/contexts/AuthContext';
 
-export const useSchedulerRealtime = (
+function useSchedulerRealtime(
   scheduledClasses: ClassEvent[],
   setScheduledClasses: React.Dispatch<React.SetStateAction<ClassEvent[]>>,
   selectedEvent: ClassEvent | null,
   setSelectedEvent: React.Dispatch<React.SetStateAction<ClassEvent | null>>,
   setIsViewEventOpen: React.Dispatch<React.SetStateAction<boolean>>
-) => {
-  const handleClassInserted = useCallback(
-    (newClass: any) => {
-      if (scheduledClasses.some((cls) => cls.id === newClass.id)) {
-        return;
-      }
-
-      const classEvent: ClassEvent = {
-        id: newClass.id,
-        title: newClass.title,
-        date: new Date(newClass.date),
-        startTime: newClass.start_time?.substring(0, 5) || '00:00',
-        endTime: newClass.end_time?.substring(0, 5) || '00:00',
-        studentId: newClass.student_id,
-        studentName: newClass.student_name || 'Student',
-        subject: newClass.subject || '',
-        zoomLink: newClass.zoom_link || '',
-        notes: newClass.notes || '',
-        tutorId: newClass.tutor_id,
-        tutorName: newClass.tutor_name || 'Tutor',
-      };
-
-      setScheduledClasses((prevClasses) => [...prevClasses, classEvent]);
-    },
-    [scheduledClasses, setScheduledClasses]
-  );
-
-  const handleClassUpdated = useCallback(
-    (updatedClass: any) => {
-      const classEvent: ClassEvent = {
-        id: updatedClass.id,
-        title: updatedClass.title,
-        date: new Date(updatedClass.date),
-        startTime: updatedClass.start_time?.substring(0, 5) || '00:00',
-        endTime: updatedClass.end_time?.substring(0, 5) || '00:00',
-        studentId: updatedClass.student_id,
-        studentName: updatedClass.student_name || 'Student',
-        subject: updatedClass.subject || '',
-        zoomLink: updatedClass.zoom_link || '',
-        notes: updatedClass.notes || '',
-        tutorId: updatedClass.tutor_id,
-        tutorName: updatedClass.tutor_name || 'Tutor',
-      };
-
-      setScheduledClasses((prevClasses) =>
-        prevClasses.map((cls) => (cls.id === classEvent.id ? classEvent : cls))
-      );
-
-      if (selectedEvent && selectedEvent.id === classEvent.id) {
-        setSelectedEvent(classEvent);
-      }
-    },
-    [setScheduledClasses, selectedEvent, setSelectedEvent]
-  );
-
-  const handleClassDeleted = useCallback(
-    (deletedClass: any) => {
-      const classId = deletedClass.id;
-
-      setScheduledClasses((prevClasses) =>
-        prevClasses.filter((cls) => cls.id !== classId)
-      );
-
-      if (selectedEvent && selectedEvent.id === classId) {
-        setIsViewEventOpen(false);
-        setSelectedEvent(null);
-      }
-    },
-    [setScheduledClasses, selectedEvent, setSelectedEvent, setIsViewEventOpen]
-  );
-
+) {
+  const { user } = useAuth();
+  
   useEffect(() => {
+    if (!user?.id) return;
+    
+    console.log('Setting up realtime subscription for tutor:', user.id);
+    
+    // Create channel with a filter for the current tutor's classes only
     const channel = supabase
-      .channel('tutor-classes')
+      .channel(`tutor-classes-${user.id}`)
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
-          table: 'student_classes',
+          table: 'scheduled_classes',
+          filter: `tutor_id=eq.${user.id}`,
         },
         (payload) => {
-          handleClassInserted(payload.new);
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'student_classes',
-        },
-        (payload) => {
-          handleClassUpdated(payload.new);
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'DELETE',
-          schema: 'public',
-          table: 'student_classes',
-        },
-        (payload) => {
-          handleClassDeleted(payload.old);
+          console.log('Realtime update for tutor classes:', payload);
+          
+          try {
+            if (payload.eventType === 'INSERT') {
+              const newClass = payload.new;
+              if (!newClass) return;
+              
+              // Convert database record to ClassEvent
+              const newClassEvent: ClassEvent = {
+                id: newClass.id || '',
+                title: newClass.title || '',
+                tutorName: newClass.tutor_name || '',
+                studentName: newClass.student_name || '',
+                date: newClass.date ? new Date(newClass.date) : new Date(),
+                startTime: newClass.start_time ? newClass.start_time.substring(0, 5) : '',
+                endTime: newClass.end_time ? newClass.end_time.substring(0, 5) : '',
+                subject: newClass.subject || '',
+                zoomLink: newClass.zoom_link,
+                notes: newClass.notes,
+                status: newClass.status || 'scheduled',
+                attendance: newClass.attendance || 'pending',
+                studentId: newClass.student_id || '',
+                tutorId: newClass.tutor_id || '',
+              };
+              
+              setScheduledClasses((prev) => [...prev, newClassEvent]);
+              
+              // If this is the event we're currently viewing, update it
+              if (selectedEvent && selectedEvent.id === newClass.id) {
+                setSelectedEvent(newClassEvent);
+              }
+            } else if (payload.eventType === 'UPDATE') {
+              const updatedClass = payload.new;
+              if (!updatedClass || !updatedClass.id) return;
+              
+              setScheduledClasses((prev) =>
+                prev.map((cls) => {
+                  if (cls.id === updatedClass.id) {
+                    // Convert database record to ClassEvent
+                    return {
+                      ...cls,
+                      title: updatedClass.title || cls.title,
+                      date: updatedClass.date ? new Date(updatedClass.date) : cls.date,
+                      startTime: updatedClass.start_time ? updatedClass.start_time.substring(0, 5) : cls.startTime,
+                      endTime: updatedClass.end_time ? updatedClass.end_time.substring(0, 5) : cls.endTime,
+                      subject: updatedClass.subject || cls.subject,
+                      zoomLink: updatedClass.zoom_link,
+                      notes: updatedClass.notes,
+                      status: updatedClass.status || cls.status,
+                      attendance: updatedClass.attendance || cls.attendance,
+                    };
+                  }
+                  return cls;
+                })
+              );
+              
+              // If this is the event we're currently viewing, update it
+              if (selectedEvent && selectedEvent.id === updatedClass.id) {
+                setSelectedEvent((prev) => {
+                  if (!prev) return null;
+                  return {
+                    ...prev,
+                    title: updatedClass.title || prev.title,
+                    date: updatedClass.date ? new Date(updatedClass.date) : prev.date,
+                    startTime: updatedClass.start_time ? updatedClass.start_time.substring(0, 5) : prev.startTime,
+                    endTime: updatedClass.end_time ? updatedClass.end_time.substring(0, 5) : prev.endTime,
+                    subject: updatedClass.subject || prev.subject,
+                    zoomLink: updatedClass.zoom_link,
+                    notes: updatedClass.notes,
+                    status: updatedClass.status || prev.status,
+                    attendance: updatedClass.attendance || prev.attendance,
+                  };
+                });
+              }
+            } else if (payload.eventType === 'DELETE') {
+              const deletedClass = payload.old;
+              if (!deletedClass || !deletedClass.id) return;
+              
+              setScheduledClasses((prev) =>
+                prev.filter((cls) => cls.id !== deletedClass.id)
+              );
+              
+              // If this is the event we're currently viewing, close the dialog
+              if (selectedEvent && selectedEvent.id === deletedClass.id) {
+                setSelectedEvent(null);
+                setIsViewEventOpen(false);
+              }
+            }
+          } catch (error) {
+            console.error('Error processing realtime update:', error);
+          }
         }
       )
       .subscribe();
-
+      
+    // Clean up the subscription
     return () => {
       supabase.removeChannel(channel);
     };
   }, [
     scheduledClasses,
-    handleClassInserted,
-    handleClassUpdated,
-    handleClassDeleted,
+    setScheduledClasses,
+    selectedEvent,
+    setSelectedEvent,
+    setIsViewEventOpen,
+    user?.id,
   ]);
-
-  return {
-    handleClassInserted,
-    handleClassUpdated,
-    handleClassDeleted,
-  };
-};
+}
 
 export default useSchedulerRealtime;
