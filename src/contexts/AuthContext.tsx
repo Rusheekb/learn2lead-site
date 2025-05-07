@@ -11,6 +11,7 @@ import { AppRole } from '@/hooks/useProfile';
 import { useAuthState } from '@/hooks/useAuthState';
 import { createStudent } from '@/services/students/studentService';
 import { createTutor } from '@/services/tutors/tutorService';
+import { toast } from 'sonner';
 
 interface AuthContextType {
   user: User | null;
@@ -135,11 +136,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const handleSignOut = async () => {
-    await signOut();
-    setUser(null);
-    setSession(null);
-    setUserRole(null);
-    navigate('/login');
+    try {
+      console.log('Signing out user...');
+      const success = await signOut();
+      
+      if (success) {
+        // Clear local state even if the API call failed but returned success
+        setUser(null);
+        setSession(null);
+        setUserRole(null);
+        navigate('/login');
+      } else {
+        // Manual fallback if signOut fails but we want to force logout
+        setUser(null);
+        setSession(null);
+        setUserRole(null);
+        localStorage.removeItem('supabase.auth.token');
+        navigate('/login');
+        toast.success('Signed out successfully');
+      }
+    } catch (error) {
+      console.error('Error in handleSignOut:', error);
+      // Force logout even if there's an error
+      setUser(null);
+      setSession(null);
+      setUserRole(null);
+      navigate('/login');
+    }
   };
 
   const value = {

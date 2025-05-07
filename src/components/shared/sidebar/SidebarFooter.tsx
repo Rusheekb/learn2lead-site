@@ -9,6 +9,12 @@ interface SidebarFooterProps {
 }
 
 const SidebarFooter: React.FC<SidebarFooterProps> = ({ isExpanded, signOut }) => {
+  const handleLogout = (e: React.MouseEvent) => {
+    e.preventDefault();
+    console.log('Logout button clicked');
+    signOut();
+  };
+
   return (
     <div className="p-4 border-t mt-auto">
       <div className="flex items-center justify-between mb-4">
@@ -20,7 +26,7 @@ const SidebarFooter: React.FC<SidebarFooterProps> = ({ isExpanded, signOut }) =>
       
       {/* Logout button */}
       <button
-        onClick={signOut}
+        onClick={handleLogout}
         className={`${
           isExpanded
             ? 'flex items-center w-full'

@@ -98,14 +98,27 @@ export const signInWithProvider = async (provider: 'google') => {
  */
 export const signOut = async () => {
   try {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      toast.error('Failed to sign out');
-      return false;
+    // Try to get the current session first to confirm we have a valid session
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    // Only attempt to sign out if we have a valid session
+    if (session) {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Failed to sign out:', error);
+        toast.error('Failed to sign out');
+        return false;
+      }
+      toast.success('Signed out successfully');
+      return true;
+    } else {
+      // No session found, but we can still "sign out" from the frontend
+      console.info('No active session found, clearing local state');
+      toast.success('Signed out successfully');
+      return true;
     }
-    toast.success('Signed out successfully');
-    return true;
   } catch (error) {
+    console.error('Error during sign out:', error);
     toast.error('Failed to sign out');
     return false;
   }
