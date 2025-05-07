@@ -1,9 +1,11 @@
+
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { fetchClassLogs } from '@/services/classLogsService';
 import { ClassEvent } from '@/types/tutorTypes';
 import { supabase } from '@/integrations/supabase/client';
 import { formatTime } from '@/utils/timeUtils';
+import { TransformedClassLog } from '@/services/logs/types';
 
 export const useClassData = (): {
   isLoading: boolean;
@@ -54,9 +56,33 @@ export const useClassData = (): {
         return;
       }
 
-      const processedLogs = classLogs.map((log: ClassEvent) => ({
-        ...log,
+      // Convert TransformedClassLog to ClassEvent
+      const processedLogs: ClassEvent[] = classLogs.map((log: TransformedClassLog): ClassEvent => ({
+        id: log.id,
+        title: log.title || log.classNumber || '',
+        tutorName: log.tutorName,
+        studentName: log.studentName,
         date: log.date instanceof Date ? log.date : new Date(log.date),
+        startTime: log.startTime,
+        endTime: log.endTime,
+        subject: log.subject,
+        content: log.content,
+        homework: log.homework,
+        duration: log.duration,
+        classCost: log.classCost,
+        tutorCost: log.tutorCost,
+        studentPayment: log.studentPayment as any, // Type casting
+        tutorPayment: log.tutorPayment as any, // Type casting
+        notes: log.notes || log.additionalInfo || null,
+        status: log.additionalInfo?.includes('Status:') 
+          ? log.additionalInfo.split('Status:')[1].trim().split(' ')[0] as any
+          : 'pending',
+        attendance: log.additionalInfo?.includes('Attendance:')
+          ? log.additionalInfo.split('Attendance:')[1].trim().split(' ')[0] as any
+          : 'pending',
+        zoomLink: log.zoomLink || null,
+        recurring: false,
+        materials: [],
       }));
 
       console.log('Processed logs:', processedLogs);

@@ -18,6 +18,7 @@ import {
 import useStudentRealtime from '@/hooks/student/useStudentRealtime';
 import { ClassItem } from '@/types/classTypes';
 import { ClassEvent } from '@/types/tutorTypes';
+import { TransformedClassLog } from '@/services/logs/types';
 
 const ClassStudentActivity: React.FC = () => {
   const [studentUploads, setStudentUploads] = useState<StudentUpload[]>([]);
@@ -43,9 +44,9 @@ const ClassStudentActivity: React.FC = () => {
       try {
         const classLogs = await fetchClassLogs();
 
-        const transformedClasses: ClassItem[] = classLogs.map((cl: ClassEvent) => ({
+        const transformedClasses: ClassItem[] = classLogs.map((cl: TransformedClassLog) => ({
           id: cl.id,
-          title: cl.title,
+          title: cl.title || cl.classNumber || '',
           subject: cl.subject,
           tutorName: cl.tutorName || 'Ms. Johnson',
           date:
@@ -54,13 +55,17 @@ const ClassStudentActivity: React.FC = () => {
               : String(cl.date),
           startTime: cl.startTime,
           endTime: cl.endTime,
-          status: cl.status || 'upcoming',
-          attendance: cl.attendance || 'pending',
+          status: cl.additionalInfo?.includes('Status:') 
+            ? cl.additionalInfo.split('Status:')[1].trim().split(' ')[0] 
+            : 'upcoming',
+          attendance: cl.additionalInfo?.includes('Attendance:')
+            ? cl.additionalInfo.split('Attendance:')[1].trim().split(' ')[0]
+            : 'pending',
           zoomLink: cl.zoomLink || '',
-          notes: cl.notes || '',
+          notes: cl.notes || cl.additionalInfo || '',
           studentName: cl.studentName,
           subjectId: cl.subject,
-          recurring: cl.recurring || false,
+          recurring: false,
         }));
 
         setClasses(transformedClasses);

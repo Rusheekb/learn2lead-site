@@ -1,7 +1,9 @@
+
 import { format, parse } from 'date-fns';
 import { parseNumericString } from '@/utils/numberUtils';
 import { DbClassLog, DbCodeLog, TransformedClassLog } from './types';
 import { Database } from '@/integrations/supabase/types';
+import { calculateEndTime } from '@/services/utils/dateTimeTransformers';
 
 type ClassLogs = Database['public']['Tables']['class_logs']['Row'];
 
@@ -19,6 +21,11 @@ export const transformClassLog = (record: DbClassLog): TransformedClassLog => {
       dateObj = new Date();
     }
 
+    // Calculate duration and endTime
+    const startTime = record['Time (CST)'] ?? '';
+    const duration = parseNumericString(record['Time (hrs)'] ?? '0');
+    const endTime = calculateEndTime(startTime, duration) || startTime; // Default to startTime if calculation fails
+
     return {
       id: record.id,
       classNumber: record['Class Number'] ?? '',
@@ -26,8 +33,8 @@ export const transformClassLog = (record: DbClassLog): TransformedClassLog => {
       studentName: record['Student Name'] ?? '',
       date: dateObj,
       day: record['Day'] || format(dateObj, 'EEEE'),
-      startTime: record['Time (CST)'] ?? '',
-      duration: parseNumericString(record['Time (hrs)'] ?? '0'),
+      startTime: startTime,
+      duration: duration,
       subject: record['Subject'] ?? '',
       content: record['Content'] || '',
       homework: record['HW'] || '',
@@ -40,7 +47,7 @@ export const transformClassLog = (record: DbClassLog): TransformedClassLog => {
       isCodeLog: false,
       // Add these to match ClassEvent interface
       title: record['Class Number'] ?? '',
-      endTime: '',
+      endTime: endTime, // Now always populated
       zoomLink: null,
       notes: record['Additional Info'],
     };
@@ -64,6 +71,11 @@ export const transformCodeLog = (record: DbCodeLog): TransformedClassLog => {
       dateObj = new Date();
     }
 
+    // Calculate endTime from startTime and duration
+    const startTime = record.time_cst || 'N/A';
+    const duration = parseNumericString(record.time_hrs ?? '0');
+    const endTime = calculateEndTime(startTime, duration) || startTime; // Default to startTime if calculation fails
+
     return {
       id: record.id,
       classNumber: record.class_number || 'Code Session',
@@ -71,8 +83,8 @@ export const transformCodeLog = (record: DbCodeLog): TransformedClassLog => {
       studentName: record.student_name ?? '',
       date: dateObj,
       day: record.day || format(dateObj, 'EEEE'),
-      startTime: record.time_cst || 'N/A',
-      duration: parseNumericString(record.time_hrs ?? '0'),
+      startTime: startTime,
+      duration: duration,
       subject: 'Coding',
       content: record.content || '',
       homework: record.hw || '',
@@ -85,7 +97,7 @@ export const transformCodeLog = (record: DbCodeLog): TransformedClassLog => {
       isCodeLog: true,
       // Add these to match ClassEvent interface
       title: record.class_number || 'Code Session',
-      endTime: '',
+      endTime: endTime, // Now always populated
       zoomLink: null,
       notes: record.additional_info,
     };
@@ -118,7 +130,7 @@ const createErrorLog = (
   additionalInfo: 'Error loading class data',
   isCodeLog,
   title: 'Error',
-  endTime: '',
+  endTime: 'Error', // Set a default value for error state
   zoomLink: null,
   notes: 'Error loading class data',
 });

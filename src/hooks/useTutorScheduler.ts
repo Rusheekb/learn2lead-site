@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { ClassEvent } from '@/types/tutorTypes';
 import useSchedulerFilters from './tutor-scheduler/useSchedulerFilters';
@@ -11,6 +10,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
+import { TransformedClassLog } from '@/services/logs/types';
 
 export function useTutorScheduler() {
   const { user } = useAuth();
@@ -94,7 +94,27 @@ export function useTutorScheduler() {
   // Sync with classList when it changes
   useEffect(() => {
     if (classList && classList.length > 0) {
-      setScheduledClasses(classList);
+      // Convert TransformedClassLog to ClassEvent if needed
+      const convertedClasses = classList.map((cls: TransformedClassLog | ClassEvent) => {
+        if ('additionalInfo' in cls) { // It's a TransformedClassLog
+          return {
+            ...cls,
+            title: cls.title || cls.classNumber || '',
+            status: cls.additionalInfo?.includes('Status:') 
+              ? cls.additionalInfo.split('Status:')[1].trim().split(' ')[0] as any
+              : 'pending',
+            attendance: cls.additionalInfo?.includes('Attendance:')
+              ? cls.additionalInfo.split('Attendance:')[1].trim().split(' ')[0] as any
+              : 'pending',
+            zoomLink: cls.zoomLink || null,
+            recurring: false,
+            materials: [],
+          } as ClassEvent;
+        }
+        return cls; // It's already a ClassEvent
+      });
+      
+      setScheduledClasses(convertedClasses);
     }
   }, [classList, setScheduledClasses]);
 

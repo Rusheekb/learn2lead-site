@@ -1,3 +1,4 @@
+
 import { Database } from '@/integrations/supabase/types';
 
 // Define the column names as they appear in the database
@@ -49,7 +50,7 @@ export interface TransformedClassLog {
   isCodeLog: boolean;
   // Add these to match ClassEvent interface
   title?: string;
-  endTime?: string;
+  endTime: string; // Changed from string | undefined to string
   zoomLink?: string | null;
   notes?: string | null;
 }
