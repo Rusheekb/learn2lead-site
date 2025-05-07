@@ -5,6 +5,7 @@ import { fetchClassLogs, createClassLog, updateClassLog, deleteClassLog } from '
 import { ClassEvent } from '@/types/tutorTypes';
 import { toast } from 'sonner';
 import { useEffect } from 'react';
+import { format } from 'date-fns';
 
 // Query keys
 export const classLogsKeys = {
@@ -39,10 +40,39 @@ export const useClassLogsQuery = () => {
     },
   });
 
-  // Update a class log
+  // Update a class log - Convert ClassEvent to DbClassLog format
   const updateMutation = useMutation({
-    mutationFn: (params: { id: string, classEvent: Partial<ClassEvent> }) => 
-      updateClassLog(params.id, params.classEvent),
+    mutationFn: (params: { id: string, classEvent: Partial<ClassEvent> }) => {
+      const { id, classEvent } = params;
+      
+      // Convert from ClassEvent to DbClassLog format
+      const dbUpdates: Record<string, any> = {};
+      
+      if (classEvent.title !== undefined) dbUpdates['Class Number'] = classEvent.title;
+      if (classEvent.tutorName !== undefined) dbUpdates['Tutor Name'] = classEvent.tutorName;
+      if (classEvent.studentName !== undefined) dbUpdates['Student Name'] = classEvent.studentName;
+      if (classEvent.date !== undefined) {
+        // Convert Date object to string format expected by database
+        const dateValue = classEvent.date instanceof Date 
+          ? format(classEvent.date, 'yyyy-MM-dd')
+          : classEvent.date;
+        dbUpdates['Date'] = dateValue;
+      }
+      if (classEvent.startTime !== undefined) dbUpdates['Time (CST)'] = classEvent.startTime;
+      if (classEvent.duration !== undefined) dbUpdates['Time (hrs)'] = classEvent.duration.toString();
+      if (classEvent.subject !== undefined) dbUpdates['Subject'] = classEvent.subject;
+      if (classEvent.content !== undefined) dbUpdates['Content'] = classEvent.content;
+      if (classEvent.homework !== undefined) dbUpdates['HW'] = classEvent.homework;
+      if (classEvent.classCost !== undefined) dbUpdates['Class Cost'] = classEvent.classCost?.toString();
+      if (classEvent.tutorCost !== undefined) dbUpdates['Tutor Cost'] = classEvent.tutorCost?.toString();
+      if (classEvent.notes !== undefined) dbUpdates['Additional Info'] = classEvent.notes;
+      if (classEvent.studentPayment !== undefined) dbUpdates['Student Payment'] = classEvent.studentPayment;
+      if (classEvent.tutorPayment !== undefined) dbUpdates['Tutor Payment'] = classEvent.tutorPayment;
+      if (classEvent.status !== undefined) dbUpdates['Status'] = classEvent.status;
+      if (classEvent.attendance !== undefined) dbUpdates['Attendance'] = classEvent.attendance;
+      
+      return updateClassLog(id, dbUpdates);
+    },
     onSuccess: (updatedClass) => {
       toast.success('Class log updated successfully');
       queryClient.invalidateQueries({ queryKey: classLogsKeys.lists() });

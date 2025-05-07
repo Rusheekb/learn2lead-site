@@ -26,8 +26,8 @@ export async function createClassLog(
   const formattedDate = dateValue ? 
     (typeof dateValue === 'string' ? 
       dateValue : 
-      new Date(dateValue).toISOString().split('T')[0]) : 
-    new Date().toISOString().split('T')[0];
+      format(new Date(dateValue), 'yyyy-MM-dd')) : 
+    format(new Date(), 'yyyy-MM-dd');
     
   // Then calculate day based on the formatted date
   const dayValue = classLog.day || classLog.Day || 
@@ -50,7 +50,10 @@ export async function createClassLog(
     'Student Payment': classLog.studentPayment || classLog['Student Payment'] || 'pending',
     'Tutor Payment': classLog.tutorPayment || classLog['Tutor Payment'] || 'pending',
     'Additional Info': classLog.notes || classLog['Additional Info'] || null,
-    'Class ID': classLog.classId || classLog['Class ID'] || null
+    'Class ID': classLog.classId || classLog['Class ID'] || null,
+    // Add these to support status and attendance updates
+    'Status': classLog.status || classLog['Status'] || null,
+    'Attendance': classLog.attendance || classLog['Attendance'] || null
   };
   
   const result = await supabase
@@ -70,8 +73,19 @@ export async function createClassLog(
 
 export async function updateClassLog(
   id: string,
-  updates: Partial<DbClassLog>
+  updates: Record<string, any>
 ): Promise<ClassEvent> {
+  // Make sure we're using the correct database field names
+  // The updates should already be in the correct format (with capital field names)
+  // but we can add validation here if needed
+  
+  if (updates.date) {
+    updates['Date'] = typeof updates.date === 'string' 
+      ? updates.date 
+      : format(updates.date, 'yyyy-MM-dd');
+    delete updates.date;
+  }
+  
   const result = await supabase
     .from('class_logs')
     .update(updates)
