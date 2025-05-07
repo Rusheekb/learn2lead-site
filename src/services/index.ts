@@ -1,6 +1,7 @@
 
-export * from './auth/profileService';
-export * from './tutors/tutorService';
-export * from './students/studentService';
-export * from './content/contentShareService';
-export * from './class-operations';
+// Re-export all service functionality
+export * from './supabaseClient';
+export * from './class-logs';
+export * from './students';
+export * from './profiles';
+export * from './content-shares';

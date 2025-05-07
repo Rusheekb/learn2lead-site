@@ -5,8 +5,7 @@ export {
   calculateEndTime,
 } from './utils/dateTimeTransformers';
 export { parseNumericString } from '@/utils/numberUtils';
-export { fetchClassLogs } from './class-operations';
-export { createClassLog } from './class-operations';
-export { updateClassLog } from './class-operations';
-export { deleteClassLog } from './class-operations';
-
+export { fetchClassLogs } from './class-logs';
+export { createClassLog } from './class-logs';
+export { updateClassLog } from './class-logs';
+export { deleteClassLog } from './class-logs';
