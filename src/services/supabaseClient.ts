@@ -55,29 +55,41 @@ export async function fetchClassLogs(): Promise<ClassEvent[]> {
 export async function createClassLog(
   classLog: Record<string, any>
 ): Promise<ClassEvent> {
-  // Make sure `Date` is included and properly formatted
-  if (!classLog.Date) {
-    // If date is not provided in the correct format, format it now
-    if (classLog.date) {
-      const dateObj = typeof classLog.date === 'string' 
-        ? new Date(classLog.date) 
-        : classLog.date;
+  // Create a properly formatted object that matches the database schema
+  const dbRecord: Record<string, any> = {
+    // Required field with appropriate format
+    'Date': classLog.Date || (classLog.date ? 
+      (typeof classLog.date === 'string' ? 
+        classLog.date : 
+        new Date(classLog.date).toISOString().split('T')[0]) : 
+      new Date().toISOString().split('T')[0]),
       
-      // Format as YYYY-MM-DD which is the expected format for the Date column
-      classLog.Date = dateObj.toISOString().split('T')[0];
-    } else {
-      throw new Error('Date is required for creating a class log');
-    }
-  }
+    // Map other fields from the input
+    'Class Number': classLog.title || classLog['Class Number'] || null,
+    'Tutor Name': classLog.tutorName || classLog['Tutor Name'] || null,
+    'Student Name': classLog.studentName || classLog['Student Name'] || null,
+    'Day': classLog.day || classLog.Day || new Date(dbRecord['Date']).toLocaleDateString('en-US', { weekday: 'long' }),
+    'Time (CST)': classLog.startTime || classLog['Time (CST)'] || null,
+    'Time (hrs)': classLog.duration?.toString() || classLog['Time (hrs)'] || null,
+    'Subject': classLog.subject || classLog.Subject || null,
+    'Content': classLog.content || classLog.Content || null,
+    'HW': classLog.homework || classLog.HW || null,
+    'Class Cost': classLog.classCost?.toString() || classLog['Class Cost'] || null,
+    'Tutor Cost': classLog.tutorCost?.toString() || classLog['Tutor Cost'] || null,
+    'Student Payment': classLog.studentPayment || classLog['Student Payment'] || 'pending',
+    'Tutor Payment': classLog.tutorPayment || classLog['Tutor Payment'] || 'pending',
+    'Additional Info': classLog.notes || classLog['Additional Info'] || null,
+    'Class ID': classLog.classId || classLog['Class ID'] || null
+  };
   
   const result = await supabase
     .from('class_logs')
-    .insert(classLog)
+    .insert(dbRecord)
     .select()
     .single();
   
   if (result.error) {
-    console.error(result.error);
+    console.error('Error creating class log:', result.error);
     throw result.error;
   }
   
