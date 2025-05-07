@@ -6,7 +6,6 @@ import { fetchScheduledClasses } from '@/services/classService';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
 
-// This is just a placeholder for the structure - you'll need to implement the actual file
 export default function useSchedulerData() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -38,8 +37,10 @@ export default function useSchedulerData() {
     
     setIsLoading(true);
     try {
+      console.log('Loading classes for tutor ID:', user.id);
       // Only fetch classes for the current logged-in tutor
       const classes = await fetchScheduledClasses(user.id);
+      console.log('Fetched classes count:', classes.length);
       setScheduledClasses(classes);
     } catch (error) {
       console.error('Error loading classes:', error);
@@ -86,5 +87,6 @@ export default function useSchedulerData() {
     setNewEvent,
     allSubjects,
     resetNewEventForm,
+    loadClasses,
   };
 }

@@ -88,13 +88,13 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
       title="Schedule New Class"
       maxWidth="max-w-xl"
       maxHeight="max-h-[90vh] sm:max-h-[80vh]"
-      className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+      className="bg-white text-gray-900"
       footer={
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-2 justify-end w-full">
           <Button 
             variant="outline" 
             onClick={handleCancel}
-            className="dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600 w-full sm:w-auto"
+            className="bg-white text-gray-900 hover:bg-gray-100 w-full sm:w-auto"
           >
             Cancel
           </Button>

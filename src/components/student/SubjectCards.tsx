@@ -23,29 +23,29 @@ const SubjectCards: React.FC<SubjectCardsProps> = ({
         return (
           <Card
             key={subject.id}
-            className={`cursor-pointer transition-all hover:shadow-md dark:shadow-none dark:bg-gray-800 dark:border-gray-700 ${
-              selectedSubject === subject.id ? 'ring-2 ring-tutoring-blue dark:ring-tutoring-teal' : ''
+            className={`cursor-pointer transition-all hover:shadow-md bg-white ${
+              selectedSubject === subject.id ? 'ring-2 ring-tutoring-blue' : ''
             }`}
             onClick={() => onSubjectClick(subject.id)}
           >
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-lg dark:text-gray-100">{subject.name}</CardTitle>
-              <IconComponent className="h-8 w-8 text-tutoring-blue dark:text-tutoring-teal" />
+              <CardTitle className="text-lg">{subject.name}</CardTitle>
+              <IconComponent className="h-8 w-8 text-tutoring-blue" />
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              <p className="text-sm text-gray-600 mb-4">
                 {subject.description}
               </p>
 
               {selectedSubject === subject.id && (
                 <div className="mt-4 space-y-2">
-                  <h4 className="font-medium text-sm dark:text-gray-300">Topics:</h4>
+                  <h4 className="font-medium text-sm">Topics:</h4>
                   <ul className="pl-5 space-y-1">
                     {subject.topics.map((topic, index) => (
                       <li key={index} className="text-sm">
                         <a
                           href="#"
-                          className="text-tutoring-blue dark:text-tutoring-teal hover:text-tutoring-teal dark:hover:text-tutoring-blue hover:underline"
+                          className="text-tutoring-blue hover:text-tutoring-teal hover:underline"
                         >
                           {topic}
                         </a>

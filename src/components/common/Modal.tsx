@@ -69,7 +69,7 @@ const Modal: React.FC<ModalProps> = ({
       aria-describedby={description ? descriptionId : undefined}
     >
       <DialogContent 
-        className={`${maxWidth} ${maxHeight} overflow-y-auto mx-4 w-[calc(100vw-2rem)] sm:w-auto ${className}`}
+        className={`${maxWidth} ${maxHeight} overflow-y-auto mx-4 w-[calc(100vw-2rem)] sm:w-auto bg-white ${className}`}
         aria-label={ariaLabel}
       >
         {(title || description) && (
@@ -91,7 +91,7 @@ const Modal: React.FC<ModalProps> = ({
                   <Button 
                     variant="outline" 
                     onClick={handleCancel} 
-                    className="w-full sm:w-auto focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-tutoring-blue dark:focus-visible:ring-tutoring-teal"
+                    className="w-full sm:w-auto focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-tutoring-blue"
                     aria-label={cancelText}
                   >
                     {cancelText}
@@ -102,7 +102,7 @@ const Modal: React.FC<ModalProps> = ({
                     variant={confirmVariant} 
                     onClick={onConfirm}
                     disabled={isConfirmLoading}
-                    className="w-full sm:w-auto focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-tutoring-blue dark:focus-visible:ring-tutoring-teal"
+                    className="w-full sm:w-auto focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-tutoring-blue"
                     aria-label={isConfirmLoading ? "Loading..." : confirmText}
                   >
                     {isConfirmLoading ? "Loading..." : confirmText}

@@ -45,6 +45,8 @@ export const fetchScheduledClasses = async (
 
     if (error) throw error;
 
+    console.log('Fetched classes for tutor ID:', tutorId, 'Count:', data?.length || 0);
+
     const classEvents: ClassEvent[] = (data || []).map((cls) => {
       // Safely handle potentially null values
       const status = cls.status || 'scheduled';
