@@ -72,14 +72,14 @@ const Dashboard = () => {
       case 'schedule':
         return (
           <div className="py-4">
-            <h3 className="text-xl font-bold mb-6 dark:text-gray-100">My Schedule</h3>
+            <h3 className="text-xl font-bold mb-6">My Schedule</h3>
             <ClassCalendar studentId={user?.id || null} />
           </div>
         );
       case 'resources':
         return (
           <div className="py-4">
-            <h3 className="text-xl font-bold mb-6 dark:text-gray-100">Learning Resources</h3>
+            <h3 className="text-xl font-bold mb-6">Learning Resources</h3>
             <StudentContent
               classId={user?.id || ''}
               showUploadControls={false}
@@ -99,7 +99,7 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold dark:text-gray-100">{t('dashboard.studentDashboard')}</h2>
+      <h2 className="text-2xl font-bold">{t('dashboard.studentDashboard')}</h2>
       {renderContent()}
     </div>
   );

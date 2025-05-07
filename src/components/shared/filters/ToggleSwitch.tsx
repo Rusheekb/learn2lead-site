@@ -28,7 +28,7 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
         id={id} 
         checked={checked} 
         onCheckedChange={onCheckedChange} 
-        className="focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-tutoring-blue dark:focus-visible:ring-tutoring-teal"
+        className="focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-tutoring-blue"
         aria-describedby={descriptionId}
       />
       <Label htmlFor={id} className="text-sm font-medium">

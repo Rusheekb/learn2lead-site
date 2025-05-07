@@ -57,7 +57,7 @@ const TutorDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold dark:text-gray-100">{t('dashboard.tutorDashboard')}</h2>
+      <h2 className="text-2xl font-bold">{t('dashboard.tutorDashboard')}</h2>
       {renderContent()}
     </div>
   );
