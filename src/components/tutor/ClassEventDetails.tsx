@@ -94,7 +94,7 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab}>
-      <TabsList className="grid w-full grid-cols-4 bg-white dark:bg-gray-800">
+      <TabsList className="grid w-full grid-cols-4 bg-white">
         <TabsTrigger value="details">Class Details</TabsTrigger>
         <TabsTrigger value="materials">
           Materials
@@ -111,36 +111,36 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
       <TabsContent value="details" className="space-y-4 pt-4">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">Student</h4>
-            <p className="dark:text-gray-100">{selectedEvent.studentName}</p>
+            <h4 className="text-sm font-medium text-gray-500">Student</h4>
+            <p>{selectedEvent.studentName}</p>
           </div>
           <div>
-            <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">Subject</h4>
-            <p className="dark:text-gray-100">{selectedEvent.subject}</p>
+            <h4 className="text-sm font-medium text-gray-500">Subject</h4>
+            <p>{selectedEvent.subject}</p>
           </div>
           <div>
-            <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">Date</h4>
-            <p className="dark:text-gray-100">
+            <h4 className="text-sm font-medium text-gray-500">Date</h4>
+            <p>
               {selectedEvent.date instanceof Date
                 ? selectedEvent.date.toLocaleDateString()
                 : new Date(selectedEvent.date).toLocaleDateString()}
             </p>
           </div>
           <div>
-            <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">Time</h4>
-            <p className="dark:text-gray-100">
+            <h4 className="text-sm font-medium text-gray-500">Time</h4>
+            <p>
               {selectedEvent.startTime} - {selectedEvent.endTime}
             </p>
           </div>
         </div>
 
         <div>
-          <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">Zoom Link</h4>
+          <h4 className="text-sm font-medium text-gray-500">Zoom Link</h4>
           <a
             href={selectedEvent.zoomLink || '#'}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-tutoring-blue hover:underline dark:text-tutoring-teal flex items-center"
+            className="text-tutoring-blue hover:underline flex items-center"
           >
             <Video className="h-4 w-4 mr-1" />
             <span>Join Meeting</span>
@@ -149,7 +149,7 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
 
         {/* Add Calendar Integration Section */}
         <div>
-          <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">Calendar Integration</h4>
+          <h4 className="text-sm font-medium text-gray-500">Calendar Integration</h4>
           <div className="mt-2">
             <CalendarLinks classEvent={selectedEvent} />
           </div>
@@ -157,8 +157,8 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
 
         {selectedEvent.notes && (
           <div>
-            <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400">Notes</h4>
-            <p className="text-gray-700 dark:text-gray-300">{selectedEvent.notes}</p>
+            <h4 className="text-sm font-medium text-gray-500">Notes</h4>
+            <p className="text-gray-700">{selectedEvent.notes}</p>
           </div>
         )}
       </TabsContent>
@@ -166,7 +166,7 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
       <TabsContent value="materials" className="space-y-4 pt-4">
         <div className="space-y-4">
           <div>
-            <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Upload Materials</h4>
+            <h4 className="text-sm font-medium text-gray-500 mb-2">Upload Materials</h4>
             <div className="flex space-x-2">
               <Input 
                 type="file" 
@@ -192,7 +192,7 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
           <Separator />
           
           <div>
-            <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Class Materials</h4>
+            <h4 className="text-sm font-medium text-gray-500 mb-2">Class Materials</h4>
             {selectedEvent.materialsUrl && selectedEvent.materialsUrl.length > 0 ? (
               <ul className="space-y-2">
                 {selectedEvent.materialsUrl.map((url, index) => (
@@ -201,7 +201,7 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
                       href={url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-tutoring-blue hover:underline dark:text-tutoring-teal flex items-center"
+                      className="text-tutoring-blue hover:underline flex items-center"
                     >
                       <FileText className="h-4 w-4 mr-2" />
                       <span>{getFilenameFromUrl(url || '')}</span>
@@ -217,7 +217,7 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
                 ))}
               </ul>
             ) : (
-              <p className="text-gray-500 dark:text-gray-400">No materials uploaded for this class.</p>
+              <p className="text-gray-500">No materials uploaded for this class.</p>
             )}
           </div>
         </div>

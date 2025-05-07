@@ -54,7 +54,7 @@ const CalendarWithEvents: React.FC<CalendarWithEventsProps> = ({
             mode="single"
             selected={selectedDate}
             onSelect={(date) => date && setSelectedDate(date)}
-            className="border rounded-md p-2 dark:border-gray-700 bg-white dark:bg-gray-800"
+            className="border rounded-md p-2 bg-white"
           />
         </CardContent>
       </Card>

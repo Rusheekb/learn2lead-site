@@ -18,9 +18,10 @@ import DashboardShell from './components/shared/DashboardShell';
 import './i18n';
 import { LanguageProvider } from './contexts/LanguageContext';
 import Profile from './pages/Profile';
+import TutorDashboard from './pages/TutorDashboard';
 
+// Still lazy-loading these components
 const Dashboard = React.lazy(() => import('./pages/Dashboard'));
-const TutorDashboard = React.lazy(() => import('./pages/TutorDashboard'));
 const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
 
 // Create a client
@@ -44,9 +45,7 @@ const StudentDashboardWrapper = ({ children }: { children: React.ReactNode }) =>
 
 const TutorDashboardWrapper = ({ children }: { children: React.ReactNode }) => (
   <DashboardShell title="Tutor Portal">
-    <Suspense fallback={<div>Loading...</div>}>
-      {children}
-    </Suspense>
+    {children}
   </DashboardShell>
 );
 
