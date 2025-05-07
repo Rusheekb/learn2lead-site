@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 export { supabase }; //
 
@@ -54,6 +55,21 @@ export async function fetchClassLogs(): Promise<ClassEvent[]> {
 export async function createClassLog(
   classLog: Record<string, any>
 ): Promise<ClassEvent> {
+  // Make sure `Date` is included and properly formatted
+  if (!classLog.Date) {
+    // If date is not provided in the correct format, format it now
+    if (classLog.date) {
+      const dateObj = typeof classLog.date === 'string' 
+        ? new Date(classLog.date) 
+        : classLog.date;
+      
+      // Format as YYYY-MM-DD which is the expected format for the Date column
+      classLog.Date = dateObj.toISOString().split('T')[0];
+    } else {
+      throw new Error('Date is required for creating a class log');
+    }
+  }
+  
   const result = await supabase
     .from('class_logs')
     .insert(classLog)
