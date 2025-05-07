@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { ClassEvent } from '@/types/tutorTypes';
 import useSchedulerFilters from './tutor-scheduler/useSchedulerFilters';
@@ -8,8 +9,13 @@ import useSchedulerData from './tutor-scheduler/useSchedulerData';
 import { useClassLogsQuery } from './queries/useClassLogsQuery';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function useTutorScheduler() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
   // Load class data from backend
   const {
     classes: classList,
@@ -17,7 +23,8 @@ export function useTutorScheduler() {
     updateClass,
     deleteClass,
     allSubjects,
-    isLoading: isClassLoading
+    isLoading: isClassLoading,
+    refetch: refetchClasses
   } = useClassLogsQuery();
 
   // Get basic scheduler state
@@ -74,6 +81,14 @@ export function useTutorScheduler() {
     setSelectedEvent,
     setIsViewEventOpen
   );
+
+  // Ensure we refetch classes when component mounts
+  useEffect(() => {
+    if (user?.id) {
+      refetchClasses();
+      queryClient.invalidateQueries(['scheduledClasses', user.id]);
+    }
+  }, [user?.id, refetchClasses, queryClient]);
 
   // Sync with classList when it changes
   useEffect(() => {
@@ -254,6 +269,7 @@ export function useTutorScheduler() {
     handleDownloadFile,
     getUnreadMessageCount,
     refreshEvent,
+    refetchClasses,
   };
 }
 

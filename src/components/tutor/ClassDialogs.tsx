@@ -26,7 +26,7 @@ interface ClassDialogsProps {
   setActiveEventTab: (tab: string) => void;
   studentMessages: StudentMessage[];
   studentUploads: StudentUpload[];
-  students: any[];
+  students?: any[];
   onCreateEvent: () => void;
   onEditEvent: () => void;
   onDuplicateEvent: (event: ClassEvent) => void;
@@ -52,7 +52,7 @@ const ClassDialogs: React.FC<ClassDialogsProps> = ({
   setActiveEventTab,
   studentMessages,
   studentUploads,
-  students,
+  students = [],
   onCreateEvent,
   onEditEvent,
   onDuplicateEvent,

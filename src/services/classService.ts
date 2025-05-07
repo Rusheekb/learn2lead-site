@@ -30,6 +30,7 @@ export const fetchScheduledClasses = async (
   try {
     let query = supabase.from('student_classes').select('*');
 
+    // Always filter by tutor_id if provided, this ensures we only get classes for the current tutor
     if (tutorId) {
       query = query.eq('tutor_id', tutorId);
     }

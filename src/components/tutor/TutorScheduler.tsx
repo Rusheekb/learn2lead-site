@@ -1,13 +1,18 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useTutorScheduler } from '@/hooks/useTutorScheduler';
 import TutorSchedulerHeader from './scheduler/TutorSchedulerHeader';
 import TutorSchedulerFilters from './scheduler/TutorSchedulerFilters';
 import TutorSchedulerCalendar from './scheduler/TutorSchedulerCalendar';
 import TutorSchedulerDialogs from './scheduler/TutorSchedulerDialogs';
 import TableSkeleton from '../common/TableSkeleton';
+import { useAuth } from '@/contexts/AuthContext';
+import { useQueryClient } from '@tanstack/react-query';
 
 const TutorScheduler: React.FC = () => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  
   // Use our comprehensive hook with all the scheduler functionality
   const {
     // State
@@ -35,6 +40,7 @@ const TutorScheduler: React.FC = () => {
     studentMessages,
     studentUploads,
     isLoading,
+    refetchClasses,
     
     // Methods
     handleSelectEvent,
@@ -48,6 +54,14 @@ const TutorScheduler: React.FC = () => {
     getUnreadMessageCount,
     refreshEvent,
   } = useTutorScheduler();
+
+  // Refetch classes whenever this component mounts or the user changes
+  useEffect(() => {
+    if (user?.id) {
+      refetchClasses();
+      queryClient.invalidateQueries(['scheduledClasses', user.id]);
+    }
+  }, [user?.id, refetchClasses, queryClient]);
 
   // Display loading state while data is being fetched
   if (isLoading) {

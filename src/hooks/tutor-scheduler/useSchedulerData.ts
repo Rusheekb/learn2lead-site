@@ -4,10 +4,12 @@ import { ClassEvent } from '@/types/tutorTypes';
 import { format, addDays } from 'date-fns';
 import { fetchScheduledClasses } from '@/services/classService';
 import { useAuth } from '@/contexts/AuthContext';
+import { useQueryClient } from '@tanstack/react-query';
 
 // This is just a placeholder for the structure - you'll need to implement the actual file
 export default function useSchedulerData() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [isLoading, setIsLoading] = useState(true);
   const [scheduledClasses, setScheduledClasses] = useState<ClassEvent[]>([]);
@@ -36,6 +38,7 @@ export default function useSchedulerData() {
     
     setIsLoading(true);
     try {
+      // Only fetch classes for the current logged-in tutor
       const classes = await fetchScheduledClasses(user.id);
       setScheduledClasses(classes);
     } catch (error) {
@@ -45,9 +48,14 @@ export default function useSchedulerData() {
     }
   }, [user]);
 
+  // Refresh classes data whenever the component mounts or the user changes
   useEffect(() => {
-    loadClasses();
-  }, [loadClasses, selectedDate]);
+    if (user?.id) {
+      loadClasses();
+      // Also invalidate any cached queries to ensure fresh data
+      queryClient.invalidateQueries(['scheduledClasses', user.id]);
+    }
+  }, [loadClasses, user?.id, queryClient]);
 
   const resetNewEventForm = () => {
     setNewEvent({
