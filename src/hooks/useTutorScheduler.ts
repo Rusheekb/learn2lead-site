@@ -24,6 +24,7 @@ export function useTutorScheduler() {
     handleCreateEvent,
     handleEditEvent,
     handleDeleteEvent,
+    handleDuplicateEvent,
     createEvent
   } = useClassOperations(
     // Convert each mutation function to return a Promise
@@ -89,7 +90,7 @@ export function useTutorScheduler() {
     handleCreateEvent,
     handleEditEvent,
     handleDeleteEvent,
-    handleDuplicateEvent: core.handleDuplicateEvent,
+    handleDuplicateEvent,
     resetNewEventForm: core.resetNewEventForm,
     handleMarkMessageRead,
     handleDownloadFile,
