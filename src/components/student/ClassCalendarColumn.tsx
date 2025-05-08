@@ -3,6 +3,7 @@ import React from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { ClassSession } from '@/types/classTypes';
+import { Badge } from '@/components/ui/badge';
 
 interface ClassCalendarColumnProps {
   selectedDate: Date;

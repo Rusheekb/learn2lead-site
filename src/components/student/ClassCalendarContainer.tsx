@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useQueryClient } from '@tanstack/react-query';
-import ClassCalendarColumns from './ClassCalendarColumns';
+import ClassCalendarColumn from './ClassCalendarColumn';
 import DailyClassSessions from './DailyClassSessions';
 import UpcomingClassSessions from './UpcomingClassSessions';
 import { ClassSession } from '@/types/classTypes';
@@ -26,7 +26,9 @@ const ClassCalendarContainer: React.FC<ClassCalendarContainerProps> = ({ student
     const loadSessions = async () => {
       setIsLoading(true);
       try {
+        console.log(`Fetching classes for student: ${studentId}`);
         const classEvents = await fetchScheduledClasses(undefined, studentId);
+        console.log(`Received ${classEvents.length} classes for student`);
 
         const classSessions = classEvents.map((cls) => ({
           id: cls.id,
@@ -76,7 +78,7 @@ const ClassCalendarContainer: React.FC<ClassCalendarContainerProps> = ({ student
         <CardContent className="p-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div>
-              <ClassCalendarColumns
+              <ClassCalendarColumn
                 selectedDate={selectedDate}
                 setSelectedDate={setSelectedDate}
                 sessions={sessions}

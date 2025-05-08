@@ -1,3 +1,4 @@
+
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { ClassItem, StudentMessage, StudentUpload } from '@/types/classTypes';
@@ -7,7 +8,7 @@ import { toast } from 'sonner';
 // Query keys
 export const studentKeys = {
   all: ['student'] as const,
-  classes: (studentId: string) => [...studentKeys.all, 'classes', studentId] as const,
+  classes: (studentName: string) => [...studentKeys.all, 'classes', studentName] as const,
   messages: (studentName: string) => [...studentKeys.all, 'messages', studentName] as const,
   uploads: (studentName: string) => [...studentKeys.all, 'uploads', studentName] as const,
   scheduledClasses: (studentId: string) => ['studentClasses', studentId] as const,
@@ -106,7 +107,13 @@ export const useStudentClassesQuery = (studentName: string, studentId?: string) 
           
           // Show toast based on the event type
           if (payload.eventType === 'INSERT') {
-            toast.success('New class scheduled');
+            const newClass = payload.new;
+            toast.success(`New class "${newClass.title}" scheduled`);
+          } else if (payload.eventType === 'UPDATE') {
+            const updatedClass = payload.new;
+            toast.info(`Class "${updatedClass.title}" updated`);
+          } else if (payload.eventType === 'DELETE') {
+            toast.info('A class has been cancelled');
           }
         }
       )
