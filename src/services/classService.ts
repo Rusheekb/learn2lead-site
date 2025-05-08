@@ -71,9 +71,9 @@ export const fetchScheduledClasses = async (
       let studentName = '';
 
       // Handle getting tutor and student names from joined profile data using the aliases
-      // Use type assertion to handle the Supabase typing issue
-      const tutorProfile = cls.tutor as Profile | null;
-      const studentProfile = cls.student as Profile | null;
+      // First convert to unknown, then to our expected type to avoid TypeScript errors
+      const tutorProfile = (cls.tutor as unknown) as Profile | null;
+      const studentProfile = (cls.student as unknown) as Profile | null;
       
       if (tutorProfile) {
         tutorName = `${tutorProfile.first_name || ''} ${tutorProfile.last_name || ''}`.trim();
