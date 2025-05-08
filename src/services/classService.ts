@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ClassEvent, ClassStatus, isValidClassStatus, AttendanceStatus, isValidAttendanceStatus } from '@/types/tutorTypes';
@@ -20,6 +21,12 @@ export interface ScheduledClass {
   updated_at: string;
   tutor_name?: string;
   student_name?: string;
+}
+
+// Define profile type to match what comes back from Supabase
+interface Profile {
+  first_name: string | null;
+  last_name: string | null;
 }
 
 export const fetchScheduledClasses = async (
@@ -64,8 +71,9 @@ export const fetchScheduledClasses = async (
       let studentName = '';
 
       // Handle getting tutor and student names from joined profile data using the aliases
-      const tutorProfile = cls.tutor;
-      const studentProfile = cls.student;
+      // Use type assertion to handle the Supabase typing issue
+      const tutorProfile = cls.tutor as Profile | null;
+      const studentProfile = cls.student as Profile | null;
       
       if (tutorProfile) {
         tutorName = `${tutorProfile.first_name || ''} ${tutorProfile.last_name || ''}`.trim();
