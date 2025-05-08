@@ -87,7 +87,7 @@ export function useTutorScheduler() {
 
     // Methods
     handleSelectEvent: core.handleSelectEvent,
-    handleCreateEvent: createEvent,
+    handleCreateEvent,
     handleEditEvent,
     handleDeleteEvent,
     handleDuplicateEvent: core.handleDuplicateEvent,
