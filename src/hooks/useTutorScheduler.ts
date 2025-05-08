@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { ClassEvent } from '@/types/tutorTypes';
 import useSchedulerFilters from './tutor-scheduler/useSchedulerFilters';
@@ -36,8 +37,6 @@ export function useTutorScheduler() {
     setScheduledClasses,
     isAddEventOpen,
     setIsAddEventOpen,
-    isViewEventOpen,
-    setIsViewEventOpen,
     newEvent,
     setNewEvent,
     resetNewEventForm,
@@ -157,6 +156,20 @@ export function useTutorScheduler() {
         queryClient.invalidateQueries({ queryKey: ['scheduledClasses', user.id] });
       }
       
+      // Also invalidate the student's classes query to ensure they see the new class immediately
+      if (event.studentId) {
+        queryClient.invalidateQueries({ queryKey: ['studentClasses', event.studentId] });
+        
+        // Additional invalidation for student-related views
+        queryClient.invalidateQueries({ queryKey: ['upcomingClasses', event.studentId] });
+        queryClient.invalidateQueries({ queryKey: ['studentDashboard', event.studentId] });
+      }
+      
+      // General refresh for any shared component data
+      queryClient.invalidateQueries({ queryKey: ['scheduledClasses'] });
+      
+      toast.success('Class scheduled successfully! Student has been notified.');
+      
       return true;
     } catch (error) {
       console.error('Error creating event:', error);
@@ -194,6 +207,8 @@ export function useTutorScheduler() {
         // Also invalidate the specific student's classes if student ID is available
         if (event.studentId) {
           queryClient.invalidateQueries({ queryKey: ['studentClasses', event.studentId] });
+          queryClient.invalidateQueries({ queryKey: ['upcomingClasses', event.studentId] });
+          queryClient.invalidateQueries({ queryKey: ['studentDashboard', event.studentId] });
         }
       }
       
@@ -225,6 +240,8 @@ export function useTutorScheduler() {
         // Also invalidate the specific student's classes if student ID was captured
         if (studentId) {
           queryClient.invalidateQueries({ queryKey: ['studentClasses', studentId] });
+          queryClient.invalidateQueries({ queryKey: ['upcomingClasses', studentId] });
+          queryClient.invalidateQueries({ queryKey: ['studentDashboard', studentId] });
         }
       }
       
