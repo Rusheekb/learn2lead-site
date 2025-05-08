@@ -35,13 +35,13 @@ const EditClassForm: React.FC<EditClassFormProps> = ({
             <Button 
               variant="outline" 
               onClick={onCancel}
-              className="dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"
+              className="bg-gray-100 text-gray-700 hover:bg-gray-200"
             >
               Cancel
             </Button>
             <Button
               onClick={onSave}
-              className="bg-tutoring-blue hover:bg-tutoring-blue/90 dark:bg-tutoring-teal dark:hover:bg-tutoring-teal/90"
+              className="bg-tutoring-blue hover:bg-tutoring-blue/90"
             >
               Save Changes
             </Button>
