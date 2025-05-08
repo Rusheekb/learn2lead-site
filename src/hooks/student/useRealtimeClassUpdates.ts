@@ -57,6 +57,7 @@ export function useRealtimeClassUpdates(
               // Also invalidate any React Query caches
               queryClient.invalidateQueries({ queryKey: ['studentClasses', studentId] });
               queryClient.invalidateQueries({ queryKey: ['upcomingClasses', studentId] });
+              queryClient.invalidateQueries({ queryKey: ['studentDashboard', studentId] });
             })
             .catch((error) => {
               console.error('Error updating sessions:', error);
