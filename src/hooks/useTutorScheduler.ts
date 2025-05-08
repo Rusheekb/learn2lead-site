@@ -37,6 +37,8 @@ export function useTutorScheduler() {
     setScheduledClasses,
     isAddEventOpen,
     setIsAddEventOpen,
+    isViewEventOpen,
+    setIsViewEventOpen,
     newEvent,
     setNewEvent,
     resetNewEventForm,
