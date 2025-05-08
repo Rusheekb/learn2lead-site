@@ -14,9 +14,11 @@ export function useRealtimeClassUpdates(
   useEffect(() => {
     if (!studentId) return;
 
+    console.log(`Setting up realtime subscription for student: ${studentId}`);
+
     // Listen for any changes to scheduled classes for this student
     const channel = supabase
-      .channel('student-classes')
+      .channel(`student-classes-${studentId}`)
       .on(
         'postgres_changes',
         {
@@ -48,25 +50,35 @@ export function useRealtimeClassUpdates(
 
               setSessions(classSessions);
               
-              // Show notification for new classes
+              // Show notification based on event type
               if (payload.eventType === 'INSERT') {
                 const newClass = payload.new;
                 toast.success(`New class "${newClass.title}" has been scheduled`);
+              } else if (payload.eventType === 'UPDATE') {
+                const updatedClass = payload.new;
+                toast.info(`Class "${updatedClass.title}" has been updated`);
+              } else if (payload.eventType === 'DELETE') {
+                toast.info('A class has been cancelled');
               }
               
-              // Also invalidate any React Query caches
+              // Also invalidate all React Query caches related to student classes
               queryClient.invalidateQueries({ queryKey: ['studentClasses', studentId] });
               queryClient.invalidateQueries({ queryKey: ['upcomingClasses', studentId] });
               queryClient.invalidateQueries({ queryKey: ['studentDashboard', studentId] });
             })
             .catch((error) => {
               console.error('Error updating sessions:', error);
+              toast.error('Could not update class schedule');
             });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log(`Subscription status for student ${studentId}:`, status);
+      });
 
+    // Cleanup function to remove the channel subscription
     return () => {
+      console.log(`Removing channel for student ${studentId}`);
       supabase.removeChannel(channel);
     };
   }, [studentId, queryClient, setSessions]);

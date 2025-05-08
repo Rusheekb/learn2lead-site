@@ -123,10 +123,13 @@ function useSchedulerRealtime(
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log(`Tutor subscription status:`, status);
+      });
       
     // Clean up the subscription
     return () => {
+      console.log(`Removing channel for tutor ${user.id}`);
       supabase.removeChannel(channel);
     };
   }, [

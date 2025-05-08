@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ClassEvent, ClassStatus, isValidClassStatus, AttendanceStatus, isValidAttendanceStatus } from '@/types/tutorTypes';
@@ -28,7 +27,7 @@ export const fetchScheduledClasses = async (
   studentId?: string
 ): Promise<ClassEvent[]> => {
   try {
-    let query = supabase.from('student_classes').select('*');
+    let query = supabase.from('scheduled_classes').select('*');
 
     // Filter by tutor_id if provided - this is crucial for security and performance
     if (tutorId) {

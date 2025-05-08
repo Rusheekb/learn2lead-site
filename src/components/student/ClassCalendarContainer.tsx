@@ -53,7 +53,12 @@ const ClassCalendarContainer: React.FC<ClassCalendarContainerProps> = ({ student
     };
 
     loadSessions();
-  }, [studentId]);
+    
+    // Invalidate and refetch on mount to ensure we have the latest data
+    queryClient.invalidateQueries({ queryKey: ['studentClasses', studentId] });
+    queryClient.invalidateQueries({ queryKey: ['upcomingClasses', studentId] });
+    queryClient.invalidateQueries({ queryKey: ['studentDashboard', studentId] });
+  }, [studentId, queryClient]);
 
   // Use the reusable hook for realtime updates
   useRealtimeClassUpdates(studentId, setSessions, queryClient);

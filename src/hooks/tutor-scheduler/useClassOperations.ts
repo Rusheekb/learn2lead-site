@@ -1,183 +1,184 @@
 
-import { ClassEvent } from '@/types/tutorTypes';
+import { useState } from 'react';
+import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { ClassEvent } from '@/types/tutorTypes';
+import { createScheduledClass } from '@/services/classService';
+import { QueryClient } from '@tanstack/react-query';
 
-// Updated parameter types to match what's being passed from react-query
-export function useClassOperations(
-  createClass: (event: any) => Promise<any>,
-  updateClass: (id: string, updates: any) => Promise<any>,
-  deleteClass: (id: string) => Promise<any>,
+interface CreateEventParams {
+  title: string;
+  tutorId: string;
+  studentId: string;
+  date: Date;
+  startTime: string;
+  endTime: string;
+  subject: string;
+  zoomLink?: string;
+  notes?: string;
+}
+
+export const useClassOperations = (
+  createClassMutation: (event: any) => Promise<any>,
+  updateClassMutation: (id: string, updates: any) => Promise<any>,
+  deleteClassMutation: (id: string) => Promise<any>,
   resetNewEventForm: () => void,
-  setIsAddEventOpen: (isOpen: boolean) => void,
-  setIsViewEventOpen: (isOpen: boolean) => void,
-  setSelectedEvent: (event: ClassEvent | null) => void,
-  setIsEditMode: (isEditMode: boolean) => void,
-  queryClient: any,
-  user: any
-) {
-  // Wrap backend operations
-  const handleCreateEvent = async (event: ClassEvent) => {
+  setIsAddEventOpen: React.Dispatch<React.SetStateAction<boolean>>,
+  setIsViewEventOpen: React.Dispatch<React.SetStateAction<boolean>>,
+  setSelectedEvent: React.Dispatch<React.SetStateAction<ClassEvent | null>>,
+  setIsEditMode: React.Dispatch<React.SetStateAction<boolean>>,
+  queryClient: QueryClient,
+  user: any | null
+) => {
+  const [isCreating, setIsCreating] = useState<boolean>(false);
+  const [isUpdating, setIsUpdating] = useState<boolean>(false);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
+
+  const createEvent = async (eventData: CreateEventParams): Promise<boolean> => {
+    if (isCreating) return false;
+    
     try {
-      // Fix the issue with toISOString by ensuring date is a Date object
-      const dateObject = event.date instanceof Date
-        ? event.date 
-        : new Date(event.date);
+      setIsCreating(true);
       
-      // Create a new class with properly formatted date
-      const newClassEvent = {
-        ...event,
-        date: dateObject.toISOString().split('T')[0]
+      if (!eventData.title || !eventData.studentId || !eventData.subject) {
+        toast.error("Please fill in all required fields");
+        return false;
+      }
+
+      const formattedDate = format(eventData.date, 'yyyy-MM-dd');
+      
+      const classData = {
+        title: eventData.title,
+        tutor_id: eventData.tutorId,
+        student_id: eventData.studentId,
+        date: formattedDate,
+        start_time: eventData.startTime,
+        end_time: eventData.endTime,
+        subject: eventData.subject,
+        zoom_link: eventData.zoomLink || null,
+        notes: eventData.notes || null,
       };
       
-      // Call the createClass function and handle the response
-      await createClass(newClassEvent);
+      const result = await createScheduledClass(classData);
       
-      // Since we've reached this point without errors, consider it a success
-      resetNewEventForm();
-      setIsAddEventOpen(false);
+      if (result) {
+        toast.success("Class scheduled successfully");
+        resetNewEventForm();
+        setIsAddEventOpen(false);
+        
+        // Invalidate relevant queries for both tutor and student
+        queryClient.invalidateQueries({ queryKey: ['scheduledClasses', eventData.tutorId] });
+        queryClient.invalidateQueries({ queryKey: ['upcomingClasses', eventData.tutorId] });
+        queryClient.invalidateQueries({ queryKey: ['studentClasses', eventData.studentId] });
+        queryClient.invalidateQueries({ queryKey: ['upcomingClasses', eventData.studentId] });
+        queryClient.invalidateQueries({ queryKey: ['studentDashboard', eventData.studentId] });
+        
+        return true;
+      }
+      return false;
+    } catch (error: any) {
+      console.error("Error creating event:", error);
+      toast.error(`Failed to schedule class: ${error.message}`);
+      return false;
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const handleEditEvent = async (event: ClassEvent): Promise<boolean> => {
+    if (isUpdating) return false;
+    
+    try {
+      setIsUpdating(true);
       
-      // Make sure to invalidate the tutor's classes query
-      if (user?.id) {
-        queryClient.invalidateQueries({ queryKey: ['scheduledClasses', user.id] });
+      if (!event.id) {
+        toast.error("Invalid event data");
+        return false;
       }
       
-      // Also invalidate the student's classes query to ensure they see the new class immediately
+      const formattedDate = event.date instanceof Date 
+        ? format(event.date, 'yyyy-MM-dd') 
+        : format(new Date(event.date), 'yyyy-MM-dd');
+      
+      const updateData = {
+        title: event.title,
+        date: formattedDate,
+        start_time: event.startTime,
+        end_time: event.endTime,
+        subject: event.subject,
+        zoom_link: event.zoomLink || null,
+        notes: event.notes || null,
+      };
+      
+      await updateClassMutation(event.id, updateData);
+      
+      toast.success("Class updated successfully");
+      setIsViewEventOpen(false);
+      setIsEditMode(false);
+      
+      // Invalidate relevant queries for both tutor and student
+      if (user?.id) {
+        queryClient.invalidateQueries({ queryKey: ['scheduledClasses', user.id] });
+        queryClient.invalidateQueries({ queryKey: ['upcomingClasses', user.id] });
+      }
+      
       if (event.studentId) {
         queryClient.invalidateQueries({ queryKey: ['studentClasses', event.studentId] });
-        
-        // Additional invalidation for student-related views
         queryClient.invalidateQueries({ queryKey: ['upcomingClasses', event.studentId] });
         queryClient.invalidateQueries({ queryKey: ['studentDashboard', event.studentId] });
       }
       
-      // General refresh for any shared component data
-      queryClient.invalidateQueries({ queryKey: ['scheduledClasses'] });
-      
-      toast.success('Class scheduled successfully! Student has been notified.');
-      
       return true;
-    } catch (error) {
-      console.error('Error creating event:', error);
-      toast.error('Failed to create class');
+    } catch (error: any) {
+      console.error("Error updating event:", error);
+      toast.error(`Failed to update class: ${error.message}`);
       return false;
+    } finally {
+      setIsUpdating(false);
     }
   };
 
-  const handleEditEvent = async (event: ClassEvent) => {
+  const handleDeleteEvent = async (event: ClassEvent): Promise<boolean> => {
+    if (isDeleting || !event.id) return false;
+    
     try {
-      if (!event) return false;
+      setIsDeleting(true);
       
-      // Fix the issue with toISOString by ensuring date is a Date object
-      const dateObject = event.date instanceof Date
-        ? event.date 
-        : new Date(event.date);
+      await deleteClassMutation(event.id);
       
-      // Update the class with properly formatted date
-      const updatedEvent = {
-        ...event,
-        date: dateObject.toISOString().split('T')[0]
-      };
-
-      // Call the updateClass function
-      await updateClass(event.id, updatedEvent);
-      
-      // Since we've reached this point without errors, consider it a success
-      setSelectedEvent(event);
-      setIsEditMode(false);
-      
-      // Make sure to invalidate the tutor's classes query
-      if (user?.id) {
-        queryClient.invalidateQueries({ queryKey: ['scheduledClasses', user.id] });
-        
-        // Also invalidate the specific student's classes if student ID is available
-        if (event.studentId) {
-          queryClient.invalidateQueries({ queryKey: ['studentClasses', event.studentId] });
-          queryClient.invalidateQueries({ queryKey: ['upcomingClasses', event.studentId] });
-          queryClient.invalidateQueries({ queryKey: ['studentDashboard', event.studentId] });
-        }
-      }
-      
-      return true;
-    } catch (error) {
-      console.error('Error updating event:', error);
-      toast.error('Failed to update class');
-      return false;
-    }
-  };
-
-  const handleDeleteEvent = async (eventId: string) => {
-    try {
-      // Save student ID before deleting for invalidation
-      const eventToDelete = await findEventById(eventId);
-      const studentId = eventToDelete?.studentId;
-      
-      // Call the deleteClass function
-      await deleteClass(eventId);
-      
-      // Since we've reached this point without errors, consider it a success
+      toast.success("Class deleted successfully");
       setIsViewEventOpen(false);
       setSelectedEvent(null);
       
-      // Make sure to invalidate the tutor's classes query
+      // Invalidate relevant queries for both tutor and student
       if (user?.id) {
         queryClient.invalidateQueries({ queryKey: ['scheduledClasses', user.id] });
-        
-        // Also invalidate the specific student's classes if student ID was captured
-        if (studentId) {
-          queryClient.invalidateQueries({ queryKey: ['studentClasses', studentId] });
-          queryClient.invalidateQueries({ queryKey: ['upcomingClasses', studentId] });
-          queryClient.invalidateQueries({ queryKey: ['studentDashboard', studentId] });
-        }
+        queryClient.invalidateQueries({ queryKey: ['upcomingClasses', user.id] });
+      }
+      
+      if (event.studentId) {
+        queryClient.invalidateQueries({ queryKey: ['studentClasses', event.studentId] });
+        queryClient.invalidateQueries({ queryKey: ['upcomingClasses', event.studentId] });
+        queryClient.invalidateQueries({ queryKey: ['studentDashboard', event.studentId] });
       }
       
       return true;
-    } catch (error) {
-      console.error('Error deleting event:', error);
-      toast.error('Failed to delete class');
+    } catch (error: any) {
+      console.error("Error deleting event:", error);
+      toast.error(`Failed to delete class: ${error.message}`);
       return false;
+    } finally {
+      setIsDeleting(false);
     }
-  };
-
-  // Helper function to find an event by ID from the database
-  const findEventById = async (eventId: string) => {
-    try {
-      const { data } = await supabase
-        .from('scheduled_classes')
-        .select('*')
-        .eq('id', eventId)
-        .single();
-        
-      if (data) {
-        return {
-          id: data.id,
-          studentId: data.student_id,
-          tutorId: data.tutor_id,
-          // Add other fields as needed
-        };
-      }
-      return null;
-    } catch (error) {
-      console.error('Error fetching event details:', error);
-      return null;
-    }
-  };
-
-  // Create event with form reset
-  const createEvent = async (event: ClassEvent) => {
-    const success = await handleCreateEvent(event);
-    if (success) {
-      setIsAddEventOpen(false);
-      resetNewEventForm();
-    }
-    return success;
   };
 
   return {
-    handleCreateEvent,
+    handleCreateEvent: createEvent,
     handleEditEvent,
     handleDeleteEvent,
-    createEvent
+    isCreating,
+    isUpdating,
+    isDeleting,
+    createEvent,
   };
-}
+};

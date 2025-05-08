@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
+import { format, isSameDay } from 'date-fns';
 import { ClassSession } from '@/types/classTypes';
 import { Badge } from '@/components/ui/badge';
 
@@ -27,30 +27,7 @@ const ClassCalendarColumn: React.FC<ClassCalendarColumnProps> = ({
       const sessionDate =
         session.date instanceof Date ? session.date : new Date(session.date);
 
-      // Check if it's the exact date
-      if (
-        sessionDate.getDate() === date.getDate() &&
-        sessionDate.getMonth() === date.getMonth() &&
-        sessionDate.getFullYear() === date.getFullYear()
-      ) {
-        return true;
-      }
-
-      // Check if it's a recurring session and if today is one of the recurring days
-      if (session.recurring && session.recurringDays) {
-        const dayOfWeek = [
-          'Sunday',
-          'Monday',
-          'Tuesday',
-          'Wednesday',
-          'Thursday',
-          'Friday',
-          'Saturday',
-        ][date.getDay()];
-        return session.recurringDays.includes(dayOfWeek);
-      }
-
-      return false;
+      return isSameDay(sessionDate, date);
     });
   };
 
