@@ -28,9 +28,9 @@ export function useTutorScheduler() {
     createEvent
   } = useClassOperations(
     // Convert each mutation function to return a Promise
-    (event) => core.createClass(event),
-    (id, updates) => core.updateClass(id, updates),
-    (id) => core.deleteClass(id),
+    (event) => Promise.resolve(core.createClass(event)),
+    (id, updates) => Promise.resolve(core.updateClass(id, updates)),
+    (id) => Promise.resolve(core.deleteClass(id)),
     core.resetNewEventForm,
     core.setIsAddEventOpen,
     core.setIsViewEventOpen,
