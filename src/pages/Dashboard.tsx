@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate, useSearchParams } from 'react-router-dom';
@@ -9,6 +8,7 @@ import ClassCalendar from '@/components/ClassCalendar';
 import StudentContent from '@/components/shared/StudentContent';
 import { useAnalyticsTracker } from '@/hooks/useAnalyticsTracker';
 import { EventName } from '@/services/analytics/analyticsService';
+import { useQueryClient } from '@tanstack/react-query';
 
 const Dashboard = () => {
   const { t } = useTranslation();
@@ -18,6 +18,7 @@ const Dashboard = () => {
   const [searchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'dashboard';
   const { trackNavigation, trackPageView } = useAnalyticsTracker();
+  const queryClient = useQueryClient();
   
   // Track page view on initial render
   useEffect(() => {
