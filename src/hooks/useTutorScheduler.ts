@@ -20,7 +20,6 @@ export function useTutorScheduler() {
   const core = useSchedulerCore();
 
   // Use class operations hook for CRUD operations
-  // Fix: Wrap the mutation functions to return Promises to match the expected type
   const {
     handleCreateEvent,
     handleEditEvent,

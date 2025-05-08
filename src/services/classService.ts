@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ClassEvent, ClassStatus, isValidClassStatus, AttendanceStatus, isValidAttendanceStatus } from '@/types/tutorTypes';
@@ -30,8 +29,8 @@ export const fetchScheduledClasses = async (
   try {
     let query = supabase.from('scheduled_classes').select(`
       *,
-      profiles!tutor_id (first_name, last_name),
-      profiles!student_id (first_name, last_name)
+      tutor:profiles!tutor_id(first_name, last_name),
+      student:profiles!student_id(first_name, last_name)
     `);
 
     // Filter by tutor_id if provided - this is crucial for security and performance
@@ -64,31 +63,16 @@ export const fetchScheduledClasses = async (
       let tutorName = '';
       let studentName = '';
 
-      // Handle getting tutor and student names from joined profile data
-      if (cls.profiles && Array.isArray(cls.profiles)) {
-        // Handle array of profiles (potential legacy format)
-        const tutorProfile = cls.profiles.find(p => p.id === cls.tutor_id);
-        const studentProfile = cls.profiles.find(p => p.id === cls.student_id);
-        
-        if (tutorProfile) {
-          tutorName = `${tutorProfile.first_name || ''} ${tutorProfile.last_name || ''}`.trim();
-        }
-        
-        if (studentProfile) {
-          studentName = `${studentProfile.first_name || ''} ${studentProfile.last_name || ''}`.trim();
-        }
-      } else {
-        // Handle new join format where profiles are nested objects
-        const tutorProfile = cls.profiles_tutor_id;
-        const studentProfile = cls.profiles_student_id;
-        
-        if (tutorProfile) {
-          tutorName = `${tutorProfile.first_name || ''} ${tutorProfile.last_name || ''}`.trim();
-        }
-        
-        if (studentProfile) {
-          studentName = `${studentProfile.first_name || ''} ${studentProfile.last_name || ''}`.trim();
-        }
+      // Handle getting tutor and student names from joined profile data using the aliases
+      const tutorProfile = cls.tutor;
+      const studentProfile = cls.student;
+      
+      if (tutorProfile) {
+        tutorName = `${tutorProfile.first_name || ''} ${tutorProfile.last_name || ''}`.trim();
+      }
+      
+      if (studentProfile) {
+        studentName = `${studentProfile.first_name || ''} ${studentProfile.last_name || ''}`.trim();
       }
       
       // Safely handle potentially null values
