@@ -1,15 +1,14 @@
 
-import { useEffect } from 'react';
 import { ClassEvent } from '@/types/tutorTypes';
 import useSchedulerFilters from './useSchedulerFilters';
 import useEventHandlers from './useEventHandlers';
-import useSchedulerRealtime from './useSchedulerRealtime';
 import useStudentContent from './useStudentContent';
 import useSchedulerData from './useSchedulerData';
 import { useClassLogsQuery } from '../queries/useClassLogsQuery';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
-import { TransformedClassLog } from '@/services/logs/types';
+import { useDataTransformations } from './core-utils/useDataTransformations';
+import { useDataFetchingEffects } from './core-utils/useDataFetchingEffects';
 
 export function useSchedulerCore() {
   const { user } = useAuth();
@@ -72,50 +71,11 @@ export function useSchedulerCore() {
     setIsViewEventOpen
   );
 
-  // Create realtime subscription - this will be scoped to the current tutor
-  useSchedulerRealtime(
-    scheduledClasses,
-    setScheduledClasses,
-    selectedEvent,
-    setSelectedEvent,
-    setIsViewEventOpen
-  );
+  // Use data transformations logic
+  useDataTransformations(classList, setScheduledClasses);
 
-  // Ensure we refetch classes when component mounts and user ID changes
-  useEffect(() => {
-    if (user?.id) {
-      refetchClasses();
-      // Enhanced invalidation to be more specific
-      queryClient.invalidateQueries({ queryKey: ['scheduledClasses', user.id] });
-    }
-  }, [user?.id, refetchClasses, queryClient]);
-
-  // Sync with classList when it changes
-  useEffect(() => {
-    if (classList && classList.length > 0) {
-      // Convert TransformedClassLog to ClassEvent if needed
-      const convertedClasses = classList.map((cls: TransformedClassLog | ClassEvent) => {
-        if ('additionalInfo' in cls) { // It's a TransformedClassLog
-          return {
-            ...cls,
-            title: cls.title || cls.classNumber || '',
-            status: cls.additionalInfo?.includes('Status:') 
-              ? cls.additionalInfo.split('Status:')[1].trim().split(' ')[0] as any
-              : 'pending',
-            attendance: cls.additionalInfo?.includes('Attendance:')
-              ? cls.additionalInfo.split('Attendance:')[1].trim().split(' ')[0] as any
-              : 'pending',
-            zoomLink: cls.zoomLink || null,
-            recurring: false,
-            materials: [],
-          } as ClassEvent;
-        }
-        return cls; // It's already a ClassEvent
-      });
-      
-      setScheduledClasses(convertedClasses);
-    }
-  }, [classList, setScheduledClasses]);
+  // Use data fetching effects
+  useDataFetchingEffects(user?.id, refetchClasses, queryClient);
 
   return {
     user,
