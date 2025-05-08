@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { ClassEvent } from '@/types/tutorTypes';
-import { deleteScheduledClass } from '@/services/classService';
+import { deleteScheduledClass } from '@/services/class'; // Updated import
 import { analytics, EventName, EventCategory } from '@/services/analytics/analyticsService';
 
 export const useDeleteEvent = (
