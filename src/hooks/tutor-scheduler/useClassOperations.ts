@@ -6,7 +6,8 @@ import { ClassEvent } from '@/types/tutorTypes';
 import { createScheduledClass } from '@/services/classService';
 import { QueryClient } from '@tanstack/react-query';
 
-interface CreateEventParams {
+// Define a proper interface that matches ClassEvent for the create operation
+export interface CreateEventParams {
   title: string;
   tutorId: string;
   studentId: string;
@@ -33,6 +34,31 @@ export const useClassOperations = (
   const [isCreating, setIsCreating] = useState<boolean>(false);
   const [isUpdating, setIsUpdating] = useState<boolean>(false);
   const [isDeleting, setIsDeleting] = useState<boolean>(false);
+
+  // Adapter function to convert ClassEvent to CreateEventParams
+  const createEventAdapter = async (event: ClassEvent): Promise<boolean> => {
+    if (!event.tutorId) {
+      toast.error("Missing tutor ID");
+      return false;
+    }
+    
+    return createEvent({
+      title: event.title,
+      tutorId: event.tutorId,
+      studentId: event.studentId || '',
+      date: event.date instanceof Date ? event.date : new Date(event.date),
+      startTime: event.startTime,
+      endTime: event.endTime,
+      subject: event.subject,
+      zoomLink: event.zoomLink || '',
+      notes: event.notes || ''
+    });
+  };
+
+  // Adapter function to convert string ID to ClassEvent for delete
+  const deleteEventAdapter = async (eventId: string, isRecurring?: boolean): Promise<boolean> => {
+    return handleDeleteEvent({ id: eventId } as ClassEvent);
+  };
 
   const createEvent = async (eventData: CreateEventParams): Promise<boolean> => {
     if (isCreating) return false;
@@ -173,9 +199,9 @@ export const useClassOperations = (
   };
 
   return {
-    handleCreateEvent: createEvent,
+    handleCreateEvent: createEventAdapter,
     handleEditEvent,
-    handleDeleteEvent,
+    handleDeleteEvent: deleteEventAdapter,
     isCreating,
     isUpdating,
     isDeleting,

@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ClassEvent, ClassStatus, isValidClassStatus, AttendanceStatus, isValidAttendanceStatus } from '@/types/tutorTypes';
@@ -27,7 +28,11 @@ export const fetchScheduledClasses = async (
   studentId?: string
 ): Promise<ClassEvent[]> => {
   try {
-    let query = supabase.from('scheduled_classes').select('*');
+    let query = supabase.from('scheduled_classes').select(`
+      *,
+      profiles!tutor_id (first_name, last_name),
+      profiles!student_id (first_name, last_name)
+    `);
 
     // Filter by tutor_id if provided - this is crucial for security and performance
     if (tutorId) {
@@ -55,6 +60,37 @@ export const fetchScheduledClasses = async (
     console.log(`Fetched classes for ${studentId ? 'student' : 'tutor'} ID: ${studentId || tutorId}, Count: ${data?.length || 0}`);
 
     const classEvents: ClassEvent[] = (data || []).map((cls) => {
+      // Generate tutorName and studentName from joined profiles data
+      let tutorName = '';
+      let studentName = '';
+
+      // Handle getting tutor and student names from joined profile data
+      if (cls.profiles && Array.isArray(cls.profiles)) {
+        // Handle array of profiles (potential legacy format)
+        const tutorProfile = cls.profiles.find(p => p.id === cls.tutor_id);
+        const studentProfile = cls.profiles.find(p => p.id === cls.student_id);
+        
+        if (tutorProfile) {
+          tutorName = `${tutorProfile.first_name || ''} ${tutorProfile.last_name || ''}`.trim();
+        }
+        
+        if (studentProfile) {
+          studentName = `${studentProfile.first_name || ''} ${studentProfile.last_name || ''}`.trim();
+        }
+      } else {
+        // Handle new join format where profiles are nested objects
+        const tutorProfile = cls.profiles_tutor_id;
+        const studentProfile = cls.profiles_student_id;
+        
+        if (tutorProfile) {
+          tutorName = `${tutorProfile.first_name || ''} ${tutorProfile.last_name || ''}`.trim();
+        }
+        
+        if (studentProfile) {
+          studentName = `${studentProfile.first_name || ''} ${studentProfile.last_name || ''}`.trim();
+        }
+      }
+      
       // Safely handle potentially null values
       const status = cls.status || 'scheduled';
       const attendance = cls.attendance || 'pending';
@@ -62,8 +98,8 @@ export const fetchScheduledClasses = async (
       return {
         id: cls.id || '',
         title: cls.title || '',
-        tutorName: cls.tutor_name || '',
-        studentName: cls.student_name || '',
+        tutorName: tutorName || 'Unknown Tutor',
+        studentName: studentName || 'Unknown Student',
         date: cls.date ? new Date(cls.date) : new Date(),
         startTime: cls.start_time ? cls.start_time.substring(0, 5) : '',
         endTime: cls.end_time ? cls.end_time.substring(0, 5) : '',
