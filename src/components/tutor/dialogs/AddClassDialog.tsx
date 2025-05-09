@@ -8,6 +8,7 @@ import { supabase } from '@/services/supabaseClient';
 import type { Student } from '@/types/sharedTypes';
 import type { TutorStudentRelationship } from '@/services/relationships/types';
 import Modal from '@/components/common/Modal';
+import { Profile } from '@/services/class/types';
 
 interface AddClassDialogProps {
   isOpen: boolean;
@@ -16,7 +17,7 @@ interface AddClassDialogProps {
   setNewEvent: (event: any) => void;
   onCreateEvent: () => void;
   onResetForm: () => void;
-  currentUser?: any;
+  currentUser?: Profile | null; // Add the currentUser prop
 }
 
 const AddClassDialog: React.FC<AddClassDialogProps> = ({
@@ -26,7 +27,7 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
   setNewEvent,
   onCreateEvent,
   onResetForm,
-  currentUser,
+  currentUser, // Include in the props
 }) => {
   const { user } = useAuth();
   const [relationships, setRelationships] = useState<TutorStudentRelationship[]>([]);

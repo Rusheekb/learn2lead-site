@@ -67,13 +67,18 @@ const TutorScheduler: React.FC = () => {
   // If we're creating a new event, make sure the tutorId is set properly
   useEffect(() => {
     if (user?.id && newEvent && !newEvent.tutorId) {
+      // Extract name from profile data in currentUser instead of the auth user object
+      const tutorName = currentUser?.first_name 
+        ? `${currentUser.first_name} ${currentUser.last_name || ''}`.trim() 
+        : 'Current Tutor';
+      
       setNewEvent({
         ...newEvent,
         tutorId: user.id,
-        tutorName: user.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : 'Current Tutor'
+        tutorName
       });
     }
-  }, [user?.id, newEvent, setNewEvent, user]);
+  }, [user?.id, newEvent, setNewEvent, currentUser]);
 
   // Display loading state while data is being fetched
   if (isLoading) {
@@ -135,7 +140,6 @@ const TutorScheduler: React.FC = () => {
         onDownloadFile={handleDownloadFile}
         getUnreadMessageCount={getUnreadMessageCount}
         refreshEvent={refreshEvent}
-        currentUser={currentUser}
       />
     </div>
   );

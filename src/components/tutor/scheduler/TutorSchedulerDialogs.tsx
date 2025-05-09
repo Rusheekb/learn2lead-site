@@ -4,6 +4,7 @@ import { ClassEvent } from '@/types/tutorTypes';
 import { StudentMessage, StudentUpload } from '@/types/classTypes';
 import ClassDialogs from '../ClassDialogs';
 import { mockStudents } from '../mock-data-students';
+import { Profile } from '@/services/class/types';
 
 interface TutorSchedulerDialogsProps {
   isViewEventOpen: boolean;
@@ -28,6 +29,7 @@ interface TutorSchedulerDialogsProps {
   onDownloadFile: (uploadId: string) => Promise<void>;
   getUnreadMessageCount: (classId: string) => number;
   refreshEvent?: () => Promise<void>;
+  currentUser?: Profile | null; // Add the currentUser prop
 }
 
 const TutorSchedulerDialogs: React.FC<TutorSchedulerDialogsProps> = ({
@@ -53,6 +55,7 @@ const TutorSchedulerDialogs: React.FC<TutorSchedulerDialogsProps> = ({
   onDownloadFile,
   getUnreadMessageCount,
   refreshEvent,
+  currentUser, // Include the prop in the component props
 }) => {
   return (
     <ClassDialogs
@@ -79,6 +82,7 @@ const TutorSchedulerDialogs: React.FC<TutorSchedulerDialogsProps> = ({
       onDownloadFile={onDownloadFile}
       getUnreadMessageCount={getUnreadMessageCount}
       refreshEvent={refreshEvent}
+      currentUser={currentUser} // Pass the currentUser prop to ClassDialogs
     />
   );
 };
