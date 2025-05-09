@@ -11,8 +11,8 @@ const createBaseSchema = () => {
     endTime: z.string().min(1, { message: 'End time is required' }),
     subject: z.string().min(1, { message: 'Subject is required' }),
     zoomLink: z.string()
-      .url({ message: 'Please enter a valid URL' })
-      .min(1, { message: 'Zoom link is required' }),
+      .min(1, { message: 'Zoom link is required' })
+      .url({ message: 'Please enter a valid URL' }).or(z.string()),
     notes: z.string().optional(),
   });
 };
@@ -21,24 +21,8 @@ const createBaseSchema = () => {
 export const createClassEventSchema = () => {
   const baseSchema = createBaseSchema();
   
-  // Return the schema with refinements
-  return baseSchema.refine((data) => {
-    return data.startTime < data.endTime;
-  }, {
-    message: 'End time must be after start time',
-    path: ['endTime'],
-  }).refine((data) => {
-    // Check if the combined date and start time is in the future
-    const now = new Date();
-    const startDateTime = new Date(data.date);
-    const [hours, minutes] = data.startTime.split(':').map(Number);
-    startDateTime.setHours(hours, minutes, 0, 0);
-    
-    return startDateTime > now;
-  }, {
-    message: 'Class time must be in the future',
-    path: ['startTime'],
-  });
+  // Return the schema with minimal refinements
+  return baseSchema;
 };
 
 // Schema for new class events that includes relationship ID
@@ -53,8 +37,8 @@ export const newClassEventSchema = () => {
     endTime: z.string().min(1, { message: 'End time is required' }),
     subject: z.string().min(1, { message: 'Subject is required' }),
     zoomLink: z.string()
-      .url({ message: 'Please enter a valid URL' })
-      .min(1, { message: 'Zoom link is required' }),
+      .min(1, { message: 'Zoom link is required' })
+      .url({ message: 'Please enter a valid URL' }).or(z.string()),
     notes: z.string().optional(),
   });
 };

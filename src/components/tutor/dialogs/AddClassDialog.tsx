@@ -39,44 +39,35 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
   // Always use auth user ID for queries - this is guaranteed to exist
   const tutorId = user?.id;
 
+  // Initialize default values when opening the modal
   useEffect(() => {
     if (!tutorId || !isOpen) return;
     
-    // Initialize default values for the form if not already set
-    if (!newEvent.startTime) {
-      const now = new Date();
-      const nextHour = new Date(now);
-      nextHour.setHours(nextHour.getHours() + 1, 0, 0, 0);
-      
-      const endTime = new Date(nextHour);
-      endTime.setHours(endTime.getHours() + 1);
-      
-      setNewEvent({
-        ...newEvent,
-        tutorId: tutorId,
-        tutorName: currentUser?.first_name 
-          ? `${currentUser.first_name} ${currentUser.last_name || ''}`.trim() 
-          : 'Current Tutor',
-        date: nextHour,
-        startTime: format(nextHour, 'HH:mm'),
-        endTime: format(endTime, 'HH:mm'),
-        title: 'New Class Session',
-      });
-    } else {
-      // Make sure the tutorId is correctly set in the newEvent
-      if (tutorId && newEvent && !newEvent.tutorId) {
-        const tutorDisplayName = currentUser?.first_name 
-          ? `${currentUser.first_name} ${currentUser.last_name || ''}`.trim() 
-          : 'Current Tutor';
-          
-        setNewEvent({
-          ...newEvent,
-          tutorId: tutorId,
-          tutorName: tutorDisplayName
-        });
-      }
-    }
+    // Initialize default values for the form
+    const now = new Date();
+    const nextHour = new Date(now);
+    nextHour.setHours(nextHour.getHours() + 1, 0, 0, 0);
     
+    const endTime = new Date(nextHour);
+    endTime.setHours(endTime.getHours() + 1);
+    
+    // Setup initial values with proper tutor information
+    const tutorDisplayName = currentUser?.first_name 
+      ? `${currentUser.first_name} ${currentUser.last_name || ''}`.trim() 
+      : 'Current Tutor';
+      
+    setNewEvent({
+      tutorId: tutorId,
+      tutorName: tutorDisplayName,
+      date: nextHour,
+      startTime: format(nextHour, 'HH:mm'),
+      endTime: format(endTime, 'HH:mm'),
+      title: 'New Class Session',
+      subject: '',
+      zoomLink: 'https://zoom.us/',
+    });
+    
+    // Load relationships and students data
     const loadRelationshipsAndStudents = async () => {
       setIsLoading(true);
       try {
@@ -112,6 +103,11 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
           }));
           
           setAssignedStudents(typedStudents);
+          
+          // Set the first relationship as selected by default if available
+          if (rels.length > 0 && !selectedRelId) {
+            setSelectedRelId(rels[0].id);
+          }
         }
       } catch (error) {
         console.error('Error loading data:', error);
@@ -121,7 +117,7 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
     };
 
     loadRelationshipsAndStudents();
-  }, [tutorId, isOpen, newEvent, setNewEvent, currentUser]);
+  }, [tutorId, isOpen, setNewEvent, currentUser]);
 
   const handleCancel = () => {
     setIsOpen(false);
@@ -133,15 +129,16 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
       isOpen={isOpen}
       onOpenChange={setIsOpen}
       title="Schedule New Class"
-      maxWidth="max-w-3xl" // Increased modal width
-      maxHeight="max-h-[95vh] sm:max-h-[90vh]" // Increased modal height
+      maxWidth="max-w-4xl" // Increased modal width
+      maxHeight="max-h-[95vh]" // Increased modal height
       className="bg-white text-gray-900"
+      onCancel={handleCancel} // Explicit cancel handler
       footer={
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-2 justify-end w-full">
+        <div className="flex flex-col sm:flex-row gap-3 justify-end w-full">
           <Button 
             variant="outline" 
             onClick={handleCancel}
-            className="bg-white text-gray-900 hover:bg-gray-100 w-full sm:w-auto"
+            className="bg-white text-gray-900 hover:bg-gray-100 w-full sm:w-auto px-6 py-2 text-base"
           >
             Cancel
           </Button>
@@ -149,9 +146,9 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
       }
     >
       {isLoading ? (
-        <div className="py-8 text-center">Loading student data...</div>
+        <div className="py-12 text-center text-lg">Loading student data...</div>
       ) : (
-        <div className="py-2"> {/* Added extra padding */}
+        <div className="py-4"> {/* Added extra padding */}
           <NewClassEventForm
             newEvent={newEvent}
             setNewEvent={setNewEvent}

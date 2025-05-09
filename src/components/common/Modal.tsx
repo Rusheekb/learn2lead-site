@@ -47,8 +47,8 @@ const Modal: React.FC<ModalProps> = ({
   isConfirmLoading = false,
   confirmVariant = "default",
   className = "",
-  maxWidth = "max-w-xl",
-  maxHeight = "max-h-[80vh]",
+  maxWidth = "max-w-4xl", // Increased from max-w-xl to max-w-4xl
+  maxHeight = "max-h-[90vh]", // Increased from max-h-[80vh] to max-h-[90vh]
   ariaLabel,
 }) => {
   const titleId = React.useId();
@@ -58,13 +58,10 @@ const Modal: React.FC<ModalProps> = ({
   const handleOpenChange = (open: boolean) => {
     // Only allow closing if it's an explicit user action through a button
     // This prevents the modal from closing when clicking outside
-    if (!open) {
-      // Optional - you can add a confirmation here if needed
-      if (onCancel) {
-        onCancel();
-      } else {
-        onOpenChange(false);
-      }
+    if (!open && onCancel) {
+      onCancel();
+    } else if (!open) {
+      // Do nothing - prevent auto-close when clicking outside
     } else {
       onOpenChange(true);
     }
@@ -79,7 +76,7 @@ const Modal: React.FC<ModalProps> = ({
       modal={true} // Ensure modal behavior
     >
       <DialogContent 
-        className={`${maxWidth} ${maxHeight} overflow-y-auto mx-4 w-[calc(100vw-2rem)] sm:w-auto bg-white px-6 py-6 ${className}`}
+        className={`${maxWidth} ${maxHeight} overflow-y-auto mx-4 w-[calc(100vw-2rem)] sm:w-auto bg-white px-6 py-8 ${className}`} // Increased padding
         aria-label={ariaLabel}
         // Prevent click outside from closing
         onPointerDownOutside={(e) => {
@@ -91,18 +88,18 @@ const Modal: React.FC<ModalProps> = ({
         }}
       >
         {(title || description) && (
-          <DialogHeader>
-            {title && <DialogTitle id={titleId} className="text-xl text-gray-900 break-words">{title}</DialogTitle>}
+          <DialogHeader className="pb-4"> {/* Added padding bottom */}
+            {title && <DialogTitle id={titleId} className="text-2xl text-gray-900 break-words">{title}</DialogTitle>} {/* Increased text size */}
             {description && <DialogDescription id={descriptionId} className="text-gray-600 break-words">{description}</DialogDescription>}
           </DialogHeader>
         )}
         
-        <div className="overflow-y-auto text-gray-900 my-4">
+        <div className="overflow-y-auto text-gray-900 my-6"> {/* Increased vertical margin */}
           {children}
         </div>
         
         {(footer || showCancel || showConfirm) && (
-          <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0 mt-6">
+          <DialogFooter className="flex flex-col sm:flex-row gap-3 mt-8"> {/* Increased margin and gap */}
             {footer || (
               <>
                 {showCancel && (

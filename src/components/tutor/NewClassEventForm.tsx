@@ -39,18 +39,19 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
   // Handle form submission
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    form.handleSubmit(() => {
-      if (onSubmit) onSubmit();
-    })();
+    if (onSubmit) {
+      form.handleSubmit(() => {
+        onSubmit();
+      })();
+    }
   };
 
-  // Always enable the button regardless of form state
-  // This addresses the main issue with the disabled button
+  // Always enable the button regardless of form validation state
   return (
     <Form {...form}>
       <form 
         onSubmit={handleSubmit} 
-        className="space-y-4"
+        className="space-y-6"
         aria-label="Schedule new class form"
       >
         <FormFieldsGroup form={form} />
@@ -61,10 +62,10 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
         />
 
         {onSubmit && (
-          <div className="flex justify-end mt-6">
+          <div className="flex justify-end mt-8">
             <Button 
               type="submit" 
-              className="bg-tutoring-blue hover:bg-tutoring-blue/90 text-white w-full sm:w-auto focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-tutoring-blue"
+              className="bg-tutoring-blue hover:bg-tutoring-blue/90 text-white w-full sm:w-auto px-8 py-6 h-auto text-lg font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-tutoring-blue"
               aria-label="Schedule class"
             >
               Schedule Class

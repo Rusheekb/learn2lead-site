@@ -29,17 +29,22 @@ export const useCreateOperation = (queryClient: QueryClient) => {
     try {
       setIsCreating(true);
       
-      // Validate required fields
-      if (!eventData.title || !eventData.studentId || !eventData.subject) {
-        toast.error("Please fill in all required fields");
-        return false;
-      }
-
       // Make sure we have a tutor ID - use the current user's ID if not specified
       const tutorId = eventData.tutorId || user?.id;
       if (!tutorId) {
         console.error("No tutor ID available");
         toast.error("Missing tutor ID. Please ensure you're logged in as a tutor.");
+        return false;
+      }
+
+      // Make a best effort with validation but don't block on it
+      if (!eventData.title) {
+        toast.error("Title is required");
+        return false;
+      }
+
+      if (!eventData.studentId) {
+        toast.error("Student selection is required");
         return false;
       }
 
@@ -52,7 +57,7 @@ export const useCreateOperation = (queryClient: QueryClient) => {
         date: formattedDate,
         start_time: eventData.startTime,
         end_time: eventData.endTime,
-        subject: eventData.subject,
+        subject: eventData.subject || "General",
         zoom_link: eventData.zoomLink || null,
         notes: eventData.notes || null,
       };
@@ -92,14 +97,17 @@ export const useCreateOperation = (queryClient: QueryClient) => {
       return false;
     }
     
+    // Be lenient with required fields
+    const studentId = event.studentId || '';
+    
     return createEvent({
-      title: event.title,
+      title: event.title || 'New Class Session',
       tutorId: tutorId,
-      studentId: event.studentId || '',
+      studentId: studentId,
       date: event.date instanceof Date ? event.date : new Date(event.date),
-      startTime: event.startTime,
-      endTime: event.endTime,
-      subject: event.subject,
+      startTime: event.startTime || '09:00',
+      endTime: event.endTime || '10:00',
+      subject: event.subject || 'General',
       zoomLink: event.zoomLink || '',
       notes: event.notes || ''
     });

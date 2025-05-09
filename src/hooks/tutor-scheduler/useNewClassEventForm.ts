@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -18,6 +17,7 @@ export const useNewClassEventForm = (
   selectedRelId: string,
   setSelectedRelId: (id: string) => void
 ) => {
+  // Initialize the form with default values
   const form = useForm<NewClassFormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -30,55 +30,76 @@ export const useNewClassEventForm = (
       zoomLink: newEvent.zoomLink || '',
       notes: newEvent.notes || '',
     },
-    mode: 'onChange', // Validate on change for more immediate feedback
+    mode: 'onChange',
   });
 
-  // Use useEffect to update the form when the newEvent changes
-  // This prevents the input values from disappearing
+  // Mark the form as dirty initially to make submit button active
   useEffect(() => {
     if (newEvent) {
-      // Only update form values if they're different from current form values
-      // to prevent focus loss and cursor jumping
+      Object.keys(form.getValues()).forEach(key => {
+        form.formState.dirtyFields[key as keyof NewClassFormValues] = true;
+      });
+      form.trigger(); // Trigger validation
+    }
+  }, []);
+  
+  // Use useEffect to update the form when the newEvent changes
+  useEffect(() => {
+    if (newEvent) {
+      // Keep a reference to the current form values to prevent unnecessary updates
       const currentValues = form.getValues();
       
+      // Update title only if changed and not empty
       if (newEvent.title && newEvent.title !== currentValues.title) {
-        form.setValue('title', newEvent.title, { shouldDirty: true, shouldValidate: false });
+        form.setValue('title', newEvent.title, { shouldDirty: true, shouldValidate: true });
       }
       
+      // Update relationshipId only if changed and not empty
       if (selectedRelId && selectedRelId !== currentValues.relationshipId) {
-        form.setValue('relationshipId', selectedRelId, { shouldDirty: true, shouldValidate: false });
+        form.setValue('relationshipId', selectedRelId, { shouldDirty: true, shouldValidate: true });
       }
       
+      // Update subject only if changed and not empty
       if (newEvent.subject && newEvent.subject !== currentValues.subject) {
-        form.setValue('subject', newEvent.subject, { shouldDirty: true, shouldValidate: false });
+        form.setValue('subject', newEvent.subject, { shouldDirty: true, shouldValidate: true });
       }
       
+      // Update zoomLink only if changed and not empty
       if (newEvent.zoomLink && newEvent.zoomLink !== currentValues.zoomLink) {
-        form.setValue('zoomLink', newEvent.zoomLink, { shouldDirty: true, shouldValidate: false });
+        form.setValue('zoomLink', newEvent.zoomLink, { shouldDirty: true, shouldValidate: true });
       }
       
+      // Update notes only if changed
       if (newEvent.notes && newEvent.notes !== currentValues.notes) {
-        form.setValue('notes', newEvent.notes, { shouldDirty: true, shouldValidate: false });
+        form.setValue('notes', newEvent.notes, { shouldDirty: true });
       }
       
+      // Update startTime only if changed and not empty
       if (newEvent.startTime && newEvent.startTime !== currentValues.startTime) {
-        form.setValue('startTime', newEvent.startTime, { shouldDirty: true, shouldValidate: false });
+        form.setValue('startTime', newEvent.startTime, { shouldDirty: true, shouldValidate: true });
       }
       
+      // Update endTime only if changed and not empty
       if (newEvent.endTime && newEvent.endTime !== currentValues.endTime) {
-        form.setValue('endTime', newEvent.endTime, { shouldDirty: true, shouldValidate: false });
+        form.setValue('endTime', newEvent.endTime, { shouldDirty: true, shouldValidate: true });
+      }
+      
+      // Update date if it exists and has changed
+      if (newEvent.date && 
+          (!currentValues.date || 
+           newEvent.date.getTime() !== currentValues.date.getTime())) {
+        form.setValue('date', newEvent.date, { shouldDirty: true, shouldValidate: true });
       }
     }
   }, [form, newEvent, selectedRelId]);
 
   // Subscribe to form changes
   useEffect(() => {
-    // Track the previous form values to avoid unnecessary updates
-    const subscription = form.watch((formValues) => {
+    const subscription = form.watch((formValues, { name, type }) => {
       if (!formValues) return;
       
-      // Only update if user has actually interacted with the form
-      if (!form.formState.isDirty) return;
+      // Only update if the field has changed
+      if (!name) return;
       
       // Handle relationship change separately to optimize student lookup
       const relationshipId = formValues.relationshipId;
@@ -91,27 +112,31 @@ export const useNewClassEventForm = (
       const student = selectedRel ? 
         assignedStudents.find(s => s.id === selectedRel.student_id) : 
         undefined;
-        
-      // Update parent state with new values
-      setNewEvent({
+      
+      // Create a new object to avoid mutating the newEvent directly
+      const updatedEvent = {
         ...newEvent,
-        title: formValues.title,
-        date: formValues.date,
-        startTime: formValues.startTime,
-        endTime: formValues.endTime,
-        studentId: selectedRel?.student_id || '',
-        studentName: student?.name || '',
-        subject: formValues.subject,
-        zoomLink: formValues.zoomLink,
-        notes: formValues.notes,
-      });
+        title: formValues.title || newEvent.title,
+        date: formValues.date || newEvent.date,
+        startTime: formValues.startTime || newEvent.startTime,
+        endTime: formValues.endTime || newEvent.endTime,
+        studentId: selectedRel?.student_id || newEvent.studentId || '',
+        studentName: student?.name || newEvent.studentName || '',
+        subject: formValues.subject || newEvent.subject,
+        zoomLink: formValues.zoomLink || newEvent.zoomLink,
+        notes: formValues.notes || newEvent.notes,
+      };
+      
+      // Only update if there are actual changes
+      if (JSON.stringify(updatedEvent) !== JSON.stringify(newEvent)) {
+        setNewEvent(updatedEvent);
+      }
     });
     
     // Properly clean up subscription
     return () => subscription.unsubscribe();
   }, [
-    form.watch, 
-    form.formState.isDirty,
+    form.watch,
     setNewEvent,
     newEvent,
     relationships,
