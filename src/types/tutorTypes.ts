@@ -35,6 +35,7 @@ export interface ClassEvent extends BaseEvent {
   materialsUrl?: string[] | null;
   recurring?: boolean;
   recurringDays?: string[];
+  relationshipId?: string; // Added relationshipId property to fix the TypeScript error
   // Add missing properties to fix type errors
   duration?: number;
   content?: string;
