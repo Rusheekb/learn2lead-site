@@ -33,6 +33,19 @@ export const useNewClassEventForm = (
     mode: 'onChange', // Validate on change for more immediate feedback
   });
 
+  // Set the form as dirty initially to enable button interaction
+  useEffect(() => {
+    // Mark form as dirty initially after a short delay to ensure form is mounted
+    const timer = setTimeout(() => {
+      if (!form.formState.isDirty) {
+        // Touch a field to mark the form as dirty
+        form.setValue('title', newEvent.title || '', { shouldDirty: true });
+      }
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [form, newEvent.title]);
+
   // Subscribe to form changes
   useEffect(() => {
     // Track the previous form values to avoid unnecessary updates

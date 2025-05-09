@@ -5,7 +5,7 @@ import { addMinutes, isFuture, parse, set } from 'date-fns';
 // Define the base schema without refinement
 const createBaseSchema = () => {
   return z.object({
-    title: z.string().min(3, { message: 'Title must be at least 3 characters long' }),
+    title: z.string().min(1, { message: 'Title is required' }),
     date: z.date({ required_error: 'Please select a date' }),
     startTime: z.string().min(1, { message: 'Start time is required' }),
     endTime: z.string().min(1, { message: 'End time is required' }),
@@ -48,23 +48,32 @@ export const newClassEventSchema = () => {
     relationshipId: z.string().min(1, { message: 'Please select a student' }),
   });
   
-  // Add the same refinements as createClassEventSchema
-  return extendedSchema.refine((data) => {
-    return data.startTime < data.endTime;
-  }, {
-    message: 'End time must be after start time',
-    path: ['endTime'],
-  }).refine((data) => {
-    // Check if the combined date and start time is in the future
-    const now = new Date();
-    const startDateTime = new Date(data.date);
-    const [hours, minutes] = data.startTime.split(':').map(Number);
-    startDateTime.setHours(hours, minutes, 0, 0);
+  // Add the same refinements as createClassEventSchema but make them optional
+  return extendedSchema.superRefine((data, ctx) => {
+    // Only validate start/end times if both are provided
+    if (data.startTime && data.endTime && data.startTime >= data.endTime) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'End time must be after start time',
+        path: ['endTime'],
+      });
+    }
     
-    return startDateTime > now;
-  }, {
-    message: 'Class time must be in the future',
-    path: ['startTime'],
+    // Check if the combined date and start time is in the future
+    if (data.date && data.startTime) {
+      const now = new Date();
+      const startDateTime = new Date(data.date);
+      const [hours, minutes] = data.startTime.split(':').map(Number);
+      startDateTime.setHours(hours, minutes, 0, 0);
+      
+      if (startDateTime <= now) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Class time must be in the future',
+          path: ['startTime'],
+        });
+      }
+    }
   });
 };
 

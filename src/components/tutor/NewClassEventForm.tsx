@@ -44,8 +44,8 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
     })();
   };
 
-  // Check if form is valid for button state
-  const isFormValid = form.formState.isValid;
+  // Modified: Make button clickable even if form isn't fully valid
+  // as long as there are changes made to the form
   const isDirty = form.formState.isDirty;
 
   return (
@@ -66,9 +66,9 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
           <div className="flex justify-end mt-6">
             <Button 
               type="submit" 
-              disabled={!isFormValid || !isDirty}
+              disabled={!isDirty}
               className="bg-tutoring-blue hover:bg-tutoring-blue/90 text-white w-full sm:w-auto focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-tutoring-blue"
-              aria-disabled={!isFormValid || !isDirty}
+              aria-disabled={!isDirty}
               aria-label="Schedule class"
             >
               Schedule Class

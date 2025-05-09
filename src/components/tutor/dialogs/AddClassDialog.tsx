@@ -9,6 +9,7 @@ import type { Student } from '@/types/sharedTypes';
 import type { TutorStudentRelationship } from '@/services/relationships/types';
 import Modal from '@/components/common/Modal';
 import { Profile } from '@/types/profile';
+import { format } from 'date-fns';
 
 interface AddClassDialogProps {
   isOpen: boolean;
@@ -41,17 +42,39 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
   useEffect(() => {
     if (!tutorId || !isOpen) return;
     
-    // Make sure the tutorId is correctly set in the newEvent
-    if (tutorId && newEvent && !newEvent.tutorId) {
-      const tutorDisplayName = currentUser?.first_name 
-        ? `${currentUser.first_name} ${currentUser.last_name || ''}`.trim() 
-        : 'Current Tutor';
-        
+    // Initialize default values for the form if not already set
+    if (!newEvent.startTime) {
+      const now = new Date();
+      const nextHour = new Date(now);
+      nextHour.setHours(nextHour.getHours() + 1, 0, 0, 0);
+      
+      const endTime = new Date(nextHour);
+      endTime.setHours(endTime.getHours() + 1);
+      
       setNewEvent({
         ...newEvent,
         tutorId: tutorId,
-        tutorName: tutorDisplayName
+        tutorName: currentUser?.first_name 
+          ? `${currentUser.first_name} ${currentUser.last_name || ''}`.trim() 
+          : 'Current Tutor',
+        date: nextHour,
+        startTime: format(nextHour, 'HH:mm'),
+        endTime: format(endTime, 'HH:mm'),
+        title: 'New Class Session',
       });
+    } else {
+      // Make sure the tutorId is correctly set in the newEvent
+      if (tutorId && newEvent && !newEvent.tutorId) {
+        const tutorDisplayName = currentUser?.first_name 
+          ? `${currentUser.first_name} ${currentUser.last_name || ''}`.trim() 
+          : 'Current Tutor';
+          
+        setNewEvent({
+          ...newEvent,
+          tutorId: tutorId,
+          tutorName: tutorDisplayName
+        });
+      }
     }
     
     const loadRelationshipsAndStudents = async () => {
