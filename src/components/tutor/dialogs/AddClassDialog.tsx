@@ -129,8 +129,8 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
       isOpen={isOpen}
       onOpenChange={setIsOpen}
       title="Schedule New Class"
-      maxWidth="max-w-5xl" // Increased modal width
-      maxHeight="max-h-[95vh]" // Increased modal height
+      maxWidth="max-w-5xl" // Keep max-w-5xl for width
+      maxHeight="max-h-[95vh]" // Keep max-h-[95vh] for height
       className="bg-white text-gray-900"
       onCancel={handleCancel} // Explicit cancel handler
       footer={
@@ -148,7 +148,7 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
       {isLoading ? (
         <div className="py-12 text-center text-lg">Loading student data...</div>
       ) : (
-        <div className="py-4"> {/* Added extra padding */}
+        <div className="py-6"> {/* Increased padding from py-4 to py-6 */}
           <NewClassEventForm
             newEvent={newEvent}
             setNewEvent={setNewEvent}
