@@ -16,6 +16,7 @@ interface AddClassDialogProps {
   setNewEvent: (event: any) => void;
   onCreateEvent: () => void;
   onResetForm: () => void;
+  currentUser?: any;
 }
 
 const AddClassDialog: React.FC<AddClassDialogProps> = ({
@@ -25,6 +26,7 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
   setNewEvent,
   onCreateEvent,
   onResetForm,
+  currentUser,
 }) => {
   const { user } = useAuth();
   const [relationships, setRelationships] = useState<TutorStudentRelationship[]>([]);
@@ -32,14 +34,28 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
   const [selectedRelId, setSelectedRelId] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
+  // Use the user from props or from context
+  const tutorUser = currentUser || user;
+
   useEffect(() => {
-    if (!user || !isOpen) return;
+    if (!tutorUser || !isOpen) return;
+    
+    // Make sure the tutorId is correctly set in the newEvent
+    if (tutorUser.id && newEvent && !newEvent.tutorId) {
+      setNewEvent({
+        ...newEvent,
+        tutorId: tutorUser.id,
+        tutorName: tutorUser.first_name ? `${tutorUser.first_name} ${tutorUser.last_name || ''}`.trim() : 'Current Tutor'
+      });
+    }
     
     const loadRelationshipsAndStudents = async () => {
       setIsLoading(true);
       try {
         // Load active pairings for this tutor
-        const rels = await fetchRelationshipsForTutor(user.id);
+        console.log(`Loading relationships for tutor ID: ${tutorUser.id}`);
+        const rels = await fetchRelationshipsForTutor(tutorUser.id);
+        console.log(`Loaded ${rels.length} relationships`);
         setRelationships(rels);
 
         // Get unique student IDs from relationships
@@ -57,11 +73,14 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
             return;
           }
           
+          console.log(`Loaded ${studentsData?.length || 0} students`);
+          
           // Ensure the data conforms to the Student type
           const typedStudents: Student[] = studentsData.map(student => ({
             id: student.id,
             name: student.name,
-            subjects: student.subjects || []
+            subjects: student.subjects || [],
+            email: '' // Add any required fields
           }));
           
           setAssignedStudents(typedStudents);
@@ -74,7 +93,7 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
     };
 
     loadRelationshipsAndStudents();
-  }, [user, isOpen]);
+  }, [tutorUser, isOpen, newEvent, setNewEvent]);
 
   const handleCancel = () => {
     setIsOpen(false);

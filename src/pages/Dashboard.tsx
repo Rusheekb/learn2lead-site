@@ -31,6 +31,16 @@ const Dashboard = () => {
     trackNavigation(EventName.TAB_CHANGE, { tab: activeTab, dashboard: 'student' });
   }, [activeTab, trackNavigation]);
 
+  // Invalidate query cache to ensure fresh data when tab changes
+  useEffect(() => {
+    if (user?.id) {
+      if (activeTab === 'schedule') {
+        queryClient.invalidateQueries({ queryKey: ['studentClasses', user.id] });
+        queryClient.invalidateQueries({ queryKey: ['upcomingClasses', user.id] });
+      }
+    }
+  }, [activeTab, user?.id, queryClient]);
+
   // Redirect based on user role
   if (userRole && userRole !== 'student') {
     switch (userRole) {

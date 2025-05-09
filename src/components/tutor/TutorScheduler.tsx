@@ -41,6 +41,7 @@ const TutorScheduler: React.FC = () => {
     studentUploads,
     isLoading,
     refetchClasses,
+    currentUser,
     
     // Methods
     handleSelectEvent,
@@ -62,6 +63,17 @@ const TutorScheduler: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['scheduledClasses', user.id] });
     }
   }, [user?.id, refetchClasses, queryClient]);
+
+  // If we're creating a new event, make sure the tutorId is set properly
+  useEffect(() => {
+    if (user?.id && newEvent && !newEvent.tutorId) {
+      setNewEvent({
+        ...newEvent,
+        tutorId: user.id,
+        tutorName: user.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : 'Current Tutor'
+      });
+    }
+  }, [user?.id, newEvent, setNewEvent, user]);
 
   // Display loading state while data is being fetched
   if (isLoading) {
@@ -123,6 +135,7 @@ const TutorScheduler: React.FC = () => {
         onDownloadFile={handleDownloadFile}
         getUnreadMessageCount={getUnreadMessageCount}
         refreshEvent={refreshEvent}
+        currentUser={currentUser}
       />
     </div>
   );

@@ -56,6 +56,14 @@ export function useTutorScheduler() {
   const filteredClasses = core.applyFilters(core.scheduledClasses);
   const isLoading = core.isClassLoading || core.isDataLoading;
 
+  // Make sure we have fresh data whenever this hook is used
+  useEffect(() => {
+    if (core.user?.id) {
+      core.refetchClasses();
+      core.queryClient.invalidateQueries({ queryKey: ['scheduledClasses', core.user.id] });
+    }
+  }, [core.user?.id]);
+
   return {
     // State
     selectedDate: core.selectedDate,
@@ -84,6 +92,7 @@ export function useTutorScheduler() {
     setNewEvent: core.setNewEvent,
     filteredClasses,
     allSubjects: core.allSubjects,
+    currentUser: core.user,
 
     // Methods
     handleSelectEvent: core.handleSelectEvent,

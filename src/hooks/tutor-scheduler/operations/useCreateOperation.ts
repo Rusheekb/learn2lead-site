@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { ClassEvent } from '@/types/tutorTypes';
 import { createScheduledClass } from '@/services/class';
 import { QueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface CreateEventParams {
   title: string;
@@ -20,6 +21,7 @@ export interface CreateEventParams {
 
 export const useCreateOperation = (queryClient: QueryClient) => {
   const [isCreating, setIsCreating] = useState<boolean>(false);
+  const { user } = useAuth();
   
   const createEvent = async (eventData: CreateEventParams): Promise<boolean> => {
     if (isCreating) return false;
@@ -27,8 +29,17 @@ export const useCreateOperation = (queryClient: QueryClient) => {
     try {
       setIsCreating(true);
       
+      // Validate required fields
       if (!eventData.title || !eventData.studentId || !eventData.subject) {
         toast.error("Please fill in all required fields");
+        return false;
+      }
+
+      // Make sure we have a tutor ID - use the current user's ID if not specified
+      const tutorId = eventData.tutorId || user?.id;
+      if (!tutorId) {
+        console.error("No tutor ID available");
+        toast.error("Missing tutor ID. Please ensure you're logged in as a tutor.");
         return false;
       }
 
@@ -36,7 +47,7 @@ export const useCreateOperation = (queryClient: QueryClient) => {
       
       const classData = {
         title: eventData.title,
-        tutor_id: eventData.tutorId,
+        tutor_id: tutorId,
         student_id: eventData.studentId,
         date: formattedDate,
         start_time: eventData.startTime,
@@ -46,14 +57,15 @@ export const useCreateOperation = (queryClient: QueryClient) => {
         notes: eventData.notes || null,
       };
       
+      console.log("Creating scheduled class with data:", classData);
       const result = await createScheduledClass(classData);
       
       if (result) {
         toast.success("Class scheduled successfully");
         
         // Invalidate relevant queries for both tutor and student
-        queryClient.invalidateQueries({ queryKey: ['scheduledClasses', eventData.tutorId] });
-        queryClient.invalidateQueries({ queryKey: ['upcomingClasses', eventData.tutorId] });
+        queryClient.invalidateQueries({ queryKey: ['scheduledClasses', tutorId] });
+        queryClient.invalidateQueries({ queryKey: ['upcomingClasses', tutorId] });
         queryClient.invalidateQueries({ queryKey: ['studentClasses', eventData.studentId] });
         queryClient.invalidateQueries({ queryKey: ['upcomingClasses', eventData.studentId] });
         queryClient.invalidateQueries({ queryKey: ['studentDashboard', eventData.studentId] });
@@ -72,14 +84,17 @@ export const useCreateOperation = (queryClient: QueryClient) => {
 
   // Adapter function to convert ClassEvent to CreateEventParams
   const createEventAdapter = async (event: ClassEvent): Promise<boolean> => {
-    if (!event.tutorId) {
-      toast.error("Missing tutor ID");
+    // Use current user ID as fallback for tutorId
+    const tutorId = event.tutorId || user?.id;
+    
+    if (!tutorId) {
+      toast.error("Missing tutor ID. Please ensure you're logged in as a tutor.");
       return false;
     }
     
     return createEvent({
       title: event.title,
-      tutorId: event.tutorId,
+      tutorId: tutorId,
       studentId: event.studentId || '',
       date: event.date instanceof Date ? event.date : new Date(event.date),
       startTime: event.startTime,
