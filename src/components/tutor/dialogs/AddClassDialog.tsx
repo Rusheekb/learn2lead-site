@@ -8,7 +8,7 @@ import { supabase } from '@/services/supabaseClient';
 import type { Student } from '@/types/sharedTypes';
 import type { TutorStudentRelationship } from '@/services/relationships/types';
 import Modal from '@/components/common/Modal';
-import { Profile } from '@/services/class/types';
+import { Profile } from '@/types/profile';
 
 interface AddClassDialogProps {
   isOpen: boolean;
@@ -17,7 +17,7 @@ interface AddClassDialogProps {
   setNewEvent: (event: any) => void;
   onCreateEvent: () => void;
   onResetForm: () => void;
-  currentUser?: Profile | null; // Add the currentUser prop
+  currentUser?: Profile | null; // Using the Profile type from @/types/profile
 }
 
 const AddClassDialog: React.FC<AddClassDialogProps> = ({
@@ -27,7 +27,7 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
   setNewEvent,
   onCreateEvent,
   onResetForm,
-  currentUser, // Include in the props
+  currentUser,
 }) => {
   const { user } = useAuth();
   const [relationships, setRelationships] = useState<TutorStudentRelationship[]>([]);
@@ -35,9 +35,8 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
   const [selectedRelId, setSelectedRelId] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Use the user from props or from context
-  const tutorUser = currentUser || user;
-  const tutorId = user?.id;  // Always use auth user ID for queries
+  // Always use auth user ID for queries - this is guaranteed to exist
+  const tutorId = user?.id;
 
   useEffect(() => {
     if (!tutorId || !isOpen) return;

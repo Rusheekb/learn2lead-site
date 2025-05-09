@@ -41,7 +41,7 @@ const TutorScheduler: React.FC = () => {
     studentUploads,
     isLoading,
     refetchClasses,
-    currentUser,
+    currentUser, // This is now a Profile object, not a User
     
     // Methods
     handleSelectEvent,
@@ -140,7 +140,7 @@ const TutorScheduler: React.FC = () => {
         onDownloadFile={handleDownloadFile}
         getUnreadMessageCount={getUnreadMessageCount}
         refreshEvent={refreshEvent}
-        currentUser={currentUser} // Include the currentUser prop
+        currentUser={currentUser} // This is now a Profile object, not a User
       />
     </div>
   );

@@ -14,10 +14,13 @@ import { TransformedClassLog } from '@/services/logs/types';
 import { useSchedulerCore } from './tutor-scheduler/useSchedulerCore';
 import { useClassOperations } from './tutor-scheduler/useClassOperations';
 import { useEventRefresh } from './tutor-scheduler/useEventRefresh';
+import { useProfile } from '@/hooks/useProfile';
+import { Profile as ProfileType } from '@/types/profile';
 
 export function useTutorScheduler() {
   // Use the core hook to get most of the functionality
   const core = useSchedulerCore();
+  const { profile } = useProfile(); // Get the profile data
 
   // Use class operations hook for CRUD operations
   const {
@@ -92,7 +95,7 @@ export function useTutorScheduler() {
     setNewEvent: core.setNewEvent,
     filteredClasses,
     allSubjects: core.allSubjects,
-    currentUser: core.user,
+    currentUser: profile, // Use the profile data instead of auth user
 
     // Methods
     handleSelectEvent: core.handleSelectEvent,

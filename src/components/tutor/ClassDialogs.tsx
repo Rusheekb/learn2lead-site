@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Profile } from '@/services/class/types';
+import { Profile } from '@/types/profile';
 
 interface ClassDialogsProps {
   isViewEventOpen: boolean;
@@ -37,7 +37,7 @@ interface ClassDialogsProps {
   onDownloadFile: (uploadId: string) => Promise<void>;
   getUnreadMessageCount: (classId: string) => number;
   refreshEvent?: () => Promise<void>;
-  currentUser?: Profile | null; // Add currentUser prop
+  currentUser?: Profile | null; // Using the Profile type from @/types/profile
 }
 
 const ClassDialogs: React.FC<ClassDialogsProps> = ({
@@ -64,7 +64,7 @@ const ClassDialogs: React.FC<ClassDialogsProps> = ({
   onDownloadFile,
   getUnreadMessageCount,
   refreshEvent,
-  currentUser, // Include the prop in the component props
+  currentUser,
 }) => {
   return (
     <>
@@ -110,7 +110,7 @@ const ClassDialogs: React.FC<ClassDialogsProps> = ({
         setNewEvent={setNewEvent}
         onCreateEvent={onCreateEvent}
         onResetForm={onResetForm}
-        currentUser={currentUser} // Pass currentUser to AddClassDialog
+        currentUser={currentUser}
       />
     </>
   );
