@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -36,10 +37,16 @@ export const useNewClassEventForm = (
   // Mark the form as dirty initially to make submit button active
   useEffect(() => {
     if (newEvent) {
+      // Instead of directly modifying formState.dirtyFields, use setValue with shouldDirty=true
       Object.keys(form.getValues()).forEach(key => {
-        form.formState.dirtyFields[key as keyof NewClassFormValues] = true;
+        // Get the current value from the form
+        const currentValue = form.getValues(key as keyof NewClassFormValues);
+        // Reset the same value but with shouldDirty=true to mark field as dirty
+        form.setValue(key as keyof NewClassFormValues, currentValue, { 
+          shouldDirty: true,
+          shouldValidate: true
+        });
       });
-      form.trigger(); // Trigger validation
     }
   }, []);
   
