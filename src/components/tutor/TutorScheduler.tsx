@@ -67,7 +67,7 @@ const TutorScheduler: React.FC = () => {
   // If we're creating a new event, make sure the tutorId is set properly
   useEffect(() => {
     if (user?.id && newEvent && !newEvent.tutorId) {
-      // Extract name from profile data in currentUser instead of the auth user object
+      // Get name from the currentUser profile data
       const tutorName = currentUser?.first_name 
         ? `${currentUser.first_name} ${currentUser.last_name || ''}`.trim() 
         : 'Current Tutor';
@@ -140,6 +140,7 @@ const TutorScheduler: React.FC = () => {
         onDownloadFile={handleDownloadFile}
         getUnreadMessageCount={getUnreadMessageCount}
         refreshEvent={refreshEvent}
+        currentUser={currentUser} // Include the currentUser prop
       />
     </div>
   );

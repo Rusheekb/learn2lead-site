@@ -22,6 +22,8 @@ export interface ScheduledClass {
 
 // Define profile type to match what comes back from Supabase
 export interface Profile {
+  id: string; // Added id property
   first_name: string | null;
   last_name: string | null;
 }
+

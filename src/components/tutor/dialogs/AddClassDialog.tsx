@@ -37,16 +37,21 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
 
   // Use the user from props or from context
   const tutorUser = currentUser || user;
+  const tutorId = user?.id;  // Always use auth user ID for queries
 
   useEffect(() => {
-    if (!tutorUser || !isOpen) return;
+    if (!tutorId || !isOpen) return;
     
     // Make sure the tutorId is correctly set in the newEvent
-    if (tutorUser.id && newEvent && !newEvent.tutorId) {
+    if (tutorId && newEvent && !newEvent.tutorId) {
+      const tutorDisplayName = currentUser?.first_name 
+        ? `${currentUser.first_name} ${currentUser.last_name || ''}`.trim() 
+        : 'Current Tutor';
+        
       setNewEvent({
         ...newEvent,
-        tutorId: tutorUser.id,
-        tutorName: tutorUser.first_name ? `${tutorUser.first_name} ${tutorUser.last_name || ''}`.trim() : 'Current Tutor'
+        tutorId: tutorId,
+        tutorName: tutorDisplayName
       });
     }
     
@@ -54,8 +59,8 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
       setIsLoading(true);
       try {
         // Load active pairings for this tutor
-        console.log(`Loading relationships for tutor ID: ${tutorUser.id}`);
-        const rels = await fetchRelationshipsForTutor(tutorUser.id);
+        console.log(`Loading relationships for tutor ID: ${tutorId}`);
+        const rels = await fetchRelationshipsForTutor(tutorId);
         console.log(`Loaded ${rels.length} relationships`);
         setRelationships(rels);
 
@@ -94,7 +99,7 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
     };
 
     loadRelationshipsAndStudents();
-  }, [tutorUser, isOpen, newEvent, setNewEvent]);
+  }, [tutorId, isOpen, newEvent, setNewEvent, currentUser]);
 
   const handleCancel = () => {
     setIsOpen(false);
