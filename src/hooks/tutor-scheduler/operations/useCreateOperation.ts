@@ -17,6 +17,7 @@ export interface CreateEventParams {
   subject: string;
   zoomLink?: string;
   notes?: string;
+  relationshipId?: string;  // Added relationshipId parameter
 }
 
 export const useCreateOperation = (queryClient: QueryClient) => {
@@ -60,6 +61,8 @@ export const useCreateOperation = (queryClient: QueryClient) => {
         subject: eventData.subject || "General",
         zoom_link: eventData.zoomLink || null,
         notes: eventData.notes || null,
+        // Add relationship_id if available to comply with RLS policies
+        relationship_id: eventData.relationshipId || null
       };
       
       console.log("Creating scheduled class with data:", classData);
@@ -109,7 +112,8 @@ export const useCreateOperation = (queryClient: QueryClient) => {
       endTime: event.endTime || '10:00',
       subject: event.subject || 'General',
       zoomLink: event.zoomLink || '',
-      notes: event.notes || ''
+      notes: event.notes || '',
+      relationshipId: event.relationshipId
     });
   };
 

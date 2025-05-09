@@ -47,8 +47,8 @@ const Modal: React.FC<ModalProps> = ({
   isConfirmLoading = false,
   confirmVariant = "default",
   className = "",
-  maxWidth = "max-w-4xl", // Increased from max-w-xl to max-w-4xl
-  maxHeight = "max-h-[90vh]", // Increased from max-h-[80vh] to max-h-[90vh]
+  maxWidth = "max-w-5xl", // Increased from max-w-4xl to max-w-5xl for more width
+  maxHeight = "max-h-[95vh]", // Increased from max-h-[90vh] to max-h-[95vh]
   ariaLabel,
 }) => {
   const titleId = React.useId();
@@ -76,7 +76,7 @@ const Modal: React.FC<ModalProps> = ({
       modal={true} // Ensure modal behavior
     >
       <DialogContent 
-        className={`${maxWidth} ${maxHeight} overflow-y-auto mx-4 w-[calc(100vw-2rem)] sm:w-auto bg-white px-6 py-8 ${className}`} // Increased padding
+        className={`${maxWidth} ${maxHeight} overflow-y-auto mx-4 w-[calc(100vw-2rem)] sm:w-auto bg-white px-8 py-8 ${className}`} // Increased padding
         aria-label={ariaLabel}
         // Prevent click outside from closing
         onPointerDownOutside={(e) => {

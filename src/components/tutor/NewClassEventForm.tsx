@@ -65,7 +65,7 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
           <div className="flex justify-end mt-8">
             <Button 
               type="submit" 
-              className="bg-tutoring-blue hover:bg-tutoring-blue/90 text-white w-full sm:w-auto px-8 py-6 h-auto text-lg font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-tutoring-blue"
+              className="bg-tutoring-blue hover:bg-tutoring-blue/90 text-white px-6 py-2 h-auto text-base font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-tutoring-blue"
               aria-label="Schedule class"
             >
               Schedule Class

@@ -132,6 +132,7 @@ export const useNewClassEventForm = (
         subject: formValues.subject || newEvent.subject,
         zoomLink: formValues.zoomLink || newEvent.zoomLink,
         notes: formValues.notes || newEvent.notes,
+        relationshipId: relationshipId || '', // Add relationshipId to the event
       };
       
       // Only update if there are actual changes
