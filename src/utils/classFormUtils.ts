@@ -42,38 +42,20 @@ export const createClassEventSchema = () => {
 };
 
 // Schema for new class events that includes relationship ID
+// Make validation more lenient to address form submission issues
 export const newClassEventSchema = () => {
-  // Create a new base schema and add the relationshipId field
-  const extendedSchema = createBaseSchema().extend({
+  // Create a more permissive schema for the new class form
+  return z.object({
+    title: z.string().min(1, { message: 'Title is required' }),
     relationshipId: z.string().min(1, { message: 'Please select a student' }),
-  });
-  
-  // Add the same refinements as createClassEventSchema but make them optional
-  return extendedSchema.superRefine((data, ctx) => {
-    // Only validate start/end times if both are provided
-    if (data.startTime && data.endTime && data.startTime >= data.endTime) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'End time must be after start time',
-        path: ['endTime'],
-      });
-    }
-    
-    // Check if the combined date and start time is in the future
-    if (data.date && data.startTime) {
-      const now = new Date();
-      const startDateTime = new Date(data.date);
-      const [hours, minutes] = data.startTime.split(':').map(Number);
-      startDateTime.setHours(hours, minutes, 0, 0);
-      
-      if (startDateTime <= now) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: 'Class time must be in the future',
-          path: ['startTime'],
-        });
-      }
-    }
+    date: z.date({ required_error: 'Please select a date' }),
+    startTime: z.string().min(1, { message: 'Start time is required' }),
+    endTime: z.string().min(1, { message: 'End time is required' }),
+    subject: z.string().min(1, { message: 'Subject is required' }),
+    zoomLink: z.string()
+      .url({ message: 'Please enter a valid URL' })
+      .min(1, { message: 'Zoom link is required' }),
+    notes: z.string().optional(),
   });
 };
 

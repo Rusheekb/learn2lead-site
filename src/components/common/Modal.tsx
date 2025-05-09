@@ -53,24 +53,42 @@ const Modal: React.FC<ModalProps> = ({
 }) => {
   const titleId = React.useId();
   const descriptionId = React.useId();
-  const handleCancel = () => {
-    if (onCancel) {
-      onCancel();
+  
+  // Custom handler to prevent modal from closing when clicking outside
+  const handleOpenChange = (open: boolean) => {
+    // Only allow closing if it's an explicit user action through a button
+    // This prevents the modal from closing when clicking outside
+    if (!open) {
+      // Optional - you can add a confirmation here if needed
+      if (onCancel) {
+        onCancel();
+      } else {
+        onOpenChange(false);
+      }
     } else {
-      onOpenChange(false);
+      onOpenChange(true);
     }
   };
 
   return (
     <Dialog 
       open={isOpen} 
-      onOpenChange={onOpenChange}
+      onOpenChange={handleOpenChange}
       aria-labelledby={title ? titleId : undefined}
       aria-describedby={description ? descriptionId : undefined}
+      modal={true} // Ensure modal behavior
     >
       <DialogContent 
-        className={`${maxWidth} ${maxHeight} overflow-y-auto mx-4 w-[calc(100vw-2rem)] sm:w-auto bg-white px-8 ${className}`}
+        className={`${maxWidth} ${maxHeight} overflow-y-auto mx-4 w-[calc(100vw-2rem)] sm:w-auto bg-white px-6 py-6 ${className}`}
         aria-label={ariaLabel}
+        // Prevent click outside from closing
+        onPointerDownOutside={(e) => {
+          e.preventDefault();
+        }}
+        // Prevent escape key from closing
+        onEscapeKeyDown={(e) => {
+          e.preventDefault();
+        }}
       >
         {(title || description) && (
           <DialogHeader>
@@ -79,7 +97,7 @@ const Modal: React.FC<ModalProps> = ({
           </DialogHeader>
         )}
         
-        <div className="overflow-y-auto text-gray-900">
+        <div className="overflow-y-auto text-gray-900 my-4">
           {children}
         </div>
         
@@ -90,7 +108,7 @@ const Modal: React.FC<ModalProps> = ({
                 {showCancel && (
                   <Button 
                     variant="outline" 
-                    onClick={handleCancel} 
+                    onClick={() => onCancel ? onCancel() : onOpenChange(false)} 
                     className="w-full sm:w-auto bg-white text-gray-900 border-gray-300 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-tutoring-blue"
                     aria-label={cancelText}
                   >

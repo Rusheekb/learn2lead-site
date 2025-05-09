@@ -44,10 +44,8 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
     })();
   };
 
-  // Modified: Make button clickable even if form isn't fully valid
-  // as long as there are changes made to the form
-  const isDirty = form.formState.isDirty;
-
+  // Always enable the button regardless of form state
+  // This addresses the main issue with the disabled button
   return (
     <Form {...form}>
       <form 
@@ -66,9 +64,7 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
           <div className="flex justify-end mt-6">
             <Button 
               type="submit" 
-              disabled={!isDirty}
               className="bg-tutoring-blue hover:bg-tutoring-blue/90 text-white w-full sm:w-auto focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-tutoring-blue"
-              aria-disabled={!isDirty}
               aria-label="Schedule class"
             >
               Schedule Class

@@ -133,8 +133,8 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
       isOpen={isOpen}
       onOpenChange={setIsOpen}
       title="Schedule New Class"
-      maxWidth="max-w-2xl"
-      maxHeight="max-h-[90vh] sm:max-h-[80vh]"
+      maxWidth="max-w-3xl" // Increased modal width
+      maxHeight="max-h-[95vh] sm:max-h-[90vh]" // Increased modal height
       className="bg-white text-gray-900"
       footer={
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-2 justify-end w-full">
@@ -151,15 +151,17 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
       {isLoading ? (
         <div className="py-8 text-center">Loading student data...</div>
       ) : (
-        <NewClassEventForm
-          newEvent={newEvent}
-          setNewEvent={setNewEvent}
-          assignedStudents={assignedStudents}
-          relationships={relationships}
-          selectedRelId={selectedRelId}
-          setSelectedRelId={setSelectedRelId}
-          onSubmit={onCreateEvent}
-        />
+        <div className="py-2"> {/* Added extra padding */}
+          <NewClassEventForm
+            newEvent={newEvent}
+            setNewEvent={setNewEvent}
+            assignedStudents={assignedStudents}
+            relationships={relationships}
+            selectedRelId={selectedRelId}
+            setSelectedRelId={setSelectedRelId}
+            onSubmit={onCreateEvent}
+          />
+        </div>
       )}
     </Modal>
   );

@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { newClassEventSchema } from '@/utils/classFormUtils';
@@ -33,24 +33,52 @@ export const useNewClassEventForm = (
     mode: 'onChange', // Validate on change for more immediate feedback
   });
 
-  // Set the form as dirty initially to enable button interaction
+  // Use useEffect to update the form when the newEvent changes
+  // This prevents the input values from disappearing
   useEffect(() => {
-    // Mark form as dirty initially after a short delay to ensure form is mounted
-    const timer = setTimeout(() => {
-      if (!form.formState.isDirty) {
-        // Touch a field to mark the form as dirty
-        form.setValue('title', newEvent.title || '', { shouldDirty: true });
+    if (newEvent) {
+      // Only update form values if they're different from current form values
+      // to prevent focus loss and cursor jumping
+      const currentValues = form.getValues();
+      
+      if (newEvent.title && newEvent.title !== currentValues.title) {
+        form.setValue('title', newEvent.title, { shouldDirty: true, shouldValidate: false });
       }
-    }, 100);
-    
-    return () => clearTimeout(timer);
-  }, [form, newEvent.title]);
+      
+      if (selectedRelId && selectedRelId !== currentValues.relationshipId) {
+        form.setValue('relationshipId', selectedRelId, { shouldDirty: true, shouldValidate: false });
+      }
+      
+      if (newEvent.subject && newEvent.subject !== currentValues.subject) {
+        form.setValue('subject', newEvent.subject, { shouldDirty: true, shouldValidate: false });
+      }
+      
+      if (newEvent.zoomLink && newEvent.zoomLink !== currentValues.zoomLink) {
+        form.setValue('zoomLink', newEvent.zoomLink, { shouldDirty: true, shouldValidate: false });
+      }
+      
+      if (newEvent.notes && newEvent.notes !== currentValues.notes) {
+        form.setValue('notes', newEvent.notes, { shouldDirty: true, shouldValidate: false });
+      }
+      
+      if (newEvent.startTime && newEvent.startTime !== currentValues.startTime) {
+        form.setValue('startTime', newEvent.startTime, { shouldDirty: true, shouldValidate: false });
+      }
+      
+      if (newEvent.endTime && newEvent.endTime !== currentValues.endTime) {
+        form.setValue('endTime', newEvent.endTime, { shouldDirty: true, shouldValidate: false });
+      }
+    }
+  }, [form, newEvent, selectedRelId]);
 
   // Subscribe to form changes
   useEffect(() => {
     // Track the previous form values to avoid unnecessary updates
     const subscription = form.watch((formValues) => {
       if (!formValues) return;
+      
+      // Only update if user has actually interacted with the form
+      if (!form.formState.isDirty) return;
       
       // Handle relationship change separately to optimize student lookup
       const relationshipId = formValues.relationshipId;
@@ -83,6 +111,7 @@ export const useNewClassEventForm = (
     return () => subscription.unsubscribe();
   }, [
     form.watch, 
+    form.formState.isDirty,
     setNewEvent,
     newEvent,
     relationships,
