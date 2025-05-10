@@ -20,7 +20,7 @@ const SidebarLogo: React.FC<SidebarLogoProps> = ({ isExpanded, toggleSidebar }) 
         to={dashboardPath}
         className={`${
           !isExpanded ? 'justify-center' : ''
-        } flex items-center text-xl font-bold text-tutoring-blue`}
+        } flex items-center text-lg sm:text-xl font-bold text-tutoring-blue`}
         aria-label="Go to dashboard"
       >
         {isExpanded ? (
@@ -33,7 +33,7 @@ const SidebarLogo: React.FC<SidebarLogoProps> = ({ isExpanded, toggleSidebar }) 
       </Link>
       <button
         onClick={toggleSidebar}
-        className="text-gray-600 hover:text-gray-900 md:block hidden focus:outline-none focus:ring-2 focus:ring-tutoring-blue rounded-md"
+        className="text-gray-600 hover:text-gray-900 hidden md:block focus:outline-none focus:ring-2 focus:ring-tutoring-blue rounded-md"
         aria-label={isExpanded ? "Collapse sidebar" : "Expand sidebar"}
         aria-expanded={isExpanded}
       >

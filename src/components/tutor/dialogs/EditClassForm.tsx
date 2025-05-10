@@ -26,22 +26,22 @@ const EditClassForm: React.FC<EditClassFormProps> = ({
   const { form } = useEditClassForm(selectedEvent, setNewEvent);
 
   return (
-    <div className="py-4 space-y-6 w-full">
+    <div className="py-4 space-y-4 sm:space-y-6 w-full">
       <Form {...form}>
-        <form className="space-y-6 w-full">
+        <form className="space-y-4 sm:space-y-6 w-full">
           <FormFieldsGroup form={form} />
 
-          <div className="flex justify-end gap-3 mt-8">
+          <div className="flex flex-col sm:flex-row justify-end gap-3 mt-4 sm:mt-8">
             <Button 
               variant="outline" 
               onClick={onCancel}
-              className="bg-gray-100 text-gray-700 hover:bg-gray-200"
+              className="bg-gray-100 text-gray-700 hover:bg-gray-200 w-full sm:w-auto"
             >
               Cancel
             </Button>
             <Button
               onClick={onSave}
-              className="bg-tutoring-blue hover:bg-tutoring-blue/90"
+              className="bg-tutoring-blue hover:bg-tutoring-blue/90 w-full sm:w-auto"
             >
               Save Changes
             </Button>

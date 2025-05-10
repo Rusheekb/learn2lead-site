@@ -76,16 +76,16 @@ const ViewClassDialog: React.FC<ViewClassDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="max-w-3xl px-8">
+      <DialogContent className="max-w-full sm:max-w-lg md:max-w-2xl lg:max-w-3xl px-4 sm:px-8 w-[calc(100vw-2rem)] sm:w-auto">
         <DialogHeader className="flex flex-row items-center justify-between">
-          <DialogTitle>{selectedEvent?.title}</DialogTitle>
+          <DialogTitle className="text-xl sm:text-2xl break-words pr-8">{selectedEvent?.title}</DialogTitle>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
                 <MoreVertical className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="min-w-[180px]">
               <DropdownMenuItem onClick={() => setIsEditMode(true)}>
                 <Edit2 className="h-4 w-4 mr-2" />
                 Edit Class
@@ -126,8 +126,8 @@ const ViewClassDialog: React.FC<ViewClassDialogProps> = ({
           refreshEvent={refreshEvent}
         />
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setIsOpen(false)}>
+        <DialogFooter className="mt-4 sm:mt-6">
+          <Button variant="outline" onClick={() => setIsOpen(false)} className="w-full sm:w-auto">
             Close
           </Button>
         </DialogFooter>

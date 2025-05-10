@@ -41,7 +41,7 @@ const TutorScheduler: React.FC = () => {
     studentUploads,
     isLoading,
     refetchClasses,
-    currentUser, // This is now a Profile object, not a User
+    currentUser,
     
     // Methods
     handleSelectEvent,
@@ -83,19 +83,21 @@ const TutorScheduler: React.FC = () => {
   // Display loading state while data is being fetched
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <TutorSchedulerHeader onAddClick={() => setIsAddEventOpen(true)} />
-        <TableSkeleton 
-          columns={['Date', 'Time', 'Student', 'Subject', 'Actions']} 
-          rowCount={5} 
-          cellWidths={['w-24', 'w-32', 'w-40', 'w-32', 'w-24']} 
-        />
+        <div className="overflow-x-auto">
+          <TableSkeleton 
+            columns={['Date', 'Time', 'Student', 'Subject', 'Actions']} 
+            rowCount={5} 
+            cellWidths={['w-24', 'w-32', 'w-40', 'w-32', 'w-24']} 
+          />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <TutorSchedulerHeader onAddClick={() => setIsAddEventOpen(true)} />
       
       <TutorSchedulerFilters
@@ -108,14 +110,16 @@ const TutorScheduler: React.FC = () => {
         allSubjects={allSubjects || []}
       />
       
-      <TutorSchedulerCalendar
-        selectedDate={selectedDate}
-        setSelectedDate={setSelectedDate}
-        scheduledClasses={filteredClasses}
-        onSelectEvent={handleSelectEvent}
-        onAddEventClick={() => setIsAddEventOpen(true)}
-        getUnreadMessageCount={getUnreadMessageCount}
-      />
+      <div className="overflow-x-auto">
+        <TutorSchedulerCalendar
+          selectedDate={selectedDate}
+          setSelectedDate={setSelectedDate}
+          scheduledClasses={filteredClasses}
+          onSelectEvent={handleSelectEvent}
+          onAddEventClick={() => setIsAddEventOpen(true)}
+          getUnreadMessageCount={getUnreadMessageCount}
+        />
+      </div>
       
       <TutorSchedulerDialogs
         isViewEventOpen={isViewEventOpen}
@@ -140,7 +144,7 @@ const TutorScheduler: React.FC = () => {
         onDownloadFile={handleDownloadFile}
         getUnreadMessageCount={getUnreadMessageCount}
         refreshEvent={refreshEvent}
-        currentUser={currentUser} // This is now a Profile object, not a User
+        currentUser={currentUser}
       />
     </div>
   );

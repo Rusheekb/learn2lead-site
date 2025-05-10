@@ -51,7 +51,7 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
     <Form {...form}>
       <form 
         onSubmit={handleSubmit} 
-        className="space-y-8" // Increased spacing between form elements from space-y-6 to space-y-8
+        className="space-y-6 sm:space-y-8" // Responsive spacing
         aria-label="Schedule new class form"
       >
         <FormFieldsGroup form={form} />
@@ -62,11 +62,10 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
         />
 
         {onSubmit && (
-          <div className="flex justify-end mt-10"> {/* Increased margin top from mt-8 to mt-10 */}
+          <div className="flex justify-end mt-6 sm:mt-10">
             <Button 
               type="submit" 
-              className="bg-tutoring-blue hover:bg-tutoring-blue/90 text-white px-8 py-3 h-auto text-base font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-tutoring-blue"
-              // Increased horizontal padding from px-6 to px-8 and vertical padding from py-2 to py-3
+              className="w-full sm:w-auto bg-tutoring-blue hover:bg-tutoring-blue/90 text-white px-6 sm:px-8 py-2 sm:py-3 h-auto text-base font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-tutoring-blue"
               aria-label="Schedule class"
             >
               Schedule Class

@@ -39,13 +39,13 @@ const StudentSelectField: React.FC<StudentSelectFieldProps> = ({
             <FormControl>
               <SelectTrigger 
                 id={selectId}
-                className="bg-white text-gray-900 border-gray-300 w-full focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-tutoring-blue"
+                className="bg-white text-gray-900 border-gray-300 w-full min-h-[44px] focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-tutoring-blue"
                 aria-label="Select student"
               >
                 <SelectValue placeholder="Select student" />
               </SelectTrigger>
             </FormControl>
-            <SelectContent className="bg-white text-gray-900 border-gray-300 max-h-60 overflow-y-auto">
+            <SelectContent className="bg-white text-gray-900 border-gray-300 max-h-60 overflow-y-auto w-full">
               {relationships.length > 0 ? (
                 relationships.map(rel => {
                   const student = assignedStudents.find(s => s.id === rel.student_id);

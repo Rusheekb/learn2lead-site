@@ -31,9 +31,9 @@ export function UserDetailModal({ user, onClose }: Props) {
 
   return (
     <Dialog open onOpenChange={() => onClose()}>
-      <DialogContent>
+      <DialogContent className="max-w-full sm:max-w-md md:max-w-lg w-[calc(100vw-2rem)] sm:w-auto">
         <DialogHeader>
-          <DialogTitle>{user.email} • {user.role}</DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl break-words pr-8">{user.email} • {user.role}</DialogTitle>
         </DialogHeader>
         <div className="py-4">
           <p className="mb-2"><strong>Name:</strong> {user.name || '—'}</p>
@@ -47,7 +47,7 @@ export function UserDetailModal({ user, onClose }: Props) {
           </p>
         </div>
         <DialogFooter>
-          <Button onClick={onClose}>Close</Button>
+          <Button onClick={onClose} className="w-full sm:w-auto">Close</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

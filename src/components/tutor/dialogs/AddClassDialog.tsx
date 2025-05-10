@@ -18,7 +18,7 @@ interface AddClassDialogProps {
   setNewEvent: (event: any) => void;
   onCreateEvent: () => void;
   onResetForm: () => void;
-  currentUser?: Profile | null; // Using the Profile type from @/types/profile
+  currentUser?: Profile | null;
 }
 
 const AddClassDialog: React.FC<AddClassDialogProps> = ({
@@ -129,16 +129,16 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
       isOpen={isOpen}
       onOpenChange={setIsOpen}
       title="Schedule New Class"
-      maxWidth="max-w-5xl" // Keep max-w-5xl for width
-      maxHeight="max-h-[95vh]" // Keep max-h-[95vh] for height
+      maxWidth="max-w-full sm:max-w-md md:max-w-lg lg:max-w-xl" // Responsive width
+      maxHeight="max-h-[95vh]"
       className="bg-white text-gray-900"
-      onCancel={handleCancel} // Explicit cancel handler
+      onCancel={handleCancel}
       footer={
         <div className="flex flex-col sm:flex-row gap-3 justify-end w-full">
           <Button 
             variant="outline" 
             onClick={handleCancel}
-            className="bg-white text-gray-900 hover:bg-gray-100 w-full sm:w-auto px-6 py-2 text-base"
+            className="bg-white text-gray-900 hover:bg-gray-100 w-full sm:w-auto px-4 sm:px-6 py-2 text-base"
           >
             Cancel
           </Button>
@@ -146,9 +146,9 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
       }
     >
       {isLoading ? (
-        <div className="py-12 text-center text-lg">Loading student data...</div>
+        <div className="py-8 sm:py-12 text-center text-lg">Loading student data...</div>
       ) : (
-        <div className="py-6"> {/* Increased padding from py-4 to py-6 */}
+        <div className="py-4 sm:py-6">
           <NewClassEventForm
             newEvent={newEvent}
             setNewEvent={setNewEvent}

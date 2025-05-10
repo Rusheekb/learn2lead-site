@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import NavMenu from '@/components/navigation/NavMenu';
@@ -11,9 +11,20 @@ import DesktopBookButton from '@/components/navigation/DesktopBookButton';
 
 const NavBar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { user, userRole } = useAuth();
+
+  // Track scroll position for styling
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -33,9 +44,14 @@ const NavBar = () => {
     }
   };
 
+  // Add shadow and background opacity when scrolled
+  const navClasses = `fixed top-0 left-0 right-0 z-40 transition-all duration-200 ${
+    isScrolled ? 'bg-white/95 shadow-md' : 'bg-white/90'
+  } backdrop-blur-sm border-b border-gray-100`;
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-sm border-b border-gray-100">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <nav className={navClasses}>
+      <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex-shrink-0 flex items-center">

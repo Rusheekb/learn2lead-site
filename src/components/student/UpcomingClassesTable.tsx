@@ -56,18 +56,18 @@ const UpcomingClassesTable: React.FC<UpcomingClassesTableProps> = ({
     {
       header: 'Actions',
       cell: (cls) => (
-        <div className="flex space-x-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <Button
             variant="outline"
             size="sm"
-            className="dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
+            className="dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700 text-xs sm:text-sm w-full sm:w-auto"
             onClick={() => onViewClass(cls)}
           >
             View Details
           </Button>
           <Button 
             size="sm"
-            className="dark:bg-tutoring-teal dark:text-gray-900"
+            className="dark:bg-tutoring-teal dark:text-gray-900 text-xs sm:text-sm w-full sm:w-auto"
             onClick={() => onViewClass(cls)}
           >
             <ArrowRight className="h-4 w-4" />
@@ -78,11 +78,13 @@ const UpcomingClassesTable: React.FC<UpcomingClassesTableProps> = ({
   ];
 
   return (
-    <DataTable
-      data={classes}
-      columns={columns}
-      showCard={false}
-    />
+    <div className="overflow-x-auto">
+      <DataTable
+        data={classes}
+        columns={columns}
+        showCard={false}
+      />
+    </div>
   );
 };
 
