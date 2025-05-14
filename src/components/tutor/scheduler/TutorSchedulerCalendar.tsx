@@ -20,6 +20,8 @@ const TutorSchedulerCalendar: React.FC<TutorSchedulerCalendarProps> = ({
   onAddEventClick,
   getUnreadMessageCount,
 }) => {
+  console.log('TutorSchedulerCalendar rendering with', scheduledClasses.length, 'events');
+  
   return (
     <CalendarWithEvents
       selectedDate={selectedDate}

@@ -43,13 +43,28 @@ const CalendarWithEvents: React.FC<CalendarWithEventsProps> = ({
 
   // Function to check if a date has any scheduled classes
   const hasEventsOnDate = (date: Date) => {
-    return scheduledClasses.some((event) => {
+    // Add debugging console log to check what's happening
+    const hasEvents = scheduledClasses.some((event) => {
       // Handle both Date objects and string dates
       const eventDate = event.date instanceof Date
         ? event.date
         : new Date(event.date);
-      return isSameDay(date, eventDate);
+      
+      const result = isSameDay(date, eventDate);
+      return result;
     });
+    
+    // Debug logging for specific dates
+    if (date.getDate() === new Date().getDate()) {
+      console.log(`Checking today (${date.toISOString().split('T')[0]}): hasEvents=${hasEvents}`, 
+        scheduledClasses.map(e => ({ 
+          date: e.date instanceof Date ? e.date.toISOString().split('T')[0] : new Date(e.date).toISOString().split('T')[0], 
+          title: e.title 
+        }))
+      );
+    }
+    
+    return hasEvents;
   };
 
   useEffect(() => {
@@ -59,21 +74,35 @@ const CalendarWithEvents: React.FC<CalendarWithEventsProps> = ({
       const eventDate = event.date instanceof Date
         ? event.date
         : new Date(event.date);
-      return isSameDay(selectedDate, eventDate);
+      
+      const result = isSameDay(selectedDate, eventDate);
+      
+      // Debug log to understand why events might not be showing
+      if (isSameDay(selectedDate, new Date())) {
+        console.log(`Event ${event.title} date check:`, {
+          eventDate: eventDate.toISOString().split('T')[0],
+          selectedDate: selectedDate.toISOString().split('T')[0],
+          isSameDay: result
+        });
+      }
+      
+      return result;
     });
 
     console.log(`Found ${events.length} events for date ${selectedDate.toISOString().split('T')[0]}`);
+    console.log('Events for selected date:', events);
     setEventsForSelectedDate(events);
   }, [selectedDate, scheduledClasses]);
 
   // Log scheduled classes for debugging
   useEffect(() => {
     console.log("CalendarWithEvents - Scheduled classes:", scheduledClasses);
+    
+    // Add a test event if none are found (for debugging UI)
+    if (!scheduledClasses || scheduledClasses.length === 0) {
+      console.log("No scheduled classes available in CalendarWithEvents");
+    }
   }, [scheduledClasses]);
-
-  if (!scheduledClasses || scheduledClasses.length === 0) {
-    console.log("No scheduled classes available in CalendarWithEvents");
-  }
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

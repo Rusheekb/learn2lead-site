@@ -13,13 +13,10 @@ export const fetchScheduledClasses = async (
     // Log the request parameters for debugging
     console.log(`Fetching scheduled classes. TutorID: ${tutorId || 'none'}, StudentID: ${studentId || 'none'}`);
     
-    // Start building the query
-    let query = supabase.from('scheduled_classes').select(`
-      id, title, date, start_time, end_time, subject, zoom_link, notes, 
-      status, attendance, student_id, tutor_id, relationship_id, created_at, updated_at
-    `);
+    // Start building the query with select('*') to fetch all columns
+    let query = supabase.from('scheduled_classes').select('*');
 
-    // Filter by tutor_id if provided - this is crucial for security and performance
+    // Filter by tutor_id if provided
     if (tutorId) {
       query = query.eq('tutor_id', tutorId);
       console.log(`Filtering classes by tutor_id: ${tutorId}`);
@@ -42,10 +39,10 @@ export const fetchScheduledClasses = async (
 
     if (error) throw error;
 
-    console.log(`Fetched classes for ${studentId ? 'student' : 'tutor'} ID: ${studentId || tutorId}, Count: ${data?.length || 0}`);
-    console.log('Raw scheduled_classes data:', data);
+    // Debug log the raw data returned from Supabase
+    console.log(`Fetched raw scheduled_classes data (count: ${data?.length || 0}):`, data);
 
-    // Fetch tutor and student profiles separately to avoid the relationship error
+    // Fetch tutor and student profiles separately to get names
     const classEvents: ClassEvent[] = await Promise.all((data || []).map(async (cls) => {
       // Get tutor profile
       const { data: tutorProfile } = await supabase
@@ -97,6 +94,7 @@ export const fetchScheduledClasses = async (
       };
     }));
 
+    console.log('Transformed class events:', classEvents);
     return classEvents;
   } catch (error: any) {
     console.error('Error fetching scheduled classes:', error);
