@@ -107,6 +107,17 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
           // Set the first relationship as selected by default if available
           if (rels.length > 0 && !selectedRelId) {
             setSelectedRelId(rels[0].id);
+            
+            // Also update the newEvent with the relationship and student data
+            const firstRel = rels[0];
+            const firstStudent = typedStudents.find(s => s.id === firstRel.student_id);
+            
+            setNewEvent(prev => ({
+              ...prev,
+              studentId: firstRel.student_id,
+              studentName: firstStudent?.name || '',
+              relationshipId: firstRel.id
+            }));
           }
         }
       } catch (error) {
@@ -129,7 +140,7 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
       isOpen={isOpen}
       onOpenChange={setIsOpen}
       title="Schedule New Class"
-      maxWidth="max-w-full sm:max-w-md md:max-w-lg lg:max-w-xl" // Responsive width
+      maxWidth="max-w-full sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl" // Wider responsive width
       maxHeight="max-h-[95vh]"
       className="bg-white text-gray-900"
       onCancel={handleCancel}
@@ -148,7 +159,7 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
       {isLoading ? (
         <div className="py-8 sm:py-12 text-center text-lg">Loading student data...</div>
       ) : (
-        <div className="py-4 sm:py-6">
+        <div className="py-4 sm:py-8 px-2 sm:px-4"> {/* Added horizontal padding */}
           <NewClassEventForm
             newEvent={newEvent}
             setNewEvent={setNewEvent}

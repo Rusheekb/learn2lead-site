@@ -46,23 +46,24 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
     }
   };
 
-  // Always enable the button regardless of form validation state
   return (
     <Form {...form}>
       <form 
         onSubmit={handleSubmit} 
-        className="space-y-6 sm:space-y-8" // Responsive spacing
+        className="space-y-6 sm:space-y-8 w-full max-w-3xl mx-auto" // Added max-width and centered
         aria-label="Schedule new class form"
       >
-        <FormFieldsGroup form={form} />
+        {/* Student selection is the most important, so let's put it first */}
         <StudentSelectField 
           form={form} 
           relationships={relationships} 
           assignedStudents={assignedStudents} 
         />
+        
+        <FormFieldsGroup form={form} />
 
         {onSubmit && (
-          <div className="flex justify-end mt-6 sm:mt-10">
+          <div className="flex justify-end mt-8 sm:mt-10">
             <Button 
               type="submit" 
               className="w-full sm:w-auto bg-tutoring-blue hover:bg-tutoring-blue/90 text-white px-6 sm:px-8 py-2 sm:py-3 h-auto text-base font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-tutoring-blue"

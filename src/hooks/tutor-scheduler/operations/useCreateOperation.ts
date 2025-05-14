@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { ClassEvent } from '@/types/tutorTypes';
-import { createScheduledClass } from '@/services/class';
+import { createScheduledClass } from '@/services/class-operations/create/createScheduledClass';
 import { QueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -17,7 +17,7 @@ export interface CreateEventParams {
   subject: string;
   zoomLink?: string;
   notes?: string;
-  relationshipId?: string;  // Added relationshipId parameter
+  relationshipId?: string;  // Important: Include the relationshipId
 }
 
 export const useCreateOperation = (queryClient: QueryClient) => {
@@ -49,6 +49,11 @@ export const useCreateOperation = (queryClient: QueryClient) => {
         return false;
       }
 
+      if (!eventData.relationshipId) {
+        toast.error("Student relationship is required for scheduling classes");
+        return false;
+      }
+
       const formattedDate = format(eventData.date, 'yyyy-MM-dd');
       
       const classData = {
@@ -61,11 +66,12 @@ export const useCreateOperation = (queryClient: QueryClient) => {
         subject: eventData.subject || "General",
         zoom_link: eventData.zoomLink || null,
         notes: eventData.notes || null,
-        // Add relationship_id if available to comply with RLS policies
-        relationship_id: eventData.relationshipId || null
+        relationship_id: eventData.relationshipId // Ensure this is passed to the database
       };
       
       console.log("Creating scheduled class with data:", classData);
+      
+      // Use the more complete createScheduledClass implementation
       const result = await createScheduledClass(classData);
       
       if (result) {
@@ -97,6 +103,11 @@ export const useCreateOperation = (queryClient: QueryClient) => {
     
     if (!tutorId) {
       toast.error("Missing tutor ID. Please ensure you're logged in as a tutor.");
+      return false;
+    }
+    
+    if (!event.relationshipId) {
+      toast.error("Missing relationship ID. Please select a student from the dropdown.");
       return false;
     }
     

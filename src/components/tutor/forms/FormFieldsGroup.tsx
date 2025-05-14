@@ -16,7 +16,7 @@ interface FormFieldsGroupProps {
 
 const FormFieldsGroup: React.FC<FormFieldsGroupProps> = ({ form }) => {
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-5 sm:space-y-7">
       <TitleField form={form} />
       <DateField form={form} />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
