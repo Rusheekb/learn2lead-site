@@ -1,13 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
-import { Dialog } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { format, addHours, setMinutes, setHours } from 'date-fns';
 import { ClassEvent } from '@/types/tutorTypes';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import NewClassEventForm from '../NewClassEventForm';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 
 interface AddClassDialogProps {
   isOpen: boolean;
@@ -107,7 +107,11 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
         setStudentOptions(options);
       } catch (err: any) {
         console.error('Error loading student relationships:', err);
-        toast.error(`Failed to load student list: ${err.message}`);
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: `Failed to load student list: ${err.message}`
+        });
       } finally {
         setIsLoading(false);
       }
@@ -142,7 +146,11 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
     if (isSubmitting) return;
     
     if (!newEvent.title || !newEvent.studentId || !newEvent.relationshipId) {
-      toast.error('Please complete all required fields');
+      toast({
+        variant: "destructive",
+        title: "Missing information",
+        description: "Please complete all required fields"
+      });
       return;
     }
     
@@ -152,7 +160,11 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
       setIsOpen(false);
     } catch (error: any) {
       console.error('Error creating class:', error);
-      toast.error(`Failed to create class: ${error.message}`);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: `Failed to create class: ${error.message}`
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -163,35 +175,32 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
   };
 
   return (
-    <Dialog
-      isOpen={isOpen}
-      onOpenChange={setIsOpen}
-      title="Schedule New Class"
-      maxWidth="max-w-full sm:max-w-xl md:max-w-2xl lg:max-w-3xl xl:max-w-4xl" // Improved responsive sizing
-      maxHeight="max-h-[90vh]" // Increased height to use more screen space
-      className="bg-white text-gray-900"
-      onCancel={handleCancel}
-      footer={
-        <div className="flex justify-end space-x-2">
-          <Button variant="outline" onClick={handleCancel}>Cancel</Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? 'Creating...' : 'Schedule Class'}
-          </Button>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogContent className="max-w-3xl px-8 bg-white text-gray-900 border">
+        <div className="py-2">
+          <h2 className="text-lg font-semibold">Schedule New Class</h2>
+          
+          {isLoading ? (
+            <div className="py-8 sm:py-12 text-center text-lg">Loading student data...</div>
+          ) : (
+            <div className="py-4 sm:py-6 px-3 sm:px-6">
+              <NewClassEventForm
+                newEvent={newEvent}
+                setNewEvent={setNewEvent}
+                studentOptions={studentOptions}
+                onStudentSelect={handleStudentChange}
+              />
+              
+              <div className="flex justify-end space-x-2 mt-6">
+                <Button variant="outline" onClick={handleCancel}>Cancel</Button>
+                <Button onClick={handleSubmit} disabled={isSubmitting}>
+                  {isSubmitting ? 'Creating...' : 'Schedule Class'}
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
-      }
-    >
-      {isLoading ? (
-        <div className="py-8 sm:py-12 text-center text-lg">Loading student data...</div>
-      ) : (
-        <div className="py-4 sm:py-6 px-3 sm:px-6"> {/* Improved padding for better spacing */}
-          <NewClassEventForm
-            newEvent={newEvent}
-            setNewEvent={setNewEvent}
-            studentOptions={studentOptions}
-            onStudentSelect={handleStudentChange}
-          />
-        </div>
-      )}
+      </DialogContent>
     </Dialog>
   );
 };
