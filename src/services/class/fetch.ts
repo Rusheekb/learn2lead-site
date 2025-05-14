@@ -16,7 +16,7 @@ export const fetchScheduledClasses = async (
     // Start building the query
     let query = supabase.from('scheduled_classes').select(`
       id, title, date, start_time, end_time, subject, zoom_link, notes, 
-      status, attendance, student_id, tutor_id, relationship_id
+      status, attendance, student_id, tutor_id, relationship_id, created_at, updated_at
     `);
 
     // Filter by tutor_id if provided - this is crucial for security and performance
@@ -73,22 +73,27 @@ export const fetchScheduledClasses = async (
       const status = cls.status || 'scheduled';
       const attendance = cls.attendance || 'pending';
       
+      // Convert date string to Date object
+      const dateObj = cls.date ? new Date(cls.date) : new Date();
+      
       return {
         id: cls.id || '',
         title: cls.title || '',
         tutorName,
         studentName,
-        date: cls.date ? new Date(cls.date) : new Date(),
+        date: dateObj,
         startTime: cls.start_time ? cls.start_time.substring(0, 5) : '',
         endTime: cls.end_time ? cls.end_time.substring(0, 5) : '',
         subject: cls.subject || '',
-        zoomLink: cls.zoom_link,
-        notes: cls.notes,
+        zoomLink: cls.zoom_link || '',
+        notes: cls.notes || '',
         status: isValidClassStatus(status) ? status : 'scheduled',
         attendance: isValidAttendanceStatus(attendance) ? attendance : 'pending',
         studentId: cls.student_id || '',
         tutorId: cls.tutor_id || '',
         relationshipId: cls.relationship_id || '',
+        recurring: false,
+        materials: [],
       };
     }));
 

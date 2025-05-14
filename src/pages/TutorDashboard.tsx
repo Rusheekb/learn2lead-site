@@ -30,7 +30,11 @@ const TutorDashboard: React.FC = () => {
     
     // When switching to schedule tab, ensure we have fresh data
     if (activeTab === 'schedule' && user?.id) {
+      // Force refresh of scheduled classes data
       queryClient.invalidateQueries({ queryKey: ['scheduledClasses', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['tutorStudents', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['tutorRelationships', user.id] });
+      console.log("Invalidated queries for tutor schedule", user.id);
     }
   }, [activeTab, trackNavigation, queryClient, user?.id]);
 

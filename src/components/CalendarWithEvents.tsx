@@ -1,12 +1,166 @@
-import { startOfDay, addDays } from 'date-fns';
-import { ClassEvent } from '../types/tutorTypes';
 
-const getUpcomingEvents = (events: ClassEvent[]): ClassEvent[] => {
+import React, { useEffect, useState } from 'react';
+import { Calendar } from '@/components/ui/calendar';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { format, isSameDay, parseISO } from 'date-fns';
+import { ClassEvent } from '@/types/tutorTypes';
+import { toast } from '@/hooks/use-toast';
+import { startOfDay, addDays } from 'date-fns';
+
+interface CalendarWithEventsProps {
+  selectedDate: Date;
+  setSelectedDate: (date: Date) => void;
+  scheduledClasses: ClassEvent[];
+  onSelectEvent: (event: ClassEvent) => void;
+  onAddEventClick: () => void;
+  getUnreadMessageCount: (classId: string) => number;
+}
+
+// Helper function to get upcoming events for the next 7 days
+export const getUpcomingEvents = (events: ClassEvent[]): ClassEvent[] => {
   const today = startOfDay(new Date());
   const nextWeek = addDays(today, 7);
 
   return events.filter((event) => {
-    const eventDate = startOfDay(event.date); // event.date is already a Date object
-    return eventDate >= today && eventDate <= nextWeek;
+    // Handle both Date objects and string dates
+    const eventDate = event.date instanceof Date 
+      ? event.date 
+      : new Date(event.date);
+    const eventDay = startOfDay(eventDate);
+    return eventDay >= today && eventDay <= nextWeek;
   });
 };
+
+const CalendarWithEvents: React.FC<CalendarWithEventsProps> = ({
+  selectedDate,
+  setSelectedDate,
+  scheduledClasses,
+  onSelectEvent,
+  onAddEventClick,
+  getUnreadMessageCount,
+}) => {
+  const [eventsForSelectedDate, setEventsForSelectedDate] = useState<ClassEvent[]>([]);
+
+  // Function to check if a date has any scheduled classes
+  const hasEventsOnDate = (date: Date) => {
+    return scheduledClasses.some((event) => {
+      // Handle both Date objects and string dates
+      const eventDate = event.date instanceof Date
+        ? event.date
+        : new Date(event.date);
+      return isSameDay(date, eventDate);
+    });
+  };
+
+  useEffect(() => {
+    // Find events for the selected date
+    const events = scheduledClasses.filter((event) => {
+      // Handle both Date objects and string dates
+      const eventDate = event.date instanceof Date
+        ? event.date
+        : new Date(event.date);
+      return isSameDay(selectedDate, eventDate);
+    });
+
+    console.log(`Found ${events.length} events for date ${selectedDate.toISOString().split('T')[0]}`);
+    setEventsForSelectedDate(events);
+  }, [selectedDate, scheduledClasses]);
+
+  // Log scheduled classes for debugging
+  useEffect(() => {
+    console.log("CalendarWithEvents - Scheduled classes:", scheduledClasses);
+  }, [scheduledClasses]);
+
+  if (!scheduledClasses || scheduledClasses.length === 0) {
+    console.log("No scheduled classes available in CalendarWithEvents");
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <Card className="md:col-span-1">
+        <CardHeader>
+          <CardTitle>Calendar</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={(date) => date && setSelectedDate(date)}
+            className="border rounded-md p-2 bg-white"
+            modifiers={{
+              hasEvent: (date) => hasEventsOnDate(date),
+            }}
+            modifiersClassNames={{
+              hasEvent:
+                'relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1 after:w-1 after:bg-tutoring-teal after:rounded-full',
+            }}
+            components={{
+              DayContent: ({ date, ...props }) => (
+                <div {...props}>
+                  {date.getDate()}
+                  {hasEventsOnDate(date) && (
+                    <span className="sr-only"> (has events)</span>
+                  )}
+                </div>
+              ),
+            }}
+          />
+        </CardContent>
+      </Card>
+      <Card className="md:col-span-2">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>{format(selectedDate, 'MMMM d, yyyy')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {eventsForSelectedDate.length === 0 ? (
+            <div className="flex flex-col items-center justify-center p-8 border border-dashed rounded-lg space-y-4">
+              <p className="text-gray-500">No classes scheduled for this day</p>
+              <button 
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                onClick={onAddEventClick}
+              >
+                Add Class
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {eventsForSelectedDate.map((event) => (
+                <div 
+                  key={event.id}
+                  className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                  onClick={() => onSelectEvent(event)}
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-medium">{event.title}</h3>
+                      <p className="text-sm text-gray-600">{event.subject}</p>
+                      <p className="text-sm text-gray-600">
+                        {event.startTime} - {event.endTime} • {event.studentName}
+                      </p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      {getUnreadMessageCount(event.id) > 0 && (
+                        <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
+                          {getUnreadMessageCount(event.id)}
+                        </span>
+                      )}
+                      <span className={`px-2 py-1 text-xs rounded-full ${
+                        event.status === 'completed' ? 'bg-green-100 text-green-800' :
+                        event.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                        'bg-blue-100 text-blue-800'
+                      }`}>
+                        {event.status}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default CalendarWithEvents;
