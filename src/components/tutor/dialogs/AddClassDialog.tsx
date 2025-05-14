@@ -112,7 +112,7 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
             const firstRel = rels[0];
             const firstStudent = typedStudents.find(s => s.id === firstRel.student_id);
             
-            setNewEvent(prev => ({
+            setNewEvent((prev: any) => ({
               ...prev,
               studentId: firstRel.student_id,
               studentName: firstStudent?.name || '',

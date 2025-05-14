@@ -8,7 +8,7 @@ export interface CreateScheduledClassInput {
   subject: string; // Changed from optional to required to match DB schema
   start_time: string;
   end_time: string;
-  zoom_link: string;
+  zoom_link: string | null; // Updated to accept null
   notes?: string | null;
   date: string;
   student_id: string;
