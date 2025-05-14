@@ -107,11 +107,7 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
         setStudentOptions(options);
       } catch (err: any) {
         console.error('Error loading student relationships:', err);
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: `Failed to load student list: ${err.message}`
-        });
+        toast(`Failed to load student list: ${err.message}`);
       } finally {
         setIsLoading(false);
       }
@@ -146,11 +142,7 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
     if (isSubmitting) return;
     
     if (!newEvent.title || !newEvent.studentId || !newEvent.relationshipId) {
-      toast({
-        variant: "destructive",
-        title: "Missing information",
-        description: "Please complete all required fields"
-      });
+      toast("Missing information. Please complete all required fields");
       return;
     }
     
@@ -160,11 +152,7 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
       setIsOpen(false);
     } catch (error: any) {
       console.error('Error creating class:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: `Failed to create class: ${error.message}`
-      });
+      toast(`Failed to create class: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
