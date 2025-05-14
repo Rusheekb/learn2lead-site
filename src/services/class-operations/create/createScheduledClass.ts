@@ -17,8 +17,8 @@ export interface CreateScheduledClassInput {
 
 export async function createScheduledClass(input: CreateScheduledClassInput) {
   if (!input.zoom_link) {
-    toast.error('Zoom link is required');
-    throw new Error('Zoom link is required');
+    // Instead of erroring, now we make zoom_link null if it's falsy
+    input.zoom_link = null;
   }
 
   // Create a properly formed object that matches the database schema exactly
@@ -43,8 +43,10 @@ export async function createScheduledClass(input: CreateScheduledClassInput) {
 
   if (error) {
     console.error('Error creating scheduled class:', error);
+    toast.error(`Error creating scheduled class: ${error.message}`);
     throw error;
   }
 
+  toast.success('Class successfully scheduled');
   return data;
 }

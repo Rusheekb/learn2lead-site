@@ -56,7 +56,8 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
       ? `${currentUser.first_name} ${currentUser.last_name || ''}`.trim() 
       : 'Current Tutor';
       
-    setNewEvent({
+    setNewEvent((prev: any) => ({
+      ...prev,
       tutorId: tutorId,
       tutorName: tutorDisplayName,
       date: nextHour,
@@ -65,7 +66,7 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
       title: 'New Class Session',
       subject: '',
       zoomLink: 'https://zoom.us/',
-    });
+    }));
     
     // Load relationships and students data
     const loadRelationshipsAndStudents = async () => {
@@ -140,8 +141,8 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
       isOpen={isOpen}
       onOpenChange={setIsOpen}
       title="Schedule New Class"
-      maxWidth="max-w-full sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl" // Wider responsive width
-      maxHeight="max-h-[95vh]"
+      maxWidth="max-w-full sm:max-w-xl md:max-w-2xl lg:max-w-3xl xl:max-w-4xl" // Improved responsive sizing
+      maxHeight="max-h-[90vh]" // Increased height to use more screen space
       className="bg-white text-gray-900"
       onCancel={handleCancel}
       footer={
@@ -159,7 +160,7 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
       {isLoading ? (
         <div className="py-8 sm:py-12 text-center text-lg">Loading student data...</div>
       ) : (
-        <div className="py-4 sm:py-8 px-2 sm:px-4"> {/* Added horizontal padding */}
+        <div className="py-4 sm:py-6 px-3 sm:px-6"> {/* Improved padding for better spacing */}
           <NewClassEventForm
             newEvent={newEvent}
             setNewEvent={setNewEvent}

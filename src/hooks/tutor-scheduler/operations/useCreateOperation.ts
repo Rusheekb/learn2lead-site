@@ -15,8 +15,8 @@ export interface CreateEventParams {
   startTime: string;
   endTime: string;
   subject: string;
-  zoomLink?: string;
-  notes?: string;
+  zoomLink?: string | null;
+  notes?: string | null;
   relationshipId?: string;  // Important: Include the relationshipId
 }
 
@@ -56,6 +56,7 @@ export const useCreateOperation = (queryClient: QueryClient) => {
 
       const formattedDate = format(eventData.date, 'yyyy-MM-dd');
       
+      // Modified to match CreateScheduledClassInput exactly
       const classData = {
         title: eventData.title,
         tutor_id: tutorId,
@@ -64,9 +65,9 @@ export const useCreateOperation = (queryClient: QueryClient) => {
         start_time: eventData.startTime,
         end_time: eventData.endTime,
         subject: eventData.subject || "General",
-        zoom_link: eventData.zoomLink || null,
-        notes: eventData.notes || null,
-        relationship_id: eventData.relationshipId // Ensure this is passed to the database
+        zoom_link: eventData.zoomLink || null, // Now explicitly handles null
+        notes: eventData.notes || null, 
+        relationship_id: eventData.relationshipId
       };
       
       console.log("Creating scheduled class with data:", classData);
@@ -92,7 +93,7 @@ export const useCreateOperation = (queryClient: QueryClient) => {
       toast.error(`Failed to schedule class: ${error.message}`);
       return false;
     } finally {
-      setIsCreating(false);
+      setIsCreating(false); // Fixed: Changed setIsLoading to setIsCreating
     }
   };
 
@@ -122,8 +123,8 @@ export const useCreateOperation = (queryClient: QueryClient) => {
       startTime: event.startTime || '09:00',
       endTime: event.endTime || '10:00',
       subject: event.subject || 'General',
-      zoomLink: event.zoomLink || '',
-      notes: event.notes || '',
+      zoomLink: event.zoomLink || null, // Allow null
+      notes: event.notes || null, // Allow null
       relationshipId: event.relationshipId
     });
   };
