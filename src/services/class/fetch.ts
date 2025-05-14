@@ -16,7 +16,7 @@ export const fetchScheduledClasses = async (
     // Start building the query
     let query = supabase.from('scheduled_classes').select(`
       id, title, date, start_time, end_time, subject, zoom_link, notes, 
-      status, attendance, student_id, tutor_id
+      status, attendance, student_id, tutor_id, relationship_id
     `);
 
     // Filter by tutor_id if provided - this is crucial for security and performance
@@ -43,6 +43,7 @@ export const fetchScheduledClasses = async (
     if (error) throw error;
 
     console.log(`Fetched classes for ${studentId ? 'student' : 'tutor'} ID: ${studentId || tutorId}, Count: ${data?.length || 0}`);
+    console.log('Raw scheduled_classes data:', data);
 
     // Fetch tutor and student profiles separately to avoid the relationship error
     const classEvents: ClassEvent[] = await Promise.all((data || []).map(async (cls) => {
@@ -87,6 +88,7 @@ export const fetchScheduledClasses = async (
         attendance: isValidAttendanceStatus(attendance) ? attendance : 'pending',
         studentId: cls.student_id || '',
         tutorId: cls.tutor_id || '',
+        relationshipId: cls.relationship_id || '',
       };
     }));
 

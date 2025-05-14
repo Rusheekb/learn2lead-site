@@ -10,17 +10,17 @@ import { useClassLogsQuery } from './queries/useClassLogsQuery';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
-import { TransformedClassLog } from '@/services/logs/types';
 import { useSchedulerCore } from './tutor-scheduler/useSchedulerCore';
 import { useClassOperations } from './tutor-scheduler/useClassOperations';
 import { useEventRefresh } from './tutor-scheduler/useEventRefresh';
 import { useProfile } from '@/hooks/useProfile';
-import { Profile as ProfileType } from '@/types/profile';
 
 export function useTutorScheduler() {
   // Use the core hook to get most of the functionality
   const core = useSchedulerCore();
   const { profile } = useProfile(); // Get the profile data
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   // Use class operations hook for CRUD operations
   const {
@@ -43,6 +43,15 @@ export function useTutorScheduler() {
     core.user
   );
 
+  // Use scheduler realtime hook to get real-time updates
+  useSchedulerRealtime(
+    core.scheduledClasses,
+    core.setScheduledClasses,
+    core.selectedEvent,
+    core.setSelectedEvent,
+    core.setIsViewEventOpen
+  );
+
   // Hook for student content
   const {
     studentUploads,
@@ -61,11 +70,11 @@ export function useTutorScheduler() {
 
   // Make sure we have fresh data whenever this hook is used
   useEffect(() => {
-    if (core.user?.id) {
+    if (user?.id) {
       core.refetchClasses();
-      core.queryClient.invalidateQueries({ queryKey: ['scheduledClasses', core.user.id] });
+      queryClient.invalidateQueries({ queryKey: ['scheduledClasses', user.id] });
     }
-  }, [core.user?.id]);
+  }, [user?.id]);
 
   return {
     // State

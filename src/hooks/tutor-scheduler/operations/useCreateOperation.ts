@@ -93,7 +93,7 @@ export const useCreateOperation = (queryClient: QueryClient) => {
       toast.error(`Failed to schedule class: ${error.message}`);
       return false;
     } finally {
-      setIsCreating(false); // Fixed: Changed setIsLoading to setIsCreating
+      setIsCreating(false);
     }
   };
 

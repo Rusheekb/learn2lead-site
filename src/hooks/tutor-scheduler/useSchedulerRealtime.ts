@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { ClassEvent } from '@/types/tutorTypes';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 function useSchedulerRealtime(
   scheduledClasses: ClassEvent[],
@@ -37,6 +38,8 @@ function useSchedulerRealtime(
               const newClass = payload.new;
               if (!newClass) return;
               
+              toast.success(`New class "${newClass.title}" has been scheduled`);
+              
               // Convert database record to ClassEvent
               const newClassEvent: ClassEvent = {
                 id: newClass.id || '',
@@ -53,6 +56,7 @@ function useSchedulerRealtime(
                 attendance: newClass.attendance || 'pending',
                 studentId: newClass.student_id || '',
                 tutorId: newClass.tutor_id || '',
+                relationshipId: newClass.relationship_id || '',
               };
               
               setScheduledClasses((prev) => [...prev, newClassEvent]);
@@ -64,6 +68,8 @@ function useSchedulerRealtime(
             } else if (payload.eventType === 'UPDATE') {
               const updatedClass = payload.new;
               if (!updatedClass || !updatedClass.id) return;
+              
+              toast.info(`Class "${updatedClass.title}" has been updated`);
               
               setScheduledClasses((prev) =>
                 prev.map((cls) => {
@@ -80,6 +86,7 @@ function useSchedulerRealtime(
                       notes: updatedClass.notes,
                       status: updatedClass.status || cls.status,
                       attendance: updatedClass.attendance || cls.attendance,
+                      relationshipId: updatedClass.relationship_id || cls.relationshipId,
                     };
                   }
                   return cls;
@@ -101,12 +108,15 @@ function useSchedulerRealtime(
                     notes: updatedClass.notes,
                     status: updatedClass.status || prev.status,
                     attendance: updatedClass.attendance || prev.attendance,
+                    relationshipId: updatedClass.relationship_id || prev.relationshipId,
                   };
                 });
               }
             } else if (payload.eventType === 'DELETE') {
               const deletedClass = payload.old;
               if (!deletedClass || !deletedClass.id) return;
+              
+              toast.info(`Class "${deletedClass.title || 'Unnamed'}" has been cancelled`);
               
               setScheduledClasses((prev) =>
                 prev.filter((cls) => cls.id !== deletedClass.id)
@@ -133,12 +143,11 @@ function useSchedulerRealtime(
       supabase.removeChannel(channel);
     };
   }, [
-    scheduledClasses,
+    user?.id,
     setScheduledClasses,
     selectedEvent,
     setSelectedEvent,
     setIsViewEventOpen,
-    user?.id,
   ]);
 }
 

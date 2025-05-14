@@ -1,24 +1,28 @@
 
 import React, { useState, useEffect } from 'react';
+import { Dialog } from '@/components/ui/dialog';
+import { format, addHours, setMinutes, setHours } from 'date-fns';
+import { ClassEvent } from '@/types/tutorTypes';
 import { Button } from '@/components/ui/button';
-import NewClassEventForm from '../NewClassEventForm';
 import { useAuth } from '@/contexts/AuthContext';
-import { fetchRelationshipsForTutor } from '@/services/relationships/fetch';
-import { supabase } from '@/services/supabaseClient';
-import type { Student } from '@/types/sharedTypes';
-import type { TutorStudentRelationship } from '@/services/relationships/types';
-import Modal from '@/components/common/Modal';
-import { Profile } from '@/types/profile';
-import { format } from 'date-fns';
+import NewClassEventForm from '../NewClassEventForm';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface AddClassDialogProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
-  newEvent: any;
-  setNewEvent: (event: any) => void;
-  onCreateEvent: () => void;
-  onResetForm: () => void;
-  currentUser?: Profile | null;
+  newEvent: Partial<ClassEvent>;
+  setNewEvent: React.Dispatch<React.SetStateAction<Partial<ClassEvent>>>;
+  onCreateEvent: (event: ClassEvent) => void;
+  onCancel: () => void;
+  currentUser: any;
+}
+
+interface StudentOption {
+  id: string;
+  name: string;
+  relationshipId: string;
 }
 
 const AddClassDialog: React.FC<AddClassDialogProps> = ({
@@ -27,31 +31,24 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
   newEvent,
   setNewEvent,
   onCreateEvent,
-  onResetForm,
-  currentUser,
+  onCancel,
+  currentUser
 }) => {
   const { user } = useAuth();
-  const [relationships, setRelationships] = useState<TutorStudentRelationship[]>([]);
-  const [assignedStudents, setAssignedStudents] = useState<Student[]>([]);
-  const [selectedRelId, setSelectedRelId] = useState<string>('');
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-
-  // Always use auth user ID for queries - this is guaranteed to exist
-  const tutorId = user?.id;
-
-  // Initialize default values when opening the modal
+  const [isLoading, setIsLoading] = useState(false);
+  const [studentOptions, setStudentOptions] = useState<StudentOption[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Set default values when dialog opens
   useEffect(() => {
-    if (!tutorId || !isOpen) return;
+    if (!isOpen || !user?.id) return;
     
-    // Initialize default values for the form
+    // Set next hour as default time
     const now = new Date();
-    const nextHour = new Date(now);
-    nextHour.setHours(nextHour.getHours() + 1, 0, 0, 0);
+    const nextHour = setMinutes(setHours(now, now.getHours() + 1), 0);
     
-    const endTime = new Date(nextHour);
-    endTime.setHours(endTime.getHours() + 1);
-    
-    // Setup initial values with proper tutor information
+    // Create tutor name from profile
+    const tutorId = user.id;
     const tutorDisplayName = currentUser?.first_name 
       ? `${currentUser.first_name} ${currentUser.last_name || ''}`.trim() 
       : 'Current Tutor';
@@ -62,7 +59,7 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
       tutorName: tutorDisplayName,
       date: nextHour,
       startTime: format(nextHour, 'HH:mm'),
-      endTime: format(endTime, 'HH:mm'),
+      endTime: format(addHours(nextHour, 1), 'HH:mm'),
       title: 'New Class Session',
       subject: '',
       zoomLink: 'https://zoom.us/',
@@ -70,74 +67,103 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
     
     // Load relationships and students data
     const loadRelationshipsAndStudents = async () => {
+      if (!user?.id) return;
+      
       setIsLoading(true);
       try {
-        // Load active pairings for this tutor
-        console.log(`Loading relationships for tutor ID: ${tutorId}`);
-        const rels = await fetchRelationshipsForTutor(tutorId);
-        console.log(`Loaded ${rels.length} relationships`);
-        setRelationships(rels);
-
-        // Get unique student IDs from relationships
-        const studentIds = Array.from(new Set(rels.map(rel => rel.student_id)));
-
-        // Fetch student details if we have relationships
-        if (studentIds.length > 0) {
-          const { data: studentsData, error } = await supabase
-            .from('students')
-            .select('id, name, subjects')
-            .in('id', studentIds);
+        // Fetch relationships between this tutor and students
+        // Plus join with profiles to get student names
+        const { data: relationships, error } = await supabase
+          .from('tutor_student_relationships')
+          .select(`
+            id, 
+            student_id,
+            profiles:student_id (
+              first_name, 
+              last_name
+            )
+          `)
+          .eq('tutor_id', user.id)
+          .eq('active', true);
           
-          if (error) {
-            console.error('Error fetching students:', error);
-            return;
-          }
-          
-          console.log(`Loaded ${studentsData?.length || 0} students`);
-          
-          // Ensure the data conforms to the Student type
-          const typedStudents: Student[] = studentsData.map(student => ({
-            id: student.id,
-            name: student.name,
-            subjects: student.subjects || [],
-            email: '' // Add any required fields
-          }));
-          
-          setAssignedStudents(typedStudents);
-          
-          // Set the first relationship as selected by default if available
-          if (rels.length > 0 && !selectedRelId) {
-            setSelectedRelId(rels[0].id);
-            
-            // Also update the newEvent with the relationship and student data
-            const firstRel = rels[0];
-            const firstStudent = typedStudents.find(s => s.id === firstRel.student_id);
-            
-            setNewEvent((prev: any) => ({
-              ...prev,
-              studentId: firstRel.student_id,
-              studentName: firstStudent?.name || '',
-              relationshipId: firstRel.id
-            }));
-          }
+        if (error) throw error;
+        
+        if (!relationships || relationships.length === 0) {
+          console.log('No student relationships found for tutor');
+          return;
         }
-      } catch (error) {
-        console.error('Error loading data:', error);
+        
+        console.log('Found relationships:', relationships);
+        
+        // Convert to format needed for dropdown
+        const options: StudentOption[] = relationships.map((rel: any) => ({
+          id: rel.student_id,
+          name: rel.profiles 
+            ? `${rel.profiles.first_name || ''} ${rel.profiles.last_name || ''}`.trim()
+            : 'Unnamed Student',
+          relationshipId: rel.id
+        }));
+        
+        setStudentOptions(options);
+      } catch (err: any) {
+        console.error('Error loading student relationships:', err);
+        toast.error(`Failed to load student list: ${err.message}`);
       } finally {
         setIsLoading(false);
       }
     };
-
+    
     loadRelationshipsAndStudents();
-  }, [tutorId, isOpen, setNewEvent, currentUser]);
+  }, [isOpen, user?.id, setNewEvent, currentUser]);
+  
+  // Handle student selection to update both studentId and relationshipId
+  const handleStudentChange = (studentId: string) => {
+    const selectedStudent = studentOptions.find(s => s.id === studentId);
+    
+    if (selectedStudent) {
+      setNewEvent({
+        ...newEvent,
+        studentId: selectedStudent.id,
+        studentName: selectedStudent.name,
+        relationshipId: selectedStudent.relationshipId // Important: Set the relationship ID
+      });
+      console.log(`Selected student ${selectedStudent.name} with relationship ID ${selectedStudent.relationshipId}`);
+    } else {
+      setNewEvent({
+        ...newEvent,
+        studentId: '',
+        studentName: '',
+        relationshipId: ''
+      });
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (isSubmitting) return;
+    
+    if (!newEvent.title || !newEvent.studentId || !newEvent.relationshipId) {
+      toast.error('Please complete all required fields');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    try {
+      await onCreateEvent(newEvent as ClassEvent);
+      setIsOpen(false);
+    } catch (error: any) {
+      console.error('Error creating class:', error);
+      toast.error(`Failed to create class: ${error.message}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleCancel = () => {
-    setIsOpen(false);
-    onResetForm();
+    onCancel();
   };
 
   return (
-    <Modal
+    <Dialog
       isOpen={isOpen}
       onOpenChange={setIsOpen}
       title="Schedule New Class"
@@ -146,13 +172,10 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
       className="bg-white text-gray-900"
       onCancel={handleCancel}
       footer={
-        <div className="flex flex-col sm:flex-row gap-3 justify-end w-full">
-          <Button 
-            variant="outline" 
-            onClick={handleCancel}
-            className="bg-white text-gray-900 hover:bg-gray-100 w-full sm:w-auto px-4 sm:px-6 py-2 text-base"
-          >
-            Cancel
+        <div className="flex justify-end space-x-2">
+          <Button variant="outline" onClick={handleCancel}>Cancel</Button>
+          <Button onClick={handleSubmit} disabled={isSubmitting}>
+            {isSubmitting ? 'Creating...' : 'Schedule Class'}
           </Button>
         </div>
       }
@@ -164,15 +187,12 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
           <NewClassEventForm
             newEvent={newEvent}
             setNewEvent={setNewEvent}
-            assignedStudents={assignedStudents}
-            relationships={relationships}
-            selectedRelId={selectedRelId}
-            setSelectedRelId={setSelectedRelId}
-            onSubmit={onCreateEvent}
+            studentOptions={studentOptions}
+            onStudentSelect={handleStudentChange}
           />
         </div>
       )}
-    </Modal>
+    </Dialog>
   );
 };
 

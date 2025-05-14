@@ -41,6 +41,7 @@ export default function useSchedulerData() {
       // Explicitly filter by the current logged-in tutor's ID
       const classes = await fetchScheduledClasses(user.id);
       console.log('Fetched classes count:', classes.length);
+      console.log('Fetched class details:', classes);
       setScheduledClasses(classes);
     } catch (error) {
       console.error('Error loading classes:', error);
