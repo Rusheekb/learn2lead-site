@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Dialog,
@@ -12,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar, ExternalLink, Download, HelpCircle, Copy } from 'lucide-react';
 import { copyToClipboard } from '@/utils/clipboardUtils';
 import { getUserCalendarFeedUrl } from '@/utils/calendarUtils';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast'; // Updated import
 import { useAuth } from '@/contexts/AuthContext';
 
 interface CalendarHelpDialogProps {
@@ -24,7 +23,6 @@ const CalendarHelpDialog: React.FC<CalendarHelpDialogProps> = ({
   isOpen,
   setIsOpen,
 }) => {
-  const { toast } = useToast();
   const { user } = useAuth();
   const [feedUrl, setFeedUrl] = React.useState<string | null>(null);
 
@@ -41,16 +39,9 @@ const CalendarHelpDialog: React.FC<CalendarHelpDialogProps> = ({
     
     const success = await copyToClipboard(feedUrl);
     if (success) {
-      toast({
-        title: 'Feed URL copied',
-        description: 'Calendar feed URL copied to clipboard',
-      });
+      toast.success('Calendar feed URL copied to clipboard');
     } else {
-      toast({
-        title: 'Failed to copy URL',
-        description: 'Please select and copy the URL manually',
-        variant: 'destructive',
-      });
+      toast.error('Please select and copy the URL manually');
     }
   };
 

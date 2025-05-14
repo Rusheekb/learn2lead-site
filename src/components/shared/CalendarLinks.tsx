@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Calendar, Download, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,7 +13,7 @@ import {
   createOutlookCalendarUrl, 
   createIcsDownloadUrl 
 } from '@/utils/calendarUtils';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface CalendarLinksProps {
@@ -28,16 +27,11 @@ const CalendarLinks: React.FC<CalendarLinksProps> = ({
   compact = false,
   dropdownOnly = false,
 }) => {
-  const { toast } = useToast();
   const { user } = useAuth();
   
   const handleDownloadIcs = async () => {
     if (!user?.id) {
-      toast({
-        title: 'Authentication required',
-        description: 'Please log in to download calendar events',
-        variant: 'destructive',
-      });
+      toast.error('Please log in to download calendar events');
       return;
     }
     
@@ -55,10 +49,7 @@ const CalendarLinks: React.FC<CalendarLinksProps> = ({
     link.click();
     document.body.removeChild(link);
     
-    toast({
-      title: 'Calendar file downloaded',
-      description: 'Import this .ics file into your calendar application',
-    });
+    toast.success('Import this .ics file into your calendar application');
   };
   
   // Prepare event data with proper types for calendar functions

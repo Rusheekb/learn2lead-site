@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { useAnalyticsTracker } from '@/hooks/useAnalyticsTracker';
 import { BackupLog } from '@/types/backup';
 import BackupCard from '@/components/admin/backup/BackupCard';
@@ -13,7 +12,6 @@ import RestoreConfirmDialog from '@/components/admin/backup/RestoreConfirmDialog
 
 const AdminSettings: React.FC = () => {
   const { t } = useTranslation();
-  const { toast } = useToast();
   const { trackPageView } = useAnalyticsTracker();
   const [isBackupDialogOpen, setIsBackupDialogOpen] = useState(false);
   const [isRestoreDialogOpen, setIsRestoreDialogOpen] = useState(false);
@@ -56,26 +54,15 @@ const AdminSettings: React.FC = () => {
     },
     onSuccess: (data) => {
       if (data.success) {
-        toast({
-          title: "Backup created successfully",
-          description: `Backup "${data.name}" was created`,
-        });
+        toast.success(`Backup "${data.name}" was created`);
         refetchBackups();
       } else {
-        toast({
-          title: "Backup failed",
-          description: data.error || "An unknown error occurred",
-          variant: "destructive",
-        });
+        toast.error(data.error || "An unknown error occurred");
       }
       setIsBackupDialogOpen(false);
     },
     onError: (error) => {
-      toast({
-        title: "Backup failed",
-        description: error.message || "An unknown error occurred",
-        variant: "destructive",
-      });
+      toast.error(error.message || "An unknown error occurred");
       setIsBackupDialogOpen(false);
     }
   });
@@ -92,26 +79,15 @@ const AdminSettings: React.FC = () => {
     },
     onSuccess: (data) => {
       if (data.success) {
-        toast({
-          title: "Restore completed successfully",
-          description: "The database has been restored from the selected backup.",
-        });
+        toast.success("The database has been restored from the selected backup.");
       } else {
-        toast({
-          title: "Restore failed",
-          description: data.error || "An unknown error occurred",
-          variant: "destructive",
-        });
+        toast.error(data.error || "An unknown error occurred");
       }
       setIsRestoreConfirmOpen(false);
       setIsRestoreDialogOpen(false);
     },
     onError: (error) => {
-      toast({
-        title: "Restore failed",
-        description: error.message || "An unknown error occurred",
-        variant: "destructive",
-      });
+      toast.error(error.message || "An unknown error occurred");
       setIsRestoreConfirmOpen(false);
       setIsRestoreDialogOpen(false);
     }

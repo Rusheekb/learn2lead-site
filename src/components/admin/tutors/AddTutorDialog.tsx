@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Dialog,
@@ -8,7 +7,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { Tutor } from '@/types/tutorTypes';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -39,8 +38,6 @@ const AddTutorDialog: React.FC<AddTutorDialogProps> = ({
   onOpenChange,
   onAddTutor,
 }) => {
-  const { toast } = useToast();
-
   const form = useForm<TutorFormValues>({
     resolver: zodResolver(tutorSchema),
     defaultValues: {
@@ -63,10 +60,7 @@ const AddTutorDialog: React.FC<AddTutorDialogProps> = ({
     };
 
     onAddTutor(newTutor);
-    toast({
-      title: 'Tutor Added',
-      description: 'New tutor has been successfully added to the system.',
-    });
+    toast.success('New tutor has been successfully added to the system.');
     onOpenChange(false);
     form.reset();
   };

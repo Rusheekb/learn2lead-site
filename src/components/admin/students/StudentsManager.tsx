@@ -9,7 +9,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Plus } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from '@/hooks/use-toast';
 import { fetchStudents } from '@/services/dataService';
 import { useClassLogs } from '@/hooks/useClassLogs';
 
@@ -22,7 +22,6 @@ const StudentsManager: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [paymentFilter, setPaymentFilter] = useState<string>('all');
-  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(true);
   const { classes } = useClassLogs();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -90,15 +89,11 @@ const StudentsManager: React.FC = () => {
       setStudents(enhancedStudents);
     } catch (error) {
       console.error('Error loading students:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load student data',
-        variant: 'destructive',
-      });
+      toast.error('Failed to load student data');
     } finally {
       setIsLoading(false);
     }
-  }, [classes, toast]);
+  }, [classes]);
 
   useEffect(() => {
     if (classes.length === 0) return;
@@ -107,11 +102,7 @@ const StudentsManager: React.FC = () => {
 
   const handleDeleteStudent = (studentId: string) => {
     setStudents(students.filter((student) => student.id !== studentId));
-    toast({
-      title: 'Student Deleted',
-      description: 'The student has been successfully removed.',
-      variant: 'default',
-    });
+    toast.success('The student has been successfully removed.');
   };
 
   const handleAddStudent = (newStudentData: Omit<Student, 'id'>) => {
@@ -121,10 +112,7 @@ const StudentsManager: React.FC = () => {
     };
 
     setStudents([...students, newStudent]);
-    toast({
-      title: 'Student Added',
-      description: 'New student has been successfully added to the system.',
-    });
+    toast.success('New student has been successfully added to the system.');
     setIsDialogOpen(false);
   };
 
