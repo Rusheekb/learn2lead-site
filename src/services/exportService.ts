@@ -4,7 +4,7 @@ import * as Papa from 'papaparse';
 import { ExportFormat } from '@/types/classTypes';
 import { ClassEvent } from '@/types/tutorTypes';
 import { toast } from 'sonner';
-import { jsPDF } from 'jspdf';
+import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 
 interface ExportableClassData {

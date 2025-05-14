@@ -1,6 +1,8 @@
 
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render } from '@testing-library/react';
+import * as rtl from '@testing-library/react';
+const { screen, fireEvent, waitFor } = rtl;
 import Profile from '@/pages/Profile';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAnalyticsTracker } from '@/hooks/useAnalyticsTracker';
