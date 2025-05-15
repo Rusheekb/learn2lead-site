@@ -1,5 +1,5 @@
 
-import { ToastOptions, ToastVariant } from './types';
+import type { ToastOptions, ToastVariant } from './types';
 
 // Create a unique ID for each toast
 export const generateId = () => {

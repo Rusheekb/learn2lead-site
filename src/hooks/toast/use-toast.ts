@@ -1,16 +1,16 @@
 
 import * as React from "react";
-import { ToastActionElement, ToastProps, ToastOptions } from "./types";
+import { ToastActionElement, ToastOptions, ToastProps } from "./types";
 
 const TOAST_LIMIT = 5;
 const TOAST_REMOVE_DELAY = 1000;
 
-export type ToasterToast = ToastProps & {
+export interface ToasterToast extends ToastProps {
   id: string;
   title?: React.ReactNode;
   description?: React.ReactNode;
   action?: ToastActionElement;
-};
+}
 
 const actionTypes = {
   ADD_TOAST: "ADD_TOAST",
@@ -223,4 +223,4 @@ function useToast() {
   };
 }
 
-export { useToast, toast, ToasterToast, ToastActionElement };
+export { useToast, toast };
