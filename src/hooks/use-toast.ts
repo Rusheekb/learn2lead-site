@@ -97,7 +97,7 @@ export const useToast = () => {
             title: options?.title, 
             description: message, 
             action: options?.action, 
-            variant: 'destructive' 
+            variant: 'destructive' as const
           },
         ].slice(-TOAST_LIMIT),
       }));
@@ -113,7 +113,7 @@ export const useToast = () => {
             title: options?.title, 
             description: message, 
             action: options?.action, 
-            variant: 'default' 
+            variant: 'default' as const
           },
         ].slice(-TOAST_LIMIT),
       }));
@@ -129,7 +129,7 @@ export const useToast = () => {
             title: options?.title, 
             description: message, 
             action: options?.action, 
-            variant: 'default' 
+            variant: 'default' as const
           },
         ].slice(-TOAST_LIMIT),
       }));
@@ -145,7 +145,7 @@ export const useToast = () => {
             title: options?.title, 
             description: message, 
             action: options?.action, 
-            variant: 'default' 
+            variant: 'default' as const
           },
         ].slice(-TOAST_LIMIT),
       }));
@@ -161,7 +161,7 @@ export const useToast = () => {
             title: options?.title, 
             description: message, 
             action: options?.action, 
-            variant: 'default' 
+            variant: 'default' as const 
           },
         ].slice(-TOAST_LIMIT),
       }));
