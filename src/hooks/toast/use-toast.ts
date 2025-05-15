@@ -1,7 +1,6 @@
 
 import * as React from "react";
-
-import { ToastActionElement, ToastProps } from "./types";
+import { ToastActionElement, ToastProps, ToastOptions } from "./types";
 
 const TOAST_LIMIT = 5;
 const TOAST_REMOVE_DELAY = 1000;
@@ -88,7 +87,7 @@ export const reducer = (state: State, action: Action): State => {
     case "DISMISS_TOAST": {
       const { toastId } = action;
 
-      // ! Side effects ! //
+      // Side effects
       if (toastId) {
         addToRemoveQueue(toastId);
       } else {
@@ -134,10 +133,12 @@ function dispatch(action: Action) {
   });
 }
 
-type Toast = Omit<ToasterToast, "id">;
+interface Toast extends Partial<ToasterToast> {
+  description?: React.ReactNode;
+}
 
-function toast({ ...props }: Toast) {
-  const id = genId();
+function toast(props: Toast) {
+  const id = props.id || genId();
 
   const update = (props: ToasterToast) =>
     dispatch({
@@ -152,10 +153,10 @@ function toast({ ...props }: Toast) {
       ...props,
       id,
       open: true,
-      onOpenChange: (open) => {
+      onOpenChange: (open: boolean) => {
         if (!open) dismiss();
       },
-    },
+    } as ToasterToast,
   });
 
   return {
@@ -164,6 +165,43 @@ function toast({ ...props }: Toast) {
     update,
   };
 }
+
+// Add variant methods to toast
+toast.success = (message: string, options?: ToastOptions) => {
+  return toast({
+    title: options?.title,
+    description: message,
+    action: options?.action,
+    variant: "default"
+  });
+};
+
+toast.error = (message: string, options?: ToastOptions) => {
+  return toast({
+    title: options?.title,
+    description: message,
+    action: options?.action,
+    variant: "destructive"
+  });
+};
+
+toast.warn = toast.warning = (message: string, options?: ToastOptions) => {
+  return toast({
+    title: options?.title,
+    description: message,
+    action: options?.action,
+    variant: "default"
+  });
+};
+
+toast.info = (message: string, options?: ToastOptions) => {
+  return toast({
+    title: options?.title,
+    description: message,
+    action: options?.action,
+    variant: "default"
+  });
+};
 
 function useToast() {
   const [state, setState] = React.useState<State>(memoryState);
@@ -185,4 +223,4 @@ function useToast() {
   };
 }
 
-export { useToast, toast };
+export { useToast, toast, ToasterToast, ToastActionElement };
