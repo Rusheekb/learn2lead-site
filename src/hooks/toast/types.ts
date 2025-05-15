@@ -1,24 +1,17 @@
 
-import { type ToastProps } from '@/components/ui/toast';
-import React from 'react';
+import * as React from "react";
 
-export type ToastActionElement = React.ReactElement;
-
-export type ToastVariant = 'default' | 'destructive';
-
-export type ToasterToast = {
+export type ToastProps = {
   id: string;
   title?: React.ReactNode;
   description?: React.ReactNode;
-  action?: ToastActionElement;
-  variant?: ToastVariant;
-}
+  action?: React.ReactNode;
+  variant: "default" | "destructive";
+};
+
+export type ToastActionElement = React.ReactElement<{
+  onAction: () => void;
+}>;
 
 export const TOAST_LIMIT = 5;
-export const TOAST_REMOVE_DELAY = 1_000_000;
-
-export type ToastOptions = Omit<ToasterToast, "id">;
-
-export interface ToastState {
-  toasts: ToasterToast[];
-}
+export const TOAST_REMOVE_DELAY = 1000;

@@ -1,15 +1,13 @@
 
 import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { AppRole } from '@/types/profile';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSidebar } from '@/hooks/useSidebar';
 import { getDashboardPath } from '@/utils/authNavigation';
 import SidebarLogo from './sidebar/SidebarLogo';
 import SidebarFooter from './sidebar/SidebarFooter';
-import StudentNavLinks from './sidebar/StudentNavLinks';
-import TutorNavLinks from './sidebar/TutorNavLinks';
-import AdminNavLinks from './sidebar/AdminNavLinks';
+import SidebarNavLinks from './sidebar/SidebarNavLinks';
 
 interface AppSidebarProps {
   className?: string;
@@ -18,7 +16,6 @@ interface AppSidebarProps {
 const AppSidebar: React.FC<AppSidebarProps> = ({ className = '' }) => {
   const { userRole, signOut } = useAuth();
   const { isExpanded, toggleSidebar } = useSidebar();
-  const navigate = useNavigate();
   
   if (!userRole) return null;
   
@@ -37,35 +34,6 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ className = '' }) => {
   };
   
   const profilePath = getProfilePath();
-  
-  // Role-specific navigation items
-  const renderNavLinks = () => {
-    switch (userRole) {
-      case 'student':
-        return (
-          <StudentNavLinks 
-            isExpanded={isExpanded}
-            profilePath={profilePath}
-          />
-        );
-      case 'tutor':
-        return (
-          <TutorNavLinks 
-            isExpanded={isExpanded}
-            profilePath={profilePath}
-          />
-        );
-      case 'admin':
-        return (
-          <AdminNavLinks 
-            isExpanded={isExpanded}
-            profilePath={profilePath}
-          />
-        );
-      default:
-        return null;
-    }
-  };
 
   return (
     <aside 
@@ -77,7 +45,11 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ className = '' }) => {
       <SidebarLogo isExpanded={isExpanded} toggleSidebar={toggleSidebar} />
 
       <div className="flex-grow p-4">
-        {renderNavLinks()}
+        <SidebarNavLinks 
+          userRole={userRole} 
+          isExpanded={isExpanded} 
+          profilePath={profilePath} 
+        />
       </div>
 
       <SidebarFooter isExpanded={isExpanded} signOut={signOut} />
