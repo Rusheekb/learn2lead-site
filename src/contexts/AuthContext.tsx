@@ -19,7 +19,7 @@ interface AuthContextType {
   userRole: AppRole | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, userData?: { first_name?: string; last_name?: string }) => Promise<void>;
   signInWithOAuth: (provider: 'google') => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -60,20 +60,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               const defaultRole = u.email?.endsWith('@learn2lead.com')
                 ? 'tutor'
                 : 'student';
+                
+              // Extract first and last name from user metadata
+              const { user_metadata } = u;
+              const firstName = user_metadata?.first_name || user_metadata?.name?.split(' ')[0] || '';
+              const lastName = user_metadata?.last_name || 
+                (user_metadata?.name ? user_metadata.name.split(' ').slice(1).join(' ') : '');
+                
               await supabase
                 .from('profiles')
-                .insert({ id: u.id, email: u.email!, role: defaultRole });
+                .insert({ 
+                  id: u.id, 
+                  email: u.email!, 
+                  role: defaultRole,
+                  first_name: firstName,
+                  last_name: lastName
+                });
 
               // Create corresponding student/tutor record
               if (defaultRole === 'student') {
                 await createStudent({
-                  name: u.email?.split('@')[0] || 'New Student',
+                  name: firstName ? `${firstName} ${lastName}`.trim() : (u.email?.split('@')[0] || 'New Student'),
                   email: u.email!,
                   subjects: [],
                 });
               } else if (defaultRole === 'tutor') {
                 await createTutor({
-                  name: u.email?.split('@')[0] || 'New Tutor',
+                  name: firstName ? `${firstName} ${lastName}`.trim() : (u.email?.split('@')[0] || 'New Tutor'),
                   email: u.email!,
                   subjects: [],
                   rating: 0,
@@ -127,8 +140,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await signInWithEmail(email, password);
   };
 
-  const handleSignUp = async (email: string, password: string) => {
-    await signUpWithEmail(email, password);
+  const handleSignUp = async (
+    email: string, 
+    password: string, 
+    userData?: { first_name?: string; last_name?: string }
+  ) => {
+    await signUpWithEmail(email, password, userData);
   };
 
   const handleSignInWithOAuth = async (provider: 'google') => {

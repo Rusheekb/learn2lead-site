@@ -14,6 +14,8 @@ import { Separator } from '@/components/ui/separator';
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { signIn, signUp, signInWithOAuth, user, userRole } = useAuth();
   const navigate = useNavigate();
@@ -58,16 +60,23 @@ const Login = () => {
       return;
     }
 
-    if (isSignUp && password.length < 6) {
-      toast.error('Password must be at least 6 characters long.');
-      return;
+    if (isSignUp) {
+      if (!firstName || !lastName) {
+        toast.error('Please enter your first and last name.');
+        return;
+      }
+      
+      if (password.length < 6) {
+        toast.error('Password must be at least 6 characters long.');
+        return;
+      }
     }
 
     setIsLoading(true);
 
     try {
       if (isSignUp) {
-        await signUp(email, password);
+        await signUp(email, password, { first_name: firstName, last_name: lastName });
         toast.success(
           'Account created! Please check your email for verification.'
         );
@@ -197,6 +206,30 @@ const Login = () => {
                     onSubmit={(e) => handleSubmit(e, true)}
                     className="space-y-4"
                   >
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="first-name-signup">First Name</Label>
+                        <Input
+                          id="first-name-signup"
+                          type="text"
+                          placeholder="John"
+                          value={firstName}
+                          onChange={(e) => setFirstName(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="last-name-signup">Last Name</Label>
+                        <Input
+                          id="last-name-signup"
+                          type="text"
+                          placeholder="Doe"
+                          value={lastName}
+                          onChange={(e) => setLastName(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
                     <div className="space-y-2">
                       <Label htmlFor="email-signup">Email</Label>
                       <Input

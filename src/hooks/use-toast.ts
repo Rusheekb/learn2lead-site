@@ -1,35 +1,38 @@
 
-// Import the toast functions directly from sonner
-import { toast as sonnerToast } from "sonner";
-import * as React from 'react';
-import { type ToastActionElement, type ToastProps } from '@/components/ui/toast';
+import { Toast, ToastActionElement, ToastProps } from '@/components/ui/toast';
 
-// Define the ToasterToast type for the toast system
-export type ToasterToast = ToastProps & {
+type ToasterToast = Toast & {
   id: string;
   title?: React.ReactNode;
   description?: React.ReactNode;
   action?: ToastActionElement;
-};
+}
 
-// Create a useToast hook with the proper return type
+export const TOAST_LIMIT = 5;
+export const TOAST_REMOVE_DELAY = 1_000_000;
+
+export type ToastOptions = Omit<ToasterToast, "id">;
+
+export interface ToastState {
+  toasts: ToasterToast[];
+}
+
+export const toast = {
+  toaster: (props: ToastProps) => {},
+  dismiss: (toastId?: string) => {},
+  error: (message: string, options?: ToastOptions) => {},
+  success: (message: string, options?: ToastOptions) => {},
+  warn: (message: string, options?: ToastOptions) => {},
+  info: (message: string, options?: ToastOptions) => {},
+  loading: (message: string, options?: ToastOptions) => {},
+}
+
 export const useToast = () => {
-  const [toasts, setToasts] = React.useState<ToasterToast[]>([]);
-
   return {
-    toasts,
-    toast: ({ ...props }: ToasterToast) => {
-      // The actual implementation is handled by sonner
-      return sonnerToast(props.title as string, {
-        description: props.description as string,
-      });
-    },
-    dismiss: (toastId?: string) => {
-      // Here we would remove a specific toast from the toasts array
-      setToasts((toasts) => toasts.filter((toast) => toast.id !== toastId));
-    },
-  };
-};
+    toast,
+    dismiss: toast.dismiss,
+    toasts: []
+  }
+}
 
-// Export the direct toast function for simpler usage
-export const toast = sonnerToast;
+export type { ToasterToast }

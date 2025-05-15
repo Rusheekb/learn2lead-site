@@ -26,12 +26,19 @@ export const signInWithEmail = async (email: string, password: string) => {
  * Signs up a user and ensures a profile row exists in the `profiles` table,
  * with default role 'student'.
  */
-export const signUpWithEmail = async (email: string, password: string) => {
+export const signUpWithEmail = async (
+  email: string, 
+  password: string, 
+  userData?: { first_name?: string; last_name?: string }
+) => {
   try {
     const { data: signupData, error: signupError } = await supabase.auth.signUp(
       {
         email,
         password,
+        options: {
+          data: userData || {}
+        }
       }
     );
     if (signupError) {
@@ -54,7 +61,13 @@ export const signUpWithEmail = async (email: string, password: string) => {
         const role = 'student';
         const { error: insertError } = await supabase
           .from('profiles')
-          .insert([{ id: user.id, email: user.email, role }]);
+          .insert([{ 
+            id: user.id, 
+            email: user.email, 
+            role,
+            first_name: userData?.first_name || '',
+            last_name: userData?.last_name || ''
+          }]);
         if (insertError) {
           toast.error('Failed to create user profile.');
           throw insertError;
