@@ -4,7 +4,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { format, isSameDay, parseISO } from 'date-fns';
 import { ClassEvent } from '@/types/tutorTypes';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { startOfDay, addDays } from 'date-fns';
 
 interface CalendarWithEventsProps {

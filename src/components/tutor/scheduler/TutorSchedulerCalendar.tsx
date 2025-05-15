@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { ClassEvent } from '@/types/tutorTypes';
-import CalendarWithEvents from '../CalendarWithEvents';
+import CalendarWithEvents from '@/components/CalendarWithEvents';
 
 interface TutorSchedulerCalendarProps {
   selectedDate: Date;
