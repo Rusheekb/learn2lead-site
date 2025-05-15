@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useRef } from 'react';
-import { ToastState, ToastOptions, ToasterToast, TOAST_LIMIT } from './types';
+import { ToastState, ToastOptions, ToasterToast, TOAST_LIMIT, ToastVariant } from './types';
 import { toast } from './toast-service';
 import { createToast } from './toast-utils';
 
@@ -37,7 +37,7 @@ export const useToast = () => {
       setState((prev) => ({
         toasts: [
           ...prev.toasts,
-          createToast(message, options, 'destructive' as const)
+          createToast(message, options, 'destructive' as ToastVariant)
         ].slice(-TOAST_LIMIT),
       }));
       return id;
@@ -47,7 +47,7 @@ export const useToast = () => {
       setState((prev) => ({
         toasts: [
           ...prev.toasts,
-          createToast(message, options, 'default' as const)
+          createToast(message, options, 'default' as ToastVariant)
         ].slice(-TOAST_LIMIT),
       }));
       return id;
@@ -57,7 +57,7 @@ export const useToast = () => {
       setState((prev) => ({
         toasts: [
           ...prev.toasts,
-          createToast(message, options, 'default' as const)
+          createToast(message, options, 'default' as ToastVariant)
         ].slice(-TOAST_LIMIT),
       }));
       return id;
@@ -67,7 +67,7 @@ export const useToast = () => {
       setState((prev) => ({
         toasts: [
           ...prev.toasts,
-          createToast(message, options, 'default' as const)
+          createToast(message, options, 'default' as ToastVariant)
         ].slice(-TOAST_LIMIT),
       }));
       return id;
@@ -77,7 +77,7 @@ export const useToast = () => {
       setState((prev) => ({
         toasts: [
           ...prev.toasts,
-          createToast(message, options, 'default' as const)
+          createToast(message, options, 'default' as ToastVariant)
         ].slice(-TOAST_LIMIT),
       }));
       return id;
