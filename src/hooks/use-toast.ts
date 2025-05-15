@@ -1,8 +1,10 @@
 
 import { useState, useEffect, useRef } from 'react';
-import { Toast as ToastPrimitive, ToastActionElement, type ToastProps } from '@/components/ui/toast';
+import { type ToastProps } from '@/components/ui/toast';
 
-type ToasterToast = {
+type ToastActionElement = React.ReactElement;
+
+export type ToasterToast = {
   id: string;
   title?: React.ReactNode;
   description?: React.ReactNode;
@@ -25,10 +27,6 @@ const generateId = () => {
 };
 
 export const toast = {
-  toaster(props: ToastProps) {
-    // Implementation would go here if needed
-  },
-  
   // Method to remove a toast by ID
   dismiss: (toastId?: string) => {
     // This will be implemented by the useToast() hook
@@ -37,61 +35,26 @@ export const toast = {
   // Toast variants
   error: (message: string, options?: ToastOptions) => {
     const id = generateId();
-    const newToast = {
-      id,
-      title: options?.title,
-      description: message,
-      action: options?.action,
-      variant: 'destructive' as const,
-    };
     return id;
   },
   
   success: (message: string, options?: ToastOptions) => {
     const id = generateId();
-    const newToast = {
-      id,
-      title: options?.title,
-      description: message,
-      action: options?.action,
-      variant: 'default' as const,
-    };
     return id;
   },
   
   warn: (message: string, options?: ToastOptions) => {
     const id = generateId();
-    const newToast = {
-      id,
-      title: options?.title,
-      description: message,
-      action: options?.action,
-      variant: 'default' as const,
-    };
     return id;
   },
   
   info: (message: string, options?: ToastOptions) => {
     const id = generateId();
-    const newToast = {
-      id,
-      title: options?.title,
-      description: message,
-      action: options?.action,
-      variant: 'default' as const,
-    };
     return id;
   },
   
   loading: (message: string, options?: ToastOptions) => {
     const id = generateId();
-    const newToast = {
-      id,
-      title: options?.title,
-      description: message,
-      action: options?.action,
-      variant: 'default' as const,
-    };
     return id;
   },
 }
@@ -212,4 +175,4 @@ export const useToast = () => {
   };
 };
 
-export type { ToasterToast };
+export type { ToastActionElement };
