@@ -1,8 +1,5 @@
-
 import React from 'react';
 import { render } from '@testing-library/react';
-import * as rtl from '@testing-library/react';
-const { screen, fireEvent, waitFor } = rtl;
 import Profile from '@/pages/Profile';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAnalyticsTracker } from '@/hooks/useAnalyticsTracker';
@@ -42,7 +39,7 @@ describe('Profile Component', () => {
   });
   
   it('renders profile page correctly', async () => {
-    render(
+    const { getByText, getByTestId } = render(
       <MemoryRouter>
         <I18nextProvider i18n={i18n}>
           <Profile />
@@ -51,10 +48,10 @@ describe('Profile Component', () => {
     );
     
     // Check if page title is rendered
-    expect(screen.getByText('profile.myProfile')).toBeInTheDocument();
+    expect(getByText('profile.myProfile')).toBeInTheDocument();
     
     // Check if ProfilePage component is rendered
-    expect(screen.getByTestId('profile-page')).toBeInTheDocument();
+    expect(getByTestId('profile-page')).toBeInTheDocument();
     
     // Ensure trackPageView was called
     expect(mockTrackPageView).toHaveBeenCalledWith('profile-page');
