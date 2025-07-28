@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import NewClassEventForm from '../NewClassEventForm';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface AddClassDialogProps {
   isOpen: boolean;
@@ -80,7 +80,8 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
             student_id,
             profiles:student_id (
               first_name, 
-              last_name
+              last_name,
+              email
             )
           `)
           .eq('tutor_id', user.id)
@@ -96,13 +97,32 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
         console.log('Found relationships:', relationships);
         
         // Convert to format needed for dropdown
-        const options: StudentOption[] = relationships.map((rel: any) => ({
-          id: rel.student_id,
-          name: rel.profiles 
-            ? `${rel.profiles.first_name || ''} ${rel.profiles.last_name || ''}`.trim()
-            : 'Unnamed Student',
-          relationshipId: rel.id
-        }));
+        const options: StudentOption[] = relationships.map((rel: any) => {
+          let studentName = 'Unnamed Student';
+          
+          if (rel.profiles) {
+            const firstName = rel.profiles.first_name || '';
+            const lastName = rel.profiles.last_name || '';
+            const fullName = `${firstName} ${lastName}`.trim();
+            
+            // If no name is available, use email or student ID as fallback
+            if (fullName) {
+              studentName = fullName;
+            } else if (rel.profiles.email) {
+              studentName = rel.profiles.email;
+            } else {
+              studentName = `Student (${rel.student_id.substring(0, 8)}...)`;
+            }
+          }
+          
+          return {
+            id: rel.student_id,
+            name: studentName,
+            relationshipId: rel.id
+          };
+        });
+        
+        console.log('Converted student options:', options);
         
         setStudentOptions(options);
       } catch (err: any) {
