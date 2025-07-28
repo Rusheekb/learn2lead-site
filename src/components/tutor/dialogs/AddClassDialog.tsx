@@ -72,18 +72,9 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
       setIsLoading(true);
       try {
         // Fetch relationships between this tutor and students
-        // Plus join with profiles to get student names
         const { data: relationships, error } = await supabase
-          .from('tutor_student_relationships')
-          .select(`
-            id, 
-            student_id,
-            profiles:student_id (
-              first_name, 
-              last_name,
-              email
-            )
-          `)
+          .from('tutor_students')
+          .select('*')
           .eq('tutor_id', user.id)
           .eq('active', true);
           
@@ -98,27 +89,13 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
         
         // Convert to format needed for dropdown
         const options: StudentOption[] = relationships.map((rel: any) => {
-          let studentName = 'Unnamed Student';
-          
-          if (rel.profiles) {
-            const firstName = rel.profiles.first_name || '';
-            const lastName = rel.profiles.last_name || '';
-            const fullName = `${firstName} ${lastName}`.trim();
-            
-            // If no name is available, use email or student ID as fallback
-            if (fullName) {
-              studentName = fullName;
-            } else if (rel.profiles.email) {
-              studentName = rel.profiles.email;
-            } else {
-              studentName = `Student (${rel.student_id.substring(0, 8)}...)`;
-            }
-          }
+          // Use student_name from the tutor_students view
+          const studentName = rel.student_name || `Student (${rel.student_id?.substring(0, 8)}...)` || 'Unnamed Student';
           
           return {
             id: rel.student_id,
             name: studentName,
-            relationshipId: rel.id
+            relationshipId: rel.student_id // Use student_id as relationship identifier for this view
           };
         });
         
