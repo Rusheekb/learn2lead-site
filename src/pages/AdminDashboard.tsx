@@ -26,7 +26,7 @@ type User = (Student | Tutor) & { role: 'student' | 'tutor' };
 
 const fetchRelationships = async () => {
   const { data, error } = await supabase
-    .from('tutor_student_relationships')
+    .from('tutor_student_assigned')
     .select('*')
     .eq('active', true);
 

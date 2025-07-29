@@ -135,7 +135,7 @@ export const assignStudentToTutor = async (
 ): Promise<boolean> => {
   try {
     const { error } = await supabase
-      .from('tutor_student_relationships')
+      .from('tutor_student_assigned')
       .insert({
         tutor_id: tutorId,
         student_id: studentId,
@@ -157,7 +157,7 @@ export const removeStudentFromTutor = async (
 ): Promise<boolean> => {
   try {
     const { error } = await supabase
-      .from('tutor_student_relationships')
+      .from('tutor_student_assigned')
       .update({ active: false })
       .eq('tutor_id', tutorId)
       .eq('student_id', studentId);

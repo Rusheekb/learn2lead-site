@@ -8,7 +8,7 @@ export async function createRelationship(input: {
   student_id: string;
 }) {
   const { data, error } = await supabase
-    .from('tutor_student_relationships')
+    .from('tutor_student_assigned')
     .insert({ ...input, active: true })
     .select()
     .single();
@@ -24,7 +24,7 @@ export async function createRelationship(input: {
 
 export async function endRelationship(id: string) {
   const { data, error } = await supabase
-    .from('tutor_student_relationships')
+    .from('tutor_student_assigned')
     .update({ active: false })
     .eq('id', id)
     .select()

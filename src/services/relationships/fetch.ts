@@ -6,7 +6,7 @@ export async function fetchRelationshipsForTutor(
   tutorId: string
 ): Promise<TutorStudentRelationship[]> {
   const { data, error } = await supabase
-    .from('tutor_student_relationships')
+    .from('tutor_student_assigned')
     .select('*')
     .eq('tutor_id', tutorId)
     .eq('active', true);
@@ -23,7 +23,7 @@ export async function fetchRelationshipsForStudent(
   studentId: string
 ): Promise<TutorStudentRelationship[]> {
   const { data, error } = await supabase
-    .from('tutor_student_relationships')
+    .from('tutor_student_assigned')
     .select('*')
     .eq('student_id', studentId)
     .eq('active', true);
@@ -40,7 +40,7 @@ export async function fetchActiveRelationshipsForAdmin(): Promise<
   TutorStudentRelationship[]
 > {
   const { data, error } = await supabase
-    .from('tutor_student_relationships')
+    .from('tutor_student_assigned')
     .select('*')
     .eq('active', true);
 

@@ -71,40 +71,14 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
       
       setIsLoading(true);
       try {
-        // Query tutor_student_assigned directly using RPC or SQL to get relationship IDs
+        // Query tutor_student_relationships using the new function
         const { data: relationshipData, error } = await supabase.rpc('get_tutor_student_relationships', {
           tutor_uuid: user.id
         });
         
-        if (error && error.code !== 'PGRST202') {
-          // If RPC doesn't exist, fall back to querying profiles joined with a custom query
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select(`
-              id,
-              first_name,
-              last_name,
-              email
-            `)
-            .eq('role', 'student');
-          
-          if (profileError) throw profileError;
-          
-          // For now, create mock relationships - in production you'd need proper table access
-          const mockRelationships = profileData?.slice(0, 3).map((profile: any, index: number) => ({
-            id: `rel_${index + 1}`,
-            student_id: profile.id,
-            student_name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || profile.email
-          })) || [];
-          
-          const options: StudentOption[] = mockRelationships.map((rel: any) => ({
-            id: rel.student_id,
-            name: rel.student_name,
-            relationshipId: rel.id
-          }));
-          
-          console.log('Using mock relationships:', options);
-          setStudentOptions(options);
+        if (error) {
+          console.error('Error loading student relationships:', error);
+          toast.error(`Failed to load student list: ${error.message}`);
           return;
         }
         
@@ -116,10 +90,10 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
         console.log('Found relationships:', relationshipData);
         
         // Convert to format needed for dropdown
-        const options: StudentOption[] = relationshipData.map((rel: any) => ({
+        const options: StudentOption[] = (relationshipData as any[]).map((rel: any) => ({
           id: rel.student_id,
           name: rel.student_name || `Student (${rel.student_id?.substring(0, 8)}...)`,
-          relationshipId: rel.relationship_id
+          relationshipId: rel.relationship_id // Use the actual relationship ID
         }));
         
         console.log('Converted student options:', options);

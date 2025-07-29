@@ -10,7 +10,7 @@ export const getRelationshipId = async (tutorId: string, studentId: string): Pro
   
   try {
     const { data, error } = await supabase
-      .from('tutor_student_relationships')
+      .from('tutor_student_assigned')
       .select('id')
       .eq('tutor_id', tutorId)
       .eq('student_id', studentId)
