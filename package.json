@@ -12,7 +12,8 @@
     "check-format": "prettier --check .",
     "prepare": "husky install",
     "preview": "vite preview",
-    "type-check": "tsc --noEmit -p tsconfig.app.json"
+    "type-check": "tsc --noEmit -p tsconfig.app.json",
+    "test": "jest"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,css,md,json,html}": [
@@ -61,7 +62,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
-    "date-fns": "^4.1.0",
+    "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.3.0",
     "file-saver": "^2.0.5",
     "i18next": "^22.5.1",
