@@ -1,8 +1,13 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { ClassEvent, isValidClassStatus, isValidAttendanceStatus } from '@/types/tutorTypes';
+import {
+  ClassEvent,
+  isValidClassStatus,
+  isValidAttendanceStatus,
+} from '@/types/tutorTypes';
 import { parseTime24to12 } from '@/utils/dateTimeUtils';
+import { parse } from 'date-fns';
 import { Profile } from './types';
 
 export const fetchScheduledClasses = async (
@@ -70,8 +75,10 @@ export const fetchScheduledClasses = async (
       const status = cls.status || 'scheduled';
       const attendance = cls.attendance || 'pending';
       
-      // Convert date string to Date object
-      const dateObj = cls.date ? new Date(cls.date) : new Date();
+      // Convert date string to Date object in local time to avoid timezone shift
+      const dateObj = cls.date
+        ? parse(cls.date, 'yyyy-MM-dd', new Date())
+        : new Date();
       
       return {
         id: cls.id || '',

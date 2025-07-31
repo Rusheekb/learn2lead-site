@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ClassEvent } from '@/types/tutorTypes';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { parse } from 'date-fns';
 
 function useSchedulerRealtime(
   scheduledClasses: ClassEvent[],
@@ -46,7 +47,9 @@ function useSchedulerRealtime(
                 title: newClass.title || '',
                 tutorName: newClass.tutor_name || '',
                 studentName: newClass.student_name || '',
-                date: newClass.date ? new Date(newClass.date) : new Date(),
+                date: newClass.date
+                  ? parse(newClass.date, 'yyyy-MM-dd', new Date())
+                  : new Date(),
                 startTime: newClass.start_time ? newClass.start_time.substring(0, 5) : '',
                 endTime: newClass.end_time ? newClass.end_time.substring(0, 5) : '',
                 subject: newClass.subject || '',
@@ -80,7 +83,9 @@ function useSchedulerRealtime(
                     return {
                       ...cls,
                       title: updatedClass.title || cls.title,
-                      date: updatedClass.date ? new Date(updatedClass.date) : cls.date,
+                      date: updatedClass.date
+                        ? parse(updatedClass.date, 'yyyy-MM-dd', new Date())
+                        : cls.date,
                       startTime: updatedClass.start_time ? updatedClass.start_time.substring(0, 5) : cls.startTime,
                       endTime: updatedClass.end_time ? updatedClass.end_time.substring(0, 5) : cls.endTime,
                       subject: updatedClass.subject || cls.subject,
@@ -102,7 +107,9 @@ function useSchedulerRealtime(
                   return {
                     ...prev,
                     title: updatedClass.title || prev.title,
-                    date: updatedClass.date ? new Date(updatedClass.date) : prev.date,
+                    date: updatedClass.date
+                      ? parse(updatedClass.date, 'yyyy-MM-dd', new Date())
+                      : prev.date,
                     startTime: updatedClass.start_time ? updatedClass.start_time.substring(0, 5) : prev.startTime,
                     endTime: updatedClass.end_time ? updatedClass.end_time.substring(0, 5) : prev.endTime,
                     subject: updatedClass.subject || prev.subject,

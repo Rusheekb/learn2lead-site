@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { format } from 'date-fns';
+import { format, parse } from 'date-fns';
 import { toast } from 'sonner';
 import { ClassEvent } from '@/types/tutorTypes';
 import { updateScheduledClass } from '@/services/class';
@@ -15,9 +15,10 @@ export const useUpdateOperation = (queryClient: QueryClient, userId?: string) =>
     try {
       setIsUpdating(true);
       
-      const formattedDate = event.date instanceof Date 
-        ? format(event.date, 'yyyy-MM-dd') 
-        : format(new Date(event.date), 'yyyy-MM-dd');
+      const formattedDate =
+        event.date instanceof Date
+          ? format(event.date, 'yyyy-MM-dd')
+          : format(parse(event.date, 'yyyy-MM-dd', new Date()), 'yyyy-MM-dd');
       
       const updateData = {
         title: event.title,

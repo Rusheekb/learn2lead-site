@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { format } from 'date-fns';
+import { format, parse } from 'date-fns';
 import { toast } from 'sonner';
 import { ClassEvent } from '@/types/tutorTypes';
 import { createScheduledClass } from '@/services/class-operations/create/createScheduledClass';
@@ -120,7 +120,10 @@ export const useCreateOperation = (queryClient: QueryClient) => {
       title: event.title || 'New Class Session',
       tutorId: tutorId,
       studentId: studentId,
-      date: event.date instanceof Date ? event.date : new Date(event.date),
+      date:
+        event.date instanceof Date
+          ? event.date
+          : parse(event.date as string, 'yyyy-MM-dd', new Date()),
       startTime: event.startTime || '09:00',
       endTime: event.endTime || '10:00',
       subject: event.subject || 'General',

@@ -1,4 +1,4 @@
-import { format } from 'date-fns';
+import { format, parse } from 'date-fns';
 
 export const formatTime = (time: string): string => {
   try {
@@ -42,7 +42,9 @@ export const formatDate = (dateString: string | Date): string => {
     if (!dateString) return '';
 
     const date =
-      typeof dateString === 'string' ? new Date(dateString) : dateString;
+      typeof dateString === 'string'
+        ? parse(dateString, 'yyyy-MM-dd', new Date())
+        : dateString;
     return format(date, 'MMMM d, yyyy');
   } catch (error) {
     console.error('Error formatting date:', error);
