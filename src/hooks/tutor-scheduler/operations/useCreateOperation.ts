@@ -54,6 +54,7 @@ export const useCreateOperation = (queryClient: QueryClient) => {
         return false;
       }
 
+      // Use the local date without timezone conversion to avoid off-by-one day issues
       const formattedDate = format(eventData.date, 'yyyy-MM-dd');
       
       // Modified to match CreateScheduledClassInput exactly
