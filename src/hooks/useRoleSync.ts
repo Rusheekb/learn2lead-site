@@ -27,7 +27,8 @@ export function useRoleSync() {
               email: email || '',
               subjects: [],
             });
-            await deleteStudent(id);
+            // Remove any existing tutor record for this user
+            await deleteTutor(id);
           } else if (role === 'tutor') {
             await createTutor({
               // Remove 'id' as it's not expected in Omit<Tutor, "id">
@@ -38,6 +39,7 @@ export function useRoleSync() {
               classes: 0,
               hourlyRate: 25,
             });
+            // Remove any existing student record for this user
             await deleteStudent(id);
           }
         } catch (error) {
