@@ -144,7 +144,13 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
             <Calendar
               mode="single"
               selected={newEvent.date as Date}
-              onSelect={(date) => date && setNewEvent({ ...newEvent, date })}
+              onSelect={(date) => {
+                if (date) {
+                  // Ensure we use the local date without timezone conversion
+                  const localDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                  setNewEvent({ ...newEvent, date: localDate });
+                }
+              }}
               initialFocus
             />
           </PopoverContent>
