@@ -16,6 +16,7 @@ import { useClassLogs } from '@/hooks/useClassLogs';
 import StudentTable, { Student } from './StudentTable';
 import StudentForm from './StudentForm';
 import StudentFilters from './StudentFilters';
+import { parse } from 'date-fns';
 
 const StudentsManager: React.FC = () => {
   const [students, setStudents] = useState<Student[]>([]);
@@ -52,7 +53,9 @@ const StudentsManager: React.FC = () => {
           const thirtyDaysAgo = new Date();
           thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
           const overdue = unpaidClasses.some((cls) => {
-            const classDate = new Date(cls.date || '');
+            const classDate = cls.date
+              ? parse(cls.date, 'yyyy-MM-dd', new Date())
+              : new Date();
             return classDate < thirtyDaysAgo;
           });
           paymentStatus = overdue ? 'overdue' : 'unpaid';
@@ -61,7 +64,7 @@ const StudentsManager: React.FC = () => {
         let enrollDate = student.lastSession;
         studentClasses.forEach((cls) => {
           if (cls.date) {
-            const d = new Date(cls.date);
+            const d = parse(cls.date, 'yyyy-MM-dd', new Date());
             const iso = d.toISOString().split('T')[0];
             if (!enrollDate || d < new Date(enrollDate)) {
               enrollDate = iso;
