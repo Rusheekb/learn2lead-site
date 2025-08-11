@@ -9,9 +9,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { User } from 'lucide-react';
-import { Student, StudentMessage, StudentNote } from '@/types/sharedTypes';
+import { Student, StudentNote } from '@/types/sharedTypes';
 import StudentOverview from './StudentOverview';
-import StudentMessages from './StudentMessages';
 import StudentNotes from './StudentNotes';
 
 interface StudentDetailsDialogProps {
@@ -20,9 +19,7 @@ interface StudentDetailsDialogProps {
   student: Student | null;
   activeTab: string;
   setActiveTab: (tab: string) => void;
-  studentMessages: StudentMessage[];
   studentNotes: StudentNote[];
-  onSendMessage: (message: string) => void;
   onAddNote: (title: string, content: string) => void;
 }
 
@@ -32,9 +29,7 @@ const StudentDetailsDialog: React.FC<StudentDetailsDialogProps> = ({
   student,
   activeTab,
   setActiveTab,
-  studentMessages,
   studentNotes,
-  onSendMessage,
   onAddNote,
 }) => {
   if (!student) return null;
@@ -50,24 +45,16 @@ const StudentDetailsDialog: React.FC<StudentDetailsDialogProps> = ({
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="messages">Messages</TabsTrigger>
             <TabsTrigger value="notes">Notes</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
             <StudentOverview
               student={student}
-              onViewMessages={() => setActiveTab('messages')}
               onViewNotes={() => setActiveTab('notes')}
-            />
-          </TabsContent>
-
-          <TabsContent value="messages">
-            <StudentMessages
-              messages={studentMessages}
-              onSendMessage={onSendMessage}
+              onViewMessages={() => {}}
             />
           </TabsContent>
 

@@ -8,10 +8,6 @@ import { StudentUpload, StudentMessage } from '@/types/classTypes';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchClassLogs } from '@/services/classLogsService';
 import {
-  fetchClassMessages,
-  createClassMessage,
-} from '@/services/classMessagesService';
-import {
   fetchClassUploads,
   uploadClassFile,
 } from '@/services/classUploadsService';
@@ -22,7 +18,7 @@ import { TransformedClassLog } from '@/services/logs/types';
 
 const ClassStudentActivity: React.FC = () => {
   const [studentUploads, setStudentUploads] = useState<StudentUpload[]>([]);
-  const [studentMessages, setStudentMessages] = useState<StudentMessage[]>([]);
+  
   const [selectedClass, setSelectedClass] = useState<ClassItem | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false);
   const [classes, setClasses] = useState<ClassItem[]>([]);
@@ -30,13 +26,8 @@ const ClassStudentActivity: React.FC = () => {
   const [activeTab, setActiveTab] = useState("details");
   const currentStudentName = 'Current Student'; // This would come from auth context in a real app
 
-  // Setup realtime subscriptions
-  useStudentRealtime(
-    currentStudentName,
-    setClasses as React.Dispatch<React.SetStateAction<any[]>>,
-    setStudentMessages,
-    setStudentUploads
-  );
+  // Setup realtime subscriptions for uploads only
+  // useStudentRealtime removed as messaging functionality is disabled
 
   useEffect(() => {
     const loadClasses = async () => {
@@ -87,8 +78,7 @@ const ClassStudentActivity: React.FC = () => {
       try {
         const classId = selectedClass.id;
 
-        const messages = await fetchClassMessages(classId);
-        setStudentMessages(messages);
+        // Message loading removed - messaging functionality disabled
 
         const uploads = await fetchClassUploads(classId);
         setStudentUploads(uploads);
@@ -125,25 +115,7 @@ const ClassStudentActivity: React.FC = () => {
     }
   };
 
-  const handleSendMessage = async (classId: string, messageText: string) => {
-    try {
-      const message = await createClassMessage(
-        classId,
-        currentStudentName,
-        messageText
-      );
-
-      if (message) {
-        setStudentMessages([...studentMessages, message]);
-        toast.success('Message sent successfully');
-      } else {
-        toast.error('Failed to send message');
-      }
-    } catch (error) {
-      console.error('Error sending message:', error);
-      toast.error('Failed to send message');
-    }
-  };
+  // Message sending removed - messaging functionality disabled
 
   const handleViewClass = (cls: ClassItem) => {
     setSelectedClass(cls);
@@ -181,11 +153,11 @@ const ClassStudentActivity: React.FC = () => {
         setIsOpen={setIsDetailsOpen}
         selectedClass={selectedClass}
         studentUploads={studentUploads}
-        studentMessages={studentMessages}
+        studentMessages={[]}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onFileUpload={handleFileUpload}
-        onSendMessage={handleSendMessage}
+        onSendMessage={async () => {}}
       />
     </div>
   );

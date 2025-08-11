@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Video, FileText, Upload, Trash2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -6,35 +5,27 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { ClassEvent } from '@/types/tutorTypes';
-import { StudentMessage, StudentUpload } from '@/types/classTypes';
+import { StudentUpload } from '@/types/classTypes';
 import { StudentContent } from '@/components/shared/StudentContent';
-import { MessageCountBadge } from '@/components/shared/ClassBadges';
-import ChatWindow from '@/components/shared/ChatWindow';
 import CalendarLinks from '@/components/shared/CalendarLinks';
 import { uploadMaterial, addMaterialToClass, removeMaterialFromClass } from '@/services/materialsService';
 import { toast } from 'sonner';
 
 interface ClassEventDetailsProps {
   selectedEvent: ClassEvent;
-  studentMessages: StudentMessage[];
   studentUploads: StudentUpload[];
-  onMarkAsRead: (messageId: string) => Promise<void>;
   onDownloadFile: (uploadId: string) => Promise<void>;
   activeTab: string;
   setActiveTab: (tab: string) => void;
-  unreadMessageCount: number;
   refreshEvent?: () => Promise<void>;
 }
 
 const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
   selectedEvent,
-  studentMessages,
   studentUploads,
-  onMarkAsRead,
   onDownloadFile,
   activeTab,
   setActiveTab,
-  unreadMessageCount,
   refreshEvent,
 }) => {
   const [isUploading, setIsUploading] = useState(false);
@@ -94,18 +85,10 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab}>
-      <TabsList className="grid w-full grid-cols-4 bg-white">
+      <TabsList className="grid w-full grid-cols-3 bg-white">
         <TabsTrigger value="details">Class Details</TabsTrigger>
-        <TabsTrigger value="materials">
-          Materials
-        </TabsTrigger>
-        <TabsTrigger value="student-content">
-          Student Content
-          <MessageCountBadge count={unreadMessageCount} />
-        </TabsTrigger>
-        <TabsTrigger value="messages">
-          Messages
-        </TabsTrigger>
+        <TabsTrigger value="materials">Materials</TabsTrigger>
+        <TabsTrigger value="student-content">Student Content</TabsTrigger>
       </TabsList>
 
       <TabsContent value="details" className="space-y-4 pt-4">
@@ -227,19 +210,7 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
         <StudentContent
           classId={selectedEvent.id}
           uploads={studentUploads}
-          messages={studentMessages}
           onDownload={onDownloadFile}
-          onMarkAsRead={onMarkAsRead}
-        />
-      </TabsContent>
-
-      <TabsContent value="messages" className="space-y-4 pt-4">
-        <ChatWindow
-          classId={selectedEvent.id}
-          tutorName="Tutor"
-          studentName={selectedEvent.studentName || ''}
-          messages={studentMessages}
-          onMarkAsRead={onMarkAsRead}
         />
       </TabsContent>
     </Tabs>

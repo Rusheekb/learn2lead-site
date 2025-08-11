@@ -116,7 +116,7 @@ const ViewClassDialog: React.FC<ViewClassDialogProps> = ({
 
         <ClassEventDetails
           selectedEvent={eventWithFormattedDate}
-          studentMessages={studentMessages}
+          
           studentUploads={studentUploads}
           onMarkAsRead={onMarkAsRead}
           onDownloadFile={onDownloadFile}

@@ -15,7 +15,7 @@ interface ClassTableProps {
   error?: string | null;
   handleClassClick: (cls: ClassEvent) => void;
   clearFilters: () => void;
-  getUnreadMessageCount: (classId: string) => number;
+  
   formatTime: (time: string) => string;
   page: number;
   pageSize: number;
@@ -50,7 +50,7 @@ const ClassTable: React.FC<ClassTableProps> = ({
   error,
   handleClassClick,
   clearFilters,
-  getUnreadMessageCount,
+  
   formatTime,
   page,
   pageSize,
@@ -95,12 +95,6 @@ const ClassTable: React.FC<ClassTableProps> = ({
       header: 'Attendance',
       cell: (cls) => (
         <AttendanceBadge attendance={cls.attendance || 'pending'} />
-      ),
-    },
-    {
-      header: 'Messages',
-      cell: (cls) => (
-        <CircleMessageBadge count={getUnreadMessageCount(cls.id)} />
       ),
     },
     {

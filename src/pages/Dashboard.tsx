@@ -96,7 +96,6 @@ const Dashboard = () => {
               classId={user?.id || ''}
               showUploadControls={false}
               uploads={[]}
-              messages={[]}
             />
           </div>
         );

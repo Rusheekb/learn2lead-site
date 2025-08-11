@@ -1,7 +1,7 @@
 
 import { toast } from 'sonner';
 import { ClassEvent } from '@/types/tutorTypes';
-import { fetchClassMessages } from '@/services/classMessagesService';
+
 import { fetchClassUploads } from '@/services/classUploadsService';
 
 export const useContentHandling = () => {
@@ -24,13 +24,10 @@ export const useContentHandling = () => {
     setStudentMessages: React.Dispatch<React.SetStateAction<any[]>>
   ) => {
     try {
-      const [uploadsData, messagesData] = await Promise.all([
-        fetchClassUploads(classId),
-        fetchClassMessages(classId),
-      ]);
-
+      const uploadsData = await fetchClassUploads(classId);
       setStudentUploads(uploadsData);
-      setStudentMessages(messagesData);
+      // Message loading removed - messaging functionality disabled
+      setStudentMessages([]);
     } catch (error) {
       console.error('Failed to load class content:', error);
       toast.error('Failed to load class content');

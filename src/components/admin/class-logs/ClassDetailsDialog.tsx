@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StudentContent } from '@/components/shared/StudentContent.tsx';
 import { StatusBadge, AttendanceBadge } from './BadgeComponents';
 import { MessageCountBadge } from '@/components/shared/ClassBadges';
-import ChatWindow from '@/components/shared/ChatWindow';
+
 import { format } from 'date-fns';
 import { FileText, ExternalLink } from 'lucide-react';
 
@@ -25,8 +25,6 @@ interface ClassDetailsDialogProps {
   studentUploads: any[];
   studentMessages: any[];
   handleDownloadFile: (uploadId: string) => Promise<void>;
-  handleMarkMessageRead: (messageId: string) => Promise<void>;
-  getUnreadMessageCount: (classId: string) => number;
   formatTime: (time: string) => string;
 }
 
@@ -39,8 +37,6 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
   studentUploads,
   studentMessages,
   handleDownloadFile,
-  handleMarkMessageRead,
-  getUnreadMessageCount,
   formatTime,
 }) => {
   if (!selectedClass) return null;
@@ -76,17 +72,11 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
         </DialogHeader>
 
         <Tabs value={activeDetailsTab} onValueChange={setActiveDetailsTab}>
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="details">Class Details</TabsTrigger>
             <TabsTrigger value="materials">Materials</TabsTrigger>
             <TabsTrigger value="student-content">
               Student Content
-              <MessageCountBadge
-                count={getUnreadMessageCount(selectedClass.id)}
-              />
-            </TabsTrigger>
-            <TabsTrigger value="messages">
-              Messages
             </TabsTrigger>
           </TabsList>
 
@@ -181,19 +171,7 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
             <StudentContent
               classId={selectedClass.id}
               uploads={studentUploads}
-              messages={studentMessages}
               onDownload={handleDownloadFile}
-              onMarkAsRead={handleMarkMessageRead}
-            />
-          </TabsContent>
-
-          <TabsContent value="messages" className="space-y-4 pt-4">
-            <ChatWindow
-              classId={selectedClass.id}
-              tutorName={selectedClass.tutorName}
-              studentName={selectedClass.studentName}
-              messages={studentMessages}
-              onMarkAsRead={handleMarkMessageRead}
             />
           </TabsContent>
         </Tabs>

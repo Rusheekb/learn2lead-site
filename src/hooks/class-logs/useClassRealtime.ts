@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { ClassEvent } from '@/types/tutorTypes';
 import { StudentMessage } from '@/types/classTypes';
-import { subscribeToAllClassMessages } from '@/services/classMessagesRealtimeService';
+
 import { toast } from 'sonner';
 
 type ClassItemDispatch = React.Dispatch<React.SetStateAction<ClassEvent[]>>;
@@ -80,39 +80,12 @@ const useClassRealtime = (
       )
       .subscribe();
 
-    // Setup messages subscription
-    const unsubscribeMessages = subscribeToAllClassMessages((newMessage) => {
-      console.log('Received message via realtime:', newMessage);
-      
-      // Update the messages if they're for the currently selected class
-      setStudentMessages((prevMessages) => {
-        // Check if the message already exists in the list
-        const messageExists = prevMessages.some((msg) => msg.id === newMessage.id);
-        
-        if (messageExists) {
-          // If it exists, update it
-          return prevMessages.map((msg) => 
-            msg.id === newMessage.id ? newMessage : msg
-          );
-        } else {
-          // If it doesn't exist, add it
-          return [...prevMessages, newMessage];
-        }
-      });
-
-      // If the new message is for the currently selected class, show a toast
-      if (selectedClass && newMessage.classId === selectedClass.id) {
-        if (newMessage.sender === 'student') {
-          toast.info(`New message from ${newMessage.studentName || 'student'}`);
-        }
-      }
-    });
+    // Message subscription removed - messaging functionality disabled
 
     // Clean up subscriptions
     return () => {
       console.log('Cleaning up realtime subscriptions');
       supabase.removeChannel(classChannel);
-      unsubscribeMessages();
     };
   }, [classes, selectedClass, setClasses, setSelectedClass, setIsDetailsOpen, setStudentMessages]);
 

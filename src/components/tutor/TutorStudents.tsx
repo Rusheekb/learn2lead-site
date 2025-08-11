@@ -101,7 +101,7 @@ const TutorStudents: React.FC = () => {
         student={selectedStudent}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        studentMessages={[]} // We'll implement these later
+         // We'll implement these later
         studentNotes={[]}    // We'll implement these later
         onSendMessage={handleSendMessage}
         onAddNote={handleAddNote}

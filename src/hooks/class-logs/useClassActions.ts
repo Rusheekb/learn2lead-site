@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { ClassEvent } from '@/types/tutorTypes';
 import { StudentMessage, StudentUpload } from '@/types/classTypes';
 import { useClassHandling } from './hooks/useClassHandling';
-import { useMessageActions } from './hooks/useMessageActions';
+
 import { useFileActions } from './hooks/useFileActions';
 import { useExportActions } from './hooks/useExportActions';
 import { usePaginationHandling } from './hooks/usePaginationHandling';
@@ -15,10 +15,7 @@ const useClassActions = () => {
   const [studentMessages, setStudentMessages] = useState<StudentMessage[]>([]);
   const [activeDetailsTab, setActiveDetailsTab] = useState<string>('details');
 
-  const { handleMarkMessageRead, getUnreadMessageCount } = useMessageActions(
-    setStudentMessages,
-    studentMessages
-  );
+  // Message actions removed - messaging functionality disabled
   const { handleDownloadFile } = useFileActions(studentUploads);
   const { handleExport, isExporting } = useExportActions();
   const {
@@ -71,13 +68,13 @@ const useClassActions = () => {
     // Actions
     handleClassClick,
     loadClassContent,
-    handleMarkMessageRead,
+    
     handleDownloadFile,
     handleUpdateStatus,
     handleUpdateAttendance,
     handleDeleteClass,
     handleExport,
-    getUnreadMessageCount,
+    
     handlePageChange,
     handlePageSizeChange,
   };

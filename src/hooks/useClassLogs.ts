@@ -38,9 +38,7 @@ export const useClassLogs = () => {
     setPageSize,
     handleClassClick,
     loadClassContent,
-    handleMarkMessageRead,
     handleDownloadFile,
-    getUnreadMessageCount,
     handlePageChange,
     handlePageSizeChange,
   } = useClassActions();
@@ -122,8 +120,8 @@ export const useClassLogs = () => {
     handleClassClick,
     formatTime,
     clearFilters,
-    handleMarkMessageRead,
-    getUnreadMessageCount,
+    
+    
     handleDownloadFile,
     handleExport,
     handleRefreshData,

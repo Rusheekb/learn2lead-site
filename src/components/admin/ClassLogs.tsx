@@ -58,8 +58,6 @@ const ClassLogs: React.FC = () => {
     handleClassClick,
     formatTime,
     clearFilters,
-    handleMarkMessageRead,
-    getUnreadMessageCount,
     handleDownloadFile,
     handleExport,
     handleRefreshData,
@@ -149,7 +147,6 @@ const ClassLogs: React.FC = () => {
         error={error}
         handleClassClick={handleClassClick}
         clearFilters={handleRefreshData}
-        getUnreadMessageCount={getUnreadMessageCount}
         formatTime={formatTime}
         page={page}
         pageSize={pageSize}
@@ -168,8 +165,6 @@ const ClassLogs: React.FC = () => {
         studentUploads={studentUploads}
         studentMessages={studentMessages}
         handleDownloadFile={handleDownloadFile}
-        handleMarkMessageRead={handleMarkMessageRead}
-        getUnreadMessageCount={getUnreadMessageCount}
         formatTime={formatTime}
       />
 
