@@ -54,7 +54,7 @@ const StudentsManager: React.FC = () => {
           thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
           const overdue = unpaidClasses.some((cls) => {
             const classDate = cls.date
-              ? parse(cls.date, 'yyyy-MM-dd', new Date())
+              ? parse(String(cls.date), 'yyyy-MM-dd', new Date())
               : new Date();
             return classDate < thirtyDaysAgo;
           });
@@ -64,7 +64,7 @@ const StudentsManager: React.FC = () => {
         let enrollDate = student.lastSession;
         studentClasses.forEach((cls) => {
           if (cls.date) {
-            const d = parse(cls.date, 'yyyy-MM-dd', new Date());
+            const d = parse(String(cls.date), 'yyyy-MM-dd', new Date());
             const iso = d.toISOString().split('T')[0];
             if (!enrollDate || d < new Date(enrollDate)) {
               enrollDate = iso;
