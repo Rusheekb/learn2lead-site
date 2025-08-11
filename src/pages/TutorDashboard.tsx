@@ -14,7 +14,7 @@ import { useQueryClient } from '@tanstack/react-query';
 const TutorDashboard: React.FC = () => {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
-  const activeTab = searchParams.get('tab') || 'overview';
+  const activeTab = searchParams.get('tab') || 'schedule';
   const { userRole, user } = useAuth();
   const { trackNavigation, trackPageView } = useAnalyticsTracker();
   const queryClient = useQueryClient();
@@ -53,16 +53,12 @@ const TutorDashboard: React.FC = () => {
   // Determine which content to show based on the active tab
   const renderContent = () => {
     switch (activeTab) {
-      case 'overview':
-        return <TutorOverviewSection />;
       case 'schedule':
         return <TutorScheduler />;
       case 'students':
         return <TutorStudents />;
-      case 'resources':
-        return <TutorMaterials />;
       default:
-        return <TutorOverviewSection />;
+        return <TutorScheduler />;
     }
   };
 
