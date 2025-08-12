@@ -54,10 +54,6 @@ const TutorStudents: React.FC = () => {
     setActiveTab('overview');
   };
 
-  const handleSendMessage = (message: string) => {
-    // In a real app, this would send to a backend
-    console.log('Sending message to student:', selectedStudent?.id, message);
-  };
 
   const handleAddNote = (title: string, content: string) => {
     // In a real app, this would save to a database
@@ -101,9 +97,7 @@ const TutorStudents: React.FC = () => {
         student={selectedStudent}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-         // We'll implement these later
-        studentNotes={[]}    // We'll implement these later
-        onSendMessage={handleSendMessage}
+        studentNotes={[]}
         onAddNote={handleAddNote}
       />
     </div>

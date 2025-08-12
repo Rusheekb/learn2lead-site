@@ -116,13 +116,10 @@ const ViewClassDialog: React.FC<ViewClassDialogProps> = ({
 
         <ClassEventDetails
           selectedEvent={eventWithFormattedDate}
-          
           studentUploads={studentUploads}
-          onMarkAsRead={onMarkAsRead}
           onDownloadFile={onDownloadFile}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
-          unreadMessageCount={getUnreadMessageCount(selectedEvent.id)}
           refreshEvent={refreshEvent}
         />
 
