@@ -80,15 +80,20 @@ const TutorScheduler: React.FC = () => {
     }
   }, [user?.id, newEvent, setNewEvent, currentUser]);
 
+  const handleAddEventClick = () => {
+    setNewEvent((prev) => ({ ...prev, date: selectedDate }));
+    setIsAddEventOpen(true);
+  };
+
   // Display loading state while data is being fetched
   if (isLoading) {
     return (
       <div className="space-y-4 sm:space-y-6">
-        <TutorSchedulerHeader onAddClick={() => setIsAddEventOpen(true)} />
+        <TutorSchedulerHeader onAddClick={handleAddEventClick} />
         <div className="overflow-x-auto">
-          <TableSkeleton 
-            columns={['Date', 'Time', 'Student', 'Subject', 'Actions']} 
-            rowCount={5} 
+          <TableSkeleton
+            columns={['Date', 'Time', 'Student', 'Subject', 'Actions']}
+            rowCount={5}
             cellWidths={['w-24', 'w-32', 'w-40', 'w-32', 'w-24']} 
           />
         </div>
@@ -98,7 +103,7 @@ const TutorScheduler: React.FC = () => {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <TutorSchedulerHeader onAddClick={() => setIsAddEventOpen(true)} />
+      <TutorSchedulerHeader onAddClick={handleAddEventClick} />
       
       <TutorSchedulerFilters
         searchTerm={searchTerm}
@@ -116,7 +121,7 @@ const TutorScheduler: React.FC = () => {
           setSelectedDate={setSelectedDate}
           scheduledClasses={filteredClasses}
           onSelectEvent={handleSelectEvent}
-          onAddEventClick={() => setIsAddEventOpen(true)}
+          onAddEventClick={handleAddEventClick}
           getUnreadMessageCount={getUnreadMessageCount}
         />
       </div>

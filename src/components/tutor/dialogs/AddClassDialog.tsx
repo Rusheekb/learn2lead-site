@@ -53,17 +53,20 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
       ? `${currentUser.first_name} ${currentUser.last_name || ''}`.trim() 
       : 'Current Tutor';
       
-    setNewEvent((prev: any) => ({
-      ...prev,
-      tutorId: tutorId,
-      tutorName: tutorDisplayName,
-      date: nextHour,
-      startTime: format(nextHour, 'HH:mm'),
-      endTime: format(addHours(nextHour, 1), 'HH:mm'),
-      title: 'New Class Session',
-      subject: '',
-      zoomLink: 'https://zoom.us/',
-    }));
+    setNewEvent((prev: any) => {
+      const baseDate = prev.date || nextHour;
+      return {
+        ...prev,
+        tutorId: tutorId,
+        tutorName: tutorDisplayName,
+        date: baseDate,
+        startTime: prev.startTime || format(nextHour, 'HH:mm'),
+        endTime: prev.endTime || format(addHours(nextHour, 1), 'HH:mm'),
+        title: prev.title || 'New Class Session',
+        subject: prev.subject || '',
+        zoomLink: prev.zoomLink || 'https://zoom.us/',
+      };
+    });
     
     // Load relationships and students data
     const loadRelationshipsAndStudents = async () => {
