@@ -31,32 +31,55 @@ export async function uploadClassFile(
   note?: string
 ): Promise<StudentUpload | null> {
   try {
-    const filename = file.name;
-    const filepath = `uploads/${classId}/${filename}`;
+    // Use secure upload edge function
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      throw new Error('User not authenticated');
+    }
 
-    // Upload file to storage
-    const { error: uploadError } = await supabase.storage
-      .from('class-materials')
-      .upload(filepath, file);
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('bucket', 'class_materials');
+    formData.append('path', `class_materials/${classId}/`);
 
-    if (uploadError) throw uploadError;
+    const { data: uploadResult, error: uploadError } = await supabase.functions.invoke(
+      'secure-file-upload',
+      {
+        body: formData,
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      }
+    );
 
-    // Create record in class_uploads table
+    if (uploadError || !uploadResult?.success) {
+      console.error('Secure upload error:', uploadError || uploadResult?.error);
+      throw new Error(uploadResult?.error || 'Failed to upload file securely');
+    }
+
+    // Create database record with secure path
+    const uploadRecord = {
+      class_id: classId,
+      student_name: studentName,
+      file_name: file.name,
+      file_path: uploadResult.path,
+      file_size: `${(file.size / 1024).toFixed(0)} KB`,
+      upload_date: new Date().toISOString().split('T')[0],
+      note: note || null,
+    };
+
     const { data, error: dbError } = await supabase
       .from('class_uploads')
-      .insert({
-        class_id: classId,
-        student_name: studentName,
-        file_name: filename,
-        file_path: filepath,
-        file_size: `${(file.size / 1024).toFixed(0)} KB`,
-        note: note || null,
-        upload_date: new Date().toISOString().split('T')[0],
-      })
+      .insert(uploadRecord)
       .select()
       .single();
 
-    if (dbError) throw dbError;
+    if (dbError) {
+      // If database insert fails, try to clean up the uploaded file
+      await supabase.storage.from('class_materials').remove([uploadResult.path]);
+      throw dbError;
+    }
 
     toast.success('File uploaded successfully');
     return data ? mapToStudentUpload(data as ClassUploadRecord) : null;

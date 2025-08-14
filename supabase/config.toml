@@ -13,6 +13,12 @@ project_id = "lnhtlbatcufmsyoujuqh"
   verify_jwt = true
   [functions.auto-backup]
   verify_jwt = false
+  [functions.send-class-reminders]
+  verify_jwt = true
+  [functions.cron-class-reminders]
+  verify_jwt = false
+  [functions.secure-file-upload]
+  verify_jwt = true
 
 [auth]
   enabled = true
