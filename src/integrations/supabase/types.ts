@@ -667,6 +667,25 @@ export type Database = {
         Args: { feed_id: string }
         Returns: string
       }
+      get_student_classes: {
+        Args: { requesting_user_id?: string }
+        Returns: {
+          attendance: string
+          date: string
+          end_time: string
+          id: string
+          notes: string
+          start_time: string
+          status: string
+          student_id: string
+          student_name: string
+          subject: string
+          title: string
+          tutor_id: string
+          tutor_name: string
+          zoom_link: string
+        }[]
+      }
       get_tutor_student_relationships: {
         Args: { tutor_uuid: string }
         Returns: {
@@ -674,6 +693,20 @@ export type Database = {
           student_id: string
           student_name: string
           tutor_id: string
+        }[]
+      }
+      get_tutor_students: {
+        Args: { requesting_user_id?: string }
+        Returns: {
+          active: boolean
+          assigned_at: string
+          grade: string
+          payment_status: string
+          student_id: string
+          student_name: string
+          subjects: string[]
+          tutor_id: string
+          tutor_name: string
         }[]
       }
       get_user_calendar_events: {

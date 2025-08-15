@@ -7,7 +7,7 @@ project_id = "lnhtlbatcufmsyoujuqh"
   schemas = ["public", "storage"]
 
 [functions]
-  [functions.check-upcoming-classes]
+[functions.check-upcoming-classes]
   verify_jwt = true
   [functions.db-operations]
   verify_jwt = true
