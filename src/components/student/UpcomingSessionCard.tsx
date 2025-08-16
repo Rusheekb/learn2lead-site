@@ -14,20 +14,20 @@ const UpcomingSessionCard: React.FC<UpcomingSessionCardProps> = ({
   session,
 }) => {
   return (
-    <div className="p-4 border rounded-md dark:border-gray-700 dark:bg-gray-800">
+    <div className="p-4 border rounded-md bg-white">
       <div className="flex justify-between items-start">
-        <h3 className="font-medium dark:text-gray-100">{session.title}</h3>
+        <h3 className="font-medium text-gray-900">{session.title}</h3>
         {session.recurring && (
-          <span className="text-xs bg-tutoring-blue/10 text-tutoring-blue dark:bg-tutoring-teal/10 dark:text-tutoring-teal px-2 py-1 rounded">
+          <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
             Recurring
           </span>
         )}
       </div>
-      <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 mt-1">
+      <div className="flex items-center text-sm text-gray-600 mt-1">
         <User className="h-4 w-4 mr-1" />
         <span>{session.tutorName}</span>
       </div>
-      <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 mt-2">
+      <div className="flex items-center text-sm text-gray-600 mt-2">
         <CalendarIcon className="h-4 w-4 mr-1" />
         <span>
           {format(new Date(session.date), 'EEE, MMM d')} •{' '}
@@ -36,7 +36,7 @@ const UpcomingSessionCard: React.FC<UpcomingSessionCardProps> = ({
       </div>
       <Button
         variant="link"
-        className="p-0 h-auto text-tutoring-blue dark:text-tutoring-teal mt-2"
+        className="p-0 h-auto text-primary mt-2"
         asChild
       >
         <a href={session.zoomLink} target="_blank" rel="noopener noreferrer">
