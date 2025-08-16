@@ -36,11 +36,11 @@ export const formatTime = (timeString: string) => {
 
 const ClassSessionDetail: React.FC<SessionDetailProps> = ({ session }) => {
   return (
-    <div className="p-4 border rounded-md mb-3 bg-white">
+    <div className="p-4 border bg-card rounded-md mb-3">
       <div className="flex justify-between items-start mb-3">
         <div>
-          <h3 className="font-medium text-gray-900">{session.title}</h3>
-          <div className="flex items-center text-sm text-gray-600 mt-1">
+          <h3 className="font-medium text-card-foreground">{session.title}</h3>
+          <div className="flex items-center text-sm text-muted-foreground mt-1">
             <User className="h-4 w-4 mr-1" />
             <span>{session.tutorName}</span>
           </div>
@@ -52,7 +52,7 @@ const ClassSessionDetail: React.FC<SessionDetailProps> = ({ session }) => {
         )}
       </div>
 
-      <div className="flex items-center text-sm text-gray-600 mb-2">
+      <div className="flex items-center text-sm text-muted-foreground mb-2">
         <Clock className="h-4 w-4 mr-2" />
         <span>
           {formatTime(session.startTime)} - {formatTime(session.endTime)}
@@ -60,7 +60,7 @@ const ClassSessionDetail: React.FC<SessionDetailProps> = ({ session }) => {
       </div>
 
       <div className="flex justify-between items-center mt-4">
-        <span className="text-xs text-gray-500">
+        <span className="text-xs text-muted-foreground">
           {session.recurring
             ? 'Every ' + session.recurringDays?.join(', ')
             : 'One-time class'}

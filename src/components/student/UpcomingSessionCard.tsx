@@ -14,20 +14,20 @@ const UpcomingSessionCard: React.FC<UpcomingSessionCardProps> = ({
   session,
 }) => {
   return (
-    <div className="p-4 border rounded-md bg-white">
+    <div className="p-4 border bg-card rounded-md">
       <div className="flex justify-between items-start">
-        <h3 className="font-medium text-gray-900">{session.title}</h3>
+        <h3 className="font-medium text-card-foreground">{session.title}</h3>
         {session.recurring && (
           <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
             Recurring
           </span>
         )}
       </div>
-      <div className="flex items-center text-sm text-gray-600 mt-1">
+      <div className="flex items-center text-sm text-muted-foreground mt-1">
         <User className="h-4 w-4 mr-1" />
         <span>{session.tutorName}</span>
       </div>
-      <div className="flex items-center text-sm text-gray-600 mt-2">
+      <div className="flex items-center text-sm text-muted-foreground mt-2">
         <CalendarIcon className="h-4 w-4 mr-1" />
         <span>
           {format(new Date(session.date), 'EEE, MMM d')} •{' '}
