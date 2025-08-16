@@ -14,36 +14,36 @@ const UpcomingSessionCard: React.FC<UpcomingSessionCardProps> = ({
   session,
 }) => {
   return (
-    <div className="p-4 border rounded-md dark:border-gray-700 dark:bg-gray-800">
-      <div className="flex justify-between items-start">
-        <h3 className="font-medium dark:text-gray-100">{session.title}</h3>
+    <div className="p-6 rounded-lg bg-gray-800 border border-gray-700 hover:bg-gray-750 transition-colors">
+      <div className="flex justify-between items-start mb-3">
+        <h3 className="font-medium text-white text-lg">{session.title}</h3>
         {session.recurring && (
-          <span className="text-xs bg-tutoring-blue/10 text-tutoring-blue dark:bg-tutoring-teal/10 dark:text-tutoring-teal px-2 py-1 rounded">
+          <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full">
             Recurring
           </span>
         )}
       </div>
-      <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 mt-1">
-        <User className="h-4 w-4 mr-1" />
+      <div className="flex items-center text-sm text-gray-400 mb-2">
+        <User className="h-4 w-4 mr-2" />
         <span>{session.tutorName}</span>
       </div>
-      <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 mt-2">
-        <CalendarIcon className="h-4 w-4 mr-1" />
+      <div className="flex items-center text-sm text-gray-400 mb-4">
+        <CalendarIcon className="h-4 w-4 mr-2" />
         <span>
-          {format(new Date(session.date), 'EEE, MMM d')} •{' '}
-          {formatTime(session.startTime)}
+          {format(new Date(session.date), 'EEE, MMM d')} • {formatTime(session.startTime)}
         </span>
       </div>
-      <Button
-        variant="link"
-        className="p-0 h-auto text-tutoring-blue dark:text-tutoring-teal mt-2"
-        asChild
-      >
-        <a href={session.zoomLink} target="_blank" rel="noopener noreferrer">
-          <Video className="h-4 w-4 mr-1 inline" />
+      <div className="flex justify-end">
+        <a 
+          href={session.zoomLink} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="flex items-center text-teal-400 hover:text-teal-300 transition-colors font-medium"
+        >
+          <Video className="h-4 w-4 mr-2" />
           Join Class
         </a>
-      </Button>
+      </div>
     </div>
   );
 };
