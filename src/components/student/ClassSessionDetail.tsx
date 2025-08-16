@@ -36,7 +36,14 @@ export const formatTime = (timeString: string) => {
 
 const ClassSessionDetail: React.FC<SessionDetailProps> = ({ session }) => {
   return (
-    <div className="p-4 border bg-card rounded-md mb-3">
+    <div 
+      className="p-4 border bg-card rounded-md mb-3 cursor-pointer hover:bg-accent/50 transition-colors"
+      onClick={() => {
+        // This will be handled by the parent component
+        const event = new CustomEvent('openClassDetails', { detail: session });
+        window.dispatchEvent(event);
+      }}
+    >
       <div className="flex justify-between items-start mb-3">
         <div>
           <h3 className="font-medium text-card-foreground">{session.title}</h3>
@@ -70,6 +77,7 @@ const ClassSessionDetail: React.FC<SessionDetailProps> = ({ session }) => {
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center text-primary hover:text-primary/80 transition-colors"
+          onClick={(e) => e.stopPropagation()}
         >
           <Video className="h-4 w-4 mr-1" />
           <span>Join Class</span>

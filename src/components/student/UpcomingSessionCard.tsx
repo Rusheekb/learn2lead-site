@@ -14,7 +14,14 @@ const UpcomingSessionCard: React.FC<UpcomingSessionCardProps> = ({
   session,
 }) => {
   return (
-    <div className="p-4 border bg-card rounded-md">
+    <div 
+      className="p-4 border bg-card rounded-md cursor-pointer hover:bg-accent/50 transition-colors"
+      onClick={() => {
+        // This will be handled by the parent component
+        const event = new CustomEvent('openClassDetails', { detail: session });
+        window.dispatchEvent(event);
+      }}
+    >
       <div className="flex justify-between items-start">
         <h3 className="font-medium text-card-foreground">{session.title}</h3>
         {session.recurring && (
@@ -38,6 +45,7 @@ const UpcomingSessionCard: React.FC<UpcomingSessionCardProps> = ({
         variant="link"
         className="p-0 h-auto text-primary mt-2"
         asChild
+        onClick={(e) => e.stopPropagation()}
       >
         <a href={session.zoomLink} target="_blank" rel="noopener noreferrer">
           <Video className="h-4 w-4 mr-1 inline" />

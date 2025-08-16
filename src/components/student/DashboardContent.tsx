@@ -1,7 +1,7 @@
 
 import React, { memo } from 'react';
 import SubjectCards from './SubjectCards';
-import ClassCalendar from '@/components/ClassCalendar';
+import ClassCalendarWithDialog from './ClassCalendarWithDialog';
 import { subjects } from '@/constants/subjectsData';
 
 interface DashboardContentProps {
@@ -20,7 +20,7 @@ const DashboardContent: React.FC<DashboardContentProps> = memo(
           selectedSubject={selectedSubject}
           onSubjectClick={onSubjectClick}
         />
-        <ClassCalendar studentId={studentId} />
+        <ClassCalendarWithDialog studentId={studentId} sessions={[]} />
       </>
     );
   }
