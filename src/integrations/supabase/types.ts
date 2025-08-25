@@ -285,7 +285,14 @@ export type Database = {
             foreignKeyName: "class_uploads_class_id_fkey"
             columns: ["class_id"]
             isOneToOne: false
-            referencedRelation: "class_logs"
+            referencedRelation: "scheduled_classes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_uploads_class_id_fkey"
+            columns: ["class_id"]
+            isOneToOne: false
+            referencedRelation: "student_classes"
             referencedColumns: ["id"]
           },
         ]
