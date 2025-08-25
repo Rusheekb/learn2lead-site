@@ -542,36 +542,8 @@ export type Database = {
             foreignKeyName: "scheduled_classes_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
-            referencedRelation: "student_classes"
-            referencedColumns: ["student_id"]
-          },
-          {
-            foreignKeyName: "scheduled_classes_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
             referencedRelation: "students"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "scheduled_classes_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "tutor_students"
-            referencedColumns: ["student_id"]
-          },
-          {
-            foreignKeyName: "scheduled_classes_tutor_id_fkey"
-            columns: ["tutor_id"]
-            isOneToOne: false
-            referencedRelation: "student_classes"
-            referencedColumns: ["tutor_id"]
-          },
-          {
-            foreignKeyName: "scheduled_classes_tutor_id_fkey"
-            columns: ["tutor_id"]
-            isOneToOne: false
-            referencedRelation: "tutor_students"
-            referencedColumns: ["tutor_id"]
           },
           {
             foreignKeyName: "scheduled_classes_tutor_id_fkey"
@@ -678,36 +650,8 @@ export type Database = {
             foreignKeyName: "tutor_student_relationships_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
-            referencedRelation: "student_classes"
-            referencedColumns: ["student_id"]
-          },
-          {
-            foreignKeyName: "tutor_student_relationships_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
             referencedRelation: "students"
             referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tutor_student_relationships_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "tutor_students"
-            referencedColumns: ["student_id"]
-          },
-          {
-            foreignKeyName: "tutor_student_relationships_tutor_id_fkey"
-            columns: ["tutor_id"]
-            isOneToOne: false
-            referencedRelation: "student_classes"
-            referencedColumns: ["tutor_id"]
-          },
-          {
-            foreignKeyName: "tutor_student_relationships_tutor_id_fkey"
-            columns: ["tutor_id"]
-            isOneToOne: false
-            referencedRelation: "tutor_students"
-            referencedColumns: ["tutor_id"]
           },
           {
             foreignKeyName: "tutor_student_relationships_tutor_id_fkey"
@@ -767,7 +711,22 @@ export type Database = {
           tutor_name: string | null
           zoom_link: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "scheduled_classes_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scheduled_classes_tutor_id_fkey"
+            columns: ["tutor_id"]
+            isOneToOne: false
+            referencedRelation: "tutors"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tutor_students: {
         Row: {
@@ -781,7 +740,22 @@ export type Database = {
           tutor_id: string | null
           tutor_name: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tutor_student_relationships_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tutor_student_relationships_tutor_id_fkey"
+            columns: ["tutor_id"]
+            isOneToOne: false
+            referencedRelation: "tutors"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
