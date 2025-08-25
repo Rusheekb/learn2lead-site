@@ -14,6 +14,96 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_audit_log: {
+        Row: {
+          accessed_at: string | null
+          id: string
+          ip_address: unknown | null
+          operation: string
+          row_id: string | null
+          sensitive_data_accessed: boolean | null
+          table_name: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          accessed_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          operation: string
+          row_id?: string | null
+          sensitive_data_accessed?: boolean | null
+          table_name: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          accessed_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          operation?: string
+          row_id?: string | null
+          sensitive_data_accessed?: boolean | null
+          table_name?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      admin_action_log: {
+        Row: {
+          action_type: string
+          admin_id: string
+          approved_at: string | null
+          approved_by: string | null
+          details: Json | null
+          id: string
+          ip_address: unknown | null
+          performed_at: string | null
+          requires_approval: boolean | null
+          target_user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          admin_id: string
+          approved_at?: string | null
+          approved_by?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          performed_at?: string | null
+          requires_approval?: boolean | null
+          target_user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          admin_id?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          details?: Json | null
+          id?: string
+          ip_address?: unknown | null
+          performed_at?: string | null
+          requires_approval?: boolean | null
+          target_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_action_log_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admin_action_log_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       backup_logs: {
         Row: {
           created_at: string
@@ -337,6 +427,50 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      role_change_audit: {
+        Row: {
+          changed_at: string | null
+          changed_by: string | null
+          id: string
+          ip_address: unknown | null
+          new_role: Database["public"]["Enums"]["app_role"]
+          old_role: Database["public"]["Enums"]["app_role"] | null
+          reason: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          changed_at?: string | null
+          changed_by?: string | null
+          id?: string
+          ip_address?: unknown | null
+          new_role: Database["public"]["Enums"]["app_role"]
+          old_role?: Database["public"]["Enums"]["app_role"] | null
+          reason?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          changed_at?: string | null
+          changed_by?: string | null
+          id?: string
+          ip_address?: unknown | null
+          new_role?: Database["public"]["Enums"]["app_role"]
+          old_role?: Database["public"]["Enums"]["app_role"] | null
+          reason?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_change_audit_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       scheduled_classes: {
         Row: {
@@ -716,6 +850,10 @@ export type Database = {
       handle_rest_get_ics: {
         Args: { request: Json }
         Returns: Json
+      }
+      log_sensitive_access: {
+        Args: { operation: string; row_id?: string; table_name: string }
+        Returns: undefined
       }
     }
     Enums: {
