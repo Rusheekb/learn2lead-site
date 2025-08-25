@@ -8,13 +8,14 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Clock, Calendar as CalendarIcon, User, Video, Upload, FileText, Download } from 'lucide-react';
+import { Clock, Calendar as CalendarIcon, User, Video, Upload, FileText, Download, Eye, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { formatTime } from './ClassSessionDetail';
 import { ClassSession, StudentUpload } from '@/types/classTypes';
 import StudentFileUpload from './StudentFileUpload';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { viewClassFile, deleteClassFile } from '@/services/classUploadsService';
 
 interface StudentClassDetailsDialogProps {
   open: boolean;
@@ -198,6 +199,43 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
     }
   };
 
+  const handleView = async (upload: StudentUpload) => {
+    try {
+      if (!upload.id) {
+        throw new Error('Upload ID not found');
+      }
+      await viewClassFile(upload.id);
+    } catch (error) {
+      console.error('Error viewing file:', error);
+      toast({
+        title: "Error",
+        description: "Failed to open file",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDelete = async (upload: StudentUpload) => {
+    try {
+      if (!upload.id) {
+        throw new Error('Upload ID not found');
+      }
+
+      if (window.confirm(`Are you sure you want to delete ${upload.fileName}?`)) {
+        await deleteClassFile(upload.id);
+        // Refresh the uploads list
+        fetchUploads();
+      }
+    } catch (error) {
+      console.error('Error deleting file:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete file",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Helper function to get filename from URL
   const getFilenameFromUrl = (url: string) => {
     const parts = url.split('/');
@@ -364,14 +402,33 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
                                 )}
                               </div>
                             </div>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDownload(upload)}
-                            >
-                              <Download className="h-4 w-4 mr-1" />
-                              Download
-                            </Button>
+                            <div className="flex space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleView(upload)}
+                              >
+                                <Eye className="h-4 w-4 mr-1" />
+                                View
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDownload(upload)}
+                              >
+                                <Download className="h-4 w-4 mr-1" />
+                                Download
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDelete(upload)}
+                                className="text-destructive hover:text-destructive-foreground hover:bg-destructive"
+                              >
+                                <Trash2 className="h-4 w-4 mr-1" />
+                                Delete
+                              </Button>
+                            </div>
                           </div>
                         ))}
                       </div>

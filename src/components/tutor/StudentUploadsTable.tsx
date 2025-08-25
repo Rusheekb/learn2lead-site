@@ -8,17 +8,23 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { FileText, Download } from 'lucide-react';
+import { FileText, Download, Eye, Trash2 } from 'lucide-react';
 import { StudentUpload } from '@/types/classTypes';
 
 interface StudentUploadsTableProps {
   uploads: StudentUpload[];
   onDownload: (uploadId: string) => void;
+  onView: (uploadId: string) => void;
+  onDelete?: (uploadId: string) => void;
+  showDeleteButton?: boolean;
 }
 
 const StudentUploadsTable: React.FC<StudentUploadsTableProps> = ({
   uploads,
   onDownload,
+  onView,
+  onDelete,
+  showDeleteButton = false,
 }) => {
   if (uploads.length === 0) {
     return (
@@ -57,11 +63,32 @@ const StudentUploadsTable: React.FC<StudentUploadsTableProps> = ({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => onDownload(upload.id)}
+                  onClick={() => onView(upload.id)}
+                  className="flex items-center gap-2"
                 >
-                  <Download className="h-4 w-4 mr-1" />
+                  <Eye className="w-4 h-4" />
+                  View
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onDownload(upload.id)}
+                  className="flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" />
                   Download
                 </Button>
+                {showDeleteButton && onDelete && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onDelete(upload.id)}
+                    className="flex items-center gap-2 text-destructive hover:text-destructive-foreground hover:bg-destructive"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete
+                  </Button>
+                )}
               </div>
             </TableCell>
           </TableRow>

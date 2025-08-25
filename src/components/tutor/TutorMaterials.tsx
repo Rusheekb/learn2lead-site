@@ -121,6 +121,13 @@ const TutorMaterials: React.FC = () => {
     }
   };
 
+  const handleViewStudentFile = (uploadId: string) => {
+    const upload = studentUploads.find((u) => u.id === uploadId);
+    if (upload) {
+      toast.success(`Opening ${upload.fileName}...`);
+    }
+  };
+
   const handleMaterialDataChange = (data: Partial<typeof materialData>) => {
     setMaterialData({ ...materialData, ...data });
   };
@@ -163,6 +170,7 @@ const TutorMaterials: React.FC = () => {
               <StudentUploadsTable
                 uploads={studentUploads}
                 onDownload={handleDownloadStudentFile}
+                onView={handleViewStudentFile}
               />
             </CardContent>
           </Card>

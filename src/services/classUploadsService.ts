@@ -126,3 +126,68 @@ export async function downloadClassFile(uploadId: string): Promise<boolean> {
     return false;
   }
 }
+
+export async function viewClassFile(uploadId: string): Promise<boolean> {
+  try {
+    // First get the file path from the uploads table
+    const { data, error } = await supabase
+      .from('class_uploads')
+      .select('file_path, file_name')
+      .eq('id', uploadId)
+      .single();
+
+    if (error) throw error;
+    if (!data) throw new Error('File not found');
+
+    // Get a signed URL for viewing
+    const { data: signedUrlData, error: urlError } = await supabase.storage
+      .from('materials')
+      .createSignedUrl(data.file_path, 3600); // 1 hour expiry
+
+    if (urlError) throw urlError;
+
+    // Open the file in a new tab
+    window.open(signedUrlData.signedUrl, '_blank');
+    return true;
+  } catch (error) {
+    console.error('Error viewing file:', error);
+    toast.error('Failed to open file');
+    return false;
+  }
+}
+
+export async function deleteClassFile(uploadId: string): Promise<boolean> {
+  try {
+    // First get the file path from the uploads table
+    const { data: uploadData, error } = await supabase
+      .from('class_uploads')
+      .select('file_path, file_name')
+      .eq('id', uploadId)
+      .single();
+
+    if (error) throw error;
+    if (!uploadData) throw new Error('File not found');
+
+    // Delete from storage
+    const { error: storageError } = await supabase.storage
+      .from('materials')
+      .remove([uploadData.file_path]);
+
+    if (storageError) throw storageError;
+
+    // Delete from database
+    const { error: dbError } = await supabase
+      .from('class_uploads')
+      .delete()
+      .eq('id', uploadId);
+
+    if (dbError) throw dbError;
+
+    toast.success(`Deleted ${uploadData.file_name}`);
+    return true;
+  } catch (error) {
+    console.error('Error deleting file:', error);
+    toast.error('Failed to delete file');
+    return false;
+  }
+}
