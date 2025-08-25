@@ -108,7 +108,7 @@ const Pricing = () => {
 
           <PricingTier
             name="Standard"
-            price="$260"
+            price="$240"
             description="Our most popular plan for dedicated students"
             features={[
               'Access to all subject areas',
@@ -123,7 +123,7 @@ const Pricing = () => {
 
           <PricingTier
             name="Premium"
-            price="$360"
+            price="$300"
             description="Comprehensive support for academic excellence"
             features={[
               'Access to all subject areas',
