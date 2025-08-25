@@ -14,7 +14,6 @@ import { formatTime } from './ClassSessionDetail';
 import { ClassSession, StudentUpload } from '@/types/classTypes';
 import StudentFileUpload from './StudentFileUpload';
 import { supabase } from '@/integrations/supabase/client';
-import { uploadClassFile } from '@/services/classUploadsService';
 import { useToast } from '@/hooks/use-toast';
 
 interface StudentClassDetailsDialogProps {
@@ -117,23 +116,52 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
         ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() 
         : session.user.email || 'Student';
 
-      // Use the uploadClassFile service function
-      const uploadResult = await uploadClassFile(
-        classSession.id,
-        studentName,
-        file,
-        note
-      );
+      // Generate unique file path
+      const fileExt = file.name.split('.').pop();
+      const timestamp = Date.now();
+      const random = Math.random().toString(36).substring(2, 8);
+      const fileName = `${timestamp}_${random}.${fileExt}`;
+      const filePath = `class_uploads/${classSession.id}/${fileName}`;
 
-      if (uploadResult) {
-        toast({
-          title: "Success",
-          description: "File uploaded successfully",
+      // Upload directly to Supabase storage
+      const { error: uploadError } = await supabase.storage
+        .from('materials')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
         });
-        fetchUploads();
-      } else {
-        throw new Error('Upload failed');
+
+      if (uploadError) {
+        console.error('Storage upload error:', uploadError);
+        throw new Error(`Storage upload failed: ${uploadError.message}`);
       }
+
+      // Create database record
+      const { error: dbError } = await supabase
+        .from('class_uploads')
+        .insert({
+          class_id: classSession.id,
+          student_name: studentName,
+          file_name: file.name,
+          file_path: filePath,
+          file_size: `${Math.round(file.size / 1024)} KB`,
+          upload_date: new Date().toISOString().split('T')[0],
+          note: note || null,
+        });
+
+      if (dbError) {
+        console.error('Database insert error:', dbError);
+        // Try to clean up the uploaded file
+        await supabase.storage.from('materials').remove([filePath]);
+        throw new Error(`Database error: ${dbError.message}`);
+      }
+
+      toast({
+        title: "Success",
+        description: "File uploaded successfully",
+      });
+
+      fetchUploads();
     } catch (error) {
       console.error('Error uploading file:', error);
       toast({
@@ -147,7 +175,7 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
   const handleDownload = async (upload: StudentUpload) => {
     try {
       const { data, error } = await supabase.storage
-        .from('class-materials')
+        .from('materials')
         .download(upload.uploadPath || '');
 
       if (error) throw error;
