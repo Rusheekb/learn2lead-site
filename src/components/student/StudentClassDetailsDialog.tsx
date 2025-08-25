@@ -12,7 +12,7 @@ import { Clock, Calendar as CalendarIcon, User, Video, Upload, FileText, Downloa
 import { format } from 'date-fns';
 import { formatTime } from './ClassSessionDetail';
 import { ClassSession, StudentUpload } from '@/types/classTypes';
-import ClassContentUpload from '@/components/shared/ClassContentUpload';
+import StudentFileUpload from './StudentFileUpload';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -100,41 +100,46 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
     if (!classSession) return;
 
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}.${fileExt}`;
-      const filePath = `class-uploads/${fileName}`;
+      // Get current user's profile for student name
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        throw new Error('User not authenticated');
+      }
 
-      const { error: uploadError } = await supabase.storage
-        .from('class-materials')
-        .upload(filePath, file);
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('first_name, last_name')
+        .eq('id', session.user.id)
+        .single();
 
-      if (uploadError) throw uploadError;
+      const studentName = profile 
+        ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() 
+        : session.user.email || 'Student';
 
-      const { error: dbError } = await supabase
-        .from('class_uploads')
-        .insert({
-          class_id: classSession.id,
-          file_name: file.name,
-          file_path: filePath,
-          file_size: `${Math.round(file.size / 1024)} KB`,
-          upload_date: new Date().toISOString().split('T')[0],
-          note: note || null,
-          student_name: 'Current Student', // This would come from user profile
+      // Use the uploadClassFile service function instead of direct upload
+      const { uploadClassFile } = await import('@/services/classUploadsService');
+      
+      const uploadResult = await uploadClassFile(
+        classSession.id,
+        studentName,
+        file,
+        note
+      );
+
+      if (uploadResult) {
+        toast({
+          title: "Success",
+          description: "File uploaded successfully",
         });
-
-      if (dbError) throw dbError;
-
-      toast({
-        title: "Success",
-        description: "File uploaded successfully",
-      });
-
-      fetchUploads();
+        fetchUploads();
+      } else {
+        throw new Error('Upload failed');
+      }
     } catch (error) {
       console.error('Error uploading file:', error);
       toast({
         title: "Error",
-        description: "Failed to upload file",
+        description: `Failed to upload file: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive",
       });
     }
@@ -251,8 +256,8 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h4 className="text-lg font-medium">Class Materials</h4>
-                <ClassContentUpload
-                  classId={parseInt(classSession.id)}
+                <StudentFileUpload
+                  classId={classSession.id}
                   onUpload={handleUpload}
                 />
               </div>
