@@ -14,6 +14,7 @@ import { formatTime } from './ClassSessionDetail';
 import { ClassSession, StudentUpload } from '@/types/classTypes';
 import StudentFileUpload from './StudentFileUpload';
 import { supabase } from '@/integrations/supabase/client';
+import { uploadClassFile } from '@/services/classUploadsService';
 import { useToast } from '@/hooks/use-toast';
 
 interface StudentClassDetailsDialogProps {
@@ -116,9 +117,7 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
         ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() 
         : session.user.email || 'Student';
 
-      // Use the uploadClassFile service function instead of direct upload
-      const { uploadClassFile } = await import('@/services/classUploadsService');
-      
+      // Use the uploadClassFile service function
       const uploadResult = await uploadClassFile(
         classSession.id,
         studentName,
