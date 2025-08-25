@@ -40,8 +40,8 @@ export async function uploadClassFile(
 
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('bucket', 'class_materials');
-    formData.append('path', `class_materials/${classId}/`);
+    formData.append('bucket', 'materials');
+    formData.append('path', `class_uploads/${classId}/`);
 
     const { data: uploadResult, error: uploadError } = await supabase.functions.invoke(
       'secure-file-upload',
@@ -77,7 +77,7 @@ export async function uploadClassFile(
 
     if (dbError) {
       // If database insert fails, try to clean up the uploaded file
-      await supabase.storage.from('class_materials').remove([uploadResult.path]);
+      await supabase.storage.from('materials').remove([uploadResult.path]);
       throw dbError;
     }
 
@@ -104,7 +104,7 @@ export async function downloadClassFile(uploadId: string): Promise<boolean> {
 
     // Download the file from storage
     const { data: fileData, error: downloadError } = await supabase.storage
-      .from('class-materials')
+      .from('materials')
       .download(data.file_path);
 
     if (downloadError) throw downloadError;
