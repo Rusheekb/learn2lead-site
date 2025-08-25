@@ -98,6 +98,7 @@ export const fetchScheduledClasses = async (
         relationshipId: cls.relationship_id || '',
         recurring: false,
         materials: [],
+        materialsUrl: cls.materials_url || [], // Include materials_url from database
       };
     }));
 
