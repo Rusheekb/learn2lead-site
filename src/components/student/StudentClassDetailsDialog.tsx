@@ -29,12 +29,14 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState('details');
   const [uploads, setUploads] = useState<StudentUpload[]>([]);
+  const [tutorMaterials, setTutorMaterials] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
     if (open && classSession) {
       fetchUploads();
+      fetchTutorMaterials();
     }
   }, [open, classSession]);
 
@@ -72,6 +74,25 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchTutorMaterials = async () => {
+    if (!classSession) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('scheduled_classes')
+        .select('materials_url')
+        .eq('id', classSession.id)
+        .single();
+
+      if (error) throw error;
+      
+      setTutorMaterials(data?.materials_url || []);
+    } catch (error) {
+      console.error('Error fetching tutor materials:', error);
+      // Don't show error toast for this as it's secondary functionality
     }
   };
 
@@ -143,6 +164,17 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
         variant: "destructive",
       });
     }
+  };
+
+  // Helper function to get filename from URL
+  const getFilenameFromUrl = (url: string) => {
+    const parts = url.split('/');
+    const filename = parts[parts.length - 1].split('?')[0];
+    // Decode URI components
+    const decodedFilename = decodeURIComponent(filename);
+    // Get everything after the last slash and before any query params
+    const matches = decodedFilename.match(/[^\/]+\.[^\/\.]+$/);
+    return matches ? matches[0] : decodedFilename;
   };
 
   if (!classSession) return null;
@@ -229,43 +261,99 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
                 <div className="text-center py-8 text-muted-foreground">
                   Loading materials...
                 </div>
-              ) : uploads.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <FileText className="w-10 h-10 mx-auto mb-2 opacity-50" />
-                  <p>No materials uploaded yet</p>
-                  <p className="text-sm">Use the upload button above to add files</p>
-                </div>
               ) : (
-                <div className="space-y-3">
-                  {uploads.map((upload) => (
-                    <div
-                      key={upload.id}
-                      className="flex items-center justify-between p-3 border rounded-lg bg-card"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <FileText className="h-5 w-5 text-muted-foreground" />
-                        <div>
-                          <p className="font-medium">{upload.fileName}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {upload.fileSize} • Uploaded on {format(new Date(upload.uploadDate), 'MMM d, yyyy')}
-                          </p>
-                          {upload.note && (
-                            <p className="text-sm text-muted-foreground italic">
-                              Note: {upload.note}
-                            </p>
-                          )}
-                        </div>
+                <div className="space-y-6">
+                  {/* Tutor Materials */}
+                  {tutorMaterials.length > 0 && (
+                    <div>
+                      <h5 className="text-md font-medium mb-3 text-primary">
+                        📚 Tutor Materials
+                      </h5>
+                      <div className="space-y-3">
+                        {tutorMaterials.map((url, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center justify-between p-3 border rounded-lg bg-accent/20"
+                          >
+                            <div className="flex items-center space-x-3">
+                              <FileText className="h-5 w-5 text-primary" />
+                              <div>
+                                <p className="font-medium">{getFilenameFromUrl(url)}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  Provided by tutor
+                                </p>
+                              </div>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              asChild
+                            >
+                              <a href={url} target="_blank" rel="noopener noreferrer">
+                                <Download className="h-4 w-4 mr-1" />
+                                View
+                              </a>
+                            </Button>
+                          </div>
+                        ))}
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDownload(upload)}
-                      >
-                        <Download className="h-4 w-4 mr-1" />
-                        Download
-                      </Button>
                     </div>
-                  ))}
+                  )}
+
+                  {/* Student Uploads */}
+                  <div>
+                    <h5 className="text-md font-medium mb-3 text-secondary-foreground">
+                      📁 Student Uploads
+                    </h5>
+                    {uploads.length === 0 ? (
+                      <div className="text-center py-6 text-muted-foreground border rounded-lg bg-muted/20">
+                        <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                        <p>No student materials uploaded yet</p>
+                        <p className="text-sm">Use the upload button above to add files</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {uploads.map((upload) => (
+                          <div
+                            key={upload.id}
+                            className="flex items-center justify-between p-3 border rounded-lg bg-card"
+                          >
+                            <div className="flex items-center space-x-3">
+                              <FileText className="h-5 w-5 text-muted-foreground" />
+                              <div>
+                                <p className="font-medium">{upload.fileName}</p>
+                                <p className="text-sm text-muted-foreground">
+                                  {upload.fileSize} • Uploaded on {format(new Date(upload.uploadDate), 'MMM d, yyyy')}
+                                </p>
+                                {upload.note && (
+                                  <p className="text-sm text-muted-foreground italic">
+                                    Note: {upload.note}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDownload(upload)}
+                            >
+                              <Download className="h-4 w-4 mr-1" />
+                              Download
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* No materials at all */}
+                  {tutorMaterials.length === 0 && uploads.length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <FileText className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                      <p>No materials available for this class yet</p>
+                      <p className="text-sm">Your tutor may add materials before class starts</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

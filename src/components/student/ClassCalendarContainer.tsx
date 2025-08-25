@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import ClassCalendarColumn from './ClassCalendarColumn';
 import DailyClassSessions from './DailyClassSessions';
 import UpcomingClassSessions from './UpcomingClassSessions';
+import StudentClassDetailsDialog from './StudentClassDetailsDialog';
 import { ClassSession } from '@/types/classTypes';
 import { fetchScheduledClasses } from '@/services/classService';
 import { toast } from 'sonner';
@@ -18,7 +19,23 @@ const ClassCalendarContainer: React.FC<ClassCalendarContainerProps> = ({ student
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [sessions, setSessions] = useState<ClassSession[]>([]);
+  const [selectedClass, setSelectedClass] = useState<ClassSession | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const queryClient = useQueryClient();
+
+  // Listen for class detail events
+  useEffect(() => {
+    const handleOpenClassDetails = (event: CustomEvent<ClassSession>) => {
+      setSelectedClass(event.detail);
+      setIsDialogOpen(true);
+    };
+
+    window.addEventListener('openClassDetails', handleOpenClassDetails as EventListener);
+
+    return () => {
+      window.removeEventListener('openClassDetails', handleOpenClassDetails as EventListener);
+    };
+  }, []);
 
   useEffect(() => {
     if (!studentId) return;
@@ -103,6 +120,13 @@ const ClassCalendarContainer: React.FC<ClassCalendarContainerProps> = ({ student
           </div>
         </CardContent>
       </Card>
+
+      {/* Student Class Details Dialog */}
+      <StudentClassDetailsDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        classSession={selectedClass}
+      />
     </div>
   );
 };
