@@ -825,8 +825,16 @@ export type Database = {
         Args: { request: Json }
         Returns: Json
       }
+      log_critical_security_event: {
+        Args: { details?: Json; event_type: string; user_id: string }
+        Returns: undefined
+      }
       log_sensitive_access: {
         Args: { operation: string; row_id?: string; table_name: string }
+        Returns: undefined
+      }
+      require_admin_access: {
+        Args: Record<PropertyKey, never>
         Returns: undefined
       }
     }
