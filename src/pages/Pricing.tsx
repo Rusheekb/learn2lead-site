@@ -95,7 +95,7 @@ const Pricing = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
           <PricingTier
             name="Basic"
-            price="$49"
+            price="$140"
             description="Perfect for beginners looking to improve in one subject"
             features={[
               'Access to one subject area',
@@ -108,7 +108,7 @@ const Pricing = () => {
 
           <PricingTier
             name="Standard"
-            price="$99"
+            price="$260"
             description="Our most popular plan for dedicated students"
             features={[
               'Access to all subject areas',
@@ -123,11 +123,11 @@ const Pricing = () => {
 
           <PricingTier
             name="Premium"
-            price="$199"
+            price="$360"
             description="Comprehensive support for academic excellence"
             features={[
               'Access to all subject areas',
-              '4 hours of tutoring per week',
+              '3 hours of tutoring per week',
               'Premium study materials',
               'Personalized study plan',
               'Practice tests and assessments',
