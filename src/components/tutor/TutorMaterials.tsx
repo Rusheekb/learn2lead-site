@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { StudentUpload } from '@/types/classTypes';
 import { Material, Student } from '@/types/sharedTypes';
+import { downloadClassFile, viewClassFile } from '@/services/classUploadsService';
 
 // Import components
 import MaterialsTable from './MaterialsTable';
@@ -114,18 +115,12 @@ const TutorMaterials: React.FC = () => {
     setIsShareOpen(true);
   };
 
-  const handleDownloadStudentFile = (uploadId: string) => {
-    const upload = studentUploads.find((u) => u.id === uploadId);
-    if (upload) {
-      toast.success(`Downloading ${upload.fileName}`);
-    }
+  const handleDownloadStudentFile = async (uploadId: string) => {
+    await downloadClassFile(uploadId);
   };
 
-  const handleViewStudentFile = (uploadId: string) => {
-    const upload = studentUploads.find((u) => u.id === uploadId);
-    if (upload) {
-      toast.success(`Opening ${upload.fileName}...`);
-    }
+  const handleViewStudentFile = async (uploadId: string) => {
+    await viewClassFile(uploadId);
   };
 
   const handleMaterialDataChange = (data: Partial<typeof materialData>) => {
