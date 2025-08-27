@@ -5,6 +5,7 @@ import { StudentMessage, StudentUpload } from '@/types/classTypes';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { mapToStudentMessage, mapToStudentUpload } from '@/services/utils/classMappers';
+import { downloadClassFile } from '@/services/classUploadsService';
 
 export default function useStudentContent(selectedEvent: ClassEvent | null) {
   const [studentMessages, setStudentMessages] = useState<StudentMessage[]>([]);
@@ -117,33 +118,7 @@ export default function useStudentContent(selectedEvent: ClassEvent | null) {
   // Download a student upload
   const handleDownloadFile = async (uploadId: string) => {
     try {
-      const upload = studentUploads.find((u) => u.id === uploadId);
-      if (!upload) {
-        throw new Error('File not found');
-      }
-      
-      // Get original file data from database to get file_path
-      const { data, error } = await supabase
-        .from('class_uploads')
-        .select('file_path')
-        .eq('id', uploadId)
-        .single();
-        
-      if (error || !data) throw error || new Error('File path not found');
-
-      const { data: fileData, error: downloadError } = await supabase.storage
-        .from('student-uploads')
-        .download(data.file_path);
-
-      if (downloadError) throw downloadError;
-
-      // Create a download link
-      const url = URL.createObjectURL(fileData);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = upload.fileName || 'download';
-      link.click();
-      URL.revokeObjectURL(url);
+      await downloadClassFile(uploadId);
     } catch (error: any) {
       console.error('Error downloading file:', error);
       toast.error('Failed to download file');
