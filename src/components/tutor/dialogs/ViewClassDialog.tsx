@@ -33,6 +33,7 @@ interface ViewClassDialogProps {
   onDeleteEvent: (eventId: string, isRecurring?: boolean) => void;
   onMarkAsRead: (messageId: string) => Promise<void>;
   onDownloadFile: (uploadId: string) => Promise<void>;
+  onViewFile: (uploadId: string) => Promise<void>;
   getUnreadMessageCount: (classId: string) => number;
   refreshEvent?: () => Promise<void>;
 }
@@ -50,6 +51,7 @@ const ViewClassDialog: React.FC<ViewClassDialogProps> = ({
   onDeleteEvent,
   onMarkAsRead,
   onDownloadFile,
+  onViewFile,
   getUnreadMessageCount,
   refreshEvent,
 }) => {
@@ -118,6 +120,7 @@ const ViewClassDialog: React.FC<ViewClassDialogProps> = ({
           selectedEvent={eventWithFormattedDate}
           studentUploads={studentUploads}
           onDownloadFile={onDownloadFile}
+          onViewFile={onViewFile}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           refreshEvent={refreshEvent}

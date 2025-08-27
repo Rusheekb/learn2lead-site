@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Profile } from '@/types/profile';
+import { useFileActions } from '@/hooks/class-logs/hooks/useFileActions';
 
 interface ClassDialogsProps {
   isViewEventOpen: boolean;
@@ -66,6 +67,7 @@ const ClassDialogs: React.FC<ClassDialogsProps> = ({
   refreshEvent,
   currentUser,
 }) => {
+  const { handleViewFile } = useFileActions(studentUploads);
   return (
     <>
       {isEditMode && selectedEvent ? (
@@ -98,6 +100,7 @@ const ClassDialogs: React.FC<ClassDialogsProps> = ({
           onDeleteEvent={onDeleteEvent}
           onMarkAsRead={onMarkAsRead}
           onDownloadFile={onDownloadFile}
+          onViewFile={handleViewFile}
           getUnreadMessageCount={getUnreadMessageCount}
           refreshEvent={refreshEvent}
         />

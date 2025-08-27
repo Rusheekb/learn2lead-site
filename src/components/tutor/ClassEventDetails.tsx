@@ -15,6 +15,7 @@ interface ClassEventDetailsProps {
   selectedEvent: ClassEvent;
   studentUploads: StudentUpload[];
   onDownloadFile: (uploadId: string) => Promise<void>;
+  onViewFile: (uploadId: string) => Promise<void>;
   activeTab: string;
   setActiveTab: (tab: string) => void;
   refreshEvent?: () => Promise<void>;
@@ -24,6 +25,7 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
   selectedEvent,
   studentUploads,
   onDownloadFile,
+  onViewFile,
   activeTab,
   setActiveTab,
   refreshEvent,
@@ -211,6 +213,7 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
           classId={selectedEvent.id}
           uploads={studentUploads}
           onDownload={onDownloadFile}
+          onView={onViewFile}
         />
       </TabsContent>
     </Tabs>

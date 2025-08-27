@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { FileIcon, Download } from 'lucide-react';
+import { FileIcon, Download, Eye } from 'lucide-react';
 import { StudentUpload } from '@/types/classTypes';
 
 interface StudentContentProps {
@@ -11,6 +11,7 @@ interface StudentContentProps {
   uploads?: StudentUpload[];
   onFileUpload?: (file: File, note: string) => void;
   onDownload?: (uploadId: string) => Promise<void>;
+  onView?: (uploadId: string) => Promise<void>;
   showUploadControls?: boolean;
 }
 
@@ -19,6 +20,7 @@ export const StudentContent: React.FC<StudentContentProps> = ({
   uploads = [],
   onFileUpload,
   onDownload,
+  onView,
   showUploadControls = false,
 }) => {
   const [file, setFile] = useState<File | null>(null);
@@ -65,15 +67,28 @@ export const StudentContent: React.FC<StudentContentProps> = ({
                       )}
                     </div>
                   </div>
-                  {onDownload && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onDownload(upload.id)}
-                    >
-                      <Download className="h-4 w-4" />
-                    </Button>
-                  )}
+                  <div className="flex space-x-1">
+                    {onView && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onView(upload.id)}
+                        title="View file"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {onDownload && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onDownload(upload.id)}
+                        title="Download file"
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
