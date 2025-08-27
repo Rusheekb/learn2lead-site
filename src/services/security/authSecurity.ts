@@ -10,12 +10,34 @@ interface SecurityEvent {
 
 export class AuthSecurityService {
   private static instance: AuthSecurityService;
+  private failedAttempts: Map<string, { count: number; lastAttempt: Date }> = new Map();
 
   static getInstance(): AuthSecurityService {
     if (!AuthSecurityService.instance) {
       AuthSecurityService.instance = new AuthSecurityService();
     }
     return AuthSecurityService.instance;
+  }
+
+  private isRateLimited(identifier: string, maxAttempts: number = 5, windowMinutes: number = 15): boolean {
+    const attempts = this.failedAttempts.get(identifier);
+    if (!attempts) return false;
+
+    const windowStart = new Date(Date.now() - windowMinutes * 60 * 1000);
+    if (attempts.lastAttempt < windowStart) {
+      this.failedAttempts.delete(identifier);
+      return false;
+    }
+
+    return attempts.count >= maxAttempts;
+  }
+
+  private recordFailedAttempt(identifier: string): void {
+    const current = this.failedAttempts.get(identifier) || { count: 0, lastAttempt: new Date() };
+    this.failedAttempts.set(identifier, {
+      count: current.count + 1,
+      lastAttempt: new Date()
+    });
   }
 
   async logSecurityEvent(event: SecurityEvent): Promise<void> {
@@ -40,13 +62,32 @@ export class AuthSecurityService {
     success: boolean, 
     error?: string
   ): Promise<void> {
+    // Check for rate limiting on failed attempts
+    if (!success) {
+      const identifier = email.toLowerCase();
+      if (this.isRateLimited(identifier)) {
+        await this.logSecurityEvent({
+          eventType: 'rate_limit_exceeded',
+          details: {
+            email,
+            error: 'Too many failed login attempts',
+            timestamp: new Date().toISOString()
+          },
+          userAgent: navigator.userAgent
+        });
+        throw new Error('Too many failed login attempts. Please try again later.');
+      }
+      this.recordFailedAttempt(identifier);
+    }
+
     const event: SecurityEvent = {
       eventType: success ? 'login_success' : 'login_failure',
       details: {
         email,
         success,
         error: error || undefined,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        rateLimit: !success ? this.failedAttempts.get(email.toLowerCase()) : undefined
       },
       userAgent: navigator.userAgent
     };

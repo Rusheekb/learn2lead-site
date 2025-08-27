@@ -836,13 +836,17 @@ export type Database = {
         Args: { details?: Json; event_type: string; user_id: string }
         Returns: undefined
       }
-      log_sensitive_access: {
-        Args: { operation: string; row_id?: string; table_name: string }
+      log_enhanced_security_event: {
+        Args: { operation_type: string; row_id?: string; target_table: string }
         Returns: undefined
       }
       require_admin_access: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      validate_file_access_permissions: {
+        Args: { file_path: string; requested_by?: string }
+        Returns: boolean
       }
     }
     Enums: {
