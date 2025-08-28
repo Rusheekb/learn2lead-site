@@ -7,11 +7,9 @@ import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import DashboardContent from '@/components/student/DashboardContent';
 import ClassCalendar from '@/components/ClassCalendar';
 import StudentContent from '@/components/shared/StudentContent';
-import SharedContentTab from '@/components/shared/profile/SharedContentTab';
 import { useAnalyticsTracker } from '@/hooks/useAnalyticsTracker';
 import { EventName } from '@/services/analytics/analyticsService';
 import { useQueryClient } from '@tanstack/react-query';
-import { useProfile } from '@/hooks/useProfile';
 
 const Dashboard = () => {
   const { t } = useTranslation();
@@ -22,7 +20,6 @@ const Dashboard = () => {
   const activeTab = searchParams.get('tab') || 'dashboard';
   const { trackNavigation, trackPageView } = useAnalyticsTracker();
   const queryClient = useQueryClient();
-  const { profile } = useProfile();
   
   // Track page view on initial render
   useEffect(() => {
@@ -95,20 +92,11 @@ const Dashboard = () => {
         return (
           <div className="py-4">
             <h3 className="text-lg sm:text-xl md:text-2xl font-bold mb-4 sm:mb-6">Learning Resources</h3>
-            <div className="space-y-6">
-              <StudentContent
-                classId={user?.id || ''}
-                showUploadControls={false}
-                uploads={[]}
-              />
-              <div className="mt-8">
-                <h4 className="text-lg font-semibold mb-4">Shared Content</h4>
-                <SharedContentTab 
-                  role={profile?.role || 'student'} 
-                  fetchUsers={async () => []} 
-                />
-              </div>
-            </div>
+            <StudentContent
+              classId={user?.id || ''}
+              showUploadControls={false}
+              uploads={[]}
+            />
           </div>
         );
       default:
