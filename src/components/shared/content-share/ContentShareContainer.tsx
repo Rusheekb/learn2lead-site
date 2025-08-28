@@ -46,7 +46,7 @@ const ContentShareContainer: React.FC<ContentShareContainerProps> = ({ role, fet
 
       {isLoading ? (
         <div className="flex justify-center py-8">
-          <p>Loading shared content...</p>
+          <div className="animate-pulse">Loading shared content...</div>
         </div>
       ) : shares.length > 0 ? (
         <ShareTable

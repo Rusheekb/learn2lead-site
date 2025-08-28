@@ -174,30 +174,32 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ profile, updateProfile }) => 
         </CardContent>
       </Card>
 
-      {/* Payment Plan */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('profile.paymentPlan')}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="plan">{t('profile.currentPlan')}</Label>
-            <Select value={paymentPlan} onValueChange={setPaymentPlan}>
-              <SelectTrigger>
-                <SelectValue placeholder={t('profile.selectPlan')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="basic">{t('profile.basicPlan')}</SelectItem>
-                <SelectItem value="premium">{t('profile.premiumPlan')}</SelectItem>
-                <SelectItem value="enterprise">{t('profile.enterprisePlan')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <Button variant="outline" className="w-full">
-            {t('profile.manageBilling')}
-          </Button>
-        </CardContent>
-      </Card>
+      {/* Payment Plan - Only for students */}
+      {profile.role === 'student' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('profile.paymentPlan')}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="plan">{t('profile.currentPlan')}</Label>
+              <Select value={paymentPlan} onValueChange={setPaymentPlan}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t('profile.selectPlan')} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="basic">{t('profile.basicPlan')}</SelectItem>
+                  <SelectItem value="premium">{t('profile.premiumPlan')}</SelectItem>
+                  <SelectItem value="enterprise">{t('profile.enterprisePlan')}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button variant="outline" className="w-full">
+              {t('profile.manageBilling')}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
