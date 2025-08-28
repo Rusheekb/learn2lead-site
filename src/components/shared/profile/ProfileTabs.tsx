@@ -31,11 +31,10 @@ const ProfileTabs: React.FC<ProfileTabsProps> = ({
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab}>
-      <TabsList className="grid w-full grid-cols-4">
+      <TabsList className="grid w-full grid-cols-3">
         <TabsTrigger value="profile">{t('profile.profile')}</TabsTrigger>
         <TabsTrigger value="settings">{t('profile.settings')}</TabsTrigger>
         <TabsTrigger value="analytics">{t('profile.analytics')}</TabsTrigger>
-        <TabsTrigger value="shared">{t('profile.sharedContent')}</TabsTrigger>
       </TabsList>
 
       <TabsContent value="profile" className="pt-6">
@@ -58,12 +57,6 @@ const ProfileTabs: React.FC<ProfileTabsProps> = ({
         <AnalyticsTab profile={profile} />
       </TabsContent>
 
-      <TabsContent value="shared" className="pt-6">
-        <SharedContentTab 
-          role={profile.role} 
-          fetchUsers={fetchRelevantUsers} 
-        />
-      </TabsContent>
     </Tabs>
   );
 };

@@ -11,21 +11,20 @@ export const useContentShareData = (
   fetchUsers: () => Promise<Profile[]>
 ) => {
   const [shares, setShares] = useState<ContentShareItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [users, setUsers] = useState<Profile[]>([]);
   
   // Set up realtime subscription with explicit typing
   useContentSharesRealtime(setShares);
 
   const loadShares = useCallback(async () => {
+    if (!userId) {
+      setShares([]);
+      return;
+    }
+
     setIsLoading(true);
     try {
-      if (!userId) {
-        setShares([]);
-        setIsLoading(false);
-        return;
-      }
-
       const { data, error } = await supabase
         .from('content_shares')
         .select('*')
@@ -56,8 +55,17 @@ export const useContentShareData = (
 
   useEffect(() => {
     if (userId) {
-      loadShares();
-      loadUsers();
+      let mounted = true;
+      
+      const loadData = async () => {
+        await Promise.all([loadShares(), loadUsers()]);
+      };
+      
+      loadData();
+      
+      return () => {
+        mounted = false;
+      };
     }
   }, [userId, loadShares, loadUsers]);
 
