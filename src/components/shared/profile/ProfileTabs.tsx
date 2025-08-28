@@ -5,6 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Profile } from '@/hooks/useProfile';
 import ProfileDisplay from './ProfileDisplay';
 import SharedContentTab from './SharedContentTab';
+import SettingsTab from './SettingsTab';
+import AnalyticsTab from './AnalyticsTab';
 
 interface ProfileTabsProps {
   profile: Profile;
@@ -29,8 +31,10 @@ const ProfileTabs: React.FC<ProfileTabsProps> = ({
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab}>
-      <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="profile">{t('profile.myProfile')}</TabsTrigger>
+      <TabsList className="grid w-full grid-cols-4">
+        <TabsTrigger value="profile">{t('profile.profile')}</TabsTrigger>
+        <TabsTrigger value="settings">{t('profile.settings')}</TabsTrigger>
+        <TabsTrigger value="analytics">{t('profile.analytics')}</TabsTrigger>
         <TabsTrigger value="shared">{t('profile.sharedContent')}</TabsTrigger>
       </TabsList>
 
@@ -41,6 +45,17 @@ const ProfileTabs: React.FC<ProfileTabsProps> = ({
           setIsEditMode={setIsEditMode}
           updateProfile={updateProfile}
         />
+      </TabsContent>
+
+      <TabsContent value="settings" className="pt-6">
+        <SettingsTab 
+          profile={profile}
+          updateProfile={updateProfile}
+        />
+      </TabsContent>
+
+      <TabsContent value="analytics" className="pt-6">
+        <AnalyticsTab profile={profile} />
       </TabsContent>
 
       <TabsContent value="shared" className="pt-6">
