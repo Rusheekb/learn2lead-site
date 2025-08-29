@@ -14,143 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      access_audit_log: {
-        Row: {
-          accessed_at: string | null
-          id: string
-          ip_address: unknown | null
-          operation: string
-          row_id: string | null
-          sensitive_data_accessed: boolean | null
-          table_name: string
-          user_agent: string | null
-          user_id: string | null
-        }
-        Insert: {
-          accessed_at?: string | null
-          id?: string
-          ip_address?: unknown | null
-          operation: string
-          row_id?: string | null
-          sensitive_data_accessed?: boolean | null
-          table_name: string
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          accessed_at?: string | null
-          id?: string
-          ip_address?: unknown | null
-          operation?: string
-          row_id?: string | null
-          sensitive_data_accessed?: boolean | null
-          table_name?: string
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      admin_action_log: {
-        Row: {
-          action_type: string
-          admin_id: string
-          approved_at: string | null
-          approved_by: string | null
-          details: Json | null
-          id: string
-          ip_address: unknown | null
-          performed_at: string | null
-          requires_approval: boolean | null
-          target_user_id: string | null
-        }
-        Insert: {
-          action_type: string
-          admin_id: string
-          approved_at?: string | null
-          approved_by?: string | null
-          details?: Json | null
-          id?: string
-          ip_address?: unknown | null
-          performed_at?: string | null
-          requires_approval?: boolean | null
-          target_user_id?: string | null
-        }
-        Update: {
-          action_type?: string
-          admin_id?: string
-          approved_at?: string | null
-          approved_by?: string | null
-          details?: Json | null
-          id?: string
-          ip_address?: unknown | null
-          performed_at?: string | null
-          requires_approval?: boolean | null
-          target_user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "admin_action_log_admin_id_fkey"
-            columns: ["admin_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "admin_action_log_approved_by_fkey"
-            columns: ["approved_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      backup_logs: {
-        Row: {
-          created_at: string
-          created_by: string
-          error_message: string | null
-          file_path: string | null
-          id: string
-          name: string
-          restored_from: string | null
-          size_bytes: number | null
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          created_by: string
-          error_message?: string | null
-          file_path?: string | null
-          id?: string
-          name: string
-          restored_from?: string | null
-          size_bytes?: number | null
-          status: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string
-          error_message?: string | null
-          file_path?: string | null
-          id?: string
-          name?: string
-          restored_from?: string | null
-          size_bytes?: number | null
-          status?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "backup_logs_restored_from_fkey"
-            columns: ["restored_from"]
-            isOneToOne: false
-            referencedRelation: "backup_logs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       class_logs: {
         Row: {
           "Additional Info": string | null
@@ -211,41 +74,6 @@ export type Database = {
         }
         Relationships: []
       }
-      class_messages: {
-        Row: {
-          class_id: string
-          id: string
-          is_read: boolean
-          message: string
-          student_name: string
-          timestamp: string
-        }
-        Insert: {
-          class_id: string
-          id?: string
-          is_read?: boolean
-          message: string
-          student_name: string
-          timestamp?: string
-        }
-        Update: {
-          class_id?: string
-          id?: string
-          is_read?: boolean
-          message?: string
-          student_name?: string
-          timestamp?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "class_messages_class_id_fkey"
-            columns: ["class_id"]
-            isOneToOne: false
-            referencedRelation: "class_logs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       class_uploads: {
         Row: {
           class_id: string
@@ -288,13 +116,6 @@ export type Database = {
             referencedRelation: "scheduled_classes"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "class_uploads_class_id_fkey"
-            columns: ["class_id"]
-            isOneToOne: false
-            referencedRelation: "student_classes"
-            referencedColumns: ["id"]
-          },
         ]
       }
       content_shares: {
@@ -330,39 +151,6 @@ export type Database = {
           shared_at?: string
           title?: string
           viewed_at?: string | null
-        }
-        Relationships: []
-      }
-      file_validation_logs: {
-        Row: {
-          created_at: string | null
-          file_name: string
-          file_size: number
-          id: string
-          mime_type: string
-          user_id: string | null
-          validation_details: Json | null
-          validation_status: string
-        }
-        Insert: {
-          created_at?: string | null
-          file_name: string
-          file_size: number
-          id?: string
-          mime_type: string
-          user_id?: string | null
-          validation_details?: Json | null
-          validation_status: string
-        }
-        Update: {
-          created_at?: string | null
-          file_name?: string
-          file_size?: number
-          id?: string
-          mime_type?: string
-          user_id?: string | null
-          validation_details?: Json | null
-          validation_status?: string
         }
         Relationships: []
       }
@@ -434,50 +222,6 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
-      }
-      role_change_audit: {
-        Row: {
-          changed_at: string | null
-          changed_by: string | null
-          id: string
-          ip_address: unknown | null
-          new_role: Database["public"]["Enums"]["app_role"]
-          old_role: Database["public"]["Enums"]["app_role"] | null
-          reason: string | null
-          user_agent: string | null
-          user_id: string
-        }
-        Insert: {
-          changed_at?: string | null
-          changed_by?: string | null
-          id?: string
-          ip_address?: unknown | null
-          new_role: Database["public"]["Enums"]["app_role"]
-          old_role?: Database["public"]["Enums"]["app_role"] | null
-          reason?: string | null
-          user_agent?: string | null
-          user_id: string
-        }
-        Update: {
-          changed_at?: string | null
-          changed_by?: string | null
-          id?: string
-          ip_address?: unknown | null
-          new_role?: Database["public"]["Enums"]["app_role"]
-          old_role?: Database["public"]["Enums"]["app_role"] | null
-          reason?: string | null
-          user_agent?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "role_change_audit_changed_by_fkey"
-            columns: ["changed_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       scheduled_classes: {
         Row: {
@@ -560,36 +304,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      security_logs: {
-        Row: {
-          created_at: string | null
-          details: Json | null
-          event_type: string
-          id: string
-          ip_address: unknown | null
-          user_agent: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          details?: Json | null
-          event_type: string
-          id?: string
-          ip_address?: unknown | null
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          details?: Json | null
-          event_type?: string
-          id?: string
-          ip_address?: unknown | null
-          user_agent?: string | null
-          user_id?: string | null
-        }
-        Relationships: []
       }
       students: {
         Row: {
@@ -701,69 +415,7 @@ export type Database = {
       }
     }
     Views: {
-      student_classes: {
-        Row: {
-          attendance: string | null
-          date: string | null
-          end_time: string | null
-          id: string | null
-          notes: string | null
-          start_time: string | null
-          status: string | null
-          student_id: string | null
-          student_name: string | null
-          subject: string | null
-          title: string | null
-          tutor_id: string | null
-          tutor_name: string | null
-          zoom_link: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "scheduled_classes_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "scheduled_classes_tutor_id_fkey"
-            columns: ["tutor_id"]
-            isOneToOne: false
-            referencedRelation: "tutors"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      tutor_students: {
-        Row: {
-          active: boolean | null
-          assigned_at: string | null
-          grade: string | null
-          payment_status: string | null
-          student_id: string | null
-          student_name: string | null
-          subjects: string[] | null
-          tutor_id: string | null
-          tutor_name: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "tutor_student_relationships_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "tutor_student_relationships_tutor_id_fkey"
-            columns: ["tutor_id"]
-            isOneToOne: false
-            referencedRelation: "tutors"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+      [_ in never]: never
     }
     Functions: {
       check_upcoming_classes: {
