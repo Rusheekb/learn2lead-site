@@ -17,7 +17,28 @@ export async function fetchClassUploads(
       .eq('class_id', classId);
 
     if (error) throw error;
-    return mapToStudentUploads((data as ClassUploadRecord[]) || []);
+    
+    // Filter out files that don't exist in storage
+    const uploads = (data as ClassUploadRecord[]) || [];
+    const validUploads: ClassUploadRecord[] = [];
+    
+    for (const upload of uploads) {
+      try {
+        const { data: fileData, error: fileError } = await supabase.storage
+          .from('materials')
+          .list(upload.file_path.split('/').slice(0, -1).join('/'), {
+            search: upload.file_path.split('/').pop()
+          });
+        
+        if (!fileError && fileData && fileData.length > 0) {
+          validUploads.push(upload);
+        }
+      } catch (fileCheckError) {
+        console.warn(`File ${upload.file_path} not found in storage, skipping`);
+      }
+    }
+    
+    return mapToStudentUploads(validUploads);
   } catch (error) {
     console.error('Error fetching class uploads:', error);
     return [];

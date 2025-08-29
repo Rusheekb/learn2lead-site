@@ -10,7 +10,33 @@ export async function fetchContentShares(): Promise<ContentShareItem[]> {
     console.error(result.error);
     throw result.error;
   }
-  return result.data || [];
+  
+  // Filter out content shares where files don't exist in storage
+  const shares = result.data || [];
+  const validShares: ContentShareItem[] = [];
+  
+  for (const share of shares) {
+    if (!share.file_path) {
+      validShares.push(share);
+      continue;
+    }
+    
+    try {
+      const { data: fileData, error: fileError } = await supabase.storage
+        .from('shared_content')
+        .list(share.file_path.split('/').slice(0, -1).join('/'), {
+          search: share.file_path.split('/').pop()
+        });
+      
+      if (!fileError && fileData && fileData.length > 0) {
+        validShares.push(share);
+      }
+    } catch (fileCheckError) {
+      console.warn(`File ${share.file_path} not found in storage, skipping share`);
+    }
+  }
+  
+  return validShares;
 }
 
 export async function createContentShare(
@@ -63,5 +89,31 @@ export async function fetchUserContentShares(
     console.error(result.error);
     throw result.error;
   }
-  return result.data || [];
+  
+  // Filter out content shares where files don't exist in storage
+  const shares = result.data || [];
+  const validShares: ContentShareItem[] = [];
+  
+  for (const share of shares) {
+    if (!share.file_path) {
+      validShares.push(share);
+      continue;
+    }
+    
+    try {
+      const { data: fileData, error: fileError } = await supabase.storage
+        .from('shared_content')
+        .list(share.file_path.split('/').slice(0, -1).join('/'), {
+          search: share.file_path.split('/').pop()
+        });
+      
+      if (!fileError && fileData && fileData.length > 0) {
+        validShares.push(share);
+      }
+    } catch (fileCheckError) {
+      console.warn(`File ${share.file_path} not found in storage, skipping share`);
+    }
+  }
+  
+  return validShares;
 }
