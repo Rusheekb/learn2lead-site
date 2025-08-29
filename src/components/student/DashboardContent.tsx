@@ -2,6 +2,7 @@
 import React, { memo } from 'react';
 import SubjectCards from './SubjectCards';
 import ClassCalendarContainer from './ClassCalendarContainer';
+import ClassHistory from '@/components/shared/ClassHistory';
 import { subjects } from '@/constants/subjectsData';
 
 interface DashboardContentProps {
@@ -21,6 +22,9 @@ const DashboardContent: React.FC<DashboardContentProps> = memo(
           onSubjectClick={onSubjectClick}
         />
         <ClassCalendarContainer studentId={studentId} />
+        <div className="mt-8">
+          <ClassHistory userRole="student" />
+        </div>
       </>
     );
   }

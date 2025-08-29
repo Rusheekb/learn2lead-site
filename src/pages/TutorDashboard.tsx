@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import TutorScheduler from '@/components/tutor/TutorScheduler';
+import TutorDashboardContent from '@/components/tutor/TutorDashboardContent';
 import TutorStudents from '@/components/tutor/TutorStudents';
 import TutorMaterials from '@/components/tutor/TutorMaterials';
 import TutorOverviewSection from '@/components/tutor/dashboard/TutorOverviewSection';
@@ -54,11 +54,11 @@ const TutorDashboard: React.FC = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'schedule':
-        return <TutorScheduler />;
+        return <TutorDashboardContent />;
       case 'students':
         return <TutorStudents />;
       default:
-        return <TutorScheduler />;
+        return <TutorDashboardContent />;
     }
   };
 

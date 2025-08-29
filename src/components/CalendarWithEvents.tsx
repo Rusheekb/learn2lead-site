@@ -6,6 +6,8 @@ import { format, isSameDay, parseISO } from 'date-fns';
 import { ClassEvent } from '@/types/tutorTypes';
 import { toast } from 'sonner';
 import { startOfDay, addDays } from 'date-fns';
+import CompletedClassActions from '@/components/tutor/CompletedClassActions';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface CalendarWithEventsProps {
   selectedDate: Date;
@@ -39,7 +41,13 @@ const CalendarWithEvents: React.FC<CalendarWithEventsProps> = ({
   onAddEventClick,
   getUnreadMessageCount,
 }) => {
+  const { userRole } = useAuth();
   const [eventsForSelectedDate, setEventsForSelectedDate] = useState<ClassEvent[]>([]);
+
+  const handleClassUpdate = () => {
+    // Trigger a refetch of the scheduled classes
+    window.location.reload(); // Simple approach for now
+  };
 
   // Function to check if a date has any scheduled classes
   const hasEventsOnDate = (date: Date) => {
@@ -156,11 +164,13 @@ const CalendarWithEvents: React.FC<CalendarWithEventsProps> = ({
               {eventsForSelectedDate.map((event) => (
                 <div 
                   key={event.id}
-                  className="p-4 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-                  onClick={() => onSelectEvent(event)}
+                  className="p-4 border rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   <div className="flex justify-between items-start">
-                    <div>
+                    <div 
+                      className="flex-1 cursor-pointer"
+                      onClick={() => onSelectEvent(event)}
+                    >
                       <h3 className="font-medium">{event.title}</h3>
                       <p className="text-sm text-gray-600">{event.subject}</p>
                       <p className="text-sm text-gray-600">
@@ -180,6 +190,12 @@ const CalendarWithEvents: React.FC<CalendarWithEventsProps> = ({
                       }`}>
                         {event.status}
                       </span>
+                      {userRole === 'tutor' && (
+                        <CompletedClassActions 
+                          classEvent={event} 
+                          onUpdate={handleClassUpdate}
+                        />
+                      )}
                     </div>
                   </div>
                 </div>
