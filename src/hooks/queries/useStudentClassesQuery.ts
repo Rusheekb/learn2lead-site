@@ -132,66 +132,12 @@ export const useStudentClassesQuery = (studentName: string, studentId?: string) 
   };
 };
 
-// Fetch student messages
+// Student messages functionality removed since table was deleted
 export const useStudentMessagesQuery = (studentName: string) => {
-  const queryClient = useQueryClient();
-
-  const fetchStudentMessages = async () => {
-    const { data, error } = await supabase
-      .from('class_messages')
-      .select('*')
-      .eq('student_name', studentName);
-      
-    if (error) {
-      throw error;
-    }
-    
-    return (data || []).map(item => ({
-      id: item.id,
-      content: item.message,
-      message: item.message,
-      classId: item.class_id,
-      studentName: item.student_name,
-      timestamp: item.timestamp,
-      read: item.is_read,
-      isRead: item.is_read,
-      sender: 'student',
-    })) as StudentMessage[];
-  };
-
-  const { data: messages = [], isLoading, error, refetch } = useQuery({
-    queryKey: studentKeys.messages(studentName),
-    queryFn: fetchStudentMessages,
-    enabled: !!studentName,
-  });
-
-  // Setup realtime subscription
-  useEffect(() => {
-    if (!studentName) return;
-    
-    const channel = supabase
-      .channel('student-messages-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'class_messages',
-          filter: `student_name=eq.${studentName}`,
-        },
-        (payload) => {
-          console.log('Realtime update for student messages:', payload);
-          
-          // Invalidate the query to refetch data
-          queryClient.invalidateQueries({ queryKey: studentKeys.messages(studentName) });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [queryClient, studentName]);
+  const messages: any[] = [];
+  const isLoading = false;
+  const error = null;
+  const refetch = () => Promise.resolve();
 
   return {
     messages,

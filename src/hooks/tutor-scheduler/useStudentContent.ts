@@ -17,18 +17,8 @@ export default function useStudentContent(selectedEvent: ClassEvent | null) {
       if (!selectedEvent?.id) return;
 
       try {
-        // Fetch messages
-        const { data: messagesData, error: messagesError } = await supabase
-          .from('class_messages')
-          .select('*')
-          .eq('class_id', selectedEvent.id)
-          .order('timestamp', { ascending: false });
-
-        if (messagesError) throw messagesError;
-        
-        // Map database records to application types
-        const mappedMessages = (messagesData || []).map(msg => mapToStudentMessage(msg));
-        setStudentMessages(mappedMessages);
+        // Messages functionality removed since table was deleted
+        setStudentMessages([]);
 
         // Fetch uploads
         const { data: uploadsData, error: uploadsError } = await supabase
@@ -93,26 +83,9 @@ export default function useStudentContent(selectedEvent: ClassEvent | null) {
     }
   }, [selectedEvent?.id]);
 
-  // Mark a message as read
   const handleMarkMessageRead = async (messageId: string) => {
-    try {
-      const { error } = await supabase
-        .from('class_messages')
-        .update({ is_read: true })
-        .eq('id', messageId);
-
-      if (error) throw error;
-
-      // Update local state to reflect the change
-      setStudentMessages((prev) =>
-        prev.map((msg) =>
-          msg.id === messageId ? { ...msg, isRead: true, read: true } : msg
-        )
-      );
-    } catch (error: any) {
-      console.error('Error marking message as read:', error);
-      toast.error('Failed to update message status');
-    }
+    // Messages functionality removed since table was deleted
+    console.log('Messages functionality removed');
   };
 
   // Download a student upload

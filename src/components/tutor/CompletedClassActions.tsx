@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Edit3, Save } from 'lucide-react';
+import { CheckCircle, Edit3, Save, Undo2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ClassEvent } from '@/types/tutorTypes';
@@ -63,6 +63,31 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
     } catch (error) {
       console.error('Error completing class:', error);
       toast.error('Failed to mark class as completed');
+    } finally {
+      setIsCompleting(false);
+    }
+  };
+
+  const handleUnmarkComplete = async () => {
+    setIsCompleting(true);
+    try {
+      // Update scheduled class status back to scheduled
+      const { error: scheduleError } = await supabase
+        .from('scheduled_classes')
+        .update({ 
+          status: 'scheduled',
+          notes: null 
+        })
+        .eq('id', classEvent.id);
+
+      if (scheduleError) throw scheduleError;
+
+      toast.success('Class status reverted to scheduled');
+      setIsDialogOpen(false);
+      onUpdate();
+    } catch (error) {
+      console.error('Error reverting class status:', error);
+      toast.error('Failed to revert class status');
     } finally {
       setIsCompleting(false);
     }
@@ -142,22 +167,37 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
               />
             </div>
 
-            <div className="flex justify-end gap-2 pt-4">
-              <Button
-                variant="outline"
-                onClick={() => setIsDialogOpen(false)}
-                disabled={isCompleting}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleMarkComplete}
-                disabled={isCompleting || !content.trim()}
-                className="flex items-center gap-2"
-              >
-                <Save className="h-4 w-4" />
-                {isCompleting ? 'Saving...' : (isCompleted ? 'Update Log' : 'Complete & Save')}
-              </Button>
+            <div className="flex justify-between gap-2 pt-4">
+              <div>
+                {isCompleted && (
+                  <Button
+                    variant="outline"
+                    onClick={handleUnmarkComplete}
+                    disabled={isCompleting}
+                    className="flex items-center gap-2 text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                  >
+                    <Undo2 className="h-4 w-4" />
+                    Revert to Scheduled
+                  </Button>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsDialogOpen(false)}
+                  disabled={isCompleting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleMarkComplete}
+                  disabled={isCompleting || !content.trim()}
+                  className="flex items-center gap-2"
+                >
+                  <Save className="h-4 w-4" />
+                  {isCompleting ? 'Saving...' : (isCompleted ? 'Update Log' : 'Complete & Save')}
+                </Button>
+              </div>
             </div>
           </div>
         </DialogContent>

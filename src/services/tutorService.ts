@@ -73,7 +73,10 @@ export const fetchTutorStudents = async (
   tutorId?: string
 ): Promise<TutorStudent[]> => {
   try {
-    let query = supabase.from('tutor_students').select('*');
+    let query = supabase.from('tutor_student_assigned').select(`
+      *,
+      student:students(name, subjects, grade, payment_status)
+    `);
 
     if (tutorId) {
       query = query.eq('tutor_id', tutorId);
@@ -86,12 +89,12 @@ export const fetchTutorStudents = async (
     // Transform data to ensure it matches our TutorStudent interface
     return (data || []).map(item => ({
       tutor_id: item.tutor_id || '',
-      tutor_name: item.tutor_name || '',
+      tutor_name: 'Tutor', // Simplified since we can't get tutor name easily
       student_id: item.student_id || '',
-      student_name: item.student_name || '',
-      grade: item.grade, // Allow null
-      subjects: item.subjects || [],
-      payment_status: item.payment_status || 'pending',
+      student_name: item.student?.name || '',
+      grade: item.student?.grade || null,
+      subjects: item.student?.subjects || [],
+      payment_status: item.student?.payment_status || 'pending',
       assigned_at: item.assigned_at || new Date().toISOString(),
       active: item.active ?? true,
     }));

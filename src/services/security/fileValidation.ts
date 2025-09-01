@@ -207,16 +207,8 @@ export class FileValidationService {
         timestamp: new Date().toISOString()
       };
 
-      await supabase
-        .from('file_validation_logs')
-        .insert({
-          file_name: file.name,
-          file_size: file.size,
-          mime_type: file.type,
-          validation_status: status,
-          validation_details: details,
-          user_id: userId
-        });
+      // File validation logging removed since table was deleted
+      console.warn('File validation result:', { fileName: file.name, status, details });
     } catch (error) {
       console.error('Failed to log file validation:', error);
       // Don't throw - logging failure shouldn't break file upload

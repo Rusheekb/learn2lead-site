@@ -42,18 +42,10 @@ export class AuthSecurityService {
 
   async logSecurityEvent(event: SecurityEvent): Promise<void> {
     try {
-      await supabase
-        .from('security_logs')
-        .insert({
-          event_type: event.eventType,
-          user_id: event.userId,
-          details: event.details,
-          ip_address: event.ipAddress,
-          user_agent: event.userAgent
-        });
+      // Security logging removed since table was deleted
+      console.warn('Security event:', event);
     } catch (error) {
       console.error('Failed to log security event:', error);
-      // Don't throw - logging failure shouldn't break the application
     }
   }
 
@@ -191,12 +183,9 @@ export class AuthSecurityService {
     try {
       const windowStart = new Date(Date.now() - windowMinutes * 60 * 1000);
       
-      const { data, error } = await supabase
-        .from('security_logs')
-        .select('id')
-        .eq('event_type', action)
-        .eq('details->>identifier', identifier)
-        .gte('created_at', windowStart.toISOString());
+      // Rate limiting removed since security_logs table was deleted
+      const data = [];
+      const error = null;
 
       if (error) {
         console.error('Rate limit check error:', error);
