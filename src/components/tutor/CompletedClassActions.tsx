@@ -26,6 +26,8 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
   const handleMarkComplete = async () => {
     setIsCompleting(true);
     try {
+      console.log('Starting class completion for:', classEvent.id);
+      
       // Update scheduled class status to completed
       const { error: scheduleError } = await supabase
         .from('scheduled_classes')
@@ -35,16 +37,27 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
         })
         .eq('id', classEvent.id);
 
-      if (scheduleError) throw scheduleError;
+      if (scheduleError) {
+        console.error('Error updating scheduled class:', scheduleError);
+        throw scheduleError;
+      }
 
-      // Check if class log already exists
-      const { data: existingLog } = await supabase
+      console.log('Scheduled class updated, checking for existing log...');
+
+      // Check if class log already exists (use maybeSingle to avoid errors)
+      const { data: existingLog, error: checkError } = await supabase
         .from('class_logs')
         .select('id')
         .eq('Class ID', classEvent.id)
         .maybeSingle();
 
+      if (checkError) {
+        console.error('Error checking for existing log:', checkError);
+        throw checkError;
+      }
+
       if (existingLog) {
+        console.log('Updating existing class log:', existingLog.id);
         // Update existing class log
         const { error: logError } = await supabase
           .from('class_logs')
@@ -54,8 +67,12 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
           })
           .eq('Class ID', classEvent.id);
 
-        if (logError) throw logError;
+        if (logError) {
+          console.error('Error updating class log:', logError);
+          throw logError;
+        }
       } else {
+        console.log('Creating new class log...');
         // Create new class log since trigger might not have created it
         const { error: logError } = await supabase
           .from('class_logs')
@@ -76,15 +93,19 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
             'Tutor Payment': 'Pending',
           });
 
-        if (logError) throw logError;
+        if (logError) {
+          console.error('Error creating class log:', logError);
+          throw logError;
+        }
       }
 
+      console.log('Class completion successful');
       toast.success('Class marked as completed and logged');
       setIsDialogOpen(false);
       onUpdate();
     } catch (error) {
       console.error('Error completing class:', error);
-      toast.error('Failed to mark class as completed');
+      toast.error(`Failed to mark class as completed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsCompleting(false);
     }
