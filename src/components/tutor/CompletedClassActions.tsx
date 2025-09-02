@@ -105,7 +105,19 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
       onUpdate();
     } catch (error) {
       console.error('Error completing class:', error);
-      toast.error(`Failed to mark class as completed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('Error type:', typeof error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
+      
+      let errorMessage = 'Unknown error';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'object' && error !== null) {
+        errorMessage = JSON.stringify(error);
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
+      toast.error(`Failed to mark class as completed: ${errorMessage}`);
     } finally {
       setIsCompleting(false);
     }
