@@ -42,7 +42,7 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
         .from('class_logs')
         .select('id')
         .eq('Class ID', classEvent.id)
-        .single();
+        .maybeSingle();
 
       if (existingLog) {
         // Update existing class log
@@ -53,6 +53,28 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
             HW: homework,
           })
           .eq('Class ID', classEvent.id);
+
+        if (logError) throw logError;
+      } else {
+        // Create new class log since trigger might not have created it
+        const { error: logError } = await supabase
+          .from('class_logs')
+          .insert({
+            'Class Number': classEvent.title,
+            'Tutor Name': classEvent.tutorName,
+            'Student Name': classEvent.studentName,
+            'Date': new Date(classEvent.date).toISOString().split('T')[0],
+            'Day': new Date(classEvent.date).toLocaleDateString('en-US', { weekday: 'long' }),
+            'Time (CST)': classEvent.startTime,
+            'Time (hrs)': classEvent.duration?.toString() || '0',
+            'Subject': classEvent.subject,
+            'Content': content,
+            'HW': homework,
+            'Class ID': classEvent.id,
+            'Additional Info': classEvent.notes || null,
+            'Student Payment': 'Pending',
+            'Tutor Payment': 'Pending',
+          });
 
         if (logError) throw logError;
       }
