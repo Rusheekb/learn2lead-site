@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Edit3, Save, Undo2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { ClassEvent } from '@/types/tutorTypes';
 
@@ -18,12 +19,18 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
   classEvent,
   onUpdate,
 }) => {
+  const { user } = useAuth();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const [content, setContent] = useState(classEvent.content || '');
   const [homework, setHomework] = useState(classEvent.homework || '');
 
   const handleMarkComplete = async () => {
+    if (!user?.id) {
+      toast.error('User not authenticated');
+      return;
+    }
+
     setIsCompleting(true);
     try {
       console.log('Starting class completion for:', classEvent.id);
@@ -73,12 +80,27 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
         }
       } else {
         console.log('Creating new class log...');
+        
+        // Get the current user's profile to ensure name matches RLS policy
+        const { data: currentUserProfile, error: profileError } = await supabase
+          .from('profiles')
+          .select('first_name, last_name')
+          .eq('id', user.id)
+          .single();
+
+        if (profileError) {
+          console.error('Error fetching tutor profile:', profileError);
+          throw new Error('Failed to fetch tutor profile for logging');
+        }
+
+        const tutorName = `${currentUserProfile?.first_name || ''} ${currentUserProfile?.last_name || ''}`.trim();
+        
         // Create new class log since trigger might not have created it
         const { error: logError } = await supabase
           .from('class_logs')
           .insert({
             'Class Number': classEvent.title,
-            'Tutor Name': classEvent.tutorName,
+            'Tutor Name': tutorName,
             'Student Name': classEvent.studentName,
             'Date': new Date(classEvent.date).toISOString().split('T')[0],
             'Day': new Date(classEvent.date).toLocaleDateString('en-US', { weekday: 'long' }),
