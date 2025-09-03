@@ -55,7 +55,8 @@ const ClassHistory: React.FC<ClassHistoryProps> = ({ userRole }) => {
           .eq('id', user.id)
           .single();
         
-        const tutorName = `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim();
+        // Match the exact format used in RLS policy: concat(first_name, ' ', last_name)
+        const tutorName = `${profile?.first_name || ''} ${profile?.last_name || ''}`;
         query = query.eq('Tutor Name', tutorName);
       } else if (userRole === 'student') {
         const { data: profile } = await supabase
@@ -64,7 +65,8 @@ const ClassHistory: React.FC<ClassHistoryProps> = ({ userRole }) => {
           .eq('id', user.id)
           .single();
         
-        const studentName = `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim();
+        // Match the exact format used in RLS policy: concat(first_name, ' ', last_name)
+        const studentName = `${profile?.first_name || ''} ${profile?.last_name || ''}`;
         query = query.eq('Student Name', studentName);
       }
 
