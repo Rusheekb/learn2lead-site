@@ -93,7 +93,8 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
           throw new Error('Failed to fetch tutor profile for logging');
         }
 
-        const tutorName = `${currentUserProfile?.first_name || ''} ${currentUserProfile?.last_name || ''}`.trim();
+        // Match the exact format used in RLS policy: concat(first_name, ' ', last_name)
+        const tutorName = `${currentUserProfile?.first_name || ''} ${currentUserProfile?.last_name || ''}`;
         
         // Create new class log since trigger might not have created it
         const { error: logError } = await supabase
