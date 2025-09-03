@@ -35,7 +35,7 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
     try {
       console.log('Starting class completion for:', classEvent.id);
       
-      // Update scheduled class status to completed
+      // Update scheduled class status to completed - this will trigger auto_create_class_log()
       const { error: scheduleError } = await supabase
         .from('scheduled_classes')
         .update({ 
@@ -49,77 +49,23 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
         throw scheduleError;
       }
 
-      console.log('Scheduled class updated, checking for existing log...');
+      console.log('Scheduled class updated, waiting for trigger to create log...');
 
-      // Check if class log already exists (use maybeSingle to avoid errors)
-      const { data: existingLog, error: checkError } = await supabase
+      // Wait a moment for the trigger to create the class log
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Now update the class log with our content and homework
+      const { error: logError } = await supabase
         .from('class_logs')
-        .select('id')
-        .eq('Class ID', classEvent.id)
-        .maybeSingle();
+        .update({
+          Content: content,
+          HW: homework,
+        })
+        .eq('Class ID', classEvent.id);
 
-      if (checkError) {
-        console.error('Error checking for existing log:', checkError);
-        throw checkError;
-      }
-
-      if (existingLog) {
-        console.log('Updating existing class log:', existingLog.id);
-        // Update existing class log
-        const { error: logError } = await supabase
-          .from('class_logs')
-          .update({
-            Content: content,
-            HW: homework,
-          })
-          .eq('Class ID', classEvent.id);
-
-        if (logError) {
-          console.error('Error updating class log:', logError);
-          throw logError;
-        }
-      } else {
-        console.log('Creating new class log...');
-        
-        // Get the current user's profile to ensure name matches RLS policy
-        const { data: currentUserProfile, error: profileError } = await supabase
-          .from('profiles')
-          .select('first_name, last_name')
-          .eq('id', user.id)
-          .single();
-
-        if (profileError) {
-          console.error('Error fetching tutor profile:', profileError);
-          throw new Error('Failed to fetch tutor profile for logging');
-        }
-
-        // Match the exact format used in RLS policy: concat(first_name, ' ', last_name)
-        const tutorName = `${currentUserProfile?.first_name || ''} ${currentUserProfile?.last_name || ''}`;
-        
-        // Create new class log since trigger might not have created it
-        const { error: logError } = await supabase
-          .from('class_logs')
-          .insert({
-            'Class Number': classEvent.title,
-            'Tutor Name': tutorName,
-            'Student Name': classEvent.studentName,
-            'Date': new Date(classEvent.date).toISOString().split('T')[0],
-            'Day': new Date(classEvent.date).toLocaleDateString('en-US', { weekday: 'long' }),
-            'Time (CST)': classEvent.startTime,
-            'Time (hrs)': classEvent.duration?.toString() || '0',
-            'Subject': classEvent.subject,
-            'Content': content,
-            'HW': homework,
-            'Class ID': classEvent.id,
-            'Additional Info': classEvent.notes || null,
-            'Student Payment': 'Pending',
-            'Tutor Payment': 'Pending',
-          });
-
-        if (logError) {
-          console.error('Error creating class log:', logError);
-          throw logError;
-        }
+      if (logError) {
+        console.error('Error updating class log:', logError);
+        throw logError;
       }
 
       console.log('Class completion successful');
