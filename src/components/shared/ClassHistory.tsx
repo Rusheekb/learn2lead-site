@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface ClassHistoryItem {
   id: string;
@@ -32,6 +33,7 @@ interface ClassHistoryProps {
 
 const ClassHistory: React.FC<ClassHistoryProps> = ({ userRole }) => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [classHistory, setClassHistory] = useState<ClassHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedClass, setSelectedClass] = useState<ClassHistoryItem | null>(null);
@@ -179,6 +181,13 @@ const ClassHistory: React.FC<ClassHistoryProps> = ({ userRole }) => {
       }
 
       toast.success('Class reverted back to scheduled');
+      
+      // Invalidate scheduler queries to refresh the calendar
+      if (user?.id) {
+        queryClient.invalidateQueries({ queryKey: ['scheduledClasses', user.id] });
+        queryClient.invalidateQueries({ queryKey: ['upcomingClasses', user.id] });
+      }
+      
       fetchClassHistory(); // Refresh the history
     } catch (error) {
       console.error('Error reverting class:', error);
@@ -237,26 +246,14 @@ const ClassHistory: React.FC<ClassHistoryProps> = ({ userRole }) => {
                     </div>
                   </div>
                   {userRole === 'tutor' && (
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleEditClass(classItem)}
-                      >
-                        <Edit3 className="h-4 w-4 mr-2" />
-                        Edit
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleRevertClass(classItem)}
-                        disabled={isReverting === classItem.id}
-                        className="text-orange-600 border-orange-600 hover:bg-orange-50"
-                      >
-                        <Undo2 className="h-4 w-4 mr-2" />
-                        {isReverting === classItem.id ? 'Reverting...' : 'Revert to Scheduled'}
-                      </Button>
-                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEditClass(classItem)}
+                    >
+                      <Edit3 className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
                   )}
                 </div>
               </CardHeader>
@@ -323,16 +320,27 @@ const ClassHistory: React.FC<ClassHistoryProps> = ({ userRole }) => {
                 rows={3}
               />
             </div>
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-between gap-2">
               <Button
                 variant="outline"
-                onClick={() => setIsEditDialogOpen(false)}
+                onClick={() => selectedClass && handleRevertClass(selectedClass)}
+                disabled={!selectedClass || isReverting === selectedClass?.id}
+                className="text-orange-600 border-orange-600 hover:bg-orange-50"
               >
-                Cancel
+                <Undo2 className="h-4 w-4 mr-2" />
+                {isReverting === selectedClass?.id ? 'Reverting...' : 'Revert to Scheduled'}
               </Button>
-              <Button onClick={handleSaveEdit}>
-                Save Changes
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsEditDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={handleSaveEdit}>
+                  Save Changes
+                </Button>
+              </div>
             </div>
           </div>
         </DialogContent>

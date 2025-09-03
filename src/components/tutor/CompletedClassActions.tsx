@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { ClassEvent } from '@/types/tutorTypes';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface CompletedClassActionsProps {
   classEvent: ClassEvent;
@@ -20,6 +21,7 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
   onUpdate,
 }) => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const [content, setContent] = useState(classEvent.content || '');
@@ -88,6 +90,19 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
 
       console.log('Class completion successful - moved from scheduled to logs');
       toast.success('Class completed and moved to class history');
+      
+      // Invalidate all relevant queries to refresh the UI
+      if (user?.id) {
+        queryClient.invalidateQueries({ queryKey: ['scheduledClasses', user.id] });
+        queryClient.invalidateQueries({ queryKey: ['upcomingClasses', user.id] });
+      }
+      
+      if (classEvent.studentId) {
+        queryClient.invalidateQueries({ queryKey: ['studentClasses', classEvent.studentId] });
+        queryClient.invalidateQueries({ queryKey: ['upcomingClasses', classEvent.studentId] });
+        queryClient.invalidateQueries({ queryKey: ['studentDashboard', classEvent.studentId] });
+      }
+      
       setIsDialogOpen(false);
       onUpdate();
     } catch (error) {
