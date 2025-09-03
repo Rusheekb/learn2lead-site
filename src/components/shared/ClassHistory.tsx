@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CalendarDays, Clock, BookOpen, User, FileText, Edit3 } from 'lucide-react';
+import { CalendarDays, Clock, BookOpen, User, FileText, Edit3, Undo2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -23,6 +23,7 @@ interface ClassHistoryItem {
   Content: string | null;
   HW: string | null;
   'Additional Info': string | null;
+  'Class ID': string | null;
 }
 
 interface ClassHistoryProps {
@@ -37,6 +38,7 @@ const ClassHistory: React.FC<ClassHistoryProps> = ({ userRole }) => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editContent, setEditContent] = useState('');
   const [editHomework, setEditHomework] = useState('');
+  const [isReverting, setIsReverting] = useState<string | null>(null);
 
   useEffect(() => {
     fetchClassHistory();
@@ -113,6 +115,79 @@ const ClassHistory: React.FC<ClassHistoryProps> = ({ userRole }) => {
     }
   };
 
+  const handleRevertClass = async (classItem: ClassHistoryItem) => {
+    if (!classItem['Class ID']) {
+      toast.error('Cannot revert class: missing class ID');
+      return;
+    }
+
+    setIsReverting(classItem.id);
+    try {
+      // Get student ID from the database by matching student name
+      const studentName = classItem['Student Name'];
+      const { data: profiles, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name')
+        .eq('first_name', studentName?.split(' ')[0] || '')
+        .eq('last_name', studentName?.split(' ').slice(1).join(' ') || '');
+
+      if (profileError || !profiles?.length) {
+        console.error('Error finding student profile:', profileError);
+        toast.error('Cannot find student profile to revert class');
+        return;
+      }
+
+      const studentId = profiles[0].id;
+
+      // Calculate end time based on duration
+      const startTime = classItem['Time (CST)'] || '09:00';
+      const duration = parseFloat(classItem['Time (hrs)'] || '1');
+      const [hours, minutes] = startTime.split(':').map(Number);
+      const endDate = new Date();
+      endDate.setHours(hours + Math.floor(duration), minutes + ((duration % 1) * 60));
+      const endTime = endDate.toTimeString().slice(0, 5);
+
+      // Restore to scheduled_classes
+      const { error: scheduleError } = await supabase
+        .from('scheduled_classes')
+        .insert({
+          title: classItem['Class Number'] || 'Untitled Class',
+          date: classItem.Date,
+          start_time: startTime,
+          end_time: endTime,
+          subject: classItem.Subject || 'Unknown Subject',
+          tutor_id: user!.id,
+          student_id: studentId,
+          status: 'scheduled',
+          notes: classItem['Additional Info'],
+        });
+
+      if (scheduleError) {
+        console.error('Error restoring scheduled class:', scheduleError);
+        throw scheduleError;
+      }
+
+      // Remove from class_logs
+      const { error: deleteLogError } = await supabase
+        .from('class_logs')
+        .delete()
+        .eq('id', classItem.id);
+
+      if (deleteLogError) {
+        console.error('Error deleting class log:', deleteLogError);
+        throw deleteLogError;
+      }
+
+      toast.success('Class reverted back to scheduled');
+      fetchClassHistory(); // Refresh the history
+    } catch (error) {
+      console.error('Error reverting class:', error);
+      toast.error('Failed to revert class to scheduled');
+    } finally {
+      setIsReverting(null);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -162,14 +237,26 @@ const ClassHistory: React.FC<ClassHistoryProps> = ({ userRole }) => {
                     </div>
                   </div>
                   {userRole === 'tutor' && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEditClass(classItem)}
-                    >
-                      <Edit3 className="h-4 w-4 mr-2" />
-                      Edit
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditClass(classItem)}
+                      >
+                        <Edit3 className="h-4 w-4 mr-2" />
+                        Edit
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRevertClass(classItem)}
+                        disabled={isReverting === classItem.id}
+                        className="text-orange-600 border-orange-600 hover:bg-orange-50"
+                      >
+                        <Undo2 className="h-4 w-4 mr-2" />
+                        {isReverting === classItem.id ? 'Reverting...' : 'Revert to Scheduled'}
+                      </Button>
+                    </div>
                   )}
                 </div>
               </CardHeader>
