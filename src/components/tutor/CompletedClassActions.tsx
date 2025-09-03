@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Edit3, Save, Undo2 } from 'lucide-react';
+import { CheckCircle, Edit3, Save } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -35,41 +35,59 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
     try {
       console.log('Starting class completion for:', classEvent.id);
       
-      // Update scheduled class status to completed - this will trigger auto_create_class_log()
-      const { error: scheduleError } = await supabase
-        .from('scheduled_classes')
-        .update({ 
-          status: 'completed',
-          notes: content 
-        })
-        .eq('id', classEvent.id);
+      // Get the current user's profile to ensure name matches RLS policy
+      const { data: currentUserProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('first_name, last_name')
+        .eq('id', user.id)
+        .single();
 
-      if (scheduleError) {
-        console.error('Error updating scheduled class:', scheduleError);
-        throw scheduleError;
+      if (profileError) {
+        console.error('Error fetching tutor profile:', profileError);
+        throw new Error('Failed to fetch tutor profile for logging');
       }
 
-      console.log('Scheduled class updated, waiting for trigger to create log...');
-
-      // Wait a moment for the trigger to create the class log
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // Now update the class log with our content and homework
+      // Match the exact format used in RLS policy: concat(first_name, ' ', last_name)
+      const tutorName = `${currentUserProfile?.first_name || ''} ${currentUserProfile?.last_name || ''}`;
+      
+      // Create class log entry directly (moving from scheduled_classes to class_logs)
       const { error: logError } = await supabase
         .from('class_logs')
-        .update({
-          Content: content,
-          HW: homework,
-        })
-        .eq('Class ID', classEvent.id);
+        .insert({
+          'Class Number': classEvent.title,
+          'Tutor Name': tutorName,
+          'Student Name': classEvent.studentName,
+          'Date': new Date(classEvent.date).toISOString().split('T')[0],
+          'Day': new Date(classEvent.date).toLocaleDateString('en-US', { weekday: 'long' }),
+          'Time (CST)': classEvent.startTime,
+          'Time (hrs)': classEvent.duration?.toString() || '0',
+          'Subject': classEvent.subject,
+          'Content': content,
+          'HW': homework,
+          'Class ID': classEvent.id,
+          'Additional Info': classEvent.notes || null,
+          'Student Payment': 'Pending',
+          'Tutor Payment': 'Pending',
+        });
 
       if (logError) {
-        console.error('Error updating class log:', logError);
+        console.error('Error creating class log:', logError);
         throw logError;
       }
 
-      console.log('Class completion successful');
-      toast.success('Class marked as completed and logged');
+      // Now remove from scheduled_classes since it's been moved to class_logs
+      const { error: deleteError } = await supabase
+        .from('scheduled_classes')
+        .delete()
+        .eq('id', classEvent.id);
+
+      if (deleteError) {
+        console.error('Error removing scheduled class:', deleteError);
+        throw deleteError;
+      }
+
+      console.log('Class completion successful - moved from scheduled to logs');
+      toast.success('Class completed and moved to class history');
       setIsDialogOpen(false);
       onUpdate();
     } catch (error) {
@@ -92,32 +110,9 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
     }
   };
 
-  const handleUnmarkComplete = async () => {
-    setIsCompleting(true);
-    try {
-      // Update scheduled class status back to scheduled
-      const { error: scheduleError } = await supabase
-        .from('scheduled_classes')
-        .update({ 
-          status: 'scheduled',
-          notes: null 
-        })
-        .eq('id', classEvent.id);
-
-      if (scheduleError) throw scheduleError;
-
-      toast.success('Class status reverted to scheduled');
-      setIsDialogOpen(false);
-      onUpdate();
-    } catch (error) {
-      console.error('Error reverting class status:', error);
-      toast.error('Failed to revert class status');
-    } finally {
-      setIsCompleting(false);
-    }
-  };
-
-  const isCompleted = classEvent.status === 'completed';
+  // Since completed classes are moved to class_logs, 
+  // this component only handles scheduled classes
+  const isCompleted = false;
 
   return (
     <>
@@ -191,37 +186,22 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
               />
             </div>
 
-            <div className="flex justify-between gap-2 pt-4">
-              <div>
-                {isCompleted && (
-                  <Button
-                    variant="outline"
-                    onClick={handleUnmarkComplete}
-                    disabled={isCompleting}
-                    className="flex items-center gap-2 text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
-                  >
-                    <Undo2 className="h-4 w-4" />
-                    Revert to Scheduled
-                  </Button>
-                )}
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsDialogOpen(false)}
-                  disabled={isCompleting}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleMarkComplete}
-                  disabled={isCompleting || !content.trim()}
-                  className="flex items-center gap-2"
-                >
-                  <Save className="h-4 w-4" />
-                  {isCompleting ? 'Saving...' : (isCompleted ? 'Update Log' : 'Complete & Save')}
-                </Button>
-              </div>
+            <div className="flex justify-end gap-2 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setIsDialogOpen(false)}
+                disabled={isCompleting}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleMarkComplete}
+                disabled={isCompleting || !content.trim()}
+                className="flex items-center gap-2"
+              >
+                <Save className="h-4 w-4" />
+                {isCompleting ? 'Saving...' : 'Complete & Save'}
+              </Button>
             </div>
           </div>
         </DialogContent>
