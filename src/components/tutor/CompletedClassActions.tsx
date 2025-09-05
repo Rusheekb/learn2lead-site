@@ -55,9 +55,27 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
   }, [classEvent.id]);
 
   const handleMarkComplete = async () => {
-    if (!user?.id) {
-      toast.error('User not authenticated');
+    if (!user?.id || isCompleting || isCompleted) {
+      toast.error('User not authenticated or operation in progress');
       return;
+    }
+
+    // Double-check that class hasn't been completed already
+    try {
+      const { data: existingLog } = await supabase
+        .from('class_logs')
+        .select('id')
+        .eq('Class ID', classEvent.id)
+        .maybeSingle();
+      
+      if (existingLog) {
+        toast.error('Class has already been completed');
+        setIsCompleted(true);
+        setIsDialogOpen(false);
+        return;
+      }
+    } catch (error) {
+      console.error('Error checking for existing completion:', error);
     }
 
     setIsCompleting(true);
@@ -104,6 +122,9 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
         throw logError;
       }
 
+      // Update local state immediately to prevent duplicate submissions
+      setIsCompleted(true);
+
       // Now remove from scheduled_classes since it's been moved to class_logs
       const { error: deleteError } = await supabase
         .from('scheduled_classes')
@@ -147,6 +168,9 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
       }
       
       toast.error(`Failed to mark class as completed: ${errorMessage}`);
+      
+      // Reset completed state on error
+      setIsCompleted(false);
     } finally {
       setIsCompleting(false);
     }
@@ -166,6 +190,7 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
         variant="default"
         size="sm"
         onClick={() => setIsDialogOpen(true)}
+        disabled={isCompleting}
         className="flex items-center gap-2"
       >
         <CheckCircle className="h-4 w-4" />
