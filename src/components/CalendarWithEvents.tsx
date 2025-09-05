@@ -16,6 +16,7 @@ interface CalendarWithEventsProps {
   onSelectEvent: (event: ClassEvent) => void;
   onAddEventClick: () => void;
   getUnreadMessageCount: (classId: string) => number;
+  onClassUpdate?: () => void;
 }
 
 // Helper function to get upcoming events for the next 7 days
@@ -40,13 +41,14 @@ const CalendarWithEvents: React.FC<CalendarWithEventsProps> = ({
   onSelectEvent,
   onAddEventClick,
   getUnreadMessageCount,
+  onClassUpdate,
 }) => {
   const { userRole } = useAuth();
   const [eventsForSelectedDate, setEventsForSelectedDate] = useState<ClassEvent[]>([]);
 
   const handleClassUpdate = () => {
-    // Trigger a refetch of the scheduled classes
-    window.location.reload(); // Simple approach for now
+    // This will be handled by the parent component through query invalidation
+    // No need to reload the entire page
   };
 
   // Function to check if a date has any scheduled classes
@@ -193,7 +195,7 @@ const CalendarWithEvents: React.FC<CalendarWithEventsProps> = ({
                       {userRole === 'tutor' && (
                         <CompletedClassActions 
                           classEvent={event} 
-                          onUpdate={handleClassUpdate}
+                          onUpdate={onClassUpdate || (() => {})}
                         />
                       )}
                     </div>
