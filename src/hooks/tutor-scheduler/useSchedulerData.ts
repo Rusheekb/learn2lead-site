@@ -53,9 +53,11 @@ export default function useSchedulerData() {
   // Refresh classes data whenever the component mounts or the user changes
   useEffect(() => {
     if (user?.id) {
-      loadClasses();
-      // Also invalidate any cached queries to ensure fresh data
+      // Invalidate cached queries first to ensure fresh data
       queryClient.invalidateQueries({ queryKey: ['scheduledClasses', user.id] });
+      queryClient.invalidateQueries({ queryKey: ['scheduledClasses'] });
+      // Then load fresh data
+      loadClasses();
     }
   }, [loadClasses, user?.id, queryClient]);
 

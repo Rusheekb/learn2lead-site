@@ -91,7 +91,11 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
       console.log('Class completion successful - moved from scheduled to logs');
       toast.success('Class completed and moved to class history');
       
-      // Invalidate all relevant queries to refresh the UI
+      // Invalidate all relevant queries to refresh the UI immediately
+      queryClient.invalidateQueries({ queryKey: ['scheduledClasses'] });
+      queryClient.invalidateQueries({ queryKey: ['upcomingClasses'] });
+      queryClient.invalidateQueries({ queryKey: ['classLogs'] });
+      
       if (user?.id) {
         queryClient.invalidateQueries({ queryKey: ['scheduledClasses', user.id] });
         queryClient.invalidateQueries({ queryKey: ['upcomingClasses', user.id] });
@@ -103,6 +107,7 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
         queryClient.invalidateQueries({ queryKey: ['studentDashboard', classEvent.studentId] });
       }
       
+      // Force an immediate refetch by calling onUpdate
       setIsDialogOpen(false);
       onUpdate();
     } catch (error) {

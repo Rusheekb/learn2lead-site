@@ -123,6 +123,7 @@ const TutorScheduler: React.FC = () => {
           onSelectEvent={handleSelectEvent}
           onAddEventClick={handleAddEventClick}
           getUnreadMessageCount={getUnreadMessageCount}
+          onClassUpdate={refetchClasses}
         />
       </div>
       

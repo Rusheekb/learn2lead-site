@@ -10,6 +10,7 @@ interface TutorSchedulerCalendarProps {
   onSelectEvent: (event: ClassEvent) => void;
   onAddEventClick: () => void;
   getUnreadMessageCount: (classId: string) => number;
+  onClassUpdate?: () => void;
 }
 
 const TutorSchedulerCalendar: React.FC<TutorSchedulerCalendarProps> = ({
@@ -19,6 +20,7 @@ const TutorSchedulerCalendar: React.FC<TutorSchedulerCalendarProps> = ({
   onSelectEvent,
   onAddEventClick,
   getUnreadMessageCount,
+  onClassUpdate,
 }) => {
   console.log('TutorSchedulerCalendar rendering with', scheduledClasses.length, 'events');
   
@@ -30,6 +32,7 @@ const TutorSchedulerCalendar: React.FC<TutorSchedulerCalendarProps> = ({
       onSelectEvent={onSelectEvent}
       onAddEventClick={onAddEventClick}
       getUnreadMessageCount={getUnreadMessageCount}
+      onClassUpdate={onClassUpdate}
     />
   );
 };

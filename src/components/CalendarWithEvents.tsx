@@ -47,8 +47,10 @@ const CalendarWithEvents: React.FC<CalendarWithEventsProps> = ({
   const [eventsForSelectedDate, setEventsForSelectedDate] = useState<ClassEvent[]>([]);
 
   const handleClassUpdate = () => {
-    // This will be handled by the parent component through query invalidation
-    // No need to reload the entire page
+    // Trigger a proper refetch by calling the parent's update function
+    if (onClassUpdate) {
+      onClassUpdate();
+    }
   };
 
   // Function to check if a date has any scheduled classes
