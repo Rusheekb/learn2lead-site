@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
@@ -26,6 +26,33 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
   const [isCompleting, setIsCompleting] = useState(false);
   const [content, setContent] = useState(classEvent.content || '');
   const [homework, setHomework] = useState(classEvent.homework || '');
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [isCheckingStatus, setIsCheckingStatus] = useState(true);
+
+  // Check if class is already completed
+  useEffect(() => {
+    const checkCompletionStatus = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('class_logs')
+          .select('id')
+          .eq('Class ID', classEvent.id)
+          .maybeSingle();
+
+        if (error) {
+          console.error('Error checking class completion status:', error);
+        } else {
+          setIsCompleted(!!data);
+        }
+      } catch (error) {
+        console.error('Error in checkCompletionStatus:', error);
+      } finally {
+        setIsCheckingStatus(false);
+      }
+    };
+
+    checkCompletionStatus();
+  }, [classEvent.id]);
 
   const handleMarkComplete = async () => {
     if (!user?.id) {
@@ -125,37 +152,31 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
     }
   };
 
-  // Since completed classes are moved to class_logs, 
-  // this component only handles scheduled classes
-  const isCompleted = false;
+  if (isCheckingStatus) {
+    return <Badge variant="secondary">Checking...</Badge>;
+  }
+
+  if (isCompleted) {
+    return <Badge variant="default">Completed</Badge>;
+  }
 
   return (
     <>
       <Button
-        variant={isCompleted ? "outline" : "default"}
+        variant="default"
         size="sm"
         onClick={() => setIsDialogOpen(true)}
         className="flex items-center gap-2"
       >
-        {isCompleted ? (
-          <>
-            <Edit3 className="h-4 w-4" />
-            Edit Log
-          </>
-        ) : (
-          <>
-            <CheckCircle className="h-4 w-4" />
-            Mark Complete
-          </>
-        )}
+        <CheckCircle className="h-4 w-4" />
+        Mark Complete
       </Button>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              {isCompleted ? 'Edit Class Log' : 'Complete Class & Add Description'}
-              {isCompleted && <Badge variant="secondary">Completed</Badge>}
+              Complete Class & Add Description
             </DialogTitle>
           </DialogHeader>
           
