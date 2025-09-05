@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
@@ -26,6 +26,8 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
   const [isCompleting, setIsCompleting] = useState(false);
   const [content, setContent] = useState(classEvent.content || '');
   const [homework, setHomework] = useState(classEvent.homework || '');
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [isCheckingStatus, setIsCheckingStatus] = useState(true);
 
   const handleMarkComplete = async () => {
     if (!user?.id) {
@@ -77,19 +79,18 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
         throw logError;
       }
 
-      // Now remove from scheduled_classes since it's been moved to class_logs
-      const { error: deleteError } = await supabase
-        .from('scheduled_classes')
-        .delete()
-        .eq('id', classEvent.id);
+      // Don't delete from scheduled_classes - just mark as completed in class_logs
+      console.log('Class completion successful - logged in class history');
+      toast.success('Class completed and logged in class history');
+      
+      // Update local state to hide the button
+      setIsCompleted(true);
 
-      if (deleteError) {
-        console.error('Error removing scheduled class:', deleteError);
-        throw deleteError;
-      }
-
-      console.log('Class completion successful - moved from scheduled to logs');
-      toast.success('Class completed and moved to class history');
+      console.log('Class completion successful - logged in class history');
+      toast.success('Class completed and logged in class history');
+      
+      // Update local state to hide the button
+      setIsCompleted(true);
       
       // Invalidate all relevant queries to refresh the UI immediately
       queryClient.invalidateQueries({ queryKey: ['scheduledClasses'] });
@@ -130,37 +131,37 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
     }
   };
 
-  // Since completed classes are moved to class_logs, 
-  // this component only handles scheduled classes
-  const isCompleted = false;
+  // Don't render anything if still checking status
+  if (isCheckingStatus) {
+    return null;
+  }
+
+  // Don't render the button if class is already completed
+  if (isCompleted) {
+    return (
+      <Badge variant="secondary" className="text-green-700 bg-green-100">
+        Completed
+      </Badge>
+    );
+  }
 
   return (
     <>
       <Button
-        variant={isCompleted ? "outline" : "default"}
+        variant="default"
         size="sm"
         onClick={() => setIsDialogOpen(true)}
         className="flex items-center gap-2"
       >
-        {isCompleted ? (
-          <>
-            <Edit3 className="h-4 w-4" />
-            Edit Log
-          </>
-        ) : (
-          <>
-            <CheckCircle className="h-4 w-4" />
-            Mark Complete
-          </>
-        )}
+        <CheckCircle className="h-4 w-4" />
+        Mark Complete
       </Button>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              {isCompleted ? 'Edit Class Log' : 'Complete Class & Add Description'}
-              {isCompleted && <Badge variant="secondary">Completed</Badge>}
+              Complete Class & Add Description
             </DialogTitle>
           </DialogHeader>
           
