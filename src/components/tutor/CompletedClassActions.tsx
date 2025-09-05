@@ -28,11 +28,13 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
   const [homework, setHomework] = useState(classEvent.homework || '');
   const [isCompleted, setIsCompleted] = useState(false);
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
+  const [lastCheckTime, setLastCheckTime] = useState(0);
 
   // Check if class is already completed
   useEffect(() => {
     const checkCompletionStatus = async () => {
       try {
+        console.log('Checking completion status for class ID:', classEvent.id);
         const { data, error } = await supabase
           .from('class_logs')
           .select('id')
@@ -42,6 +44,7 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
         if (error) {
           console.error('Error checking class completion status:', error);
         } else {
+          console.log('Completion check result:', { data, isCompleted: !!data });
           setIsCompleted(!!data);
         }
       } catch (error) {
@@ -53,6 +56,28 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
 
     checkCompletionStatus();
   }, [classEvent.id]);
+
+  // Re-check completion status when the component updates or after operations
+  useEffect(() => {
+    if (!isCheckingStatus && !isCompleting) {
+      const recheckStatus = async () => {
+        const { data } = await supabase
+          .from('class_logs')
+          .select('id')
+          .eq('Class ID', classEvent.id)
+          .maybeSingle();
+        
+        if (data && !isCompleted) {
+          console.log('Found completed class on recheck, updating state');
+          setIsCompleted(true);
+        }
+      };
+      
+      // Small delay to ensure database operations are committed
+      const timeoutId = setTimeout(recheckStatus, 500);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [classEvent.id, isCheckingStatus, isCompleting, isCompleted, lastCheckTime]);
 
   const handleMarkComplete = async () => {
     if (!user?.id || isCompleting || isCompleted) {
@@ -98,7 +123,8 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
       const tutorName = `${currentUserProfile?.first_name || ''} ${currentUserProfile?.last_name || ''}`;
       
       // Create class log entry directly (moving from scheduled_classes to class_logs)
-      const { error: logError } = await supabase
+      console.log('Creating class log entry for class ID:', classEvent.id);
+      const { data: insertData, error: logError } = await supabase
         .from('class_logs')
         .insert({
           'Class Number': classEvent.title,
@@ -122,8 +148,10 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
         throw logError;
       }
 
+      console.log('Class log created successfully:', insertData);
       // Update local state immediately to prevent duplicate submissions
       setIsCompleted(true);
+      setLastCheckTime(Date.now());
 
       // Now remove from scheduled_classes since it's been moved to class_logs
       const { error: deleteError } = await supabase
@@ -181,8 +209,11 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
   }
 
   if (isCompleted) {
+    console.log('Rendering completed badge for class:', classEvent.id);
     return <Badge variant="default">Completed</Badge>;
   }
+
+  console.log('Rendering mark complete button for class:', classEvent.id);
 
   return (
     <>
