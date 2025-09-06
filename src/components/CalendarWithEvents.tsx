@@ -193,7 +193,7 @@ const CalendarWithEvents: React.FC<CalendarWithEventsProps> = ({
                       </span>
                       {userRole === 'tutor' && (
                         <CompletedClassActions 
-                          key={`${event.id}-${event.status}-actions`}
+                          key={`${event.id}-${Date.now()}`}
                           classEvent={event} 
                           onUpdate={handleClassUpdate}
                         />

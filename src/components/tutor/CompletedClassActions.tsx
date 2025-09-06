@@ -28,13 +28,11 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
   const [homework, setHomework] = useState(classEvent.homework || '');
   const [isCompleted, setIsCompleted] = useState(false);
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
-  const [lastCheckTime, setLastCheckTime] = useState(0);
 
-  // Check if class is already completed
+  // Single source of truth for completion status
   useEffect(() => {
     const checkCompletionStatus = async () => {
       try {
-        console.log('Checking completion status for class ID:', classEvent.id);
         const { data, error } = await supabase
           .from('class_logs')
           .select('id')
@@ -44,7 +42,6 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
         if (error) {
           console.error('Error checking class completion status:', error);
         } else {
-          console.log('Completion check result:', { data, isCompleted: !!data });
           setIsCompleted(!!data);
         }
       } catch (error) {
@@ -57,56 +54,17 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
     checkCompletionStatus();
   }, [classEvent.id]);
 
-  // Re-check completion status when the component updates or after operations
-  useEffect(() => {
-    if (!isCheckingStatus && !isCompleting) {
-      const recheckStatus = async () => {
-        const { data } = await supabase
-          .from('class_logs')
-          .select('id')
-          .eq('Class ID', classEvent.id)
-          .maybeSingle();
-        
-        if (data && !isCompleted) {
-          console.log('Found completed class on recheck, updating state');
-          setIsCompleted(true);
-        }
-      };
-      
-      // Small delay to ensure database operations are committed
-      const timeoutId = setTimeout(recheckStatus, 500);
-      return () => clearTimeout(timeoutId);
-    }
-  }, [classEvent.id, isCheckingStatus, isCompleting, isCompleted, lastCheckTime]);
-
   const handleMarkComplete = async () => {
     if (!user?.id || isCompleting || isCompleted) {
       toast.error('User not authenticated or operation in progress');
       return;
     }
 
-    // Double-check that class hasn't been completed already
-    try {
-      const { data: existingLog } = await supabase
-        .from('class_logs')
-        .select('id')
-        .eq('Class ID', classEvent.id)
-        .maybeSingle();
-      
-      if (existingLog) {
-        toast.error('Class has already been completed');
-        setIsCompleted(true);
-        setIsDialogOpen(false);
-        return;
-      }
-    } catch (error) {
-      console.error('Error checking for existing completion:', error);
-    }
-
+    // Immediately set completing state to prevent double clicks
     setIsCompleting(true);
+    setIsCompleted(true); // Optimistically set as completed to hide button immediately
+
     try {
-      console.log('Starting class completion for:', classEvent.id);
-      
       // Get the current user's profile to ensure name matches RLS policy
       const { data: currentUserProfile, error: profileError } = await supabase
         .from('profiles')
@@ -119,58 +77,50 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
         throw new Error('Failed to fetch tutor profile for logging');
       }
 
-      // Match the exact format used in RLS policy: concat(first_name, ' ', last_name)
-      const tutorName = `${currentUserProfile?.first_name || ''} ${currentUserProfile?.last_name || ''}`;
+      const tutorName = `${currentUserProfile?.first_name || ''} ${currentUserProfile?.last_name || ''}`.trim() || 'Unknown Tutor';
       
-      // Create class log entry directly (moving from scheduled_classes to class_logs)
-      console.log('Creating class log entry for class ID:', classEvent.id);
-      const { data: insertData, error: logError } = await supabase
-        .from('class_logs')
-        .insert({
-          'Class Number': classEvent.title,
-          'Tutor Name': tutorName,
-          'Student Name': classEvent.studentName,
-          'Date': new Date(classEvent.date).toISOString().split('T')[0],
-          'Day': new Date(classEvent.date).toLocaleDateString('en-US', { weekday: 'long' }),
-          'Time (CST)': classEvent.startTime,
-          'Time (hrs)': classEvent.duration?.toString() || '0',
-          'Subject': classEvent.subject,
-          'Content': content,
-          'HW': homework,
-          'Class ID': classEvent.id,
-          'Additional Info': classEvent.notes || null,
-          'Student Payment': 'Pending',
-          'Tutor Payment': 'Pending',
+      // Use the atomic function to prevent duplicates
+      const { data: result, error: functionError } = await supabase
+        .rpc('complete_class_atomic', {
+          p_class_id: classEvent.id,
+          p_class_number: classEvent.title,
+          p_tutor_name: tutorName,
+          p_student_name: classEvent.studentName || 'Unknown Student',
+          p_date: new Date(classEvent.date).toISOString().split('T')[0],
+          p_day: new Date(classEvent.date).toLocaleDateString('en-US', { weekday: 'long' }),
+          p_time_cst: classEvent.startTime,
+          p_time_hrs: classEvent.duration?.toString() || '0',
+          p_subject: classEvent.subject,
+          p_content: content,
+          p_hw: homework || '',
+          p_additional_info: classEvent.notes || '',
         });
 
-      if (logError) {
-        console.error('Error creating class log:', logError);
-        throw logError;
+      if (functionError) {
+        console.error('Error calling complete_class_atomic:', functionError);
+        throw functionError;
       }
 
-      console.log('Class log created successfully:', insertData);
-      // Update local state immediately to prevent duplicate submissions
-      setIsCompleted(true);
-      setLastCheckTime(Date.now());
+      // Type the result properly
+      const typedResult = result as { success: boolean; error?: string; code?: string; message?: string };
 
-      // Now remove from scheduled_classes since it's been moved to class_logs
-      const { error: deleteError } = await supabase
-        .from('scheduled_classes')
-        .delete()
-        .eq('id', classEvent.id);
-
-      if (deleteError) {
-        console.error('Error removing scheduled class:', deleteError);
-        throw deleteError;
+      if (!typedResult?.success) {
+        if (typedResult?.code === 'ALREADY_COMPLETED') {
+          toast.error('Class has already been completed');
+          setIsCompleted(true);
+          setIsDialogOpen(false);
+          return;
+        }
+        throw new Error(typedResult?.error || 'Failed to complete class');
       }
 
-      console.log('Class completion successful - moved from scheduled to logs');
       toast.success('Class completed and moved to class history');
       
       // Invalidate all relevant queries to refresh the UI
       if (user?.id) {
         queryClient.invalidateQueries({ queryKey: ['scheduledClasses', user.id] });
         queryClient.invalidateQueries({ queryKey: ['upcomingClasses', user.id] });
+        queryClient.invalidateQueries({ queryKey: ['classLogs'] });
       }
       
       if (classEvent.studentId) {
@@ -183,8 +133,6 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
       onUpdate();
     } catch (error) {
       console.error('Error completing class:', error);
-      console.error('Error type:', typeof error);
-      console.error('Error details:', JSON.stringify(error, null, 2));
       
       let errorMessage = 'Unknown error';
       if (error instanceof Error) {
@@ -197,7 +145,7 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
       
       toast.error(`Failed to mark class as completed: ${errorMessage}`);
       
-      // Reset completed state on error
+      // Reset completed state on error to show button again
       setIsCompleted(false);
     } finally {
       setIsCompleting(false);
@@ -208,12 +156,15 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
     return <Badge variant="secondary">Checking...</Badge>;
   }
 
+  // Show completed badge if class is completed
   if (isCompleted) {
-    console.log('Rendering completed badge for class:', classEvent.id);
     return <Badge variant="default">Completed</Badge>;
   }
 
-  console.log('Rendering mark complete button for class:', classEvent.id);
+  // Show processing state if currently completing
+  if (isCompleting) {
+    return <Badge variant="secondary">Processing...</Badge>;
+  }
 
   return (
     <>

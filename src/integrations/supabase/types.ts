@@ -422,6 +422,23 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      complete_class_atomic: {
+        Args: {
+          p_additional_info: string
+          p_class_id: string
+          p_class_number: string
+          p_content: string
+          p_date: string
+          p_day: string
+          p_hw: string
+          p_student_name: string
+          p_subject: string
+          p_time_cst: string
+          p_time_hrs: string
+          p_tutor_name: string
+        }
+        Returns: Json
+      }
       generate_class_notifications: {
         Args: Record<PropertyKey, never>
         Returns: undefined
