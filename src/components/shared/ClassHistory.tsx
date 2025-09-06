@@ -50,33 +50,62 @@ const ClassHistory: React.FC<ClassHistoryProps> = ({ userRole }) => {
     if (!user) return;
 
     try {
-      let query = supabase.from('class_logs').select('*');
+      // Use a more robust approach to fetch classes based on user ID relationship
+      let query;
       
       if (userRole === 'tutor') {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('first_name, last_name')
-          .eq('id', user.id)
-          .single();
-        
-        // Match the exact format used in RLS policy: concat(first_name, ' ', last_name)
-        const tutorName = `${profile?.first_name || ''} ${profile?.last_name || ''}`;
-        query = query.eq('Tutor Name', tutorName);
+        // For tutors, get classes where they are the tutor
+        query = supabase
+          .from('class_logs')
+          .select(`
+            *,
+            scheduled_classes!inner(tutor_id)
+          `)
+          .eq('scheduled_classes.tutor_id', user.id);
       } else if (userRole === 'student') {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('first_name, last_name')
-          .eq('id', user.id)
-          .single();
-        
-        // Match the exact format used in RLS policy: concat(first_name, ' ', last_name)
-        const studentName = `${profile?.first_name || ''} ${profile?.last_name || ''}`;
-        query = query.eq('Student Name', studentName);
+        // For students, get classes where they are the student
+        query = supabase
+          .from('class_logs')
+          .select(`
+            *,
+            scheduled_classes!inner(student_id)
+          `)
+          .eq('scheduled_classes.student_id', user.id);
+      } else {
+        // Admin can see all
+        query = supabase.from('class_logs').select('*');
       }
 
-      const { data, error } = await query.order('Date', { ascending: false });
+      // If the join approach fails, fall back to name matching
+      let { data, error } = await query?.order('Date', { ascending: false }) || { data: null, error: null };
 
-      if (error) throw error;
+      // Fallback to name matching if join fails
+      if (error || !data) {
+        console.log('Join query failed, falling back to name matching:', error);
+        
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('first_name, last_name, email')
+          .eq('id', user.id)
+          .single();
+        
+        if (profile) {
+          const fullName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
+          const fallbackQuery = supabase.from('class_logs').select('*');
+          
+          if (userRole === 'tutor') {
+            fallbackQuery.or(`Tutor Name.eq.${fullName},Tutor Name.eq.${profile.email}`);
+          } else if (userRole === 'student') {
+            fallbackQuery.or(`Student Name.eq.${fullName},Student Name.eq.${profile.email}`);
+          }
+          
+          const { data: fallbackData, error: fallbackError } = await fallbackQuery.order('Date', { ascending: false });
+          
+          if (!fallbackError) {
+            data = fallbackData;
+          }
+        }
+      }
 
       setClassHistory(data || []);
     } catch (error) {

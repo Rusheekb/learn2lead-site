@@ -6,6 +6,8 @@ import { format, isSameDay, parseISO } from 'date-fns';
 import { ClassEvent } from '@/types/tutorTypes';
 import ClassEventCard from './ClassEventCard';
 import EmptyDayPanel from './EmptyDayPanel';
+import { supabase } from '@/integrations/supabase/client';
+import { transformDbRecordToClassEvent } from '@/services/class-operations/utils/classEventMapper';
 
 interface CalendarWithEventsProps {
   selectedDate: Date;
@@ -27,21 +29,47 @@ const CalendarWithEvents: React.FC<CalendarWithEventsProps> = ({
   const [eventsForSelectedDate, setEventsForSelectedDate] = useState<
     ClassEvent[]
   >([]);
+  const [completedClasses, setCompletedClasses] = useState<ClassEvent[]>([]);
 
-  // Function to check if a date has any scheduled classes
+  // Function to check if a date has any scheduled or completed classes
   const hasEventsOnDate = (date: Date) => {
-    return scheduledClasses.some((event) => {
+    const hasScheduled = scheduledClasses.some((event) => {
       const eventDate = event.date instanceof Date
         ? event.date
         : parseISO(event.date as string);
       return isSameDay(date, eventDate);
     });
+    
+    const hasCompleted = completedClasses.some((event) => {
+      const eventDate = event.date instanceof Date
+        ? event.date
+        : parseISO(event.date as string);
+      return isSameDay(date, eventDate);
+    });
+    
+    return hasScheduled || hasCompleted;
   };
 
+  // Fetch completed classes
   useEffect(() => {
-    // Find events for the selected date
-    const events = scheduledClasses.filter((event) => {
-      // Handle both Date objects and string dates
+    const fetchCompletedClasses = async () => {
+      try {
+        const { data, error } = await supabase.from('class_logs').select('*');
+        if (!error && data) {
+          const transformedClasses = data.map(item => transformDbRecordToClassEvent(item as any));
+          setCompletedClasses(transformedClasses);
+        }
+      } catch (error) {
+        console.error('Error fetching completed classes:', error);
+      }
+    };
+
+    fetchCompletedClasses();
+  }, []);
+
+  useEffect(() => {
+    // Find scheduled events for the selected date
+    const scheduledEvents = scheduledClasses.filter((event) => {
       const eventDate =
         event.date instanceof Date
           ? event.date
@@ -50,8 +78,24 @@ const CalendarWithEvents: React.FC<CalendarWithEventsProps> = ({
       return isSameDay(selectedDate, eventDate);
     });
 
-    setEventsForSelectedDate(events);
-  }, [selectedDate, scheduledClasses]);
+    // Find completed events for the selected date
+    const completedEvents = completedClasses.filter((event) => {
+      const eventDate =
+        event.date instanceof Date
+          ? event.date
+          : parseISO(event.date as string);
+
+      return isSameDay(selectedDate, eventDate);
+    });
+
+    // Combine both lists, with completed classes marked as such
+    const allEvents = [
+      ...scheduledEvents,
+      ...completedEvents.map(event => ({ ...event, status: 'completed' as const }))
+    ];
+
+    setEventsForSelectedDate(allEvents);
+  }, [selectedDate, scheduledClasses, completedClasses]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
