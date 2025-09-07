@@ -84,16 +84,36 @@ const ClassHistory: React.FC<ClassHistoryProps> = ({ userRole }) => {
         .eq('id', user.id)
         .single();
 
-      if (!profile) return;
+      if (!profile) {
+        console.log('No profile found for user');
+        setIsLoading(false);
+        return;
+      }
 
+      console.log('User profile for class history:', profile);
+      
       const fullName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
+      console.log('Full name for matching:', fullName);
+      console.log('Email for matching:', profile.email);
       
       let query = supabase.from('class_logs').select('*');
       
       if (userRole === 'tutor') {
-        query = query.or(`"Tutor Name".eq.${fullName},"Tutor Name".eq.${profile.email}`);
+        // Query by either full name or email, handling cases where name might be empty
+        if (fullName) {
+          query = query.or(`"Tutor Name".eq."${fullName}","Tutor Name".eq."${profile.email}"`);
+        } else {
+          query = query.eq('"Tutor Name"', profile.email);
+        }
+        console.log('Querying for tutor classes');
       } else if (userRole === 'student') {
-        query = query.or(`"Student Name".eq.${fullName},"Student Name".eq.${profile.email}`);
+        // Query by either full name or email, handling cases where name might be empty
+        if (fullName) {
+          query = query.or(`"Student Name".eq."${fullName}","Student Name".eq."${profile.email}"`);
+        } else {
+          query = query.eq('"Student Name"', profile.email);
+        }
+        console.log('Querying for student classes');
       }
       // Admin can see all - no filter needed
 
@@ -104,7 +124,14 @@ const ClassHistory: React.FC<ClassHistoryProps> = ({ userRole }) => {
         throw error;
       }
 
-      console.log('Fetched class history:', data);
+      console.log('Fetched class history data:', data);
+      console.log('Number of records found:', data?.length || 0);
+      
+      // Also log some sample data to see the structure
+      if (data && data.length > 0) {
+        console.log('Sample class history record:', data[0]);
+      }
+      
       setClassHistory(data || []);
     } catch (error) {
       console.error('Error fetching class history:', error);
