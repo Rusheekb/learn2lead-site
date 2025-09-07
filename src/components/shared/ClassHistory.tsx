@@ -44,69 +44,67 @@ const ClassHistory: React.FC<ClassHistoryProps> = ({ userRole }) => {
 
   useEffect(() => {
     fetchClassHistory();
-  }, [user]);
+  }, [user, userRole]);
+
+  // Setup realtime subscription for class_logs
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('class-history-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'class_logs',
+        },
+        (payload) => {
+          console.log('Realtime update for class history:', payload);
+          fetchClassHistory();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, userRole]);
 
   const fetchClassHistory = async () => {
     if (!user) return;
 
     try {
-      // Use a more robust approach to fetch classes based on user ID relationship
-      let query;
+      setIsLoading(true);
+      
+      // Get user profile for name matching
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('first_name, last_name, email')
+        .eq('id', user.id)
+        .single();
+
+      if (!profile) return;
+
+      const fullName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
+      
+      let query = supabase.from('class_logs').select('*');
       
       if (userRole === 'tutor') {
-        // For tutors, get classes where they are the tutor
-        query = supabase
-          .from('class_logs')
-          .select(`
-            *,
-            scheduled_classes!inner(tutor_id)
-          `)
-          .eq('scheduled_classes.tutor_id', user.id);
+        query = query.or(`"Tutor Name".eq.${fullName},"Tutor Name".eq.${profile.email}`);
       } else if (userRole === 'student') {
-        // For students, get classes where they are the student
-        query = supabase
-          .from('class_logs')
-          .select(`
-            *,
-            scheduled_classes!inner(student_id)
-          `)
-          .eq('scheduled_classes.student_id', user.id);
-      } else {
-        // Admin can see all
-        query = supabase.from('class_logs').select('*');
+        query = query.or(`"Student Name".eq.${fullName},"Student Name".eq.${profile.email}`);
+      }
+      // Admin can see all - no filter needed
+
+      const { data, error } = await query.order('Date', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching class history:', error);
+        throw error;
       }
 
-      // If the join approach fails, fall back to name matching
-      let { data, error } = await query?.order('Date', { ascending: false }) || { data: null, error: null };
-
-      // Fallback to name matching if join fails
-      if (error || !data) {
-        console.log('Join query failed, falling back to name matching:', error);
-        
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('first_name, last_name, email')
-          .eq('id', user.id)
-          .single();
-        
-        if (profile) {
-          const fullName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
-          const fallbackQuery = supabase.from('class_logs').select('*');
-          
-          if (userRole === 'tutor') {
-            fallbackQuery.or(`Tutor Name.eq.${fullName},Tutor Name.eq.${profile.email}`);
-          } else if (userRole === 'student') {
-            fallbackQuery.or(`Student Name.eq.${fullName},Student Name.eq.${profile.email}`);
-          }
-          
-          const { data: fallbackData, error: fallbackError } = await fallbackQuery.order('Date', { ascending: false });
-          
-          if (!fallbackError) {
-            data = fallbackData;
-          }
-        }
-      }
-
+      console.log('Fetched class history:', data);
       setClassHistory(data || []);
     } catch (error) {
       console.error('Error fetching class history:', error);
