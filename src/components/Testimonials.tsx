@@ -18,7 +18,7 @@ const Testimonials = () => {
       rating: 5,
     },
     {
-      quote: '...',
+      quote: "Since my son began high school ELA tutoring in the summer of 2024, his reading and writing skills have improved remarkably. The tutor tailors lessons to his learning style, providing detailed feedback and adapting to our homeschool curriculum. Her expertise in grammar, writing, and SAT prep has been invaluable. Thanks to her guidance, ELA has transformed from his least favorite subject to one he genuinely enjoys.",
       author: 'Anonymous Parent',
       role: 'Parent',
       rating: 5,
