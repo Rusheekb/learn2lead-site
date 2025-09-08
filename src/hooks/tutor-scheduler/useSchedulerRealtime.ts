@@ -1,10 +1,10 @@
-
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { ClassEvent } from '@/types/tutorTypes';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { parse } from 'date-fns';
+import { useQueryClient } from '@tanstack/react-query';
 
 function useSchedulerRealtime(
   scheduledClasses: ClassEvent[],
@@ -14,15 +14,17 @@ function useSchedulerRealtime(
   setIsViewEventOpen: React.Dispatch<React.SetStateAction<boolean>>
 ) {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   
   useEffect(() => {
     if (!user?.id) return;
     
-    console.log('Setting up realtime subscription for tutor:', user.id);
+    console.log('Setting up consolidated realtime subscription for tutor:', user.id);
     
-    // Create channel with a filter for the current tutor's classes only
+    // Create a single channel with multiple subscriptions to prevent conflicts
     const channel = supabase
-      .channel(`tutor-classes-${user.id}`)
+      .channel(`tutor-scheduler-${user.id}`)
+      // Subscribe to scheduled_classes changes
       .on(
         'postgres_changes',
         {
@@ -32,7 +34,7 @@ function useSchedulerRealtime(
           filter: `tutor_id=eq.${user.id}`,
         },
         (payload) => {
-          console.log('Realtime update for tutor classes:', payload);
+          console.log('Realtime update for scheduled classes:', payload);
           
           try {
             if (payload.eventType === 'INSERT') {
@@ -138,17 +140,58 @@ function useSchedulerRealtime(
               }
             }
           } catch (error) {
-            console.error('Error processing realtime update:', error);
+            console.error('Error processing scheduled classes realtime update:', error);
+          }
+        }
+      )
+      // Subscribe to class_logs changes to handle class completion
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'class_logs',
+        },
+        (payload) => {
+          console.log('Class completion detected:', payload);
+          
+          try {
+            const completedLog = payload.new;
+            if (!completedLog || !completedLog['Class ID']) return;
+            
+            // Remove the completed class from scheduled classes
+            setScheduledClasses((prev) => {
+              const filtered = prev.filter((cls) => cls.id !== completedLog['Class ID']);
+              if (filtered.length !== prev.length) {
+                console.log('Removing completed class from scheduled list:', completedLog['Class ID']);
+              }
+              return filtered;
+            });
+            
+            // If this is the event we're currently viewing, close the dialog
+            if (selectedEvent && selectedEvent.id === completedLog['Class ID']) {
+              setSelectedEvent(null);
+              setIsViewEventOpen(false);
+            }
+            
+            // Invalidate relevant queries to refresh other components
+            queryClient.invalidateQueries({ queryKey: ['classLogs'] });
+            queryClient.invalidateQueries({ queryKey: ['completedClasses'] });
+            if (user?.id) {
+              queryClient.invalidateQueries({ queryKey: ['scheduledClasses', user.id] });
+            }
+          } catch (error) {
+            console.error('Error processing class completion:', error);
           }
         }
       )
       .subscribe((status) => {
-        console.log(`Tutor subscription status:`, status);
+        console.log(`Consolidated tutor subscription status:`, status);
       });
       
     // Clean up the subscription
     return () => {
-      console.log(`Removing channel for tutor ${user.id}`);
+      console.log(`Removing consolidated channel for tutor ${user.id}`);
       supabase.removeChannel(channel);
     };
   }, [
@@ -157,6 +200,7 @@ function useSchedulerRealtime(
     selectedEvent,
     setSelectedEvent,
     setIsViewEventOpen,
+    queryClient,
   ]);
 }
 

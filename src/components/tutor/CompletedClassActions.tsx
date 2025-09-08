@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { ClassEvent } from '@/types/tutorTypes';
 import { useQueryClient } from '@tanstack/react-query';
+import { useClassCompletionStatus } from '@/hooks/useClassCompletionStatus';
 
 interface CompletedClassActionsProps {
   classEvent: ClassEvent;
@@ -26,43 +27,20 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
   const [isCompleting, setIsCompleting] = useState(false);
   const [content, setContent] = useState(classEvent.content || '');
   const [homework, setHomework] = useState(classEvent.homework || '');
-  const [isCompleted, setIsCompleted] = useState(false);
-  const [isCheckingStatus, setIsCheckingStatus] = useState(true);
+  
+  // Use stable completion status hook to prevent flashing
+  const { isCompleted, isLoading: isCheckingStatus, setIsCompleted } = useClassCompletionStatus(classEvent.id);
 
-  // Single source of truth for completion status
-  useEffect(() => {
-    const checkCompletionStatus = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('class_logs')
-          .select('id')
-          .eq('Class ID', classEvent.id)
-          .maybeSingle();
-
-        if (error) {
-          console.error('Error checking class completion status:', error);
-        } else {
-          setIsCompleted(!!data);
-        }
-      } catch (error) {
-        console.error('Error in checkCompletionStatus:', error);
-      } finally {
-        setIsCheckingStatus(false);
-      }
-    };
-
-    checkCompletionStatus();
-  }, [classEvent.id]);
-
-  const handleMarkComplete = async () => {
+  const handleMarkComplete = useCallback(async () => {
     if (!user?.id || isCompleting || isCompleted) {
       toast.error('User not authenticated or operation in progress');
       return;
     }
 
-    // Immediately set completing state to prevent double clicks
+    // Immediately set completing and completed state to prevent double clicks and flashing
     setIsCompleting(true);
-    setIsCompleted(true); // Optimistically set as completed to hide button immediately
+    setIsCompleted(true);
+    setIsDialogOpen(false); // Close dialog immediately
 
     try {
       // Get the current user's profile to ensure name matches RLS policy
@@ -150,7 +128,7 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
     } finally {
       setIsCompleting(false);
     }
-  };
+  }, [user?.id, isCompleting, isCompleted, classEvent, content, homework, queryClient, onUpdate]);
 
   if (isCheckingStatus) {
     return <Badge variant="secondary">Checking...</Badge>;

@@ -45,9 +45,8 @@ const CalendarWithEvents: React.FC<CalendarWithEventsProps> = ({
   const [eventsForSelectedDate, setEventsForSelectedDate] = useState<ClassEvent[]>([]);
 
   const handleClassUpdate = () => {
-    // Force component re-render by updating a state or triggering parent refresh
-    // The key prop will help force re-renders of the CompletedClassActions component
-    console.log('Class update triggered');
+    // Minimal update handler - let parent components handle the heavy lifting
+    onSelectEvent(eventsForSelectedDate[0]); // Refresh the parent state
   };
 
   // Function to check if a date has any scheduled classes
@@ -193,7 +192,6 @@ const CalendarWithEvents: React.FC<CalendarWithEventsProps> = ({
                       </span>
                       {userRole === 'tutor' && (
                         <CompletedClassActions 
-                          key={`${event.id}-${Date.now()}`}
                           classEvent={event} 
                           onUpdate={handleClassUpdate}
                         />

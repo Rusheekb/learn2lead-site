@@ -52,30 +52,8 @@ export const useCompletedClasses = (userRole: 'student' | 'tutor' | 'admin') => 
     fetchCompletedClasses();
   }, [user, userRole]);
 
-  // Setup realtime subscription for class_logs
-  useEffect(() => {
-    if (!user) return;
-
-    const channel = supabase
-      .channel('completed-classes-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'class_logs',
-        },
-        (payload) => {
-          console.log('Realtime update for completed classes:', payload);
-          fetchCompletedClasses();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, userRole]);
+  // Real-time updates are now handled by the scheduler's main subscription
+  // to prevent competing state updates and flashing issues
 
   return {
     completedClasses,
