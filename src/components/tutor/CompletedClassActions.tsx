@@ -83,10 +83,16 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
       const typedResult = result as { success: boolean; error?: string; code?: string; message?: string };
 
       if (!typedResult?.success) {
-        if (typedResult?.code === 'ALREADY_COMPLETED') {
-          toast.error('Class has already been completed');
+        if (typedResult?.code === 'ALREADY_COMPLETED' || typedResult?.code === 'DUPLICATE_SESSION') {
+          toast.error('This class has already been completed');
           setIsCompleted(true);
           setIsDialogOpen(false);
+          return;
+        } else if (typedResult?.code === 'CLASS_NOT_FOUND') {
+          toast.error('Class no longer exists or has already been completed');
+          setIsCompleted(true);
+          setIsDialogOpen(false);
+          onUpdate(); // Refresh the calendar to remove this class
           return;
         }
         throw new Error(typedResult?.error || 'Failed to complete class');
