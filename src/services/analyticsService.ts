@@ -67,14 +67,18 @@ class AnalyticsService {
       };
     }
 
-    // Calculate total revenue (sum of all class costs)
+    // Calculate total revenue (sum of all class costs) with proper number handling
     const totalRevenue = classes.reduce((sum, classEvent) => {
-      return sum + (classEvent.classCost || 0);
+      const cost = typeof classEvent.classCost === 'number' ? classEvent.classCost : 
+                   typeof classEvent.classCost === 'string' ? parseNumericString(classEvent.classCost) : 0;
+      return sum + cost;
     }, 0);
 
-    // Calculate total tutor costs
+    // Calculate total tutor costs with proper number handling
     const totalTutorCosts = classes.reduce((sum, classEvent) => {
-      return sum + (classEvent.tutorCost || 0);
+      const cost = typeof classEvent.tutorCost === 'number' ? classEvent.tutorCost : 
+                   typeof classEvent.tutorCost === 'string' ? parseNumericString(classEvent.tutorCost) : 0;
+      return sum + cost;
     }, 0);
 
     // Net income is revenue minus tutor costs
@@ -86,7 +90,10 @@ class AnalyticsService {
     // Calculate student retention rate (percentage of students who attended more than one class)
     const studentCounts = new Map<string, number>();
     classes.forEach(classEvent => {
-      if (classEvent.studentName) {
+      // Only count valid student names (non-empty and not 'Unknown Student')
+      if (classEvent.studentName && 
+          classEvent.studentName.trim() && 
+          classEvent.studentName !== 'Unknown Student') {
         const count = studentCounts.get(classEvent.studentName) || 0;
         studentCounts.set(classEvent.studentName, count + 1);
       }
