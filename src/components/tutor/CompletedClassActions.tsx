@@ -100,9 +100,10 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
 
       toast.success('Class completed and moved to class history');
       
-      // Invalidate all relevant queries to refresh the UI
+      // Force refresh of all relevant data to ensure UI is in sync
       if (user?.id) {
-        queryClient.invalidateQueries({ queryKey: ['scheduledClasses', user.id] });
+        await queryClient.invalidateQueries({ queryKey: ['scheduledClasses', user.id] });
+        await queryClient.refetchQueries({ queryKey: ['scheduledClasses', user.id] });
         queryClient.invalidateQueries({ queryKey: ['upcomingClasses', user.id] });
         queryClient.invalidateQueries({ queryKey: ['classLogs'] });
       }

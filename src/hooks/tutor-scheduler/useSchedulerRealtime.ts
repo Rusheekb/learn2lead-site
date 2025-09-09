@@ -144,47 +144,6 @@ function useSchedulerRealtime(
           }
         }
       )
-      // Subscribe to class_logs changes to handle class completion
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'class_logs',
-        },
-        (payload) => {
-          console.log('Class completion detected:', payload);
-          
-          try {
-            const completedLog = payload.new;
-            if (!completedLog || !completedLog['Class ID']) return;
-            
-            // Remove the completed class from scheduled classes
-            setScheduledClasses((prev) => {
-              const filtered = prev.filter((cls) => cls.id !== completedLog['Class ID']);
-              if (filtered.length !== prev.length) {
-                console.log('Removing completed class from scheduled list:', completedLog['Class ID']);
-              }
-              return filtered;
-            });
-            
-            // If this is the event we're currently viewing, close the dialog
-            if (selectedEvent && selectedEvent.id === completedLog['Class ID']) {
-              setSelectedEvent(null);
-              setIsViewEventOpen(false);
-            }
-            
-            // Invalidate relevant queries to refresh other components
-            queryClient.invalidateQueries({ queryKey: ['classLogs'] });
-            queryClient.invalidateQueries({ queryKey: ['completedClasses'] });
-            if (user?.id) {
-              queryClient.invalidateQueries({ queryKey: ['scheduledClasses', user.id] });
-            }
-          } catch (error) {
-            console.error('Error processing class completion:', error);
-          }
-        }
-      )
       .subscribe((status) => {
         console.log(`Consolidated tutor subscription status:`, status);
       });
