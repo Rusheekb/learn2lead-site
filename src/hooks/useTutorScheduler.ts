@@ -6,12 +6,9 @@ import useEventHandlers from './tutor-scheduler/useEventHandlers';
 import useSchedulerRealtime from './tutor-scheduler/useSchedulerRealtime';
 import useStudentContent from './tutor-scheduler/useStudentContent';
 import useSchedulerData from './tutor-scheduler/useSchedulerData';
-import { useClassLogsQuery } from './queries/useClassLogsQuery';
-import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSchedulerCore } from './tutor-scheduler/useSchedulerCore';
-import { useClassOperations } from './tutor-scheduler/useClassOperations';
 import { useEventRefresh } from './tutor-scheduler/useEventRefresh';
 import { useProfile } from '@/hooks/useProfile';
 
@@ -22,26 +19,11 @@ export function useTutorScheduler() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Use class operations hook for CRUD operations
-  const {
-    handleCreateEvent,
-    handleEditEvent,
-    handleDeleteEvent,
-    handleDuplicateEvent,
-    createEvent
-  } = useClassOperations(
-    // Convert each mutation function to return a Promise
-    (event) => Promise.resolve(core.createClass(event)),
-    (id, updates) => Promise.resolve(core.updateClass(id, updates)),
-    (id) => Promise.resolve(core.deleteClass(id)),
-    core.resetNewEventForm,
-    core.setIsAddEventOpen,
-    core.setIsViewEventOpen,
-    core.setSelectedEvent,
-    core.setIsEditMode,
-    core.queryClient,
-    core.user
-  );
+  // Use the core event handlers directly
+  const handleCreateEvent = core.baseCreateEvent;
+  const handleEditEvent = core.baseEditEvent;
+  const handleDeleteEvent = core.baseDeleteEvent;
+  const handleDuplicateEvent = core.handleDuplicateEvent;
 
   // Use scheduler realtime hook to get real-time updates
   useSchedulerRealtime(
@@ -66,15 +48,14 @@ export function useTutorScheduler() {
 
   // Apply filters to create filtered list
   const filteredClasses = core.applyFilters(core.scheduledClasses);
-  const isLoading = core.isClassLoading || core.isDataLoading;
+  const isLoading = core.isLoading;
 
   // Make sure we have fresh data whenever this hook is used
   useEffect(() => {
     if (user?.id) {
-      core.refetchClasses();
       queryClient.invalidateQueries({ queryKey: ['scheduledClasses', user.id] });
     }
-  }, [user?.id]);
+  }, [user?.id, queryClient]);
 
   return {
     // State
@@ -117,7 +98,7 @@ export function useTutorScheduler() {
     handleDownloadFile,
     getUnreadMessageCount,
     refreshEvent: () => refreshEvent(core.selectedEvent, core.setSelectedEvent, core.setScheduledClasses),
-    refetchClasses: core.refetchClasses,
+    refetchClasses: () => queryClient.invalidateQueries({ queryKey: ['scheduledClasses', user?.id] }),
   };
 }
 

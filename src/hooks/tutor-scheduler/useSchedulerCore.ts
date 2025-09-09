@@ -4,26 +4,16 @@ import useSchedulerFilters from './useSchedulerFilters';
 import useEventHandlers from './useEventHandlers';
 import useStudentContent from './useStudentContent';
 import useSchedulerData from './useSchedulerData';
-import { useClassLogsQuery } from '../queries/useClassLogsQuery';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
-import { useDataTransformations } from './core-utils/useDataTransformations';
 import { useDataFetchingEffects } from './core-utils/useDataFetchingEffects';
 
 export function useSchedulerCore() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Load class data from backend
-  const {
-    classes: classList,
-    createClass,
-    updateClass,
-    deleteClass,
-    allSubjects,
-    isLoading: isClassLoading,
-    refetch: refetchClasses
-  } = useClassLogsQuery();
+  // We don't need useClassLogsQuery for the scheduler since it fetches completed classes
+  // The scheduler should only show scheduled classes, which are handled by useSchedulerData
 
   // Get basic scheduler state
   const {
@@ -38,6 +28,7 @@ export function useSchedulerCore() {
     setIsViewEventOpen,
     newEvent,
     setNewEvent,
+    allSubjects,
     resetNewEventForm,
   } = useSchedulerData();
 
@@ -71,22 +62,15 @@ export function useSchedulerCore() {
     setIsViewEventOpen
   );
 
-  // Use data transformations logic
-  useDataTransformations(classList, setScheduledClasses);
-
-  // Use data fetching effects
-  useDataFetchingEffects(user?.id, refetchClasses, queryClient);
+  // Use data fetching effects - use the loadClasses function from useSchedulerData
+  useDataFetchingEffects(user?.id, () => {}, queryClient);
 
   return {
     user,
     queryClient,
-    classList,
-    createClass,
-    updateClass,
-    deleteClass,
     allSubjects,
-    isClassLoading,
-    refetchClasses,
+    isLoading: isDataLoading,
+    refetchClasses: () => {}, // Not needed for scheduler
     selectedDate,
     setSelectedDate,
     isDataLoading,
