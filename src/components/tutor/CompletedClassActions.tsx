@@ -25,6 +25,7 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
   const queryClient = useQueryClient();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
   const [content, setContent] = useState(classEvent.content || '');
   const [homework, setHomework] = useState(classEvent.homework || '');
   
@@ -37,9 +38,8 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
       return;
     }
 
-    // Immediately set completing and completed state to prevent double clicks and flashing
+    // Immediately set completing state and start removal process
     setIsCompleting(true);
-    setIsCompleted(true);
     setIsDialogOpen(false); // Close dialog immediately
 
     try {
@@ -85,19 +85,19 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
       if (!typedResult?.success) {
         if (typedResult?.code === 'ALREADY_COMPLETED' || typedResult?.code === 'DUPLICATE_SESSION') {
           toast.error('This class has already been completed');
-          setIsCompleted(true);
-          setIsDialogOpen(false);
+          setIsRemoving(true); // Hide the component
           return;
         } else if (typedResult?.code === 'CLASS_NOT_FOUND') {
           toast.error('Class no longer exists or has already been completed');
-          setIsCompleted(true);
-          setIsDialogOpen(false);
+          setIsRemoving(true); // Hide the component
           onUpdate(); // Refresh the calendar to remove this class
           return;
         }
         throw new Error(typedResult?.error || 'Failed to complete class');
       }
 
+      // Start the removal process immediately after success
+      setIsRemoving(true);
       toast.success('Class completed and moved to class history');
       
       // Force refresh of all relevant data to ensure UI is in sync
@@ -130,25 +130,26 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
       
       toast.error(`Failed to mark class as completed: ${errorMessage}`);
       
-      // Reset completed state on error to show button again
+      // Reset state on error to show button again
       setIsCompleted(false);
+      setIsRemoving(false);
     } finally {
       setIsCompleting(false);
     }
   }, [user?.id, isCompleting, isCompleted, classEvent, content, homework, queryClient, onUpdate]);
 
+  // If class is being removed or already completed, don't render anything
+  if (isRemoving || isCompleted) {
+    return null;
+  }
+
   if (isCheckingStatus) {
     return <Badge variant="secondary">Checking...</Badge>;
   }
 
-  // Show completed badge if class is completed
-  if (isCompleted) {
-    return <Badge variant="default">Completed</Badge>;
-  }
-
   // Show processing state if currently completing
   if (isCompleting) {
-    return <Badge variant="secondary">Processing...</Badge>;
+    return <Badge variant="secondary">Removing...</Badge>;
   }
 
   return (
