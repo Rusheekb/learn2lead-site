@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Profile } from '@/hooks/useProfile';
-import { supabase } from '@/integrations/supabase/client';
+import { fetchUserAnalyticsData } from '@/services/analytics/dataService';
 import { CalendarDays, Clock, BookOpen, Users, TrendingUp, Award } from 'lucide-react';
+import { ClassEvent } from '@/types/tutorTypes';
 
 interface AnalyticsTabProps {
   profile: Profile;
@@ -36,38 +37,36 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ profile }) => {
     const fetchAnalytics = async () => {
       setIsLoading(true);
       try {
-        let query = supabase.from('scheduled_classes').select('*');
-        
-        if (profile.role === 'student') {
-          query = query.eq('student_id', profile.id);
-        } else if (profile.role === 'tutor') {
-          query = query.eq('tutor_id', profile.id);
-        }
-
-        const { data: classes, error } = await query;
-
-        if (error) {
-          console.error('Error fetching analytics:', error);
-          return;
-        }
+        // Fetch combined data from class_logs and scheduled_classes
+        const classes = await fetchUserAnalyticsData(profile.id, profile.role as 'tutor' | 'student');
 
         const now = new Date();
         const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         
-        const completedClasses = classes?.filter(c => c.status === 'completed') || [];
-        const upcomingClasses = classes?.filter(c => new Date(c.date) > now) || [];
-        const thisMonthClasses = classes?.filter(c => new Date(c.date) >= thisMonth) || [];
+        const completedClasses = classes.filter(c => c.status === 'completed');
+        const upcomingClasses = classes.filter(c => {
+          const classDate = new Date(c.date);
+          return classDate > now && c.status === 'scheduled';
+        });
+        const thisMonthClasses = classes.filter(c => {
+          const classDate = new Date(c.date);
+          return classDate >= thisMonth;
+        });
 
-        // Calculate total hours
+        // Calculate total hours from completed classes
         const totalHours = completedClasses.reduce((acc, cls) => {
-          const start = new Date(`1970-01-01T${cls.start_time}`);
-          const end = new Date(`1970-01-01T${cls.end_time}`);
+          if (!cls.startTime || !cls.endTime) return acc;
+          
+          const start = new Date(`1970-01-01T${cls.startTime}`);
+          const end = new Date(`1970-01-01T${cls.endTime}`);
           return acc + (end.getTime() - start.getTime()) / (1000 * 60 * 60);
         }, 0);
 
         const monthlyHours = thisMonthClasses.reduce((acc, cls) => {
-          const start = new Date(`1970-01-01T${cls.start_time}`);
-          const end = new Date(`1970-01-01T${cls.end_time}`);
+          if (!cls.startTime || !cls.endTime) return acc;
+          
+          const start = new Date(`1970-01-01T${cls.startTime}`);
+          const end = new Date(`1970-01-01T${cls.endTime}`);
           return acc + (end.getTime() - start.getTime()) / (1000 * 60 * 60);
         }, 0);
 
@@ -89,7 +88,7 @@ const AnalyticsTab: React.FC<AnalyticsTabProps> = ({ profile }) => {
           : 0;
 
         setAnalytics({
-          totalClasses: classes?.length || 0,
+          totalClasses: classes.length,
           totalHours: Math.round(totalHours * 10) / 10,
           completedClasses: completedClasses.length,
           upcomingClasses: upcomingClasses.length,

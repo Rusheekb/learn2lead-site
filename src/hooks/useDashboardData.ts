@@ -1,18 +1,18 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useClassLogs } from '@/hooks/useClassLogs';
-import { useAnalytics } from '@/hooks/useAnalytics';
+import { useRealAnalytics } from '@/hooks/useRealAnalytics';
 import { TopPerformer, PopularSubject } from '@/types/sharedTypes';
 
 export const useDashboardData = () => {
-  const { classes, isLoading: isLoadingClasses } = useClassLogs();
   const {
-    isLoading: isLoadingAnalytics,
+    isLoading,
     businessAnalytics,
     getTopPerformingTutors,
     getTopPerformingStudents,
     getRevenueByMonth,
     getSubjectPopularity,
-  } = useAnalytics(classes);
+    classes,
+    error
+  } = useRealAnalytics();
 
   const [cachedData, setCachedData] = useState({
     topTutors: [] as TopPerformer[],
@@ -20,8 +20,6 @@ export const useDashboardData = () => {
     monthlyClasses: {} as Record<string, number>,
     popularSubjects: [] as PopularSubject[],
   });
-
-  const isLoading = isLoadingClasses || isLoadingAnalytics;
 
   // Cache calculated values when data is loaded to prevent recalculations
   useEffect(() => {
@@ -58,5 +56,6 @@ export const useDashboardData = () => {
     topStudents: cachedData.topStudents,
     monthlyClasses: cachedData.monthlyClasses,
     popularSubjects: cachedData.popularSubjects,
+    error
   };
 };

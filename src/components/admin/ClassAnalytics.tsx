@@ -1,7 +1,6 @@
 
 import React from 'react';
-import { useClassLogs } from '@/hooks/useClassLogs';
-import { useAnalytics } from '@/hooks/useAnalytics';
+import { useRealAnalytics } from '@/hooks/useRealAnalytics';
 import AnalyticsMetricsGrid from './analytics/AnalyticsMetricsGrid';
 import TopPerformersGrid from './analytics/TopPerformersGrid';
 import PopularSubjectsTable from './analytics/PopularSubjectsTable';
@@ -10,18 +9,16 @@ import WeeklyClassesChart from './analytics/WeeklyClassesChart';
 import { TopPerformer } from '@/types/sharedTypes';
 
 const ClassAnalytics: React.FC = () => {
-  const { classes, isLoading: isLoadingClasses } = useClassLogs();
   const {
-    isLoading: isLoadingAnalytics,
+    isLoading,
     businessAnalytics,
     getTopPerformingTutors,
     getTopPerformingStudents,
     getRevenueByMonth,
     getSubjectPopularity,
-    weeklyClasses
-  } = useAnalytics(classes);
-
-  const isLoading = isLoadingClasses || isLoadingAnalytics;
+    weeklyClasses,
+    error
+  } = useRealAnalytics();
 
   // Explicitly cast to TopPerformer[] to ensure type safety
   const topTutors: TopPerformer[] = getTopPerformingTutors('totalClasses');
@@ -35,6 +32,17 @@ const ClassAnalytics: React.FC = () => {
         <h2 className="text-2xl font-bold">Learning Analytics</h2>
         <div className="flex justify-center items-center py-12">
           <p>Loading analytics data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-8">
+        <h2 className="text-2xl font-bold">Learning Analytics</h2>
+        <div className="flex justify-center items-center py-12">
+          <p className="text-destructive">Error loading analytics: {error}</p>
         </div>
       </div>
     );
