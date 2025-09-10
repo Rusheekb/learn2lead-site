@@ -147,6 +147,7 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
     try {
       await onCreateEvent(newEvent as ClassEvent);
       setIsOpen(false);
+      toast.success('Class is being scheduled...');
     } catch (error: any) {
       console.error('Error creating class:', error);
       toast.error(`Failed to create class: ${error.message}`);

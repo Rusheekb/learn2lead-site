@@ -35,22 +35,8 @@ export const useCreateEvent = (
       const newClassId = await createScheduledClass(scheduledClass);
 
       if (newClassId) {
-        const createdClass: ClassEvent = {
-          id: newClassId,
-          title: newEvent.title,
-          tutorId: newEvent.tutorId,
-          tutorName: 'Current Tutor', // Will be updated by realtime events
-          studentId: newEvent.studentId,
-          studentName: 'Student', // Will be updated by realtime events
-          date: newEvent.date,
-          startTime: newEvent.startTime,
-          endTime: newEvent.endTime,
-          subject: newEvent.subject,
-          zoomLink: newEvent.zoomLink || null,
-          notes: newEvent.notes || null,
-        };
-
-        setScheduledClasses([...scheduledClasses, createdClass]);
+        // Don't add to local state - let the real-time subscription handle it
+        // This prevents duplicate classes from appearing
         
         // Track class creation event
         analytics.track({

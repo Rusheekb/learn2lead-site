@@ -41,6 +41,13 @@ function useSchedulerRealtime(
               const newClass = payload.new;
               if (!newClass) return;
               
+              // Check for duplicate - prevent adding if class already exists
+              const classExists = scheduledClasses.some(cls => cls.id === newClass.id);
+              if (classExists) {
+                console.log('Class already exists, skipping duplicate insertion:', newClass.id);
+                return;
+              }
+              
               toast.success(`New class "${newClass.title}" has been scheduled`);
               
               // Convert database record to ClassEvent
