@@ -223,6 +223,36 @@ export type Database = {
         }
         Relationships: []
       }
+      role_change_audit: {
+        Row: {
+          changed_by: string
+          created_at: string | null
+          id: string
+          new_role: string
+          old_role: string
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          changed_by: string
+          created_at?: string | null
+          id?: string
+          new_role: string
+          old_role: string
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          changed_by?: string
+          created_at?: string | null
+          id?: string
+          new_role?: string
+          old_role?: string
+          reason?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       scheduled_classes: {
         Row: {
           attendance: string | null
@@ -469,6 +499,10 @@ export type Database = {
         }
         Returns: Json
       }
+      demote_tutor_to_student: {
+        Args: { reason?: string; tutor_user_id: string }
+        Returns: Json
+      }
       generate_class_notifications: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -538,6 +572,10 @@ export type Database = {
       log_enhanced_security_event: {
         Args: { operation_type: string; row_id?: string; target_table: string }
         Returns: undefined
+      }
+      promote_student_to_tutor: {
+        Args: { reason?: string; student_user_id: string }
+        Returns: Json
       }
       require_admin_access: {
         Args: Record<PropertyKey, never>
