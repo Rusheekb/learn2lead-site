@@ -4,14 +4,21 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { FileText } from 'lucide-react';
-import { StudentNote } from '@/types/sharedTypes';
+import { StudentNote } from '@/services/studentNotes';
 
 interface StudentNotesProps {
   notes: StudentNote[];
   onAddNote: (title: string, content: string) => void;
+  loading?: boolean;
+  creating?: boolean;
 }
 
-const StudentNotes: React.FC<StudentNotesProps> = ({ notes, onAddNote }) => {
+const StudentNotes: React.FC<StudentNotesProps> = ({ 
+  notes, 
+  onAddNote, 
+  loading = false, 
+  creating = false 
+}) => {
   const [newNote, setNewNote] = useState({ title: '', content: '' });
 
   const handleAddNote = () => {
@@ -32,7 +39,7 @@ const StudentNotes: React.FC<StudentNotesProps> = ({ notes, onAddNote }) => {
                 {note.title}
               </h4>
               <p className="text-sm text-gray-500 mt-1">
-                {new Date(note.date).toLocaleDateString()}
+                {new Date(note.created_at).toLocaleDateString()}
               </p>
               <p className="mt-2 text-gray-700">{note.content}</p>
             </div>
@@ -70,7 +77,9 @@ const StudentNotes: React.FC<StudentNotesProps> = ({ notes, onAddNote }) => {
             />
           </div>
           <div className="flex justify-end">
-            <Button onClick={handleAddNote}>Save Note</Button>
+            <Button onClick={handleAddNote} disabled={creating}>
+              {creating ? 'Saving...' : 'Save Note'}
+            </Button>
           </div>
         </div>
       </div>

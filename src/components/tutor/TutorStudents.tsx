@@ -55,13 +55,6 @@ const TutorStudents: React.FC = () => {
   };
 
 
-  const handleAddNote = (title: string, content: string) => {
-    // In a real app, this would save to a database
-    console.log('Adding note for student:', selectedStudent?.id, {
-      title,
-      content,
-    });
-  };
 
   return (
     <div className="space-y-6">
@@ -97,8 +90,6 @@ const TutorStudents: React.FC = () => {
         student={selectedStudent}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        studentNotes={[]}
-        onAddNote={handleAddNote}
       />
     </div>
   );

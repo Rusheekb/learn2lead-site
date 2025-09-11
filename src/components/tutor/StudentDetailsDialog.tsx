@@ -9,7 +9,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { User } from 'lucide-react';
-import { Student, StudentNote } from '@/types/sharedTypes';
+import { Student } from '@/types/sharedTypes';
+import { useStudentNotes } from '@/hooks/useStudentNotes';
 import StudentOverview from './StudentOverview';
 import StudentNotes from './StudentNotes';
 
@@ -19,8 +20,6 @@ interface StudentDetailsDialogProps {
   student: Student | null;
   activeTab: string;
   setActiveTab: (tab: string) => void;
-  studentNotes: StudentNote[];
-  onAddNote: (title: string, content: string) => void;
 }
 
 const StudentDetailsDialog: React.FC<StudentDetailsDialogProps> = ({
@@ -29,9 +28,9 @@ const StudentDetailsDialog: React.FC<StudentDetailsDialogProps> = ({
   student,
   activeTab,
   setActiveTab,
-  studentNotes,
-  onAddNote,
 }) => {
+  const { notes, loading, creating, addNote } = useStudentNotes(student?.id || null);
+
   if (!student) return null;
 
   return (
@@ -59,7 +58,12 @@ const StudentDetailsDialog: React.FC<StudentDetailsDialogProps> = ({
           </TabsContent>
 
           <TabsContent value="notes">
-            <StudentNotes notes={studentNotes} onAddNote={onAddNote} />
+            <StudentNotes 
+              notes={notes} 
+              onAddNote={addNote} 
+              loading={loading}
+              creating={creating}
+            />
           </TabsContent>
         </Tabs>
 
