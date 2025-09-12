@@ -5,17 +5,17 @@ import StudentList from './StudentList';
 import StudentListSkeleton from './StudentListSkeleton';
 import StudentDetailsDialog from './StudentDetailsDialog';
 import { useAuth } from '@/contexts/AuthContext';
-import { fetchRelationshipsForTutor } from '@/services/relationships/fetch';
+import { fetchAssignmentsForTutor } from '@/services/assignments/fetch';
 import { fetchStudents } from '@/services/students/studentService';
 import type { Student } from '@/types/sharedTypes';
-import type { TutorStudentRelationship } from '@/services/relationships/types';
+import type { TutorStudentAssignment } from '@/services/assignments/types';
 
 const TutorStudents: React.FC = () => {
   const { user } = useAuth();
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>('overview');
-  const [relationships, setRelationships] = useState<TutorStudentRelationship[]>([]);
+  const [assignments, setAssignments] = useState<TutorStudentAssignment[]>([]);
   const [myStudents, setMyStudents] = useState<Student[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -26,12 +26,12 @@ const TutorStudents: React.FC = () => {
       setIsLoading(true);
       try {
         // 1. Load active pairings for this tutor
-        const rels = await fetchRelationshipsForTutor(user.id);
-        setRelationships(rels);
+        const assignments = await fetchAssignmentsForTutor(user.id);
+        setAssignments(assignments);
         
         // 2. Load all student profiles and filter to just your students
         const studentsResponse = await fetchStudents();
-        const studentIds = rels.map(r => r.student_id);
+        const studentIds = assignments.map((assignment: TutorStudentAssignment) => assignment.student_id);
         // Extract the data array from the paginated response and filter it
         const filteredStudents = studentsResponse.data.filter((s: Student) => 
           studentIds.includes(s.id)

@@ -1,4 +1,4 @@
-export interface TutorStudentRelationship {
+export interface TutorStudentAssignment {
   id: string;
   tutor_id: string;
   student_id: string;

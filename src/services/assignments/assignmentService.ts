@@ -3,9 +3,9 @@ export * from './fetch';
 export * from './mutations';
 export * from './types';
 
-// This file re-exports all relationship service functionality
+// This file re-exports all assignment service functionality
 // for easier imports throughout the application
-export const getRelationshipId = async (tutorId: string, studentId: string): Promise<string | null> => {
+export const getAssignmentId = async (tutorId: string, studentId: string): Promise<string | null> => {
   const { supabase } = await import('@/integrations/supabase/client');
   
   try {
@@ -18,13 +18,13 @@ export const getRelationshipId = async (tutorId: string, studentId: string): Pro
       .single();
     
     if (error) {
-      console.error('Error fetching relationship ID:', error);
+      console.error('Error fetching assignment ID:', error);
       return null;
     }
     
     return data?.id || null;
   } catch (error) {
-    console.error('Exception fetching relationship ID:', error);
+    console.error('Exception fetching assignment ID:', error);
     return null;
   }
 };

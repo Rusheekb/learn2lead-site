@@ -4,17 +4,17 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/comp
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { UseFormReturn } from 'react-hook-form';
 import { Student } from '@/types/sharedTypes';
-import { TutorStudentRelationship } from '@/services/relationships/types';
+import { TutorStudentAssignment } from '@/services/assignments/types';
 
 interface StudentSelectFieldProps {
   form: UseFormReturn<any, any, any>;
-  relationships: TutorStudentRelationship[];
+  assignments: TutorStudentAssignment[];
   assignedStudents: Student[];
 }
 
 const StudentSelectField: React.FC<StudentSelectFieldProps> = ({ 
   form, 
-  relationships, 
+  assignments, 
   assignedStudents 
 }) => {
   const selectId = React.useId();
@@ -46,11 +46,11 @@ const StudentSelectField: React.FC<StudentSelectFieldProps> = ({
               </SelectTrigger>
             </FormControl>
             <SelectContent className="bg-white text-gray-900 border-gray-300 max-h-60 overflow-y-auto w-full">
-              {relationships.length > 0 ? (
-                relationships.map(rel => {
-                  const student = assignedStudents.find(s => s.id === rel.student_id);
+              {assignments.length > 0 ? (
+                assignments.map(assignment => {
+                  const student = assignedStudents.find(s => s.id === assignment.student_id);
                   return (
-                    <SelectItem key={rel.id} value={rel.id} className="text-gray-900 hover:bg-gray-100 focus:bg-gray-100">
+                    <SelectItem key={assignment.id} value={assignment.id} className="text-gray-900 hover:bg-gray-100 focus:bg-gray-100">
                       {student?.name ?? 'Loading...'}
                     </SelectItem>
                   );

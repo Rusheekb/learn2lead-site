@@ -81,16 +81,16 @@ const AdminNavLinks: React.FC<AdminNavLinksProps> = ({
         {isExpanded && <span className="ml-3">Students</span>}
       </NavLink>
       <NavLink 
-        to="/admin-dashboard?tab=relationships" 
+        to="/admin-dashboard?tab=assignments" 
         className={() => 
-          isLinkActive('/admin-dashboard', { key: 'tab', value: 'relationships' })
+          isLinkActive('/admin-dashboard', { key: 'tab', value: 'assignments' })
             ? `${baseClasses} ${expandedClasses} ${activeClasses}`
             : `${baseClasses} ${expandedClasses}`
         }
-        aria-label="Relationships"
+        aria-label="Assignments"
       >
         <UsersRound className="h-5 w-5" aria-hidden="true" />
-        {isExpanded && <span className="ml-3">Relationships</span>}
+        {isExpanded && <span className="ml-3">Assignments</span>}
       </NavLink>
       <NavLink 
         to="/admin-dashboard?tab=settings" 

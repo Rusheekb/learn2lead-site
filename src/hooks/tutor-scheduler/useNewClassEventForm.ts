@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { newClassEventSchema } from '@/utils/classFormUtils';
 import { Student } from '@/types/sharedTypes';
-import { TutorStudentRelationship } from '@/services/relationships/types';
+import { TutorStudentAssignment } from '@/services/assignments/types';
 import type { z } from 'zod';
 
 const schema = newClassEventSchema();
@@ -13,7 +13,7 @@ export type NewClassFormValues = z.infer<typeof schema>;
 export const useNewClassEventForm = (
   newEvent: any,
   setNewEvent: (event: any) => void,
-  relationships: TutorStudentRelationship[],
+  assignments: TutorStudentAssignment[],
   assignedStudents: Student[],
   selectedRelId: string,
   setSelectedRelId: (id: string) => void
@@ -114,10 +114,10 @@ export const useNewClassEventForm = (
         setSelectedRelId(relationshipId || '');
       }
       
-      // Only lookup student if relationship has changed
-      const selectedRel = relationships.find(r => r.id === relationshipId);
-      const student = selectedRel ? 
-        assignedStudents.find(s => s.id === selectedRel.student_id) : 
+      // Only lookup student if assignment has changed
+      const selectedAssignment = assignments.find(a => a.id === relationshipId);
+      const student = selectedAssignment ? 
+        assignedStudents.find(s => s.id === selectedAssignment.student_id) : 
         undefined;
       
       // Create a new object to avoid mutating the newEvent directly
@@ -127,7 +127,7 @@ export const useNewClassEventForm = (
         date: formValues.date || newEvent.date,
         startTime: formValues.startTime || newEvent.startTime,
         endTime: formValues.endTime || newEvent.endTime,
-        studentId: selectedRel?.student_id || newEvent.studentId || '',
+        studentId: selectedAssignment?.student_id || newEvent.studentId || '',
         studentName: student?.name || newEvent.studentName || '',
         subject: formValues.subject || newEvent.subject,
         zoomLink: formValues.zoomLink || newEvent.zoomLink,
@@ -147,7 +147,7 @@ export const useNewClassEventForm = (
     form.watch,
     setNewEvent,
     newEvent,
-    relationships,
+    assignments,
     assignedStudents,
     selectedRelId,
     setSelectedRelId

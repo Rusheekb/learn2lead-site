@@ -1,9 +1,9 @@
 
 import { supabase } from '@/services/supabaseClient';
 import { toast } from 'sonner';
-import { TutorStudentRelationship } from './types';
+import { TutorStudentAssignment } from './types';
 
-export async function createRelationship(input: {
+export async function createAssignment(input: {
   tutor_id: string;
   student_id: string;
 }) {
@@ -14,15 +14,15 @@ export async function createRelationship(input: {
     .single();
 
   if (error) {
-    console.error('Error creating relationship:', error);
+    console.error('Error creating assignment:', error);
     throw error;
   }
 
-  toast.success('Tutor-student relationship created successfully');
+  toast.success('Tutor-student assignment created successfully');
   return data;
 }
 
-export async function endRelationship(id: string) {
+export async function endAssignment(id: string) {
   const { data, error } = await supabase
     .from('tutor_student_assigned')
     .update({ active: false })
@@ -31,10 +31,10 @@ export async function endRelationship(id: string) {
     .single();
 
   if (error) {
-    console.error('Error ending relationship:', error);
+    console.error('Error ending assignment:', error);
     throw error;
   }
 
-  toast.success('Tutor-student relationship ended successfully');
+  toast.success('Tutor-student assignment ended successfully');
   return data;
 }

@@ -1,10 +1,10 @@
 
 import { supabase } from '@/services/supabaseClient';
-import type { TutorStudentRelationship } from './types';
+import type { TutorStudentAssignment } from './types';
 
-export async function fetchRelationshipsForTutor(
+export async function fetchAssignmentsForTutor(
   tutorId: string
-): Promise<TutorStudentRelationship[]> {
+): Promise<TutorStudentAssignment[]> {
   const { data, error } = await supabase
     .from('tutor_student_assigned')
     .select('*')
@@ -12,16 +12,16 @@ export async function fetchRelationshipsForTutor(
     .eq('active', true);
 
   if (error) {
-    console.error('Error fetching relationships:', error);
+    console.error('Error fetching assignments:', error);
     throw error;
   }
 
-  return (data ?? []) as TutorStudentRelationship[];
+  return (data ?? []) as TutorStudentAssignment[];
 }
 
-export async function fetchRelationshipsForStudent(
+export async function fetchAssignmentsForStudent(
   studentId: string
-): Promise<TutorStudentRelationship[]> {
+): Promise<TutorStudentAssignment[]> {
   const { data, error } = await supabase
     .from('tutor_student_assigned')
     .select('*')
@@ -29,15 +29,15 @@ export async function fetchRelationshipsForStudent(
     .eq('active', true);
 
   if (error) {
-    console.error('Error fetching relationships:', error);
+    console.error('Error fetching assignments:', error);
     throw error;
   }
 
-  return (data ?? []) as TutorStudentRelationship[];
+  return (data ?? []) as TutorStudentAssignment[];
 }
 
-export async function fetchActiveRelationshipsForAdmin(): Promise<
-  TutorStudentRelationship[]
+export async function fetchActiveAssignmentsForAdmin(): Promise<
+  TutorStudentAssignment[]
 > {
   const { data, error } = await supabase
     .from('tutor_student_assigned')
@@ -45,5 +45,5 @@ export async function fetchActiveRelationshipsForAdmin(): Promise<
     .eq('active', true);
 
   if (error) throw error;
-  return (data ?? []) as TutorStudentRelationship[];
+  return (data ?? []) as TutorStudentAssignment[];
 }

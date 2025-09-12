@@ -6,7 +6,7 @@ import { UserDetailModal } from '@/components/admin/UserDetailModal';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Student, Tutor } from '@/types/tutorTypes';
-import { TutorStudentRelationship } from '@/services/relationships/relationshipService';
+import { TutorStudentAssignment } from '@/services/assignments/assignmentService';
 import { fetchTutors } from '@/services/tutors/tutorService';
 import { fetchStudents } from '@/services/students/studentService';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
@@ -19,12 +19,12 @@ const ClassLogs = lazy(() => import('@/components/admin/ClassLogs'));
 const PaymentsManager = lazy(() => import('@/components/admin/PaymentsManager'));
 const TutorsManager = lazy(() => import('@/components/admin/TutorsManager'));
 const StudentsManager = lazy(() => import('@/components/admin/StudentsManager'));
-const RelationshipManager = lazy(() => import('@/components/admin/RelationshipManager'));
+const AssignmentManager = lazy(() => import('@/components/admin/AssignmentManager'));
 const AdminSettings = lazy(() => import('@/pages/AdminSettings'));
 
 type User = (Student | Tutor) & { role: 'student' | 'tutor' };
 
-const fetchRelationships = async () => {
+const fetchAssignments = async () => {
   const { data, error } = await supabase
     .from('tutor_student_assigned')
     .select('*')
@@ -34,7 +34,7 @@ const fetchRelationships = async () => {
     throw error;
   }
 
-  return data as TutorStudentRelationship[];
+  return data as TutorStudentAssignment[];
 };
 
 const AdminDashboard: React.FC = () => {
@@ -55,15 +55,15 @@ const AdminDashboard: React.FC = () => {
   }, [activeTab, trackNavigation]);
 
   const { 
-    data: relationships = [], 
-    isLoading: isRelationshipsLoading,
-    refetch: refetchRelationships
+    data: assignments = [], 
+    isLoading: isAssignmentsLoading,
+    refetch: refetchAssignments
   } = useQuery({
-    queryKey: ['relationships'],
-    queryFn: fetchRelationships,
+    queryKey: ['assignments'],
+    queryFn: fetchAssignments,
   });
   
-  // Fetch tutors for the RelationshipManager
+  // Fetch tutors for the AssignmentManager
   const { 
     data: tutorsResponse
   } = useQuery({
@@ -73,7 +73,7 @@ const AdminDashboard: React.FC = () => {
   
   const tutors = tutorsResponse?.data || [];
   
-  // Fetch students for the RelationshipManager
+  // Fetch students for the AssignmentManager
   const { 
     data: studentsResponse
   } = useQuery({
@@ -83,8 +83,8 @@ const AdminDashboard: React.FC = () => {
   
   const students = studentsResponse?.data || [];
 
-  const handleRelationshipChange = () => {
-    refetchRelationships();
+  const handleAssignmentChange = () => {
+    refetchAssignments();
   };
 
   const handleStudentSelect = (student: Student) => {
@@ -128,14 +128,14 @@ const AdminDashboard: React.FC = () => {
             <StudentsManager onSelect={handleStudentSelect} />
           </Suspense>
         );
-      case 'relationships':
+      case 'assignments':
         return (
           <Suspense fallback={<LoadingSpinner />}>
-            <RelationshipManager
-              relationships={relationships}
+            <AssignmentManager
+              assignments={assignments}
               tutors={tutors}
               students={students}
-              onRelationshipChange={handleRelationshipChange}
+              onAssignmentChange={handleAssignmentChange}
             />
           </Suspense>
         );

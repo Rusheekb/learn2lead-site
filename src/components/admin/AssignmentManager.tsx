@@ -1,9 +1,9 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
-import { createRelationship, endRelationship, TutorStudentRelationship } from '@/services/relationships/relationshipService';
+import { Badge } from '@/components/ui/badge';
+import { createAssignment, endAssignment, TutorStudentAssignment } from '@/services/assignments/assignmentService';
 import { useAuth } from '@/contexts/AuthContext';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -18,78 +18,78 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 
-interface RelationshipManagerProps {
+interface AssignmentManagerProps {
   tutors: Array<{ id: string; name: string }>;
   students: Array<{ id: string; name: string }>;
-  relationships: TutorStudentRelationship[];
-  onRelationshipChange: () => void;
+  assignments: TutorStudentAssignment[];
+  onAssignmentChange: () => void;
 }
 
 // Define validation schema
-const relationshipSchema = z.object({
-  tutor_id: z.string().min(1, { message: "Please select a tutor" }),
-  student_id: z.string().min(1, { message: "Please select a student" }),
+const assignmentSchema = z.object({
+  tutorId: z.string().min(1, "Please select a tutor"),
+  studentId: z.string().min(1, "Please select a student"),
 });
 
-type RelationshipFormValues = z.infer<typeof relationshipSchema>;
+type AssignmentFormValues = z.infer<typeof assignmentSchema>;
 
-const RelationshipManager: React.FC<RelationshipManagerProps> = ({
+const AssignmentManager: React.FC<AssignmentManagerProps> = ({
   tutors,
   students,
-  relationships,
-  onRelationshipChange
+  assignments,
+  onAssignmentChange
 }) => {
   const { user } = useAuth();
   
-  const form = useForm<RelationshipFormValues>({
-    resolver: zodResolver(relationshipSchema),
+  const form = useForm<AssignmentFormValues>({
+    resolver: zodResolver(assignmentSchema),
     defaultValues: {
-      tutor_id: '',
-      student_id: '',
+      tutorId: '',
+      studentId: '',
     },
   });
 
-  const handleCreateRelationship = async (values: RelationshipFormValues) => {
+  const handleCreateAssignment = async (values: AssignmentFormValues) => {
     try {
-      await createRelationship({
-        tutor_id: values.tutor_id,
-        student_id: values.student_id
+      await createAssignment({
+        tutor_id: values.tutorId,
+        student_id: values.studentId
       });
       
       form.reset();
-      onRelationshipChange();
-      toast.success("Relationship created successfully");
+      onAssignmentChange();
+      toast.success("Assignment created successfully");
     } catch (error) {
-      console.error('Failed to create relationship:', error);
-      toast.error("Failed to create relationship");
+      console.error('Failed to create assignment:', error);
+      toast.error("Failed to create assignment");
     }
   };
 
-  const handleEndRelationship = async (relationshipId: string) => {
+  const handleEndAssignment = async (assignmentId: string) => {
     try {
-      await endRelationship(relationshipId);
-      onRelationshipChange();
-      toast.success("Relationship ended successfully");
+      await endAssignment(assignmentId);
+      onAssignmentChange();
+      toast.success("Assignment ended successfully");
     } catch (error) {
-      console.error('Failed to end relationship:', error);
-      toast.error("Failed to end relationship");
+      console.error('Failed to end assignment:', error);
+      toast.error("Failed to end assignment");
     }
   };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Manage Tutor-Student Relationships</CardTitle>
+        <CardTitle>Manage Tutor-Student Assignments</CardTitle>
       </CardHeader>
       <CardContent>
         <Form {...form}>
           <form 
-            onSubmit={form.handleSubmit(handleCreateRelationship)} 
+            onSubmit={form.handleSubmit(handleCreateAssignment)} 
             className="flex flex-wrap gap-4 mb-6 items-end"
           >
             <FormField
               control={form.control}
-              name="tutor_id"
+              name="tutorId"
               render={({ field }) => (
                 <FormItem className="flex-1 min-w-[200px]">
                   <FormLabel>Tutor</FormLabel>
@@ -114,7 +114,7 @@ const RelationshipManager: React.FC<RelationshipManagerProps> = ({
             
             <FormField
               control={form.control}
-              name="student_id"
+              name="studentId"
               render={({ field }) => (
                 <FormItem className="flex-1 min-w-[200px]">
                   <FormLabel>Student</FormLabel>
@@ -138,7 +138,7 @@ const RelationshipManager: React.FC<RelationshipManagerProps> = ({
             />
             
             <Button type="submit" className="mt-auto">
-              Create Relationship
+              Create Assignment
             </Button>
           </form>
         </Form>
@@ -154,27 +154,30 @@ const RelationshipManager: React.FC<RelationshipManagerProps> = ({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {relationships.map((rel) => (
-              <TableRow key={rel.id}>
+            {assignments.map((assignment) => (
+              <TableRow key={assignment.id}>
                 <TableCell>
-                  {tutors.find(t => t.id === rel.tutor_id)?.name || 'Unknown'}
+                  {tutors.find(t => t.id === assignment.tutor_id)?.name || 'Unknown'}
                 </TableCell>
                 <TableCell>
-                  {students.find(s => s.id === rel.student_id)?.name || 'Unknown'}
+                  {students.find(s => s.id === assignment.student_id)?.name || 'Unknown'}
                 </TableCell>
                 <TableCell>
-                  {new Date(rel.assigned_at).toLocaleDateString()}
+                  {new Date(assignment.assigned_at).toLocaleDateString()}
                 </TableCell>
                 <TableCell>
-                  {rel.active ? 'Active' : 'Inactive'}
+                  <Badge variant={assignment.active ? "default" : "secondary"}>
+                    {assignment.active ? "Active" : "Inactive"}
+                  </Badge>
                 </TableCell>
                 <TableCell>
-                  {rel.active && (
-                    <Button
-                      variant="destructive"
-                      onClick={() => handleEndRelationship(rel.id)}
+                  {assignment.active && (
+                    <Button 
+                      variant="destructive" 
+                      size="sm"
+                      onClick={() => handleEndAssignment(assignment.id)}
                     >
-                      End Relationship
+                      End Assignment
                     </Button>
                   )}
                 </TableCell>
@@ -187,4 +190,4 @@ const RelationshipManager: React.FC<RelationshipManagerProps> = ({
   );
 };
 
-export default RelationshipManager;
+export default AssignmentManager;
