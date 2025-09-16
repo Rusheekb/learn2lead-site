@@ -55,10 +55,28 @@ export function RolePromotionDialog({ isOpen, onClose, user, onSuccess }: Props)
         onClose();
         setReason('');
       } else {
-        if (result.code === 'HAS_ACTIVE_STUDENTS') {
-          toast.error(`Cannot demote tutor with ${result.active_students} active student assignments`);
-        } else {
-          toast.error(result.error || 'Role change failed');
+        // Handle specific error codes with better messaging
+        switch (result.code) {
+          case 'NOT_AUTHENTICATED':
+            toast.error('Session expired. Please refresh the page and log in again.');
+            break;
+          case 'PROFILE_NOT_FOUND':
+            toast.error('Your user profile could not be found. Please refresh the page and try again.');
+            break;
+          case 'PERMISSION_DENIED':
+            toast.error('You do not have permission to change user roles.');
+            break;
+          case 'HAS_ACTIVE_STUDENTS':
+            toast.error(`Cannot demote tutor with ${result.active_students} active student assignments`);
+            break;
+          case 'USER_NOT_FOUND':
+            toast.error('The selected user could not be found.');
+            break;
+          case 'INVALID_ROLE':
+            toast.error(`User is not a ${isPromotion ? 'student' : 'tutor'}.`);
+            break;
+          default:
+            toast.error(result.error || 'Role change failed. Please try again.');
         }
       }
     } catch (error) {
