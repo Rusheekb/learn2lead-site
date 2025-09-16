@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { AlertTriangle, Users, UserCheck } from 'lucide-react';
 import { toast } from 'sonner';
-import { promoteStudentToTutor, demoteTutorToStudent } from '@/services/roleManagement';
+import { promoteStudentToTutorByIdOrEmail, demoteTutorToStudentByIdOrEmail } from '@/services/roleManagement';
 
 interface Props {
   isOpen: boolean;
@@ -46,8 +46,8 @@ export function RolePromotionDialog({ isOpen, onClose, user, onSuccess }: Props)
     setIsLoading(true);
     try {
       const result = isPromotion 
-        ? await promoteStudentToTutor(user.id, reason)
-        : await demoteTutorToStudent(user.id, reason);
+        ? await promoteStudentToTutorByIdOrEmail(user.id, user.email, reason)
+        : await demoteTutorToStudentByIdOrEmail(user.id, user.email, reason);
 
       if (result.success) {
         toast.success(result.message || `User ${isPromotion ? 'promoted' : 'demoted'} successfully`);

@@ -31,6 +31,51 @@ export async function promoteStudentToTutor(
   return data as unknown as RolePromotionResult;
 }
 
+// Helper to resolve a profile id from either a profiles.id or an email
+async function resolveProfileId(idOrMaybeStudentId: string, email?: string): Promise<string | null> {
+  try {
+    const byId = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', idOrMaybeStudentId)
+      .maybeSingle();
+
+    if (byId.data?.id) return byId.data.id;
+
+    if (email) {
+      const byEmail = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', email)
+        .maybeSingle();
+      if (byEmail.data?.id) return byEmail.data.id;
+    }
+  } catch (e) {
+    console.error('resolveProfileId error:', e);
+  }
+  return null;
+}
+
+export async function promoteStudentToTutorByIdOrEmail(
+  userIdOrStudentId: string,
+  email: string,
+  reason: string = 'Admin promotion'
+): Promise<RolePromotionResult> {
+  const profileId = await resolveProfileId(userIdOrStudentId, email);
+  if (!profileId) {
+    return { success: false, error: 'User not found', code: 'USER_NOT_FOUND' };
+  }
+  const { data, error } = await supabase.rpc('promote_student_to_tutor', {
+    student_user_id: profileId,
+    reason,
+  });
+  if (error) {
+    console.error('Error promoting student to tutor:', error);
+    return { success: false, error: error.message, code: 'RPC_ERROR' };
+  }
+  return data as unknown as RolePromotionResult;
+}
+
 export async function demoteTutorToStudent(
   tutorUserId: string, 
   reason: string = 'Admin demotion'
@@ -49,6 +94,26 @@ export async function demoteTutorToStudent(
     };
   }
 
+  return data as unknown as RolePromotionResult;
+}
+
+export async function demoteTutorToStudentByIdOrEmail(
+  userIdOrTutorId: string,
+  email: string,
+  reason: string = 'Admin demotion'
+): Promise<RolePromotionResult> {
+  const profileId = await resolveProfileId(userIdOrTutorId, email);
+  if (!profileId) {
+    return { success: false, error: 'User not found', code: 'USER_NOT_FOUND' };
+  }
+  const { data, error } = await supabase.rpc('demote_tutor_to_student', {
+    tutor_user_id: profileId,
+    reason,
+  });
+  if (error) {
+    console.error('Error demoting tutor to student:', error);
+    return { success: false, error: error.message, code: 'RPC_ERROR' };
+  }
   return data as unknown as RolePromotionResult;
 }
 
