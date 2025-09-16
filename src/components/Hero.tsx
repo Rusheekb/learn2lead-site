@@ -2,6 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import studentsWorkingImage from '@/assets/students-working1.png';
 
 const Hero = () => {
   const navigate = useNavigate();
@@ -65,13 +66,12 @@ const Hero = () => {
               <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-tutoring-blue/10 rounded-full blur-3xl"></div>
 
               <div className="relative p-4 bg-white rounded-2xl shadow-xl overflow-hidden">
-                <div className="aspect-w-16 aspect-h-9 rounded-xl overflow-hidden bg-tutoring-lightBlue">
-                  {/* Replace with your actual image or illustration */}
-                  <div className="w-full h-96 flex items-center justify-center hero-gradient rounded-xl">
-                    <p className="text-white text-lg font-medium">
-                      Students learning together
-                    </p>
-                  </div>
+                <div className="rounded-xl overflow-hidden">
+                  <img 
+                    src={studentsWorkingImage} 
+                    alt="Students learning together in a collaborative environment"
+                    className="w-full h-96 object-cover rounded-xl"
+                  />
                 </div>
               </div>
             </div>
