@@ -581,6 +581,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      sync_user_roles: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       validate_file_access_permissions: {
         Args: { file_path: string; requested_by?: string }
         Returns: boolean
