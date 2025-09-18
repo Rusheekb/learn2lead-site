@@ -87,17 +87,20 @@ export const fetchTutorStudents = async (
     if (error) throw error;
     
     // Transform data to ensure it matches our TutorStudent interface
-    return (data || []).map(item => ({
-      tutor_id: item.tutor_id || '',
-      tutor_name: 'Tutor', // Simplified since we can't get tutor name easily
-      student_id: item.student_id || '',
-      student_name: item.student?.name || '',
-      grade: item.student?.grade || null,
-      subjects: item.student?.subjects || [],
-      payment_status: item.student?.payment_status || 'pending',
-      assigned_at: item.assigned_at || new Date().toISOString(),
-      active: item.active ?? true,
-    }));
+    return (data || []).map((item: any) => {
+      const s = item?.student as any;
+      return {
+        tutor_id: item.tutor_id || '',
+        tutor_name: 'Tutor', // Simplified since we can't get tutor name easily
+        student_id: item.student_id || '',
+        student_name: s?.name || '',
+        grade: s?.grade ?? null,
+        subjects: s?.subjects || [],
+        payment_status: s?.payment_status || 'pending',
+        assigned_at: item.assigned_at || new Date().toISOString(),
+        active: item.active ?? true,
+      } as TutorStudent;
+    });
   } catch (error: any) {
     toast.error(`Error loading tutor students: ${error.message}`);
     return [];
