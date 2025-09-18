@@ -225,7 +225,7 @@ export type Database = {
       }
       role_change_audit: {
         Row: {
-          changed_by: string
+          changed_by: string | null
           created_at: string | null
           id: string
           new_role: string
@@ -234,7 +234,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          changed_by: string
+          changed_by?: string | null
           created_at?: string | null
           id?: string
           new_role: string
@@ -243,7 +243,7 @@ export type Database = {
           user_id: string
         }
         Update: {
-          changed_by?: string
+          changed_by?: string | null
           created_at?: string | null
           id?: string
           new_role?: string
@@ -428,17 +428,17 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "tutor_student_relationships_student_id_fkey"
+            foreignKeyName: "tutor_student_assigned_student_fk"
             columns: ["student_id"]
             isOneToOne: false
-            referencedRelation: "students"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "tutor_student_relationships_tutor_id_fkey"
+            foreignKeyName: "tutor_student_assigned_tutor_fk"
             columns: ["tutor_id"]
             isOneToOne: false
-            referencedRelation: "tutors"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
