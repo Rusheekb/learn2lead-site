@@ -5,17 +5,14 @@ import StudentList from './StudentList';
 import StudentListSkeleton from './StudentListSkeleton';
 import StudentDetailsDialog from './StudentDetailsDialog';
 import { useAuth } from '@/contexts/AuthContext';
-import { fetchAssignmentsForTutor } from '@/services/assignments/fetch';
-import { fetchStudents } from '@/services/students/studentService';
+import { fetchTutorStudentsByEmail, TutorStudentData } from '@/services/tutors/tutorStudentsService';
 import type { Student } from '@/types/sharedTypes';
-import type { TutorStudentAssignment } from '@/services/assignments/types';
 
 const TutorStudents: React.FC = () => {
   const { user } = useAuth();
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>('overview');
-  const [assignments, setAssignments] = useState<TutorStudentAssignment[]>([]);
   const [myStudents, setMyStudents] = useState<Student[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -25,19 +22,21 @@ const TutorStudents: React.FC = () => {
     const loadStudents = async () => {
       setIsLoading(true);
       try {
-        // 1. Load active pairings for this tutor
-        const assignments = await fetchAssignmentsForTutor(user.id);
-        setAssignments(assignments);
+        // Use the new email-based function to fetch tutor students
+        const tutorStudents = await fetchTutorStudentsByEmail();
         
-        // 2. Load all student profiles and filter to just your students
-        const studentsResponse = await fetchStudents();
-        const studentIds = assignments.map((assignment: TutorStudentAssignment) => assignment.student_id);
-        // Extract the data array from the paginated response and filter it
-        const filteredStudents = studentsResponse.data.filter((s: Student) => 
-          studentIds.includes(s.id)
-        );
+        // Transform the data to match the Student interface
+        const transformedStudents: Student[] = tutorStudents.map((ts: TutorStudentData) => ({
+          id: ts.student_id,
+          name: ts.student_name,
+          email: ts.student_email,
+          subjects: ts.subjects || [],
+          grade: ts.grade || 'Not specified',
+          paymentStatus: ts.payment_status || 'paid',
+          nextSession: undefined // Will be populated if needed
+        }));
         
-        setMyStudents(filteredStudents);
+        setMyStudents(transformedStudents);
       } catch (error) {
         console.error('Error loading students:', error);
       } finally {

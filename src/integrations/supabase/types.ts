@@ -557,6 +557,21 @@ export type Database = {
           tutor_name: string
         }[]
       }
+      get_tutor_students_by_email: {
+        Args: { requesting_user_id?: string }
+        Returns: {
+          active: boolean
+          assigned_at: string
+          grade: string
+          payment_status: string
+          student_email: string
+          student_id: string
+          student_name: string
+          subjects: string[]
+          tutor_id: string
+          tutor_name: string
+        }[]
+      }
       get_user_calendar_events: {
         Args: { user_id: string }
         Returns: string
