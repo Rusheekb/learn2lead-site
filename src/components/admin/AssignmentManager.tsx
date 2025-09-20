@@ -19,8 +19,8 @@ import {
 import { toast } from 'sonner';
 
 interface AssignmentManagerProps {
-  tutors: Array<{ id: string; name: string }>;
-  students: Array<{ id: string; name: string }>;
+  tutors: Array<{ id: string; profileId: string; name: string }>;
+  students: Array<{ id: string; profileId: string; name: string }>;
   assignments: TutorStudentAssignment[];
   onAssignmentChange: () => void;
 }
@@ -51,9 +51,25 @@ const AssignmentManager: React.FC<AssignmentManagerProps> = ({
 
   const handleCreateAssignment = async (values: AssignmentFormValues) => {
     try {
+      // Find the tutor and student to get their profile IDs
+      const selectedTutor = tutors.find(t => t.id === values.tutorId);
+      const selectedStudent = students.find(s => s.id === values.studentId);
+      
+      if (!selectedTutor || !selectedStudent) {
+        toast.error("Selected tutor or student not found");
+        return;
+      }
+
+      console.log('Creating assignment with profile IDs:', {
+        tutor_id: selectedTutor.profileId,
+        student_id: selectedStudent.profileId,
+        tutorName: selectedTutor.name,
+        studentName: selectedStudent.name
+      });
+
       await createAssignment({
-        tutor_id: values.tutorId,
-        student_id: values.studentId
+        tutor_id: selectedTutor.profileId, // Use profileId for assignment
+        student_id: selectedStudent.profileId // Use profileId for assignment
       });
       
       form.reset();
@@ -157,10 +173,10 @@ const AssignmentManager: React.FC<AssignmentManagerProps> = ({
             {assignments.map((assignment) => (
               <TableRow key={assignment.id}>
                 <TableCell>
-                  {tutors.find(t => t.id === assignment.tutor_id)?.name || 'Unknown'}
+                  {tutors.find(t => t.profileId === assignment.tutor_id)?.name || 'Unknown'}
                 </TableCell>
                 <TableCell>
-                  {students.find(s => s.id === assignment.student_id)?.name || 'Unknown'}
+                  {students.find(s => s.profileId === assignment.student_id)?.name || 'Unknown'}
                 </TableCell>
                 <TableCell>
                   {new Date(assignment.assigned_at).toLocaleDateString()}

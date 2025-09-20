@@ -9,6 +9,7 @@ import { Student, Tutor } from '@/types/tutorTypes';
 import { TutorStudentAssignment } from '@/services/assignments/assignmentService';
 import { fetchTutors } from '@/services/tutors/tutorService';
 import { fetchStudents } from '@/services/students/studentService';
+import { fetchTutorsWithProfileIds, fetchStudentsWithProfileIds, TutorWithProfileId, StudentWithProfileId } from '@/services/assignments/fetchService';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import { useAnalyticsTracker } from '@/hooks/useAnalyticsTracker';
 import { EventName } from '@/services/analytics/analyticsService';
@@ -63,25 +64,21 @@ const AdminDashboard: React.FC = () => {
     queryFn: fetchAssignments,
   });
   
-  // Fetch tutors for the AssignmentManager
+  // Fetch tutors with profile IDs for the AssignmentManager
   const { 
-    data: tutorsResponse
+    data: tutorsWithProfileIds = []
   } = useQuery({
-    queryKey: ['tutors', { page: 1, pageSize: 100, search: '' }],
-    queryFn: () => fetchTutors({ page: 1, pageSize: 100 }),
+    queryKey: ['tutors-with-profile-ids'],
+    queryFn: fetchTutorsWithProfileIds,
   });
   
-  const tutors = tutorsResponse?.data || [];
-  
-  // Fetch students for the AssignmentManager
+  // Fetch students with profile IDs for the AssignmentManager
   const { 
-    data: studentsResponse
+    data: studentsWithProfileIds = []
   } = useQuery({
-    queryKey: ['students', { page: 1, pageSize: 100, search: '' }],
-    queryFn: () => fetchStudents({ page: 1, pageSize: 100 }),
+    queryKey: ['students-with-profile-ids'],
+    queryFn: fetchStudentsWithProfileIds,
   });
-  
-  const students = studentsResponse?.data || [];
 
   const handleAssignmentChange = () => {
     refetchAssignments();
@@ -133,8 +130,8 @@ const AdminDashboard: React.FC = () => {
           <Suspense fallback={<LoadingSpinner />}>
             <AssignmentManager
               assignments={assignments}
-              tutors={tutors}
-              students={students}
+              tutors={tutorsWithProfileIds}
+              students={studentsWithProfileIds}
               onAssignmentChange={handleAssignmentChange}
             />
           </Suspense>

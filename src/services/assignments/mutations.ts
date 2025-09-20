@@ -56,7 +56,9 @@ export async function createAssignment(input: {
   tutor_id: string;
   student_id: string;
 }) {
-  // Ensure we always insert with profiles.id to satisfy FK constraints
+  console.log('Creating assignment with input:', input);
+
+  // The input should now already contain profile IDs, but let's add a fallback
   const mappedTutorId = await resolveProfileIdFromTutorId(input.tutor_id);
   const mappedStudentId = await resolveProfileIdFromStudentId(input.student_id);
 
@@ -65,6 +67,8 @@ export async function createAssignment(input: {
     toast.error('Could not resolve selected users');
     throw new Error('Failed to resolve profile IDs for assignment');
   }
+
+  console.log('Final assignment data:', { tutor_id: mappedTutorId, student_id: mappedStudentId });
 
   const { data, error } = await supabase
     .from('tutor_student_assigned')
