@@ -1,4 +1,5 @@
 import React from 'react';
+import { smoothScrollToSection } from '@/utils/scrollUtils';
 
 const Footer = () => {
   return (
@@ -19,36 +20,36 @@ const Footer = () => {
             <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-2">
               <li>
-                <a
-                  href="#services"
-                  className="text-gray-400 hover:text-white transition-colors"
+                <button
+                  onClick={() => smoothScrollToSection('services')}
+                  className="text-gray-400 hover:text-white transition-colors text-left"
                 >
                   Services
-                </a>
+                </button>
               </li>
               <li>
-                <a
-                  href="#testimonials"
-                  className="text-gray-400 hover:text-white transition-colors"
+                <button
+                  onClick={() => smoothScrollToSection('testimonials')}
+                  className="text-gray-400 hover:text-white transition-colors text-left"
                 >
                   Testimonials
-                </a>
+                </button>
               </li>
               <li>
-                <a
-                  href="#blog"
-                  className="text-gray-400 hover:text-white transition-colors"
+                <button
+                  onClick={() => smoothScrollToSection('blog')}
+                  className="text-gray-400 hover:text-white transition-colors text-left"
                 >
                   Blog
-                </a>
+                </button>
               </li>
               <li>
-                <a
-                  href="#contact"
-                  className="text-gray-400 hover:text-white transition-colors"
+                <button
+                  onClick={() => smoothScrollToSection('contact')}
+                  className="text-gray-400 hover:text-white transition-colors text-left"
                 >
                   Contact
-                </a>
+                </button>
               </li>
             </ul>
           </div>

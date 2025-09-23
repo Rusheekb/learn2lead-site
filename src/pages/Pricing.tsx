@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 type PricingTierProps = {
   name: string;
@@ -53,6 +54,8 @@ const PricingTier: React.FC<PricingTierProps> = ({
 };
 
 const Pricing = () => {
+  const navigate = useNavigate();
+  
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm">
@@ -67,13 +70,13 @@ const Pricing = () => {
             <div>
               <Button
                 variant="ghost"
-                onClick={() => (window.location.href = '/')}
+                onClick={() => navigate('/')}
               >
                 Home
               </Button>
               <Button
                 variant="ghost"
-                onClick={() => (window.location.href = '/login')}
+                onClick={() => navigate('/login')}
               >
                 Login
               </Button>

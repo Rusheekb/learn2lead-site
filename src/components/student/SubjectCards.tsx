@@ -43,12 +43,12 @@ const SubjectCards: React.FC<SubjectCardsProps> = ({
                   <ul className="pl-5 space-y-1">
                     {subject.topics.map((topic, index) => (
                       <li key={index} className="text-sm">
-                        <a
-                          href="#"
-                          className="text-tutoring-blue hover:text-tutoring-teal hover:underline"
+                        <button
+                          onClick={() => {/* Handle topic navigation */}}
+                          className="text-tutoring-blue hover:text-tutoring-teal hover:underline text-left"
                         >
                           {topic}
-                        </a>
+                        </button>
                       </li>
                     ))}
                   </ul>

@@ -5,11 +5,13 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
-import React, { Suspense } from 'react';
-import Index from './pages/Index';
-import NotFound from './pages/NotFound';
-import Login from './pages/Login';
-import Pricing from './pages/Pricing';
+import React from 'react';
+import OptimizedSuspense from './components/shared/OptimizedSuspense';
+// Lazy load all pages for optimal code splitting
+const Index = React.lazy(() => import('./pages/Index'));
+const NotFound = React.lazy(() => import('./pages/NotFound'));
+const Login = React.lazy(() => import('./pages/Login'));
+const Pricing = React.lazy(() => import('./pages/Pricing'));
 import { AuthProvider } from './contexts/AuthContext';
 import PrivateRoute from './components/PrivateRoute';
 import { useRoleSync } from './hooks/useRoleSync';
@@ -17,10 +19,10 @@ import { SidebarProvider } from '@/hooks/useSidebar';
 import DashboardShell from './components/shared/DashboardShell';
 import './i18n';
 import { LanguageProvider } from './contexts/LanguageContext';
-import Profile from './pages/Profile';
-import TutorDashboard from './pages/TutorDashboard';
+import PerformanceMonitor from './components/shared/PerformanceMonitor';
+const Profile = React.lazy(() => import('./pages/Profile'));
+const TutorDashboard = React.lazy(() => import('./pages/TutorDashboard'));
 
-// Still lazy-loading these components
 const Dashboard = React.lazy(() => import('./pages/Dashboard'));
 const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
 
@@ -37,23 +39,25 @@ const queryClient = new QueryClient({
 // Wrapper for dashboard routes that adds the DashboardShell
 const StudentDashboardWrapper = ({ children }: { children: React.ReactNode }) => (
   <DashboardShell title="Student Portal">
-    <Suspense fallback={<div>Loading...</div>}>
+    <OptimizedSuspense>
       {children}
-    </Suspense>
+    </OptimizedSuspense>
   </DashboardShell>
 );
 
 const TutorDashboardWrapper = ({ children }: { children: React.ReactNode }) => (
   <DashboardShell title="Tutor Portal">
-    {children}
+    <OptimizedSuspense>
+      {children}
+    </OptimizedSuspense>
   </DashboardShell>
 );
 
 const AdminDashboardWrapper = ({ children }: { children: React.ReactNode }) => (
   <DashboardShell title="Admin Portal">
-    <Suspense fallback={<div>Loading...</div>}>
+    <OptimizedSuspense>
       {children}
-    </Suspense>
+    </OptimizedSuspense>
   </DashboardShell>
 );
 
@@ -69,10 +73,22 @@ function App() {
               <AuthProvider>
                 <SidebarProvider>
                   <Routes>
-                    {/* Public routes */}
-                    <Route path="/" element={<Index />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/pricing" element={<Pricing />} />
+                    {/* Public routes with optimized loading */}
+                    <Route path="/" element={
+                      <OptimizedSuspense>
+                        <Index />
+                      </OptimizedSuspense>
+                    } />
+                    <Route path="/login" element={
+                      <OptimizedSuspense>
+                        <Login />
+                      </OptimizedSuspense>
+                    } />
+                    <Route path="/pricing" element={
+                      <OptimizedSuspense>
+                        <Pricing />
+                      </OptimizedSuspense>
+                    } />
                     
                     {/* Private routes */}
                     <Route element={
@@ -122,11 +138,16 @@ function App() {
                       </Route>
                     </Route>
 
-                    <Route path="*" element={<NotFound />} />
+                    <Route path="*" element={
+                      <OptimizedSuspense>
+                        <NotFound />
+                      </OptimizedSuspense>
+                    } />
                   </Routes>
                 </SidebarProvider>
               </AuthProvider>
             </BrowserRouter>
+            <PerformanceMonitor />
           </TooltipProvider>
         </HelmetProvider>
       </QueryClientProvider>

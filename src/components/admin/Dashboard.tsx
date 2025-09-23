@@ -2,7 +2,7 @@
 import React, { Suspense, lazy } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDashboardData } from '@/hooks/useDashboardData';
-import LoadingSpinner from '@/components/shared/LoadingSpinner';
+import OptimizedSuspense from '@/components/shared/OptimizedSuspense';
 
 // Dynamically import the heavy dashboard content component
 const DashboardContent = lazy(() => import('./dashboard/DashboardContent'));
@@ -13,9 +13,9 @@ const Dashboard: React.FC = () => {
   console.log('Dashboard data:', dashboardData);
 
   return (
-    <Suspense fallback={<LoadingSpinner />}>
+    <OptimizedSuspense>
       <DashboardContent {...dashboardData} />
-    </Suspense>
+    </OptimizedSuspense>
   );
 };
 
