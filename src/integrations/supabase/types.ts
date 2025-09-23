@@ -323,14 +323,14 @@ export type Database = {
             foreignKeyName: "scheduled_classes_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
-            referencedRelation: "students"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "scheduled_classes_tutor_id_fkey"
             columns: ["tutor_id"]
             isOneToOne: false
-            referencedRelation: "tutors"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -435,7 +435,21 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "tutor_student_assigned_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "tutor_student_assigned_tutor_fk"
+            columns: ["tutor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tutor_student_assigned_tutor_id_fkey"
             columns: ["tutor_id"]
             isOneToOne: false
             referencedRelation: "profiles"
