@@ -15,6 +15,7 @@ const Pricing = React.lazy(() => import('./pages/Pricing'));
 import { AuthProvider } from './contexts/AuthContext';
 import PrivateRoute from './components/PrivateRoute';
 import { useRoleSync } from './hooks/useRoleSync';
+import { RoutePersistence } from './components/shared/RoutePersistence';
 import { SidebarProvider } from '@/hooks/useSidebar';
 import DashboardShell from './components/shared/DashboardShell';
 import './i18n';
@@ -71,6 +72,7 @@ function App() {
           <TooltipProvider>
             <BrowserRouter>
               <AuthProvider>
+                <RoutePersistence />
                 <SidebarProvider>
                   <Routes>
                     {/* Public routes with optimized loading */}

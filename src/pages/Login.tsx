@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import NavBar from '@/components/NavBar';
 import { toast } from 'sonner';
 import AuthTabs from '@/components/auth/AuthTabs';
+import { getSavedRoute } from '@/hooks/useRoutePersistence';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -36,13 +37,16 @@ const Login = () => {
   // Redirect if already logged in
   useEffect(() => {
     if (user && userRole) {
+      // Try to get saved route first, then fall back to default dashboard
+      const savedRoute = getSavedRoute(user.id);
+      
       const redirectPaths = {
         student: '/dashboard',
         tutor: '/tutor-dashboard',
         admin: '/admin-dashboard',
       };
 
-      const path = redirectPaths[userRole] || '/';
+      const path = savedRoute || redirectPaths[userRole] || '/';
       navigate(path, { replace: true });
     }
   }, [user, userRole, navigate]);

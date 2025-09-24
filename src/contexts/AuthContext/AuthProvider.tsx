@@ -12,6 +12,7 @@ import { createStudent } from '@/services/students/studentService';
 import { createTutor } from '@/services/tutors/tutorService';
 import { toast } from 'sonner';
 import { AuthContextType } from '@/types/auth';
+import { getSavedRoute, clearSavedRoute } from '@/hooks/useRoutePersistence';
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -89,7 +90,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               setUserRole(existingProfile.role);
             }
 
-            navigate(getDashboardPath(existingProfile?.role || 'student'), {
+            // Try to restore saved route, otherwise go to default dashboard
+            const savedRoute = getSavedRoute(u.id);
+            const targetPath = savedRoute || getDashboardPath(existingProfile?.role || 'student');
+            
+            navigate(targetPath, {
               replace: true,
             });
           } catch (err) {
@@ -101,6 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (event === 'SIGNED_OUT') {
+        clearSavedRoute(); // Clear saved route on sign out
         setUserRole(null);
         setUser(null);
         setSession(null);
@@ -157,6 +163,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(null);
         setSession(null);
         setUserRole(null);
+        clearSavedRoute();
         localStorage.removeItem('supabase.auth.token');
         navigate('/login');
         toast.success('Signed out successfully');
@@ -167,6 +174,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(null);
       setSession(null);
       setUserRole(null);
+      clearSavedRoute();
       navigate('/login');
     }
   };
