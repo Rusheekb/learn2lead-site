@@ -20,7 +20,7 @@ import { SidebarProvider } from '@/hooks/useSidebar';
 import DashboardShell from './components/shared/DashboardShell';
 import './i18n';
 import { LanguageProvider } from './contexts/LanguageContext';
-import PerformanceMonitor from './components/shared/PerformanceMonitor';
+
 const Profile = React.lazy(() => import('./pages/Profile'));
 const TutorDashboard = React.lazy(() => import('./pages/TutorDashboard'));
 
@@ -149,7 +149,7 @@ function App() {
                 </SidebarProvider>
               </AuthProvider>
             </BrowserRouter>
-            <PerformanceMonitor />
+            
           </TooltipProvider>
         </HelmetProvider>
       </QueryClientProvider>

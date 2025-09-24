@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { ClassEvent } from '@/types/tutorTypes';
 import { deleteScheduledClass } from '@/services/class'; // Updated import
-import { analytics, EventName, EventCategory } from '@/services/analytics/analyticsService';
+
 
 export const useDeleteEvent = (
   scheduledClasses: ClassEvent[],
@@ -24,20 +24,9 @@ export const useDeleteEvent = (
         );
         setIsViewEventOpen(false);
         
-        // Track class deleted event
+        // Class deleted successfully
         if (eventToDelete) {
-          analytics.track({
-            category: EventCategory.CLASS,
-            name: EventName.CLASS_DELETED,
-            properties: {
-              classId: eventId,
-              title: eventToDelete.title,
-              subject: eventToDelete.subject,
-              date: typeof eventToDelete.date === 'string'
-                ? eventToDelete.date
-                : format(eventToDelete.date, 'yyyy-MM-dd'),
-            }
-          });
+          console.log('Class deleted:', eventId);
         }
         
         return true;

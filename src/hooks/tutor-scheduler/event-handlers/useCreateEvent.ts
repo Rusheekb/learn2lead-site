@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { ClassEvent } from '@/types/tutorTypes';
 import { createScheduledClass } from '@/services/class'; // Updated import
-import { analytics, EventName, EventCategory } from '@/services/analytics/analyticsService';
+
 import { useQueryClient } from '@tanstack/react-query';
 
 export const useCreateEvent = (
@@ -38,18 +38,8 @@ export const useCreateEvent = (
         // Don't add to local state - let the real-time subscription handle it
         // This prevents duplicate classes from appearing
         
-        // Track class creation event
-        analytics.track({
-          category: EventCategory.CLASS,
-          name: EventName.CLASS_CREATED,
-          properties: {
-            classId: newClassId,
-            title: newEvent.title,
-            subject: newEvent.subject,
-            studentId: newEvent.studentId,
-            date: format(newEvent.date, 'yyyy-MM-dd'),
-          }
-        });
+        // Class created successfully
+        console.log('Class created:', newClassId);
         
         // Invalidate student classes query
         if (newEvent.studentId) {

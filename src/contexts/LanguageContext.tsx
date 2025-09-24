@@ -1,7 +1,7 @@
 
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { useTranslation } from 'react-i18next';
-import { analytics, EventName, EventCategory } from '@/services/analytics/analyticsService';
+
 
 type Language = 'en' | 'es';
 
@@ -24,15 +24,8 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setLanguageState(lang);
     localStorage.setItem('language', lang);
     
-    // Track language change event
-    analytics.track({
-      category: EventCategory.UI,
-      name: EventName.LANGUAGE_CHANGE,
-      properties: { 
-        from: language,
-        to: lang
-      }
-    });
+    // Language changed successfully
+    console.log(`Language changed from ${language} to ${lang}`);
   };
 
   useEffect(() => {

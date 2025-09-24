@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { ClassEvent } from '@/types/tutorTypes';
 import { updateScheduledClass } from '@/services/class'; // Updated import
-import { analytics, EventName, EventCategory } from '@/services/analytics/analyticsService';
+
 
 export const useEditEvent = (
   scheduledClasses: ClassEvent[],
@@ -39,19 +39,8 @@ export const useEditEvent = (
           )
         );
         
-        // Track class edited event
-        analytics.track({
-          category: EventCategory.CLASS,
-          name: EventName.CLASS_EDITED,
-          properties: {
-            classId: selectedEvent.id,
-            title: selectedEvent.title,
-            subject: selectedEvent.subject,
-            date: typeof selectedEvent.date === 'string'
-              ? selectedEvent.date
-              : format(selectedEvent.date, 'yyyy-MM-dd'),
-          }
-        });
+        // Class edited successfully
+        console.log('Class updated:', selectedEvent.id);
         
         return true;
       }

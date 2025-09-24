@@ -7,8 +7,6 @@ import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import DashboardContent from '@/components/student/DashboardContent';
 import ClassCalendar from '@/components/ClassCalendar';
 import StudentContent from '@/components/shared/StudentContent';
-import { useAnalyticsTracker } from '@/hooks/useAnalyticsTracker';
-import { EventName } from '@/services/analytics/analyticsService';
 import { useQueryClient } from '@tanstack/react-query';
 
 const Dashboard = () => {
@@ -18,18 +16,7 @@ const Dashboard = () => {
   const { userRole, user } = useAuth();
   const [searchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'dashboard';
-  const { trackNavigation, trackPageView } = useAnalyticsTracker();
   const queryClient = useQueryClient();
-  
-  // Track page view on initial render
-  useEffect(() => {
-    trackPageView('student-dashboard');
-  }, [trackPageView]);
-  
-  // Track tab changes
-  useEffect(() => {
-    trackNavigation(EventName.TAB_CHANGE, { tab: activeTab, dashboard: 'student' });
-  }, [activeTab, trackNavigation]);
 
   // Invalidate query cache to ensure fresh data when tab changes
   useEffect(() => {

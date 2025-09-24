@@ -1,7 +1,7 @@
 
 import { useState, useEffect, createContext, useContext } from 'react';
 import { useTranslation } from 'react-i18next';
-import { analytics, EventName, EventCategory } from '@/services/analytics/analyticsService';
+
 
 interface SidebarContextType {
   isExpanded: boolean;
@@ -21,15 +21,8 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
     setSidebarExpanded((prev: boolean) => {
       const newState = !prev;
       
-      // Track sidebar toggle analytics event
-      analytics.track({
-        category: EventCategory.UI,
-        name: EventName.TOGGLE_SIDEBAR,
-        properties: { 
-          from: prev ? 'expanded' : 'collapsed',
-          to: newState ? 'expanded' : 'collapsed'
-        }
-      });
+      // Sidebar toggled successfully
+      console.log(`Sidebar toggled from ${prev ? 'expanded' : 'collapsed'} to ${newState ? 'expanded' : 'collapsed'}`);
       
       return newState;
     });

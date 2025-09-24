@@ -7,8 +7,6 @@ import TutorDashboardContent from '@/components/tutor/TutorDashboardContent';
 import TutorStudents from '@/components/tutor/TutorStudents';
 import TutorMaterials from '@/components/tutor/TutorMaterials';
 import TutorOverviewSection from '@/components/tutor/dashboard/TutorOverviewSection';
-import { useAnalyticsTracker } from '@/hooks/useAnalyticsTracker';
-import { EventName } from '@/services/analytics/analyticsService';
 import { useQueryClient } from '@tanstack/react-query';
 
 const TutorDashboard: React.FC = () => {
@@ -16,18 +14,10 @@ const TutorDashboard: React.FC = () => {
   const [searchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'schedule';
   const { userRole, user } = useAuth();
-  const { trackNavigation, trackPageView } = useAnalyticsTracker();
   const queryClient = useQueryClient();
   
-  // Track page view on initial render
+  // Invalidate queries when switching to schedule tab
   useEffect(() => {
-    trackPageView('tutor-dashboard');
-  }, [trackPageView]);
-  
-  // Track tab changes and invalidate queries when switching to schedule tab
-  useEffect(() => {
-    trackNavigation(EventName.TAB_CHANGE, { tab: activeTab, dashboard: 'tutor' });
-    
     // When switching to schedule tab, ensure we have fresh data
     if (activeTab === 'schedule' && user?.id) {
       // Force refresh of scheduled classes data
@@ -36,7 +26,7 @@ const TutorDashboard: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['tutorRelationships', user.id] });
       console.log("Invalidated queries for tutor schedule", user.id);
     }
-  }, [activeTab, trackNavigation, queryClient, user?.id]);
+  }, [activeTab, queryClient, user?.id]);
 
   // Redirect if not a tutor
   if (userRole && userRole !== 'tutor') {

@@ -11,11 +11,7 @@ import { fetchTutors } from '@/services/tutors/tutorService';
 import { fetchStudents } from '@/services/students/studentService';
 import { fetchTutorsWithProfileIds, fetchStudentsWithProfileIds, TutorWithProfileId, StudentWithProfileId } from '@/services/assignments/fetchService';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
-import { useAnalyticsTracker } from '@/hooks/useAnalyticsTracker';
-import { EventName } from '@/services/analytics/analyticsService';
-
 // Dynamically import heavy components
-const ClassAnalytics = lazy(() => import('@/components/admin/ClassAnalytics'));
 const ClassLogs = lazy(() => import('@/components/admin/ClassLogs'));
 const PaymentsManager = lazy(() => import('@/components/admin/PaymentsManager'));
 const TutorsManager = lazy(() => import('@/components/admin/TutorsManager'));
@@ -43,17 +39,6 @@ const AdminDashboard: React.FC = () => {
   const [searchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'analytics';
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const { trackNavigation, trackPageView } = useAnalyticsTracker();
-
-  // Track page view on initial render
-  useEffect(() => {
-    trackPageView('admin-dashboard');
-  }, [trackPageView]);
-
-  // Track tab changes
-  useEffect(() => {
-    trackNavigation(EventName.TAB_CHANGE, { tab: activeTab, dashboard: 'admin' });
-  }, [activeTab, trackNavigation]);
 
   const { 
     data: assignments = [], 
@@ -97,9 +82,10 @@ const AdminDashboard: React.FC = () => {
     switch (activeTab) {
       case 'analytics':
         return (
-          <Suspense fallback={<LoadingSpinner />}>
-            <ClassAnalytics />
-          </Suspense>
+          <div className="space-y-6">
+            <h3 className="text-lg font-semibold">Analytics Overview</h3>
+            <p className="text-muted-foreground">Basic analytics coming soon...</p>
+          </div>
         );
       case 'schedule':
         return (
@@ -144,9 +130,10 @@ const AdminDashboard: React.FC = () => {
         );
       default:
         return (
-          <Suspense fallback={<LoadingSpinner />}>
-            <ClassAnalytics />
-          </Suspense>
+          <div className="space-y-6">
+            <h3 className="text-lg font-semibold">Analytics Overview</h3>
+            <p className="text-muted-foreground">Basic analytics coming soon...</p>
+          </div>
         );
     }
   };

@@ -6,7 +6,7 @@ import { Profile } from '@/hooks/useProfile';
 import ProfileDisplay from './ProfileDisplay';
 import SharedContentTab from './SharedContentTab';
 import SettingsTab from './SettingsTab';
-import AnalyticsTab from './AnalyticsTab';
+
 
 interface ProfileTabsProps {
   profile: Profile;
@@ -31,10 +31,9 @@ const ProfileTabs: React.FC<ProfileTabsProps> = ({
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab}>
-      <TabsList className="grid w-full grid-cols-3">
+      <TabsList className="grid w-full grid-cols-2">
         <TabsTrigger value="profile">{t('profile.profile')}</TabsTrigger>
         <TabsTrigger value="settings">{t('profile.settings')}</TabsTrigger>
-        <TabsTrigger value="analytics">{t('profile.analytics')}</TabsTrigger>
       </TabsList>
 
       <TabsContent value="profile" className="pt-6">
@@ -53,9 +52,6 @@ const ProfileTabs: React.FC<ProfileTabsProps> = ({
         />
       </TabsContent>
 
-      <TabsContent value="analytics" className="pt-6">
-        <AnalyticsTab profile={profile} />
-      </TabsContent>
 
     </Tabs>
   );
