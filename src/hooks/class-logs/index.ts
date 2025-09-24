@@ -5,7 +5,7 @@ import { useClassData } from './hooks/useClassData';
 import { useClassActions } from './hooks/useClassActions';
 
 import { useFileActions } from './hooks/useFileActions';
-import { useExportActions } from './hooks/useExportActions';
+
 import { usePagination } from './hooks/usePagination';
 
 export {
@@ -14,6 +14,5 @@ export {
   useClassData,
   useClassActions,
   useFileActions,
-  useExportActions,
   usePagination,
 };

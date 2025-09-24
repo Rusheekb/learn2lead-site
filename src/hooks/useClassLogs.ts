@@ -4,7 +4,7 @@ import useClassFilters from './class-logs/useClassFilters';
 import useClassActions from './class-logs/useClassActions';
 import useClassData from './class-logs/useClassData';
 import useClassRealtime from './class-logs/useClassRealtime';
-import { useExportActions } from './class-logs/hooks/useExportActions';
+
 
 export const useClassLogs = () => {
   const {
@@ -53,7 +53,7 @@ export const useClassLogs = () => {
     handleRefreshData,
   } = useClassData();
 
-  const { isExporting, handleExport } = useExportActions();
+  
 
   // Create realtime subscription
   useClassRealtime(
@@ -104,7 +104,7 @@ export const useClassLogs = () => {
     setStudentMessages, // Make sure to include this in the returned object
     activeDetailsTab,
     setActiveDetailsTab,
-    isExporting,
+    
     isLoading,
     error,
     classes,
@@ -123,7 +123,7 @@ export const useClassLogs = () => {
     
     
     handleDownloadFile,
-    handleExport,
+    
     handleRefreshData,
     handlePageChange,
     handlePageSizeChange,

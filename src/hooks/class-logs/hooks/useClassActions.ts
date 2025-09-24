@@ -1,7 +1,7 @@
 
 
 import { useFileActions } from './useFileActions';
-import { useExportActions } from './useExportActions';
+
 import { StudentMessage, StudentUpload } from '@/types/classTypes';
 
 export const useClassActions = (
@@ -12,10 +12,9 @@ export const useClassActions = (
   
   const { handleDownloadFile } = useFileActions(studentUploads);
   
-  const { handleExport } = useExportActions();
+  
 
   return {
     handleDownloadFile,
-    handleExport,
   };
 };

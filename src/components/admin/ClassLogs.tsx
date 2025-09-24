@@ -44,7 +44,7 @@ const ClassLogs: React.FC = () => {
     studentMessages,
     activeDetailsTab,
     setActiveDetailsTab,
-    isExporting,
+    
     isLoading,
     error,
     classes,
@@ -59,16 +59,12 @@ const ClassLogs: React.FC = () => {
     formatTime,
     clearFilters,
     handleDownloadFile,
-    handleExport,
+    
     handleRefreshData,
     handlePageChange,
     handlePageSizeChange,
   } = useClassLogs();
 
-  // Function to handle export with proper arguments
-  const handleExportFormat = (format: ExportFormat) => {
-    handleExport(filteredClasses, format);
-  };
 
   return (
     <div className="space-y-6">
@@ -94,33 +90,6 @@ const ClassLogs: React.FC = () => {
             <RefreshCw className="h-4 w-4" />
             {isLoading ? t('classLogs.refreshing') : t('classLogs.refresh')}
           </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2"
-                disabled={isLoading || isExporting || Boolean(error) || filteredClasses.length === 0}
-              >
-                {isExporting ? (
-                  <Loader className="h-4 w-4 animate-spin" />
-                ) : (
-                  <FileDown className="h-4 w-4" />
-                )}
-                {isExporting ? t('classLogs.exporting') : t('classLogs.export')}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => handleExportFormat('csv')} disabled={isExporting}>
-                <Download className="h-4 w-4 mr-2" />
-                {t('classLogs.exportAsCSV')}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleExportFormat('pdf')} disabled={isExporting}>
-                <Printer className="h-4 w-4 mr-2" />
-                {t('classLogs.exportAsPDF')}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       </div>
 

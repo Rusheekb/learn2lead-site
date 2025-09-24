@@ -5,7 +5,7 @@ import { StudentMessage, StudentUpload } from '@/types/classTypes';
 import { useClassHandling } from './hooks/useClassHandling';
 
 import { useFileActions } from './hooks/useFileActions';
-import { useExportActions } from './hooks/useExportActions';
+
 import { usePaginationHandling } from './hooks/usePaginationHandling';
 
 const useClassActions = () => {
@@ -17,7 +17,6 @@ const useClassActions = () => {
 
   // Message actions removed - messaging functionality disabled
   const { handleDownloadFile } = useFileActions(studentUploads);
-  const { handleExport, isExporting } = useExportActions();
   const {
     handleClassClick: baseHandleClassClick,
     loadClassContent: baseLoadClassContent,
@@ -59,7 +58,7 @@ const useClassActions = () => {
     setStudentMessages, // Make sure to include this in the returned object
     activeDetailsTab,
     setActiveDetailsTab,
-    isExporting,
+    
     page,
     setPage,
     pageSize,
@@ -73,7 +72,7 @@ const useClassActions = () => {
     handleUpdateStatus,
     handleUpdateAttendance,
     handleDeleteClass,
-    handleExport,
+    
     
     handlePageChange,
     handlePageSizeChange,
