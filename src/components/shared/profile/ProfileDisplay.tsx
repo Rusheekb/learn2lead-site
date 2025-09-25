@@ -4,7 +4,7 @@ import { Profile } from '@/hooks/useProfile';
 import ProfileEditor from '../ProfileEditor';
 import ProfileView from '../ProfileView';
 import AppearanceSettings from './AppearanceSettings';
-import { useTranslation } from 'react-i18next';
+
 
 interface ProfileDisplayProps {
   profile: Profile;
@@ -19,7 +19,6 @@ const ProfileDisplay: React.FC<ProfileDisplayProps> = ({
   setIsEditMode,
   updateProfile,
 }) => {
-  const { t } = useTranslation();
 
   return isEditMode ? (
     <ProfileEditor
@@ -42,7 +41,7 @@ const ProfileDisplay: React.FC<ProfileDisplayProps> = ({
           onClick={() => setIsEditMode(true)}
           className="text-tutoring-blue hover:text-tutoring-blue/80 dark:text-tutoring-teal dark:hover:text-tutoring-teal/80"
         >
-          {t('profile.editProfile')}
+          Edit Profile
         </button>
       </div>
     </div>

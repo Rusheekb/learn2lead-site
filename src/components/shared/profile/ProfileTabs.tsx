@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Profile } from '@/hooks/useProfile';
 import ProfileDisplay from './ProfileDisplay';
@@ -27,13 +26,11 @@ const ProfileTabs: React.FC<ProfileTabsProps> = ({
   updateProfile,
   fetchRelevantUsers,
 }) => {
-  const { t } = useTranslation();
-
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab}>
       <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="profile">{t('profile.profile')}</TabsTrigger>
-        <TabsTrigger value="settings">{t('profile.settings')}</TabsTrigger>
+        <TabsTrigger value="profile">Profile</TabsTrigger>
+        <TabsTrigger value="settings">Settings</TabsTrigger>
       </TabsList>
 
       <TabsContent value="profile" className="pt-6">

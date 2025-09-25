@@ -1,6 +1,5 @@
 
 import React, { useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import { Navigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import TutorDashboardContent from '@/components/tutor/TutorDashboardContent';
@@ -10,7 +9,6 @@ import TutorOverviewSection from '@/components/tutor/dashboard/TutorOverviewSect
 import { useQueryClient } from '@tanstack/react-query';
 
 const TutorDashboard: React.FC = () => {
-  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'schedule';
   const { userRole, user } = useAuth();

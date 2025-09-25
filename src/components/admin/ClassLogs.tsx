@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { FileDown, Printer, RefreshCw, Download, Upload, Loader } from 'lucide-react';
 import {
@@ -24,7 +23,6 @@ import { useClassLogs } from '@/hooks/useClassLogs';
 import { ExportFormat } from '@/types/classTypes';
 
 const ClassLogs: React.FC = () => {
-  const { t } = useTranslation();
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const {
     searchTerm,
@@ -69,7 +67,7 @@ const ClassLogs: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">{t('classLogs.title')}</h2>
+        <h2 className="text-2xl font-bold">Class Logs</h2>
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
@@ -78,7 +76,7 @@ const ClassLogs: React.FC = () => {
             className="flex items-center gap-2"
           >
             <Upload className="h-4 w-4" />
-            {t('classLogs.importCSV')}
+            Import CSV
           </Button>
           <Button
             variant="outline"
@@ -88,7 +86,7 @@ const ClassLogs: React.FC = () => {
             disabled={isLoading}
           >
             <RefreshCw className="h-4 w-4" />
-            {isLoading ? t('classLogs.refreshing') : t('classLogs.refresh')}
+            {isLoading ? 'Refreshing...' : 'Refresh'}
           </Button>
         </div>
       </div>

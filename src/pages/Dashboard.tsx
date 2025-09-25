@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import { Navigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
@@ -10,7 +9,6 @@ import StudentContent from '@/components/shared/StudentContent';
 import { useQueryClient } from '@tanstack/react-query';
 
 const Dashboard = () => {
-  const { t } = useTranslation();
   const [selectedSubject, setSelectedSubject] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { userRole, user } = useAuth();

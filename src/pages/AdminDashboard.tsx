@@ -1,6 +1,5 @@
 
 import React, { useState, Suspense, lazy, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { UserDetailModal } from '@/components/admin/UserDetailModal';
 import { useQuery } from '@tanstack/react-query';
@@ -35,7 +34,6 @@ const fetchAssignments = async () => {
 };
 
 const AdminDashboard: React.FC = () => {
-  const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'analytics';
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -140,7 +138,7 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">{t('dashboard.adminDashboard')}</h2>
+      <h2 className="text-2xl font-bold">Admin Dashboard</h2>
       
       {renderContent()}
       

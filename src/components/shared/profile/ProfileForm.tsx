@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -21,54 +20,52 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
   profile,
   handleInputChange,
 }) => {
-  const { t } = useTranslation();
-
   return (
     <div className="space-y-4">
       <div>
-        <Label htmlFor="first_name">{t('profile.firstName')}</Label>
+        <Label htmlFor="first_name">First Name</Label>
         <Input
           id="first_name"
           name="first_name"
           value={formData.first_name}
           onChange={handleInputChange}
-          placeholder={String(t('profile.firstName'))}
+          placeholder="First Name"
         />
       </div>
 
       <div>
-        <Label htmlFor="last_name">{t('profile.lastName')}</Label>
+        <Label htmlFor="last_name">Last Name</Label>
         <Input
           id="last_name"
           name="last_name"
           value={formData.last_name}
           onChange={handleInputChange}
-          placeholder={String(t('profile.lastName'))}
+          placeholder="Last Name"
         />
       </div>
 
       <div>
-        <Label htmlFor="bio">{t('profile.bio')}</Label>
+        <Label htmlFor="bio">Bio</Label>
         <Textarea
           id="bio"
           name="bio"
           value={formData.bio}
           onChange={handleInputChange}
-          placeholder={String(t('profile.bio'))}
+          placeholder="Tell us about yourself..."
           className="resize-none h-32"
         />
       </div>
 
       <div>
-        <Label>{t('auth.email')}</Label>
+        <Label>Email</Label>
         <Input value={profile.email} disabled className="bg-gray-100" />
         <p className="text-sm text-gray-500 mt-1">
-          {t('profile.emailCannotBeChanged')}
+          Email cannot be changed
         </p>
       </div>
 
       <div>
-        <Label>{t('profile.role')}</Label>
+        <Label>Role</Label>
         <Input
           value={
             profile.role.charAt(0).toUpperCase() + profile.role.slice(1)
@@ -77,7 +74,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
           className="bg-gray-100"
         />
         <p className="text-sm text-gray-500 mt-1">
-          {t('profile.roleAssignedByAdmin')}
+          Role is assigned by admin
         </p>
       </div>
     </div>

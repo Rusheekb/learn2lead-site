@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { Profile } from '@/hooks/useProfile';
 import {
@@ -24,7 +23,6 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
   onSave,
   onCancel,
 }) => {
-  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     first_name: profile.first_name || '',
     last_name: profile.last_name || '',
@@ -52,7 +50,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{t('profile.editProfile')}</CardTitle>
+        <CardTitle>Edit Profile</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -67,11 +65,11 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
       <CardFooter className="flex justify-end space-x-2">
         {onCancel && (
           <Button variant="ghost" onClick={onCancel}>
-            {t('common.cancel')}
+            Cancel
           </Button>
         )}
         <Button onClick={handleSubmit} disabled={isSaving}>
-          {isSaving ? t('profile.saving') : t('profile.saveChanges')}
+          {isSaving ? 'Saving...' : 'Save Changes'}
         </Button>
       </CardFooter>
     </Card>

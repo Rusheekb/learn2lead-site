@@ -1,9 +1,7 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 const Dashboard: React.FC = () => {
-  const { t } = useTranslation();
 
   return (
     <div className="space-y-6">

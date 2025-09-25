@@ -1,13 +1,10 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 const AdminSettings: React.FC = () => {
-  const { t } = useTranslation();
-
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">{t('dashboard.adminSettings')}</h2>
+      <h2 className="text-2xl font-bold">Admin Settings</h2>
       
       <div className="grid md:grid-cols-2 gap-6">
         <Card>

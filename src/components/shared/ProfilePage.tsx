@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { useProfile } from '@/hooks/useProfile';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -9,7 +8,6 @@ import LoadingState from './profile/LoadingState';
 import ProfileNotFound from './profile/ProfileNotFound';
 
 const ProfilePage: React.FC = () => {
-  const { t } = useTranslation();
   const { profile, isLoading, updateProfile } = useProfile();
   const [activeTab, setActiveTab] = useState('profile');
   const [isEditMode, setIsEditMode] = useState(false);
@@ -59,7 +57,7 @@ const ProfilePage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">{t('profile.myProfile')}</h2>
+      <h2 className="text-2xl font-bold">My Profile</h2>
 
       <ProfileTabs
         profile={profile}

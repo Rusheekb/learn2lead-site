@@ -1,6 +1,5 @@
 
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,7 +13,6 @@ interface AvatarUploaderProps {
 }
 
 const AvatarUploader: React.FC<AvatarUploaderProps> = ({ profile, onSave }) => {
-  const { t } = useTranslation();
   const [isUploading, setIsUploading] = useState(false);
 
   const getInitials = (firstName?: string | null, lastName?: string | null) => {
@@ -74,7 +72,7 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({ profile, onSave }) => {
           htmlFor="avatar"
           className="cursor-pointer px-4 py-2 border rounded-md bg-gray-100 hover:bg-gray-200"
         >
-          {isUploading ? String(t('profile.uploading')) : String(t('profile.changeAvatar'))}
+          {isUploading ? 'Uploading...' : 'Change Avatar'}
         </Label>
         <Input
           id="avatar"
