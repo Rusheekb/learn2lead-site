@@ -1,122 +1,57 @@
-
 import React from 'react';
+import { AddClassDialog } from './dialogs/AddClassDialog';
+import { ViewClassDialog } from './dialogs/ViewClassDialog';
 import { ClassEvent } from '@/types/tutorTypes';
-import { StudentMessage, StudentUpload } from '@/types/classTypes';
-import ViewClassDialog from './dialogs/ViewClassDialog';
-import EditClassForm from './dialogs/EditClassForm';
-import AddClassDialog from './dialogs/AddClassDialog';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Profile } from '@/types/profile';
-import { useFileActions } from '@/hooks/class-logs/hooks/useFileActions';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 interface ClassDialogsProps {
-  isViewEventOpen: boolean;
-  setIsViewEventOpen: (isOpen: boolean) => void;
   isAddEventOpen: boolean;
-  setIsAddEventOpen: (isOpen: boolean) => void;
+  isEditEventOpen: boolean;
+  isViewEventOpen: boolean;
   selectedEvent: ClassEvent | null;
-  isEditMode: boolean;
-  setIsEditMode: (isEdit: boolean) => void;
-  newEvent: any;
-  setNewEvent: (event: any) => void;
-  activeEventTab: string;
-  setActiveEventTab: (tab: string) => void;
-  studentMessages: StudentMessage[];
-  studentUploads: StudentUpload[];
-  students?: any[];
-  onCreateEvent: () => void;
-  onEditEvent: () => void;
-  onDuplicateEvent: (event: ClassEvent) => void;
-  onDeleteEvent: (eventId: string, isRecurring?: boolean) => void;
-  onResetForm: () => void;
-  onMarkAsRead: (messageId: string) => Promise<void>;
-  onDownloadFile: (uploadId: string) => Promise<void>;
-  getUnreadMessageCount: (classId: string) => number;
-  refreshEvent?: () => Promise<void>;
-  currentUser?: Profile | null; // Using the Profile type from @/types/profile
+  onCloseDialogs: () => void;
+  onRefreshData: () => void;
 }
 
-const ClassDialogs: React.FC<ClassDialogsProps> = ({
-  isViewEventOpen,
-  setIsViewEventOpen,
+export function ClassDialogs({
   isAddEventOpen,
-  setIsAddEventOpen,
+  isEditEventOpen,
+  isViewEventOpen,
   selectedEvent,
-  isEditMode,
-  setIsEditMode,
-  newEvent,
-  setNewEvent,
-  activeEventTab,
-  setActiveEventTab,
-  studentMessages,
-  studentUploads,
-  students = [],
-  onCreateEvent,
-  onEditEvent,
-  onDuplicateEvent,
-  onDeleteEvent,
-  onResetForm,
-  onMarkAsRead,
-  onDownloadFile,
-  getUnreadMessageCount,
-  refreshEvent,
-  currentUser,
-}) => {
-  const { handleViewFile } = useFileActions(studentUploads);
+  onCloseDialogs,
+  onRefreshData,
+}: ClassDialogsProps) {
   return (
     <>
-      {isEditMode && selectedEvent ? (
-        <Dialog open={isViewEventOpen} onOpenChange={setIsViewEventOpen}>
-          <DialogContent className="max-w-3xl px-8 bg-white text-gray-900 border">
-            <DialogHeader>
-              <DialogTitle className="text-gray-900">{selectedEvent.title}</DialogTitle>
-            </DialogHeader>
-            <EditClassForm
-              selectedEvent={selectedEvent}
-              newEvent={newEvent}
-              setNewEvent={setNewEvent}
-              onCancel={() => setIsEditMode(false)}
-              onSave={onEditEvent}
-              students={students}
-            />
-          </DialogContent>
-        </Dialog>
-      ) : (
-        <ViewClassDialog
-          isOpen={isViewEventOpen}
-          setIsOpen={setIsViewEventOpen}
-          selectedEvent={selectedEvent}
-          setIsEditMode={setIsEditMode}
-          activeTab={activeEventTab}
-          setActiveTab={setActiveEventTab}
-          studentMessages={studentMessages}
-          studentUploads={studentUploads}
-          onDuplicateEvent={onDuplicateEvent}
-          onDeleteEvent={onDeleteEvent}
-          onMarkAsRead={onMarkAsRead}
-          onDownloadFile={onDownloadFile}
-          onViewFile={handleViewFile}
-          getUnreadMessageCount={getUnreadMessageCount}
-          refreshEvent={refreshEvent}
-        />
-      )}
-
       <AddClassDialog
-        isOpen={isAddEventOpen}
-        setIsOpen={setIsAddEventOpen}
-        newEvent={newEvent}
-        setNewEvent={setNewEvent}
-        onCreateEvent={onCreateEvent}
-        onCancel={onResetForm}
-        currentUser={currentUser}
+        open={isAddEventOpen}
+        onOpenChange={(open) => !open && onCloseDialogs()}
+        onSuccess={onRefreshData}
       />
+
+      {selectedEvent && (
+        <>
+          <Dialog open={isEditEventOpen} onOpenChange={(open) => !open && onCloseDialogs()}>
+            <DialogContent>
+              <div className="p-4">
+                <h2 className="text-lg font-semibold mb-4">Edit Class</h2>
+                <p className="mb-4">Edit functionality simplified</p>
+                <Button onClick={onCloseDialogs}>Close</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          <ViewClassDialog
+            open={isViewEventOpen}
+            onOpenChange={(open) => !open && onCloseDialogs()}
+            classEvent={selectedEvent}
+            onEdit={() => {
+              onCloseDialogs();
+            }}
+          />
+        </>
+      )}
     </>
   );
-};
-
-export default ClassDialogs;
+}

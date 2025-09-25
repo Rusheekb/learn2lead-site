@@ -1,134 +1,61 @@
-
-import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { useQueryClient } from '@tanstack/react-query';
-import ClassCalendarColumn from './ClassCalendarColumn';
-import DailyClassSessions from './DailyClassSessions';
-import UpcomingClassSessions from './UpcomingClassSessions';
-import StudentClassDetailsDialog from './StudentClassDetailsDialog';
+import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { ClassSession } from '@/types/classTypes';
-import { fetchScheduledClasses } from '@/services/classService';
-import { toast } from 'sonner';
-import { useRealtimeClassUpdates } from '@/hooks/student/useRealtimeClassUpdates';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { CalendarWithEvents } from '@/components/CalendarWithEvents';
+import { useRealtimeManager } from '@/hooks/useRealtimeManager';
 
 interface ClassCalendarContainerProps {
-  studentId: string | null;
+  onSelectClass?: (classSession: ClassSession) => void;
 }
 
-const ClassCalendarContainer: React.FC<ClassCalendarContainerProps> = ({ studentId }) => {
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+export const ClassCalendarContainer: React.FC<ClassCalendarContainerProps> = ({ onSelectClass }) => {
   const [sessions, setSessions] = useState<ClassSession[]>([]);
-  const [selectedClass, setSelectedClass] = useState<ClassSession | null>(null);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const queryClient = useQueryClient();
+  const { user } = useAuth();
 
-  // Listen for class detail events
-  useEffect(() => {
-    const handleOpenClassDetails = (event: CustomEvent<ClassSession>) => {
-      setSelectedClass(event.detail);
-      setIsDialogOpen(true);
-    };
+  // Use simplified realtime manager
+  useRealtimeManager({
+    userId: user?.id,
+    userRole: user?.user_metadata?.role,
+  });
 
-    window.addEventListener('openClassDetails', handleOpenClassDetails as EventListener);
+  // Fetch student classes
+  const { data: classData, isLoading } = useQuery({
+    queryKey: ['student-classes', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      
+      const { data, error } = await supabase
+        .from('scheduled_classes')
+        .select('*')
+        .eq('student_id', user.id)
+        .order('start_time', { ascending: true });
+      
+      if (error) throw error;
+      return data as ClassSession[];
+    },
+    enabled: !!user?.id,
+  });
 
-    return () => {
-      window.removeEventListener('openClassDetails', handleOpenClassDetails as EventListener);
-    };
-  }, []);
+  React.useEffect(() => {
+    if (classData) {
+      setSessions(classData);
+    }
+  }, [classData]);
 
-  useEffect(() => {
-    if (!studentId) return;
-
-    const loadSessions = async () => {
-      setIsLoading(true);
-      try {
-        console.log(`Fetching classes for student: ${studentId}`);
-        const classEvents = await fetchScheduledClasses(undefined, studentId);
-        console.log(`Received ${classEvents.length} classes for student`);
-
-        const classSessions = classEvents.map((cls) => ({
-          id: cls.id,
-          title: cls.title,
-          subjectId: cls.subject,
-          tutorName: cls.tutorName || '',
-          date: cls.date,
-          startTime: cls.startTime,
-          endTime: cls.endTime,
-          zoomLink: cls.zoomLink || '',
-          recurring: false,
-          recurringDays: [],
-        }));
-
-        setSessions(classSessions);
-      } catch (error) {
-        console.error('Error loading sessions:', error);
-        toast.error('Failed to load class sessions');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadSessions();
-    
-    // Invalidate and refetch on mount to ensure we have the latest data
-    queryClient.invalidateQueries({ queryKey: ['studentClasses', studentId] });
-    queryClient.invalidateQueries({ queryKey: ['upcomingClasses', studentId] });
-    queryClient.invalidateQueries({ queryKey: ['studentDashboard', studentId] });
-  }, [studentId, queryClient]);
-
-  // Use the reusable hook for realtime updates
-  useRealtimeClassUpdates(studentId, setSessions, queryClient);
+  const handleClassSelect = (session: ClassSession) => {
+    onSelectClass?.(session);
+  };
 
   if (isLoading) {
-    return (
-      <div className="mt-8">
-        <h3 className="text-xl font-medium mb-4">Class Calendar</h3>
-        <Card>
-          <CardContent className="p-6 flex justify-center items-center h-64">
-            <p>Loading your classes...</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <div>Loading calendar...</div>;
   }
 
   return (
-    <div className="mt-8">
-      <h3 className="text-xl font-medium mb-4">Class Calendar</h3>
-      <Card>
-        <CardContent className="p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div>
-              <ClassCalendarColumn
-                selectedDate={selectedDate}
-                setSelectedDate={setSelectedDate}
-                sessions={sessions}
-              />
-            </div>
-
-            <div>
-              <DailyClassSessions 
-                selectedDate={selectedDate}
-                sessions={sessions}
-              />
-            </div>
-
-            <div>
-              <UpcomingClassSessions sessions={sessions} />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Student Class Details Dialog */}
-      <StudentClassDetailsDialog
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
-        classSession={selectedClass}
-      />
-    </div>
+    <CalendarWithEvents 
+      sessions={sessions}
+      onClassSelect={handleClassSelect}
+    />
   );
 };
-
-export default ClassCalendarContainer;

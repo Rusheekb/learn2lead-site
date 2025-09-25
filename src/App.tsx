@@ -3,8 +3,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { HelmetProvider } from 'react-helmet-async';
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import React from 'react';
 import OptimizedSuspense from './components/shared/OptimizedSuspense';
 // Lazy load all pages for optimal code splitting
@@ -18,8 +17,6 @@ import { useRoleSync } from './hooks/useRoleSync';
 import { RoutePersistence } from './components/shared/RoutePersistence';
 import { SidebarProvider } from '@/hooks/useSidebar';
 import DashboardShell from './components/shared/DashboardShell';
-import './i18n';
-import { LanguageProvider } from './contexts/LanguageContext';
 
 const Profile = React.lazy(() => import('./pages/Profile'));
 const TutorDashboard = React.lazy(() => import('./pages/TutorDashboard'));
@@ -66,10 +63,8 @@ function App() {
   useRoleSync();
 
   return (
-    <LanguageProvider>
-      <QueryClientProvider client={queryClient}>
-        <HelmetProvider>
-          <TooltipProvider>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
             <BrowserRouter>
               <AuthProvider>
                 <RoutePersistence />
@@ -150,10 +145,8 @@ function App() {
               </AuthProvider>
             </BrowserRouter>
             
-          </TooltipProvider>
-        </HelmetProvider>
-      </QueryClientProvider>
-    </LanguageProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
   );
 }
 
