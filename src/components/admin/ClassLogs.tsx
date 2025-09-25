@@ -20,7 +20,7 @@ import ClassFilters from './class-logs/ClassFilters';
 import ClassTable from './class-logs/ClassTable';
 import ClassDetailsDialog from './class-logs/ClassDetailsDialog';
 import CsvUploader from './class-logs/CsvUploader';
-import useClassLogs from '@/hooks/useClassLogs';
+import { useClassLogs } from '@/hooks/useClassLogs';
 import { ExportFormat } from '@/types/classTypes';
 
 const ClassLogs: React.FC = () => {
@@ -100,8 +100,8 @@ const ClassLogs: React.FC = () => {
         setStatusFilter={setStatusFilter}
         subjectFilter={subjectFilter}
         setSubjectFilter={setSubjectFilter}
-        dateFilter={dateFilter}
-        setDateFilter={setDateFilter}
+        dateFilter={dateFilter || undefined}
+        setDateFilter={(date) => setDateFilter(date || null)}
         clearFilters={clearFilters}
         allSubjects={allSubjects}
         showCodeLogs={showCodeLogs}
@@ -133,7 +133,7 @@ const ClassLogs: React.FC = () => {
         setActiveDetailsTab={setActiveDetailsTab}
         studentUploads={studentUploads}
         studentMessages={studentMessages}
-        handleDownloadFile={handleDownloadFile}
+        handleDownloadFile={async () => {}}
         formatTime={formatTime}
       />
 

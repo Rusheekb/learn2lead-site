@@ -1,7 +1,7 @@
 
 import React, { memo } from 'react';
 import SubjectCards from './SubjectCards';
-import ClassCalendarContainer from './ClassCalendarContainer';
+import { ClassCalendarContainer } from './ClassCalendarContainer';
 import ClassHistory from '@/components/shared/ClassHistory';
 import { subjects } from '@/constants/subjectsData';
 

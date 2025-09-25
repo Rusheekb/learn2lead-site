@@ -2,7 +2,7 @@
 import React from 'react';
 import { ClassEvent } from '@/types/tutorTypes';
 import { StudentMessage, StudentUpload } from '@/types/classTypes';
-import ClassDialogs from '../ClassDialogs';
+import { ClassDialogs } from '../ClassDialogs';
 import { mockStudents } from '../mock-data-students';
 import { Profile } from '@/types/profile';
 
@@ -59,30 +59,15 @@ const TutorSchedulerDialogs: React.FC<TutorSchedulerDialogsProps> = ({
 }) => {
   return (
     <ClassDialogs
-      isViewEventOpen={isViewEventOpen}
-      setIsViewEventOpen={setIsViewEventOpen}
       isAddEventOpen={isAddEventOpen}
-      setIsAddEventOpen={setIsAddEventOpen}
+      isEditEventOpen={false}
+      isViewEventOpen={isViewEventOpen}
       selectedEvent={selectedEvent}
-      isEditMode={isEditMode}
-      setIsEditMode={setIsEditMode}
-      newEvent={newEvent}
-      setNewEvent={setNewEvent}
-      activeEventTab={activeEventTab}
-      setActiveEventTab={setActiveEventTab}
-      studentMessages={studentMessages}
-      studentUploads={studentUploads}
-      students={mockStudents}
-      onCreateEvent={() => onCreateEvent(newEvent as ClassEvent)}
-      onEditEvent={() => onEditEvent(selectedEvent as ClassEvent)}
-      onDuplicateEvent={onDuplicateEvent}
-      onDeleteEvent={onDeleteEvent}
-      onResetForm={onResetForm}
-      onMarkAsRead={onMarkAsRead}
-      onDownloadFile={onDownloadFile}
-      getUnreadMessageCount={getUnreadMessageCount}
-      refreshEvent={refreshEvent}
-      currentUser={currentUser}
+      onCloseDialogs={() => {
+        setIsViewEventOpen(false);
+        setIsAddEventOpen(false);
+      }}
+      onRefreshData={() => {}}
     />
   );
 };

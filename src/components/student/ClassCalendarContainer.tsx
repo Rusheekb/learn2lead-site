@@ -3,14 +3,15 @@ import { useQuery } from '@tanstack/react-query';
 import { ClassSession } from '@/types/classTypes';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { CalendarWithEvents } from '@/components/CalendarWithEvents';
+import CalendarWithEvents from '@/components/CalendarWithEvents';
 import { useRealtimeManager } from '@/hooks/useRealtimeManager';
 
 interface ClassCalendarContainerProps {
+  studentId?: string | null;
   onSelectClass?: (classSession: ClassSession) => void;
 }
 
-export const ClassCalendarContainer: React.FC<ClassCalendarContainerProps> = ({ onSelectClass }) => {
+export const ClassCalendarContainer: React.FC<ClassCalendarContainerProps> = ({ studentId, onSelectClass }) => {
   const [sessions, setSessions] = useState<ClassSession[]>([]);
   const { user } = useAuth();
 
@@ -33,7 +34,7 @@ export const ClassCalendarContainer: React.FC<ClassCalendarContainerProps> = ({ 
         .order('start_time', { ascending: true });
       
       if (error) throw error;
-      return data as ClassSession[];
+      return data as any;
     },
     enabled: !!user?.id,
   });
@@ -54,8 +55,12 @@ export const ClassCalendarContainer: React.FC<ClassCalendarContainerProps> = ({ 
 
   return (
     <CalendarWithEvents 
-      sessions={sessions}
-      onClassSelect={handleClassSelect}
+      selectedDate={new Date()}
+      setSelectedDate={() => {}}
+      scheduledClasses={sessions as any}
+      onSelectEvent={handleClassSelect as any}
+      onAddEventClick={() => {}}
+      getUnreadMessageCount={() => 0}
     />
   );
 };

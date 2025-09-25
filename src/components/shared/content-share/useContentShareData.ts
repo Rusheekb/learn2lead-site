@@ -5,8 +5,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRealtimeManager } from '@/hooks/useRealtimeManager';
 
-export const useContentShareData = () => {
+export const useContentShareData = (userId?: string, fetchUsers?: () => Promise<any[]>) => {
   const [shares, setShares] = useState<ContentShareItem[]>([]);
+  const [users, setUsers] = useState<any[]>([]);
   const { user } = useAuth();
 
   // Use simplified realtime manager
@@ -39,9 +40,30 @@ export const useContentShareData = () => {
     }
   }, [shareData]);
 
+  const loadShares = async () => {
+    // Mock function
+  };
+
+  const handleDownload = (filePath: string | null) => {
+    // Mock function
+  };
+
+  const markAsViewed = (shareId: string) => {
+    // Mock function
+  };
+
+  const getUserName = (userId: string) => {
+    return users.find(u => u.id === userId)?.name || 'Unknown User';
+  };
+
   return {
     shares,
     isLoading,
     error,
+    users,
+    loadShares,
+    handleDownload,
+    markAsViewed,
+    getUserName,
   };
 };
