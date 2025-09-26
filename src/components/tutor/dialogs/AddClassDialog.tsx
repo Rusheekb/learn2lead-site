@@ -8,6 +8,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import NewClassEventForm from '../NewClassEventForm';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { ClassValidator } from '@/services/classValidation';
+import { ErrorHandler } from '@/services/errorHandling';
 
 interface AddClassDialogProps {
   isOpen: boolean;
@@ -138,8 +140,10 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
   const handleSubmit = async () => {
     if (isSubmitting) return;
     
-    if (!newEvent.title || !newEvent.studentId || !newEvent.relationshipId) {
-      toast.error("Missing information. Please complete all required fields");
+    // Validate the form data
+    const validationErrors = ClassValidator.validateClassCreation(newEvent);
+    if (validationErrors.length > 0) {
+      toast.error(ClassValidator.formatValidationErrors(validationErrors));
       return;
     }
     
@@ -147,10 +151,9 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
     try {
       await onCreateEvent(newEvent as ClassEvent);
       setIsOpen(false);
-      toast.success('Class is being scheduled...');
+      toast.success('Class scheduled successfully');
     } catch (error: any) {
-      console.error('Error creating class:', error);
-      toast.error(`Failed to create class: ${error.message}`);
+      ErrorHandler.handle(error, 'AddClassDialog.handleSubmit');
     } finally {
       setIsSubmitting(false);
     }

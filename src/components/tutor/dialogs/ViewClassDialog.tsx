@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -19,6 +19,8 @@ import { ClassEvent } from '@/types/tutorTypes';
 import ClassEventDetails from '../ClassEventDetails';
 import { StudentMessage, StudentUpload } from '@/types/classTypes';
 import { format } from 'date-fns';
+import ConfirmationDialog from '@/components/shared/ConfirmationDialog';
+import EditClassDialog from './EditClassDialog';
 
 interface ViewClassDialogProps {
   isOpen: boolean;
@@ -30,7 +32,7 @@ interface ViewClassDialogProps {
   studentMessages: StudentMessage[];
   studentUploads: StudentUpload[];
   onDuplicateEvent: (event: ClassEvent) => void;
-  onDeleteEvent: (eventId: string, isRecurring?: boolean) => void;
+  onDeleteEvent: (eventId: string, isRecurring?: boolean) => Promise<boolean>;
   onMarkAsRead: (messageId: string) => Promise<void>;
   onDownloadFile: (uploadId: string) => Promise<void>;
   onViewFile: (uploadId: string) => Promise<void>;
@@ -55,6 +57,11 @@ const ViewClassDialog: React.FC<ViewClassDialogProps> = ({
   getUnreadMessageCount,
   refreshEvent,
 }) => {
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [deleteRecurring, setDeleteRecurring] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   if (!selectedEvent) return null;
 
   // Ensure we properly format event dates for display
@@ -67,6 +74,35 @@ const ViewClassDialog: React.FC<ViewClassDialogProps> = ({
     } catch (e) {
       console.error('Error formatting date:', e);
       return String(date);
+    }
+  };
+
+  const handleEdit = () => {
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDelete = (recurring = false) => {
+    setDeleteRecurring(recurring);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await onDeleteEvent(selectedEvent.id, deleteRecurring);
+      setIsDeleteDialogOpen(false);
+      setIsOpen(false);
+    } catch (error) {
+      console.error('Delete failed:', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleEditComplete = () => {
+    setIsEditDialogOpen(false);
+    if (refreshEvent) {
+      refreshEvent();
     }
   };
 
@@ -88,7 +124,7 @@ const ViewClassDialog: React.FC<ViewClassDialogProps> = ({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="min-w-[180px]">
-              <DropdownMenuItem onClick={() => setIsEditMode(true)}>
+              <DropdownMenuItem onClick={handleEdit}>
                 <Edit2 className="h-4 w-4 mr-2" />
                 Edit Class
               </DropdownMenuItem>
@@ -98,7 +134,7 @@ const ViewClassDialog: React.FC<ViewClassDialogProps> = ({
               </DropdownMenuItem>
               <DropdownMenuItem
                 className="text-red-600"
-                onClick={() => onDeleteEvent(selectedEvent.id)}
+                onClick={() => handleDelete(false)}
               >
                 <Trash2 className="h-4 w-4 mr-2" />
                 Delete Class
@@ -106,7 +142,7 @@ const ViewClassDialog: React.FC<ViewClassDialogProps> = ({
               {selectedEvent.recurring && (
                 <DropdownMenuItem
                   className="text-red-600"
-                  onClick={() => onDeleteEvent(selectedEvent.id, true)}
+                  onClick={() => handleDelete(true)}
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
                   Delete All Recurring
@@ -132,6 +168,28 @@ const ViewClassDialog: React.FC<ViewClassDialogProps> = ({
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      <EditClassDialog
+        isOpen={isEditDialogOpen}
+        setIsOpen={setIsEditDialogOpen}
+        classEvent={selectedEvent}
+        onUpdate={handleEditComplete}
+      />
+
+      <ConfirmationDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        onConfirm={confirmDelete}
+        title={`Delete ${deleteRecurring ? 'All Recurring ' : ''}Class${deleteRecurring ? 'es' : ''}`}
+        description={
+          deleteRecurring
+            ? 'This will permanently delete all recurring instances of this class. This action cannot be undone.'
+            : 'This will permanently delete this class. This action cannot be undone.'
+        }
+        confirmText={`Delete ${deleteRecurring ? 'All' : 'Class'}`}
+        variant="destructive"
+        isLoading={isDeleting}
+      />
     </Dialog>
   );
 };

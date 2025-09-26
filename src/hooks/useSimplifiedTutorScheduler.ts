@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useRealtimeManager } from './useRealtimeManager';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 export const useSimplifiedTutorScheduler = () => {
   const [scheduledClasses, setScheduledClasses] = useState<ClassEvent[]>([]);
@@ -66,17 +67,32 @@ export const useSimplifiedTutorScheduler = () => {
     setIsEditEventOpen(true);
   };
 
-  const handleDeleteEvent = async (eventId: string) => {
+  const handleDeleteEvent = async (eventId: string, isRecurring?: boolean): Promise<boolean> => {
+    if (!user?.id) {
+      throw new Error('User not authenticated');
+    }
+
     try {
       const { error } = await supabase
         .from('scheduled_classes')
         .delete()
-        .eq('id', eventId);
+        .eq('id', eventId)
+        .eq('tutor_id', user.id); // Ensure only tutor can delete their classes
       
       if (error) throw error;
-      refetch();
+      
+      // Refresh data
+      await Promise.all([
+        refetch(),
+        queryClient.invalidateQueries({ queryKey: ['scheduled-classes', user.id] }),
+        queryClient.refetchQueries({ queryKey: ['scheduled-classes', user.id] })
+      ]);
+      
+      toast.success(isRecurring ? 'All recurring classes deleted' : 'Class deleted successfully');
+      return true;
     } catch (error) {
       console.error('Error deleting event:', error);
+      throw error;
     }
   };
 
@@ -132,7 +148,7 @@ export const useSimplifiedTutorScheduler = () => {
     handleSelectEvent,
     handleCreateEvent: mockAsyncFunction,
     handleEditEvent: mockAsyncFunction,
-    handleDeleteEvent: async (eventId: string, isRecurring?: boolean) => true,
+    handleDeleteEvent,
     handleDuplicateEvent: mockFunction,
     resetNewEventForm: mockFunction,
     handleMarkMessageRead: async () => {},

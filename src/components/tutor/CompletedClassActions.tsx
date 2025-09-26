@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { ClassEvent } from '@/types/tutorTypes';
 import { useQueryClient } from '@tanstack/react-query';
 import { useClassCompletionStatus } from '@/hooks/useClassCompletionStatus';
+import { ErrorHandler } from '@/services/errorHandling';
 
 interface CompletedClassActionsProps {
   classEvent: ClassEvent;
@@ -34,7 +35,16 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
 
   const handleMarkComplete = useCallback(async () => {
     if (!user?.id || isCompleting || isCompleted) {
-      toast.error('User not authenticated or operation in progress');
+      ErrorHandler.handle(
+        { message: 'User not authenticated or operation in progress' },
+        'CompletedClassActions.handleMarkComplete'
+      );
+      return;
+    }
+
+    // Validate required fields
+    if (!content.trim()) {
+      toast.error('Please describe what was covered in this class');
       return;
     }
 
@@ -46,38 +56,50 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
       // Get the current user's profile to ensure name matches RLS policy
       const { data: currentUserProfile, error: profileError } = await supabase
         .from('profiles')
-        .select('first_name, last_name')
+        .select('first_name, last_name, email')
         .eq('id', user.id)
         .single();
 
       if (profileError) {
-        console.error('Error fetching tutor profile:', profileError);
         throw new Error('Failed to fetch tutor profile for logging');
       }
 
-      const tutorName = `${currentUserProfile?.first_name || ''} ${currentUserProfile?.last_name || ''}`.trim() || 'Unknown Tutor';
+      // Improve name matching for RLS policies
+      const tutorName = currentUserProfile?.first_name && currentUserProfile?.last_name
+        ? `${currentUserProfile.first_name} ${currentUserProfile.last_name}`.trim()
+        : currentUserProfile?.email || 'Unknown Tutor';
       
-      // Use the atomic function to prevent duplicates
-      const { data: result, error: functionError } = await supabase
-        .rpc('complete_class_atomic', {
-          p_class_id: classEvent.id,
-          p_class_number: classEvent.title,
-          p_tutor_name: tutorName,
-          p_student_name: classEvent.studentName || 'Unknown Student',
-          p_date: new Date(classEvent.date).toISOString().split('T')[0],
-          p_day: new Date(classEvent.date).toLocaleDateString('en-US', { weekday: 'long' }),
-          p_time_cst: classEvent.startTime,
-          p_time_hrs: classEvent.duration?.toString() || '0',
-          p_subject: classEvent.subject,
-          p_content: content,
-          p_hw: homework || '',
-          p_additional_info: classEvent.notes || '',
-        });
+      // Calculate duration if missing
+      const duration = classEvent.duration || (() => {
+        if (classEvent.startTime && classEvent.endTime) {
+          const start = new Date(`2000-01-01T${classEvent.startTime}`);
+          const end = new Date(`2000-01-01T${classEvent.endTime}`);
+          return Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60) * 100) / 100;
+        }
+        return 1; // Default to 1 hour
+      })();
+      
+      // Use the atomic function with retry logic
+      const result = await ErrorHandler.createRetryWrapper(async () => {
+        const { data, error } = await supabase
+          .rpc('complete_class_atomic', {
+            p_class_id: classEvent.id,
+            p_class_number: classEvent.title,
+            p_tutor_name: tutorName,
+            p_student_name: classEvent.studentName || 'Unknown Student',
+            p_date: new Date(classEvent.date).toISOString().split('T')[0],
+            p_day: new Date(classEvent.date).toLocaleDateString('en-US', { weekday: 'long' }),
+            p_time_cst: classEvent.startTime,
+            p_time_hrs: duration.toString(),
+            p_subject: classEvent.subject,
+            p_content: content.trim(),
+            p_hw: homework.trim() || '',
+            p_additional_info: classEvent.notes || '',
+          });
 
-      if (functionError) {
-        console.error('Error calling complete_class_atomic:', functionError);
-        throw functionError;
-      }
+        if (error) throw error;
+        return data;
+      }, 3, 1000);
 
       // Type the result properly
       const typedResult = result as { success: boolean; error?: string; code?: string; message?: string };
@@ -85,12 +107,12 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
       if (!typedResult?.success) {
         if (typedResult?.code === 'ALREADY_COMPLETED' || typedResult?.code === 'DUPLICATE_SESSION') {
           toast.error('This class has already been completed');
-          setIsRemoving(true); // Hide the component
+          setIsRemoving(true);
           return;
         } else if (typedResult?.code === 'CLASS_NOT_FOUND') {
           toast.error('Class no longer exists or has already been completed');
-          setIsRemoving(true); // Hide the component
-          onUpdate(); // Refresh the calendar to remove this class
+          setIsRemoving(true);
+          onUpdate();
           return;
         }
         throw new Error(typedResult?.error || 'Failed to complete class');
@@ -101,34 +123,30 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
       toast.success('Class completed and moved to class history');
       
       // Force refresh of all relevant data to ensure UI is in sync
+      const refreshPromises = [];
+      
       if (user?.id) {
-        await queryClient.invalidateQueries({ queryKey: ['scheduledClasses', user.id] });
-        await queryClient.refetchQueries({ queryKey: ['scheduledClasses', user.id] });
-        queryClient.invalidateQueries({ queryKey: ['upcomingClasses', user.id] });
-        queryClient.invalidateQueries({ queryKey: ['classLogs'] });
+        refreshPromises.push(
+          queryClient.invalidateQueries({ queryKey: ['scheduledClasses', user.id] }),
+          queryClient.refetchQueries({ queryKey: ['scheduledClasses', user.id] }),
+          queryClient.invalidateQueries({ queryKey: ['upcomingClasses', user.id] }),
+          queryClient.invalidateQueries({ queryKey: ['classLogs'] })
+        );
       }
       
       if (classEvent.studentId) {
-        queryClient.invalidateQueries({ queryKey: ['studentClasses', classEvent.studentId] });
-        queryClient.invalidateQueries({ queryKey: ['upcomingClasses', classEvent.studentId] });
-        queryClient.invalidateQueries({ queryKey: ['studentDashboard', classEvent.studentId] });
+        refreshPromises.push(
+          queryClient.invalidateQueries({ queryKey: ['studentClasses', classEvent.studentId] }),
+          queryClient.invalidateQueries({ queryKey: ['upcomingClasses', classEvent.studentId] }),
+          queryClient.invalidateQueries({ queryKey: ['studentDashboard', classEvent.studentId] })
+        );
       }
       
+      await Promise.all(refreshPromises);
       setIsDialogOpen(false);
       onUpdate();
     } catch (error) {
-      console.error('Error completing class:', error);
-      
-      let errorMessage = 'Unknown error';
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      } else if (typeof error === 'object' && error !== null) {
-        errorMessage = JSON.stringify(error);
-      } else if (typeof error === 'string') {
-        errorMessage = error;
-      }
-      
-      toast.error(`Failed to mark class as completed: ${errorMessage}`);
+      ErrorHandler.handle(error, 'CompletedClassActions.handleMarkComplete');
       
       // Reset state on error to show button again
       setIsCompleted(false);

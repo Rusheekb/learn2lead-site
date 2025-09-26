@@ -56,7 +56,7 @@ export function ClassDialogs({
             studentMessages={[]}
             studentUploads={[]}
             onDuplicateEvent={() => {}}
-            onDeleteEvent={async () => {}}
+            onDeleteEvent={async () => true}
             onMarkAsRead={async () => {}}
             onDownloadFile={async () => {}}
             onViewFile={async () => {}}
