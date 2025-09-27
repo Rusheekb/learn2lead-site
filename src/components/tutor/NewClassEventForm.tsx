@@ -137,14 +137,15 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
 
       {/* Date */}
       <div className="space-y-2">
-        <Label htmlFor="date">Date</Label>
+        <Label htmlFor="date">Date *</Label>
         <Popover>
           <PopoverTrigger asChild>
             <Button
               variant="outline"
               className={cn(
                 'w-full justify-start text-left font-normal',
-                !newEvent.date && 'text-muted-foreground'
+                !newEvent.date && 'text-muted-foreground',
+                !newEvent.date ? 'border-red-300' : ''
               )}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
@@ -162,16 +163,20 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
                   setNewEvent({ ...newEvent, date: localDate });
                 }
               }}
+              disabled={(date) => date < new Date(new Date().setDate(new Date().getDate() - 1))} // Disable past dates
               initialFocus
             />
           </PopoverContent>
         </Popover>
+        {!newEvent.date && (
+          <p className="text-sm text-red-600">Date is required</p>
+        )}
       </div>
 
       {/* Time slots - horizontal layout */}
       <div className="md:col-span-2 grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="startTime">Start Time</Label>
+          <Label htmlFor="startTime">Start Time *</Label>
           <Input
             id="startTime"
             type="time"
@@ -180,11 +185,15 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
               setNewEvent({ ...newEvent, startTime: e.target.value })
             }
             required
+            className={!newEvent.startTime ? 'border-red-300' : ''}
           />
+          {!newEvent.startTime && (
+            <p className="text-sm text-red-600">Start time is required</p>
+          )}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="endTime">End Time</Label>
+          <Label htmlFor="endTime">End Time *</Label>
           <Input
             id="endTime"
             type="time"
@@ -193,7 +202,11 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
               setNewEvent({ ...newEvent, endTime: e.target.value })
             }
             required
+            className={!newEvent.endTime ? 'border-red-300' : ''}
           />
+          {!newEvent.endTime && (
+            <p className="text-sm text-red-600">End time is required</p>
+          )}
         </div>
       </div>
 
