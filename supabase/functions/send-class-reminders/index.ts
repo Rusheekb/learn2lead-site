@@ -1,7 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { Resend } from "npm:resend@1.0.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
+import { Resend } from "https://esm.sh/resend@1.0.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.58.0";
 
 // Define types for clarity
 interface ClassReminder {
@@ -64,9 +64,7 @@ serve(async (req) => {
     const { data: classesToRemind, error: queryError } = await supabase
       .from('scheduled_classes')
       .select(`
-        id, title, date, start_time, end_time, zoom_link, subject,
-        tutors!inner(email, name),
-        students!inner(email, name)
+        id, title, date, start_time, end_time, zoom_link, subject, tutor_id, student_id
       `)
       .eq('reminder_sent', true)
       .gt('date', new Date().toISOString().split('T')[0]) // Ensure future classes
@@ -83,6 +81,24 @@ serve(async (req) => {
     
     // Process each class and send reminders
     for (const cls of classesToRemind || []) {
+      // Get tutor and student info
+      const { data: tutorData } = await supabase
+        .from('profiles')
+        .select('email, first_name, last_name')
+        .eq('id', cls.tutor_id)
+        .single();
+        
+      const { data: studentData } = await supabase
+        .from('profiles')
+        .select('email, first_name, last_name')
+        .eq('id', cls.student_id)
+        .single();
+      
+      if (!tutorData || !studentData) {
+        console.warn(`Missing tutor or student data for class ${cls.id}`);
+        continue;
+      }
+      
       // Extract the needed information with proper typings
       const classReminder: ClassReminder = {
         id: cls.id,
@@ -92,10 +108,10 @@ serve(async (req) => {
         end_time: cls.end_time,
         zoom_link: cls.zoom_link,
         subject: cls.subject,
-        tutor_email: cls.tutors.email,
-        tutor_name: cls.tutors.name,
-        student_email: cls.students.email,
-        student_name: cls.students.name,
+        tutor_email: tutorData.email,
+        tutor_name: `${tutorData.first_name || ''} ${tutorData.last_name || ''}`.trim() || tutorData.email,
+        student_email: studentData.email,
+        student_name: `${studentData.first_name || ''} ${studentData.last_name || ''}`.trim() || studentData.email,
       };
       
       // Send reminder to tutor
@@ -137,7 +153,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: false,
-        message: error.message,
+        message: error instanceof Error ? error.message : 'Unknown error',
       }),
       {
         status: 500,
@@ -216,6 +232,6 @@ async function sendReminderEmail(
     
   } catch (error) {
     console.error(`Failed to send reminder email to ${recipientEmail}:`, error);
-    return { error: true, message: error.message };
+    return { error: true, message: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
