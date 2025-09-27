@@ -56,17 +56,26 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
       : 'Current Tutor';
       
     setNewEvent((prev: any) => {
+      // Only set defaults if values are not already present
+      if (prev.tutorId && prev.date && prev.startTime) {
+        return prev; // Already initialized
+      }
+      
       const baseDate = prev.date || nextHour;
       return {
-        ...prev,
         tutorId: tutorId,
         tutorName: tutorDisplayName,
         date: baseDate,
-        startTime: prev.startTime || format(nextHour, 'HH:mm'),
-        endTime: prev.endTime || format(addHours(nextHour, 1), 'HH:mm'),
-        title: prev.title || 'New Class Session',
-        subject: prev.subject || '',
-        zoomLink: prev.zoomLink || 'https://zoom.us/',
+        startTime: format(nextHour, 'HH:mm'),
+        endTime: format(addHours(nextHour, 1), 'HH:mm'),
+        title: 'New Class Session',
+        subject: '',
+        zoomLink: 'https://zoom.us/',
+        notes: '',
+        studentId: '',
+        studentName: '',
+        relationshipId: '',
+        ...prev, // Preserve any existing values
       };
     });
     

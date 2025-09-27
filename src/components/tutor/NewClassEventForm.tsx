@@ -60,28 +60,33 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       {/* Title */}
       <div className="space-y-2">
-        <Label htmlFor="title">Title</Label>
+        <Label htmlFor="title">Title *</Label>
         <Input
           id="title"
           value={newEvent.title || ''}
           onChange={(e) =>
             setNewEvent({ ...newEvent, title: e.target.value })
           }
-          placeholder="Class Title"
+          placeholder="Enter class title"
           required
+          className={!newEvent.title ? 'border-red-300' : ''}
         />
+        {!newEvent.title && (
+          <p className="text-sm text-red-600">Title is required</p>
+        )}
       </div>
 
       {/* Subject */}
       <div className="space-y-2">
-        <Label htmlFor="subject">Subject</Label>
+        <Label htmlFor="subject">Subject *</Label>
         <Select
           value={newEvent.subject || ''}
           onValueChange={(value) =>
             setNewEvent({ ...newEvent, subject: value })
           }
+          required
         >
-          <SelectTrigger className="w-full">
+          <SelectTrigger className={`w-full ${!newEvent.subject ? 'border-red-300' : ''}`}>
             <SelectValue placeholder="Select Subject" />
           </SelectTrigger>
           <SelectContent>
@@ -92,17 +97,20 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
             ))}
           </SelectContent>
         </Select>
+        {!newEvent.subject && (
+          <p className="text-sm text-red-600">Subject is required</p>
+        )}
       </div>
 
       {/* Student */}
       <div className="space-y-2">
-        <Label htmlFor="student">Student</Label>
+        <Label htmlFor="student">Student *</Label>
         <Select 
           value={newEvent.studentId || ''} 
           onValueChange={(value) => onStudentSelect(value)}
           required
         >
-          <SelectTrigger className="w-full">
+          <SelectTrigger className={`w-full ${!newEvent.studentId ? 'border-red-300' : ''}`}>
             <SelectValue placeholder="Select Student" />
           </SelectTrigger>
           <SelectContent>
@@ -119,6 +127,9 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
             )}
           </SelectContent>
         </Select>
+        {!newEvent.studentId && (
+          <p className="text-sm text-red-600">Please select a student</p>
+        )}
         {newEvent.relationshipId && (
           <p className="text-xs text-gray-500">Relationship ID: {newEvent.relationshipId}</p>
         )}

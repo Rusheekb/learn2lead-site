@@ -41,10 +41,17 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    // Using a simple SQL query that won't cause time zone issues
+    // Query scheduled_classes table which exists
     const { data, error } = await supabaseClient
-      .from('student_classes')
-      .select('id, title, date, start_time, tutor_name, student_name')
+      .from('scheduled_classes')
+      .select(`
+        id, 
+        title, 
+        date, 
+        start_time,
+        tutor_id,
+        student_id
+      `)
       .gte('date', new Date().toISOString().split('T')[0])
       .order('date', { ascending: true })
       .order('start_time', { ascending: true })
