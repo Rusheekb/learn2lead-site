@@ -16,7 +16,7 @@ interface AddClassDialogProps {
   setIsOpen: (isOpen: boolean) => void;
   newEvent: Partial<ClassEvent>;
   setNewEvent: React.Dispatch<React.SetStateAction<Partial<ClassEvent>>>;
-  onCreateEvent: (event: ClassEvent) => void;
+  onCreateEvent: (event: ClassEvent) => Promise<boolean>;
   onCancel: () => void;
   currentUser: any;
 }

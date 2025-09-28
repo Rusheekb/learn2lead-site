@@ -12,6 +12,10 @@ interface ClassDialogsProps {
   selectedEvent: ClassEvent | null;
   onCloseDialogs: () => void;
   onRefreshData: () => void;
+  newEvent: any;
+  setNewEvent: (event: any) => void;
+  onCreateEvent: (event: ClassEvent) => Promise<boolean>;
+  currentUser?: any;
 }
 
 export function ClassDialogs({
@@ -21,17 +25,21 @@ export function ClassDialogs({
   selectedEvent,
   onCloseDialogs,
   onRefreshData,
+  newEvent,
+  setNewEvent,
+  onCreateEvent,
+  currentUser,
 }: ClassDialogsProps) {
   return (
     <>
       <AddClassDialog
         isOpen={isAddEventOpen}
         setIsOpen={(open: boolean) => !open && onCloseDialogs()}
-        newEvent={{}}
-        setNewEvent={() => {}}
-        onCreateEvent={async () => {}}
+        newEvent={newEvent}
+        setNewEvent={setNewEvent}
+        onCreateEvent={onCreateEvent}
         onCancel={onCloseDialogs}
-        currentUser={null}
+        currentUser={currentUser}
       />
 
       {selectedEvent && (

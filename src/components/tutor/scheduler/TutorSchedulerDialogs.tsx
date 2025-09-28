@@ -68,6 +68,10 @@ const TutorSchedulerDialogs: React.FC<TutorSchedulerDialogsProps> = ({
         setIsAddEventOpen(false);
       }}
       onRefreshData={() => {}}
+      newEvent={newEvent}
+      setNewEvent={setNewEvent}
+      onCreateEvent={onCreateEvent}
+      currentUser={currentUser}
     />
   );
 };
