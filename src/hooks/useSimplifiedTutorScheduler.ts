@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useRealtimeManager } from './useRealtimeManager';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { createScheduledClass } from '@/services/class/create';
 
 export const useSimplifiedTutorScheduler = () => {
   const [scheduledClasses, setScheduledClasses] = useState<ClassEvent[]>([]);
@@ -108,6 +109,51 @@ export const useSimplifiedTutorScheduler = () => {
     queryClient.invalidateQueries({ queryKey: ['scheduled-classes'] });
   };
 
+  // Actual create event handler
+  const handleCreateEventActual = async (event: ClassEvent): Promise<boolean> => {
+    if (!user?.id) {
+      toast.error('User not authenticated');
+      return false;
+    }
+
+    try {
+      // Map ClassEvent to the format expected by createScheduledClass
+      const classData = {
+        title: event.title,
+        tutor_id: user.id,
+        student_id: event.studentId,
+        date: event.date,
+        start_time: event.startTime,
+        end_time: event.endTime,
+        subject: event.subject,
+        zoom_link: event.zoomLink,
+        notes: event.notes,
+        relationship_id: event.relationshipId,
+      };
+
+      console.log('Creating class with data:', classData);
+      
+      const classId = await createScheduledClass(classData);
+      
+      if (classId) {
+        // Refresh data after successful creation
+        await Promise.all([
+          refetch(),
+          queryClient.invalidateQueries({ queryKey: ['scheduled-classes', user.id] }),
+          queryClient.refetchQueries({ queryKey: ['scheduled-classes', user.id] })
+        ]);
+        
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Error creating event:', error);
+      toast.error('Failed to create class');
+      return false;
+    }
+  };
+
   // Mock additional functions needed by TutorScheduler
   const mockAsyncFunction = async () => true;
   const mockFunction = () => {};
@@ -146,7 +192,7 @@ export const useSimplifiedTutorScheduler = () => {
     
     // Handlers
     handleSelectEvent,
-    handleCreateEvent: mockAsyncFunction,
+    handleCreateEvent: handleCreateEventActual,
     handleEditEvent: mockAsyncFunction,
     handleDeleteEvent,
     handleDuplicateEvent: mockFunction,
