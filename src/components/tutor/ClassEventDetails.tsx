@@ -8,6 +8,7 @@ import { ClassEvent } from '@/types/tutorTypes';
 import { StudentUpload } from '@/types/classTypes';
 import { StudentContent } from '@/components/shared/StudentContent';
 import CalendarLinks from '@/components/shared/CalendarLinks';
+import CompletedClassActions from '@/components/tutor/CompletedClassActions';
 import { uploadMaterial, addMaterialToClass, removeMaterialFromClass } from '@/services/materialsService';
 import { toast } from 'sonner';
 
@@ -86,12 +87,19 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
   };
 
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab}>
-      <TabsList className="grid w-full grid-cols-3 bg-white">
-        <TabsTrigger value="details">Class Details</TabsTrigger>
-        <TabsTrigger value="materials">Materials</TabsTrigger>
-        <TabsTrigger value="student-content">Student Content</TabsTrigger>
-      </TabsList>
+    <div className="space-y-4">
+      {/* Class Completion Actions */}
+      <CompletedClassActions 
+        classEvent={selectedEvent} 
+        onUpdate={refreshEvent ? () => refreshEvent() : () => {}} 
+      />
+      
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-3 bg-white">
+          <TabsTrigger value="details">Class Details</TabsTrigger>
+          <TabsTrigger value="materials">Materials</TabsTrigger>
+          <TabsTrigger value="student-content">Student Content</TabsTrigger>
+        </TabsList>
 
       <TabsContent value="details" className="space-y-4 pt-4">
         <div className="grid grid-cols-2 gap-4">
@@ -216,7 +224,8 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
           onView={onViewFile}
         />
       </TabsContent>
-    </Tabs>
+      </Tabs>
+    </div>
   );
 };
 

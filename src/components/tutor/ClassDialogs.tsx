@@ -30,6 +30,22 @@ export function ClassDialogs({
   onCreateEvent,
   currentUser,
 }: ClassDialogsProps) {
+  const handleDeleteEvent = async (eventId: string, isRecurring?: boolean) => {
+    try {
+      // Import the delete service
+      const { deleteScheduledClass } = await import('@/services/class/delete');
+      const success = await deleteScheduledClass(eventId);
+      if (success) {
+        onRefreshData();
+        onCloseDialogs();
+      }
+      return success;
+    } catch (error) {
+      console.error('Delete failed:', error);
+      return false;
+    }
+  };
+
   return (
     <>
       <AddClassDialog
@@ -43,34 +59,23 @@ export function ClassDialogs({
       />
 
       {selectedEvent && (
-        <>
-          <Dialog open={isEditEventOpen} onOpenChange={(open: boolean) => !open && onCloseDialogs()}>
-            <DialogContent>
-              <div className="p-4">
-                <h2 className="text-lg font-semibold mb-4">Edit Class</h2>
-                <p className="mb-4">Edit functionality simplified</p>
-                <Button onClick={onCloseDialogs}>Close</Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-
-          <ViewClassDialog
-            isOpen={isViewEventOpen}
-            setIsOpen={(open: boolean) => !open && onCloseDialogs()}
-            selectedEvent={selectedEvent}
-            setIsEditMode={() => {}}
-            activeTab="details"
-            setActiveTab={() => {}}
-            studentMessages={[]}
-            studentUploads={[]}
-            onDuplicateEvent={() => {}}
-            onDeleteEvent={async () => true}
-            onMarkAsRead={async () => {}}
-            onDownloadFile={async () => {}}
-            onViewFile={async () => {}}
-            getUnreadMessageCount={() => 0}
-          />
-        </>
+        <ViewClassDialog
+          isOpen={isViewEventOpen}
+          setIsOpen={(open: boolean) => !open && onCloseDialogs()}
+          selectedEvent={selectedEvent}
+          setIsEditMode={() => {}}
+          activeTab="details"
+          setActiveTab={() => {}}
+          studentMessages={[]}
+          studentUploads={[]}
+          onDuplicateEvent={() => {}}
+          onDeleteEvent={handleDeleteEvent}
+          onMarkAsRead={async () => {}}
+          onDownloadFile={async () => {}}
+          onViewFile={async () => {}}
+          getUnreadMessageCount={() => 0}
+          refreshEvent={async () => onRefreshData()}
+        />
       )}
     </>
   );
