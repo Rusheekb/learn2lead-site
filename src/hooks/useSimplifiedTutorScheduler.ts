@@ -6,6 +6,7 @@ import { useRealtimeManager } from './useRealtimeManager';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { createScheduledClass } from '@/services/class/create';
+import { formatClassEventDate } from '@/utils/safeDateUtils';
 
 export const useSimplifiedTutorScheduler = () => {
   const [scheduledClasses, setScheduledClasses] = useState<ClassEvent[]>([]);
@@ -122,7 +123,7 @@ export const useSimplifiedTutorScheduler = () => {
         title: event.title,
         tutor_id: user.id,
         student_id: event.studentId,
-        date: event.date,
+        date: event.date ? formatClassEventDate(event.date) : '', // Safe date formatting to prevent timezone issues
         start_time: event.startTime,
         end_time: event.endTime,
         subject: event.subject,

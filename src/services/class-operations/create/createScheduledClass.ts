@@ -1,6 +1,7 @@
 
 import { supabase } from '@/services/supabaseClient';
 import { toast } from 'sonner';
+import { ensureDateFormat } from '@/utils/safeDateUtils';
 
 export interface CreateScheduledClassInput {
   relationship_id: string;
@@ -30,7 +31,7 @@ export async function createScheduledClass(input: CreateScheduledClassInput) {
     end_time: input.end_time,
     zoom_link: input.zoom_link,
     notes: input.notes || null,
-    date: input.date,
+    date: ensureDateFormat(input.date), // Ensure proper date format to prevent timezone issues
     student_id: input.student_id,
     tutor_id: input.tutor_id
   };

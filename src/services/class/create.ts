@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { ensureDateFormat } from '@/utils/safeDateUtils';
 
 export const createScheduledClass = async (
   classData: Record<string, any>
@@ -30,7 +31,7 @@ export const createScheduledClass = async (
       title: classData.title,
       tutor_id: classData.tutor_id,
       student_id: classData.student_id,
-      date: classData.date,
+      date: ensureDateFormat(classData.date), // Ensure proper date format to prevent timezone issues
       start_time: classData.start_time,
       end_time: classData.end_time,
       subject: classData.subject,
