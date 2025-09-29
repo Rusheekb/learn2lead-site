@@ -12,6 +12,7 @@ import { ClassEvent } from '@/types/tutorTypes';
 import { useQueryClient } from '@tanstack/react-query';
 import { useClassCompletionStatus } from '@/hooks/useClassCompletionStatus';
 import { ErrorHandler } from '@/services/errorHandling';
+import { completeClass, CompleteClassData } from '@/services/classCompletion';
 
 interface CompletedClassActionsProps {
   classEvent: ClassEvent;
@@ -79,48 +80,35 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
         return 1; // Default to 1 hour
       })();
       
-      // Use the atomic function with retry logic
-      const result = await ErrorHandler.createRetryWrapper(async () => {
-        const { data, error } = await supabase
-          .rpc('complete_class_atomic', {
-            p_class_id: classEvent.id,
-            p_class_number: classEvent.title,
-            p_tutor_name: tutorName,
-            p_student_name: classEvent.studentName || 'Unknown Student',
-            p_date: new Date(classEvent.date).toISOString().split('T')[0],
-            p_day: new Date(classEvent.date).toLocaleDateString('en-US', { weekday: 'long' }),
-            p_time_cst: classEvent.startTime,
-            p_time_hrs: duration.toString(),
-            p_subject: classEvent.subject,
-            p_content: content.trim(),
-            p_hw: homework.trim() || '',
-            p_additional_info: classEvent.notes || '',
-          });
+      // Prepare completion data
+      const completionData: CompleteClassData = {
+        classId: classEvent.id,
+        classNumber: classEvent.title,
+        tutorName,
+        studentName: classEvent.studentName || 'Unknown Student',
+        date: new Date(classEvent.date).toISOString().split('T')[0],
+        day: new Date(classEvent.date).toLocaleDateString('en-US', { weekday: 'long' }),
+        timeCst: classEvent.startTime,
+        timeHrs: duration.toString(),
+        subject: classEvent.subject,
+        content: content.trim(),
+        hw: homework.trim() || '',
+        additionalInfo: classEvent.notes || '',
+      };
 
-        if (error) throw error;
-        return data;
-      }, 3, 1000);
+      // Use the new service function
+      const success = await completeClass(completionData);
 
-      // Type the result properly
-      const typedResult = result as { success: boolean; error?: string; code?: string; message?: string };
-
-      if (!typedResult?.success) {
-        if (typedResult?.code === 'ALREADY_COMPLETED' || typedResult?.code === 'DUPLICATE_SESSION') {
-          toast.error('This class has already been completed');
-          setIsRemoving(true);
-          return;
-        } else if (typedResult?.code === 'CLASS_NOT_FOUND') {
-          toast.error('Class no longer exists or has already been completed');
-          setIsRemoving(true);
-          onUpdate();
-          return;
-        }
-        throw new Error(typedResult?.error || 'Failed to complete class');
+      if (!success) {
+        // If completion failed, the error was already shown by the service
+        setIsRemoving(true);
+        onUpdate();
+        return;
       }
 
       // Start the removal process immediately after success
       setIsRemoving(true);
-      toast.success('Class completed and moved to class history');
+      // toast.success is already shown by the service
       
       // Force refresh of all relevant data to ensure UI is in sync
       const refreshPromises = [];
