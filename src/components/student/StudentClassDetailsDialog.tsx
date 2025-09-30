@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Clock, Calendar as CalendarIcon, User, Video, Upload, FileText, Download, Eye, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { parseDateToLocal } from '@/utils/safeDateUtils';
 import { formatTime } from './ClassSessionDetail';
 import { ClassSession, StudentUpload } from '@/types/classTypes';
 import StudentFileUpload from './StudentFileUpload';
@@ -276,7 +277,7 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
                 <div className="flex items-center text-sm text-muted-foreground">
                   <CalendarIcon className="h-4 w-4 mr-2" />
                   <span>
-                    {format(new Date(classSession.date), 'EEEE, MMMM d, yyyy')}
+                    {format(parseDateToLocal(classSession.date as any), 'EEEE, MMMM d, yyyy')}
                   </span>
                 </div>
 

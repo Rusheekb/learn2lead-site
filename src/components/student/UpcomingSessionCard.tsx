@@ -5,6 +5,7 @@ import { Video, User, Calendar as CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { formatTime } from './ClassSessionDetail';
 import { ClassSession } from '@/types/classTypes';
+import { parseDateToLocal } from '@/utils/safeDateUtils';
 
 interface UpcomingSessionCardProps {
   session: ClassSession;
@@ -36,8 +37,8 @@ const UpcomingSessionCard: React.FC<UpcomingSessionCardProps> = ({
       </div>
       <div className="flex items-center text-sm text-muted-foreground mt-2">
         <CalendarIcon className="h-4 w-4 mr-1" />
-        <span>
-          {format(new Date(session.date), 'EEE, MMM d')} •{' '}
+<span>
+          {format(parseDateToLocal(session.date as any), 'EEE, MMM d')} •{' '}
           {formatTime(session.startTime)}
         </span>
       </div>

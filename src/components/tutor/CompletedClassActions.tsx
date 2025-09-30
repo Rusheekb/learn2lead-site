@@ -13,6 +13,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useClassCompletionStatus } from '@/hooks/useClassCompletionStatus';
 import { ErrorHandler } from '@/services/errorHandling';
 import { completeClass, CompleteClassData } from '@/services/classCompletion';
+import { parseDateToLocal, formatDateForDatabase } from '@/utils/safeDateUtils';
 
 interface CompletedClassActionsProps {
   classEvent: ClassEvent;
@@ -80,14 +81,15 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
         return 1; // Default to 1 hour
       })();
       
-      // Prepare completion data
+// Prepare completion data
+      const localDate = parseDateToLocal(classEvent.date as any);
       const completionData: CompleteClassData = {
         classId: classEvent.id,
         classNumber: classEvent.title,
         tutorName,
         studentName: classEvent.studentName || 'Unknown Student',
-        date: new Date(classEvent.date).toISOString().split('T')[0],
-        day: new Date(classEvent.date).toLocaleDateString('en-US', { weekday: 'long' }),
+        date: formatDateForDatabase(localDate),
+        day: localDate.toLocaleDateString('en-US', { weekday: 'long' }),
         timeCst: classEvent.startTime,
         timeHrs: duration.toString(),
         subject: classEvent.subject,
@@ -193,7 +195,7 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
                   <span className="font-medium">Student:</span> {classEvent.studentName}
                 </div>
                 <div>
-                  <span className="font-medium">Date:</span> {new Date(classEvent.date).toLocaleDateString()}
+<span className="font-medium">Date:</span> {parseDateToLocal(classEvent.date as any).toLocaleDateString()}
                 </div>
               </div>
             </div>

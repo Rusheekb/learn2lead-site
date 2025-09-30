@@ -48,3 +48,31 @@ export const ensureDateFormat = (dateInput: Date | string): string => {
 export const formatClassEventDate = (date: Date | string): string => {
   return ensureDateFormat(date);
 };
+
+/**
+ * Parses a date input into a local Date at midnight without timezone shift.
+ * - If input is 'YYYY-MM-DD', constructs Date(year, monthIndex, day)
+ * - If input is a Date, normalizes to local midnight of that date
+ * - If input is another string format, attempts Date parsing and normalizes to local date
+ */
+export const parseDateToLocal = (dateInput: string | Date): Date => {
+  if (dateInput instanceof Date) {
+    return new Date(
+      dateInput.getFullYear(),
+      dateInput.getMonth(),
+      dateInput.getDate()
+    );
+  }
+  if (typeof dateInput === 'string') {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateInput)) {
+      const [y, m, d] = dateInput.split('-').map(Number);
+      return new Date(y, (m as number) - 1, d as number);
+    }
+    const parsed = new Date(dateInput);
+    if (isNaN(parsed.getTime())) {
+      throw new Error('Invalid date string');
+    }
+    return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+  }
+  throw new Error('Invalid date input: must be Date or string');
+};

@@ -3,6 +3,7 @@ import React from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { ClassSession } from '@/types/classTypes';
+import { parseDateToLocal } from '@/utils/safeDateUtils';
 
 interface ClassCalendarColumnsProps {
   selectedDate: Date;
@@ -20,11 +21,10 @@ const ClassCalendarColumns: React.FC<ClassCalendarColumnsProps> = ({
     return getSessionsForDate(date, sessions).length > 0;
   };
 
-  // Function to get sessions for a specific date
+// Function to get sessions for a specific date
   const getSessionsForDate = (date: Date, sessions: ClassSession[]) => {
     return sessions.filter((session) => {
-      const sessionDate =
-        session.date instanceof Date ? session.date : new Date(session.date);
+      const sessionDate = parseDateToLocal(session.date as any);
 
       // Check if it's the exact date
       if (

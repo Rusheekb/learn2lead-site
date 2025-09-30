@@ -4,6 +4,7 @@ import DailyClassSessions from './DailyClassSessions';
 import UpcomingClassSessions from './UpcomingClassSessions';
 import StudentClassDetailsDialog from './StudentClassDetailsDialog';
 import { ClassSession } from '@/types/classTypes';
+import { parseDateToLocal } from '@/utils/safeDateUtils';
 
 interface ClassCalendarWithDialogProps {
   studentId: string | null;
@@ -31,27 +32,24 @@ const ClassCalendarWithDialog: React.FC<ClassCalendarWithDialogProps> = ({
     };
   }, []);
 
-  const getSessionsForDate = (date: Date) => {
-    return sessions.filter((session) => {
-      const sessionDate =
-        session.date instanceof Date ? session.date : new Date(session.date);
+const getSessionsForDate = (date: Date) => {
+  return sessions.filter((session) => {
+    const sessionDate = parseDateToLocal(session.date as any);
 
-      return (
-        sessionDate.getDate() === date.getDate() &&
-        sessionDate.getMonth() === date.getMonth() &&
-        sessionDate.getFullYear() === date.getFullYear()
-      );
-    });
-  };
+    return (
+      sessionDate.getDate() === date.getDate() &&
+      sessionDate.getMonth() === date.getMonth() &&
+      sessionDate.getFullYear() === date.getFullYear()
+    );
+  });
+};
 
-  const getDatesWithSessions = () => {
-    const dates = sessions.map((session) => {
-      const sessionDate =
-        session.date instanceof Date ? session.date : new Date(session.date);
-      return sessionDate;
-    });
-    return dates;
-  };
+const getDatesWithSessions = () => {
+  const dates = sessions.map((session) => {
+    return parseDateToLocal(session.date as any);
+  });
+  return dates;
+};
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

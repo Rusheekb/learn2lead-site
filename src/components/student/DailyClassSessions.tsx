@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import ClassSessionDetail from './ClassSessionDetail';
 import EmptySessionsState from './EmptySessionsState';
 import { ClassSession } from '@/types/classTypes';
+import { parseDateToLocal } from '@/utils/safeDateUtils';
 
 interface DailyClassSessionsProps {
   selectedDate: Date;
@@ -11,18 +12,17 @@ interface DailyClassSessionsProps {
 }
 
 const DailyClassSessions: React.FC<DailyClassSessionsProps> = ({ selectedDate, sessions }) => {
-  const getSessionsForDate = (date: Date) => {
-    return sessions.filter((session) => {
-      const sessionDate =
-        session.date instanceof Date ? session.date : new Date(session.date);
+const getSessionsForDate = (date: Date) => {
+  return sessions.filter((session) => {
+    const sessionDate = parseDateToLocal(session.date as any);
 
-      return (
-        sessionDate.getDate() === date.getDate() &&
-        sessionDate.getMonth() === date.getMonth() &&
-        sessionDate.getFullYear() === date.getFullYear()
-      );
-    });
-  };
+    return (
+      sessionDate.getDate() === date.getDate() &&
+      sessionDate.getMonth() === date.getMonth() &&
+      sessionDate.getFullYear() === date.getFullYear()
+    );
+  });
+};
 
   const sessionsForSelectedDate = getSessionsForDate(selectedDate);
 

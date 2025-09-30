@@ -4,6 +4,7 @@ import { isBefore, isToday, addDays, startOfDay } from 'date-fns';
 import UpcomingSessionCard from './UpcomingSessionCard';
 import EmptySessionsState from './EmptySessionsState';
 import { ClassSession } from '@/types/classTypes';
+import { parseDateToLocal } from '@/utils/safeDateUtils';
 
 interface UpcomingClassSessionsProps {
   sessions: ClassSession[];
@@ -18,29 +19,20 @@ const UpcomingClassSessions: React.FC<UpcomingClassSessionsProps> = ({
     const today = startOfDay(new Date());
     const futureDate = addDays(today, days);
 
-    return sessions
-      .filter((session) => {
-        const sessionDate =
-          session.date instanceof Date
-            ? startOfDay(session.date)
-            : startOfDay(new Date(session.date));
+return sessions
+  .filter((session) => {
+    const sessionDate = startOfDay(parseDateToLocal(session.date as any));
 
-        return (
-          (isToday(sessionDate) || isBefore(today, sessionDate)) &&
-          isBefore(sessionDate, futureDate)
-        );
-      })
-      .sort((a, b) => {
-        const dateA =
-          a.date instanceof Date
-            ? a.date.getTime()
-            : new Date(a.date).getTime();
-        const dateB =
-          b.date instanceof Date
-            ? b.date.getTime()
-            : new Date(b.date).getTime();
-        return dateA - dateB;
-      });
+    return (
+      (isToday(sessionDate) || isBefore(today, sessionDate)) &&
+      isBefore(sessionDate, futureDate)
+    );
+  })
+  .sort((a, b) => {
+    const dateA = parseDateToLocal(a.date as any).getTime();
+    const dateB = parseDateToLocal(b.date as any).getTime();
+    return dateA - dateB;
+  });
   };
 
   const upcomingSessions = getUpcomingSessions();

@@ -4,6 +4,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { format, isSameDay } from 'date-fns';
 import { ClassSession } from '@/types/classTypes';
 import { Badge } from '@/components/ui/badge';
+import { parseDateToLocal } from '@/utils/safeDateUtils';
 
 interface ClassCalendarColumnProps {
   selectedDate: Date;
@@ -21,12 +22,10 @@ const ClassCalendarColumn: React.FC<ClassCalendarColumnProps> = ({
     return getSessionsForDate(date, sessions).length > 0;
   };
 
-  // Function to get sessions for a specific date
+// Function to get sessions for a specific date
   const getSessionsForDate = (date: Date, sessions: ClassSession[]) => {
     return sessions.filter((session) => {
-      const sessionDate =
-        session.date instanceof Date ? session.date : new Date(session.date);
-
+      const sessionDate = parseDateToLocal(session.date as any);
       return isSameDay(sessionDate, date);
     });
   };

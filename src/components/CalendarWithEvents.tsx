@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { startOfDay, addDays } from 'date-fns';
 import CompletedClassActions from '@/components/tutor/CompletedClassActions';
 import { useAuth } from '@/contexts/AuthContext';
+import { parseDateToLocal } from '@/utils/safeDateUtils';
 
 interface CalendarWithEventsProps {
   selectedDate: Date;
@@ -24,10 +25,7 @@ export const getUpcomingEvents = (events: ClassEvent[]): ClassEvent[] => {
   const nextWeek = addDays(today, 7);
 
   return events.filter((event) => {
-    // Handle both Date objects and string dates
-    const eventDate = event.date instanceof Date 
-      ? event.date 
-      : new Date(event.date);
+    const eventDate = parseDateToLocal(event.date as any);
     const eventDay = startOfDay(eventDate);
     return eventDay >= today && eventDay <= nextWeek;
   });
@@ -53,10 +51,7 @@ const CalendarWithEvents: React.FC<CalendarWithEventsProps> = ({
   const hasEventsOnDate = (date: Date) => {
     return scheduledClasses.some((event) => {
       // Handle both Date objects and string dates
-      const eventDate = event.date instanceof Date
-        ? event.date
-        : new Date(event.date);
-      
+      const eventDate = parseDateToLocal(event.date as any);
       return isSameDay(date, eventDate);
     });
   };
@@ -65,10 +60,7 @@ const CalendarWithEvents: React.FC<CalendarWithEventsProps> = ({
     // Find events for the selected date
     const events = scheduledClasses.filter((event) => {
       // Handle both Date objects and string dates
-      const eventDate = event.date instanceof Date
-        ? event.date
-        : new Date(event.date);
-      
+      const eventDate = parseDateToLocal(event.date as any);
       const result = isSameDay(selectedDate, eventDate);
       
       return result;
