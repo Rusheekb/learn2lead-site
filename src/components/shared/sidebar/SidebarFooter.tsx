@@ -11,7 +11,6 @@ interface SidebarFooterProps {
 const SidebarFooter: React.FC<SidebarFooterProps> = ({ isExpanded, signOut }) => {
   const handleLogout = (e: React.MouseEvent) => {
     e.preventDefault();
-    console.log('Logout button clicked');
     signOut();
   };
 

@@ -23,7 +23,9 @@ export const formatTime = (timeString: string): string => {
 
     return `${hour12}:${minute.toString().padStart(2, '0')} ${period}`;
   } catch (error) {
-    console.warn('Error formatting time:', timeString, error);
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Error formatting time:', timeString, error);
+    }
     return 'Invalid Time';
   }
 };

@@ -17,6 +17,7 @@ import { useRoleSync } from './hooks/useRoleSync';
 import { RoutePersistence } from './components/shared/RoutePersistence';
 import { SidebarProvider } from '@/hooks/useSidebar';
 import DashboardShell from './components/shared/DashboardShell';
+import ErrorBoundary from './components/ErrorBoundary';
 
 const Profile = React.lazy(() => import('./pages/Profile'));
 const TutorDashboard = React.lazy(() => import('./pages/TutorDashboard'));
@@ -63,13 +64,14 @@ function App() {
   useRoleSync();
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-            <BrowserRouter>
-              <AuthProvider>
-                <RoutePersistence />
-                <SidebarProvider>
-                  <Routes>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <BrowserRouter>
+            <AuthProvider>
+              <RoutePersistence />
+              <SidebarProvider>
+                <Routes>
                     {/* Public routes with optimized loading */}
                     <Route path="/" element={
                       <OptimizedSuspense>
@@ -140,13 +142,13 @@ function App() {
                         <NotFound />
                       </OptimizedSuspense>
                     } />
-                  </Routes>
-                </SidebarProvider>
-              </AuthProvider>
-            </BrowserRouter>
-            
-      </TooltipProvider>
-    </QueryClientProvider>
+                </Routes>
+              </SidebarProvider>
+            </AuthProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

@@ -59,8 +59,7 @@ const ClassHistory: React.FC<ClassHistoryProps> = ({ userRole }) => {
           schema: 'public',
           table: 'class_logs',
         },
-        (payload) => {
-          console.log('Realtime update for class history:', payload);
+        () => {
           fetchClassHistory();
         }
       )
@@ -85,16 +84,11 @@ const ClassHistory: React.FC<ClassHistoryProps> = ({ userRole }) => {
         .single();
 
       if (!profile) {
-        console.log('No profile found for user');
         setIsLoading(false);
         return;
       }
-
-      console.log('User profile for class history:', profile);
       
       const fullName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
-      console.log('Full name for matching:', fullName);
-      console.log('Email for matching:', profile.email);
       
       let query = supabase.from('class_logs').select('*');
       
@@ -105,7 +99,6 @@ const ClassHistory: React.FC<ClassHistoryProps> = ({ userRole }) => {
         } else {
           query = query.eq('"Tutor Name"', profile.email);
         }
-        console.log('Querying for tutor classes');
       } else if (userRole === 'student') {
         // Query by either full name or email, handling cases where name might be empty
         if (fullName) {
@@ -113,28 +106,20 @@ const ClassHistory: React.FC<ClassHistoryProps> = ({ userRole }) => {
         } else {
           query = query.eq('"Student Name"', profile.email);
         }
-        console.log('Querying for student classes');
       }
       // Admin can see all - no filter needed
 
       const { data, error } = await query.order('Date', { ascending: false });
 
       if (error) {
-        console.error('Error fetching class history:', error);
         throw error;
-      }
-
-      console.log('Fetched class history data:', data);
-      console.log('Number of records found:', data?.length || 0);
-      
-      // Also log some sample data to see the structure
-      if (data && data.length > 0) {
-        console.log('Sample class history record:', data[0]);
       }
       
       setClassHistory(data || []);
     } catch (error) {
-      console.error('Error fetching class history:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error fetching class history:', error);
+      }
       toast.error('Failed to load class history');
     } finally {
       setIsLoading(false);
@@ -166,7 +151,9 @@ const ClassHistory: React.FC<ClassHistoryProps> = ({ userRole }) => {
       setIsEditDialogOpen(false);
       fetchClassHistory();
     } catch (error) {
-      console.error('Error updating class:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error updating class:', error);
+      }
       toast.error('Failed to update class description');
     }
   };
@@ -188,7 +175,9 @@ const ClassHistory: React.FC<ClassHistoryProps> = ({ userRole }) => {
         .eq('last_name', studentName?.split(' ').slice(1).join(' ') || '');
 
       if (profileError || !profiles?.length) {
-        console.error('Error finding student profile:', profileError);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error finding student profile:', profileError);
+        }
         toast.error('Cannot find student profile to revert class');
         return;
       }
@@ -219,7 +208,9 @@ const ClassHistory: React.FC<ClassHistoryProps> = ({ userRole }) => {
         });
 
       if (scheduleError) {
-        console.error('Error restoring scheduled class:', scheduleError);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error restoring scheduled class:', scheduleError);
+        }
         throw scheduleError;
       }
 
@@ -230,7 +221,9 @@ const ClassHistory: React.FC<ClassHistoryProps> = ({ userRole }) => {
         .eq('id', classItem.id);
 
       if (deleteLogError) {
-        console.error('Error deleting class log:', deleteLogError);
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error deleting class log:', deleteLogError);
+        }
         throw deleteLogError;
       }
 
@@ -244,7 +237,9 @@ const ClassHistory: React.FC<ClassHistoryProps> = ({ userRole }) => {
       
       fetchClassHistory(); // Refresh the history
     } catch (error) {
-      console.error('Error reverting class:', error);
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error reverting class:', error);
+      }
       toast.error('Failed to revert class to scheduled');
     } finally {
       setIsReverting(null);

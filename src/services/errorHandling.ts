@@ -79,12 +79,17 @@ export class ErrorHandler {
   }
 
   static logError(error: AppError, context?: string): void {
-    console.error(`[${error.type.toUpperCase()}] ${context || 'Unknown context'}:`, {
-      message: error.message,
-      code: error.code,
-      details: error.details,
-      timestamp: new Date().toISOString()
-    });
+    if (process.env.NODE_ENV === 'development') {
+      console.error(`[${error.type.toUpperCase()}] ${context || 'Unknown context'}:`, {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    // TODO: Send to error monitoring service in production
+    // Example: Sentry.captureException(error);
   }
 
   static showUserMessage(error: AppError): void {
