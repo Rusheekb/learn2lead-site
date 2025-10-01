@@ -140,13 +140,15 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
           </a>
         </div>
 
-        {/* Add Calendar Integration Section */}
-        <div>
-          <h4 className="text-sm font-medium text-gray-500">Calendar Integration</h4>
-          <div className="mt-2">
-            <CalendarLinks classEvent={selectedEvent} />
+        {/* Add Calendar Integration Section - only if date/time fields are valid */}
+        {selectedEvent.date && selectedEvent.startTime && selectedEvent.endTime && (
+          <div>
+            <h4 className="text-sm font-medium text-gray-500">Calendar Integration</h4>
+            <div className="mt-2">
+              <CalendarLinks classEvent={selectedEvent} />
+            </div>
           </div>
-        </div>
+        )}
 
         {selectedEvent.notes && (
           <div>

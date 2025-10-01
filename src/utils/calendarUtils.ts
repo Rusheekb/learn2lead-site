@@ -1,5 +1,32 @@
+import { parseDateToLocal } from './safeDateUtils';
 
 // Utility functions for calendar integration
+
+/**
+ * Safely parse HH:mm time string and return hours and minutes
+ */
+const parseHHMM = (timeStr: string): { hours: number; minutes: number } | null => {
+  if (!timeStr || typeof timeStr !== 'string') {
+    console.warn('Invalid time string:', timeStr);
+    return null;
+  }
+  
+  const parts = timeStr.split(':');
+  if (parts.length !== 2) {
+    console.warn('Time string not in HH:mm format:', timeStr);
+    return null;
+  }
+  
+  const hours = parseInt(parts[0], 10);
+  const minutes = parseInt(parts[1], 10);
+  
+  if (isNaN(hours) || isNaN(minutes) || hours < 0 || hours > 23 || minutes < 0 || minutes > 59) {
+    console.warn('Invalid time values:', { hours, minutes });
+    return null;
+  }
+  
+  return { hours, minutes };
+};
 
 /**
  * Returns the calendar feed URL for a given user
@@ -33,22 +60,38 @@ export const createGoogleCalendarUrl = (event: {
   notes?: string | null;
 }): string => {
   try {
-    // Format the date and times for Google Calendar
-    const dateStr = typeof event.date === 'string' ? event.date : event.date.toISOString().split('T')[0];
+    // Parse date to local midnight without timezone shift
+    const baseDate = parseDateToLocal(event.date);
     
-    // Parse and format the start and end times
-    const [startHour, startMinute] = event.startTime.split(':').map(Number);
-    const [endHour, endMinute] = event.endTime.split(':').map(Number);
+    // Parse start and end times
+    const startParsed = parseHHMM(event.startTime);
+    const endParsed = parseHHMM(event.endTime);
     
-    const startDate = new Date(dateStr);
-    startDate.setHours(startHour, startMinute);
+    if (!startParsed || !endParsed) {
+      console.warn('Invalid start or end time for calendar URL');
+      return '#';
+    }
     
-    const endDate = new Date(dateStr);
-    endDate.setHours(endHour, endMinute);
+    // Create start and end Date objects in local time
+    const startDate = new Date(baseDate);
+    startDate.setHours(startParsed.hours, startParsed.minutes, 0, 0);
     
-    // Format dates for Google Calendar URL
-    const start = startDate.toISOString().replace(/-|:|\.\d+/g, '');
-    const end = endDate.toISOString().replace(/-|:|\.\d+/g, '');
+    const endDate = new Date(baseDate);
+    endDate.setHours(endParsed.hours, endParsed.minutes, 0, 0);
+    
+    // Format as YYYYMMDDTHHMMSS (local time, no Z suffix)
+    const formatLocal = (d: Date) => {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const hours = String(d.getHours()).padStart(2, '0');
+      const minutes = String(d.getMinutes()).padStart(2, '0');
+      const seconds = String(d.getSeconds()).padStart(2, '0');
+      return `${year}${month}${day}T${hours}${minutes}${seconds}`;
+    };
+    
+    const start = formatLocal(startDate);
+    const end = formatLocal(endDate);
     
     // Create description with Zoom link if available
     let description = event.notes || '';
@@ -68,7 +111,7 @@ export const createGoogleCalendarUrl = (event: {
     
     return url.toString();
   } catch (error) {
-    console.error('Error creating Google Calendar URL:', error);
+    console.warn('Error creating Google Calendar URL:', error);
     return '#';
   }
 };
@@ -87,20 +130,26 @@ export const createOutlookCalendarUrl = (event: {
   notes?: string | null;
 }): string => {
   try {
-    // Format the date and times for Outlook Calendar
-    const dateStr = typeof event.date === 'string' ? event.date : event.date.toISOString().split('T')[0];
+    // Parse date to local midnight without timezone shift
+    const baseDate = parseDateToLocal(event.date);
     
-    // Parse and format the start and end times
-    const [startHour, startMinute] = event.startTime.split(':').map(Number);
-    const [endHour, endMinute] = event.endTime.split(':').map(Number);
+    // Parse start and end times
+    const startParsed = parseHHMM(event.startTime);
+    const endParsed = parseHHMM(event.endTime);
     
-    const startDate = new Date(dateStr);
-    startDate.setHours(startHour, startMinute);
+    if (!startParsed || !endParsed) {
+      console.warn('Invalid start or end time for calendar URL');
+      return '#';
+    }
     
-    const endDate = new Date(dateStr);
-    endDate.setHours(endHour, endMinute);
+    // Create start and end Date objects in local time
+    const startDate = new Date(baseDate);
+    startDate.setHours(startParsed.hours, startParsed.minutes, 0, 0);
     
-    // Format dates for Outlook Calendar URL
+    const endDate = new Date(baseDate);
+    endDate.setHours(endParsed.hours, endParsed.minutes, 0, 0);
+    
+    // Format as ISO strings for Outlook
     const start = startDate.toISOString();
     const end = endDate.toISOString();
     
@@ -122,7 +171,7 @@ export const createOutlookCalendarUrl = (event: {
     
     return url.toString();
   } catch (error) {
-    console.error('Error creating Outlook Calendar URL:', error);
+    console.warn('Error creating Outlook Calendar URL:', error);
     return '#';
   }
 };
@@ -142,25 +191,45 @@ export const createIcsDownloadUrl = (event: {
   notes?: string | null;
 }): string => {
   try {
-    // Format the date and times for ICS file
-    const dateStr = typeof event.date === 'string' ? event.date : event.date.toISOString().split('T')[0];
+    // Parse date to local midnight without timezone shift
+    const baseDate = parseDateToLocal(event.date);
     
-    // Parse and format the start and end times
-    const [startHour, startMinute] = event.startTime.split(':').map(Number);
-    const [endHour, endMinute] = event.endTime.split(':').map(Number);
+    // Parse start and end times
+    const startParsed = parseHHMM(event.startTime);
+    const endParsed = parseHHMM(event.endTime);
     
-    const startDate = new Date(dateStr);
-    startDate.setHours(startHour, startMinute);
+    if (!startParsed || !endParsed) {
+      console.warn('Invalid start or end time for ICS file');
+      return '#';
+    }
     
-    const endDate = new Date(dateStr);
-    endDate.setHours(endHour, endMinute);
+    // Create start and end Date objects in local time
+    const startDate = new Date(baseDate);
+    startDate.setHours(startParsed.hours, startParsed.minutes, 0, 0);
     
-    // Format dates for ICS file
-    const start = startDate.toISOString().replace(/-|:|\.\d+/g, '');
-    const end = endDate.toISOString().replace(/-|:|\.\d+/g, '');
+    const endDate = new Date(baseDate);
+    endDate.setHours(endParsed.hours, endParsed.minutes, 0, 0);
+    
+    // Format as YYYYMMDDTHHMMSS (local time, no Z suffix for floating time)
+    const formatLocal = (d: Date) => {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const hours = String(d.getHours()).padStart(2, '0');
+      const minutes = String(d.getMinutes()).padStart(2, '0');
+      const seconds = String(d.getSeconds()).padStart(2, '0');
+      return `${year}${month}${day}T${hours}${minutes}${seconds}`;
+    };
+    
+    const start = formatLocal(startDate);
+    const end = formatLocal(endDate);
+    const now = formatLocal(new Date());
     
     // Create a unique ID for the event
     const eventUid = `${event.id}@learn2lead.com`;
+    
+    // Escape special characters in ICS format
+    const escapeIcs = (str: string) => str.replace(/[,;\\]/g, '\\$&').replace(/\n/g, '\\n');
     
     // Create ICS content
     const icsContent = [
@@ -169,23 +238,23 @@ export const createIcsDownloadUrl = (event: {
       'PRODID:-//Learn2Lead//Tutoring Platform//EN',
       'BEGIN:VEVENT',
       `UID:${eventUid}`,
-      `DTSTAMP:${new Date().toISOString().replace(/-|:|\.\d+/g, '')}`,
+      `DTSTAMP:${now}`,
       `DTSTART:${start}`,
       `DTEND:${end}`,
-      `SUMMARY:${event.title}`,
-      `DESCRIPTION:${event.notes || ''}\n\nJoin Zoom Meeting: ${event.zoomLink || ''}`,
+      `SUMMARY:${escapeIcs(event.title)}`,
+      `DESCRIPTION:${escapeIcs(event.notes || '')}${event.zoomLink ? '\\n\\nJoin Zoom Meeting: ' + escapeIcs(event.zoomLink) : ''}`,
       event.zoomLink ? `LOCATION:Zoom Meeting` : '',
       'END:VEVENT',
       'END:VCALENDAR'
-    ].filter(Boolean).join('\n');
+    ].filter(Boolean).join('\r\n');
     
     // Create a Blob and download URL
-    const blob = new Blob([icsContent], { type: 'text/calendar' });
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     
     return url;
   } catch (error) {
-    console.error('Error creating ICS download URL:', error);
+    console.warn('Error creating ICS download URL:', error);
     return '#';
   }
 };

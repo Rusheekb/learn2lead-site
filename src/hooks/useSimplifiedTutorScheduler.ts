@@ -6,7 +6,7 @@ import { useRealtimeManager } from './useRealtimeManager';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { createScheduledClass } from '@/services/class/create';
-import { formatClassEventDate } from '@/utils/safeDateUtils';
+import { formatClassEventDate, parseDateToLocal } from '@/utils/safeDateUtils';
 
 export const useSimplifiedTutorScheduler = () => {
   const [scheduledClasses, setScheduledClasses] = useState<ClassEvent[]>([]);
@@ -32,12 +32,50 @@ export const useSimplifiedTutorScheduler = () => {
       
       const { data, error } = await supabase
         .from('scheduled_classes')
-        .select('*')
+        .select(`
+          *,
+          student:profiles!scheduled_classes_student_id_fkey(first_name, last_name, email),
+          tutor:profiles!scheduled_classes_tutor_id_fkey(first_name, last_name, email)
+        `)
         .eq('tutor_id', user.id)
         .order('start_time', { ascending: true });
       
       if (error) throw error;
-      return data as any;
+      
+      // Transform raw DB data to ClassEvent format
+      return (data || []).map((record: any) => {
+        const student = record.student || {};
+        const tutor = record.tutor || {};
+        
+        const studentName = 
+          student.first_name || student.last_name
+            ? `${student.first_name || ''} ${student.last_name || ''}`.trim()
+            : student.email || 'Unknown Student';
+            
+        const tutorName =
+          tutor.first_name || tutor.last_name
+            ? `${tutor.first_name || ''} ${tutor.last_name || ''}`.trim()
+            : tutor.email || 'Unknown Tutor';
+        
+        return {
+          id: record.id,
+          title: record.title,
+          date: record.date, // Keep as string 'YYYY-MM-DD'
+          startTime: record.start_time?.substring(0, 5) || '00:00', // Format as 'HH:mm'
+          endTime: record.end_time?.substring(0, 5) || '00:00', // Format as 'HH:mm'
+          subject: record.subject || '',
+          studentId: record.student_id,
+          studentName,
+          tutorId: record.tutor_id,
+          tutorName,
+          zoomLink: record.zoom_link,
+          notes: record.notes,
+          status: record.status,
+          attendance: record.attendance,
+          materialsUrl: record.materials_url || [],
+          relationshipId: record.relationship_id,
+        } as ClassEvent;
+      });
     },
     enabled: !!user?.id,
   });

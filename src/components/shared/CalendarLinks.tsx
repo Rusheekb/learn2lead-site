@@ -29,6 +29,16 @@ const CalendarLinks: React.FC<CalendarLinksProps> = ({
 }) => {
   const { user } = useAuth();
   
+  // Validate event has required fields for calendar URLs
+  const isValidEvent = () => {
+    if (!classEvent.date || !classEvent.startTime || !classEvent.endTime) {
+      return false;
+    }
+    // Check if times are in HH:mm format
+    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    return timeRegex.test(classEvent.startTime) && timeRegex.test(classEvent.endTime);
+  };
+  
   const handleDownloadIcs = async () => {
     if (!user?.id) {
       toast.error('Please log in to download calendar events');
@@ -59,8 +69,26 @@ const CalendarLinks: React.FC<CalendarLinksProps> = ({
     notes: classEvent.notes || undefined
   };
   
-  const googleUrl = createGoogleCalendarUrl(eventForCalendar);
-  const outlookUrl = createOutlookCalendarUrl(eventForCalendar);
+  // Only generate URLs if event is valid
+  const googleUrl = isValidEvent() ? createGoogleCalendarUrl(eventForCalendar) : '#';
+  const outlookUrl = isValidEvent() ? createOutlookCalendarUrl(eventForCalendar) : '#';
+  
+  // If event is invalid, show disabled state
+  if (!isValidEvent()) {
+    return (
+      <div className={`flex ${compact ? 'gap-1' : 'gap-2'} items-center`}>
+        <Button
+          variant={compact ? "ghost" : "outline"}
+          size={compact ? "sm" : "default"}
+          disabled
+          className="flex items-center opacity-50"
+        >
+          <Calendar className={`${compact ? 'h-4 w-4' : 'h-5 w-5'} ${compact ? 'mr-1' : 'mr-2'}`} />
+          {!compact && "Calendar unavailable"}
+        </Button>
+      </div>
+    );
+  }
   
   const calendarDropdown = (
     <DropdownMenu>
