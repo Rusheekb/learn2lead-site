@@ -72,16 +72,20 @@ const ClassSessionDetail: React.FC<SessionDetailProps> = ({ session }) => {
             ? 'Every ' + session.recurringDays?.join(', ')
             : 'One-time class'}
         </span>
-        <a
-          href={session.zoomLink}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center text-primary hover:text-primary/80 transition-colors"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <Video className="h-4 w-4 mr-1" />
-          <span>Join Class</span>
-        </a>
+        {session.zoomLink ? (
+          <a
+            href={session.zoomLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center text-primary hover:text-primary/80 transition-colors"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Video className="h-4 w-4 mr-1" />
+            <span>Join Class</span>
+          </a>
+        ) : (
+          <span className="text-xs text-muted-foreground">Zoom link not available</span>
+        )}
       </div>
     </div>
   );

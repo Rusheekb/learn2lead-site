@@ -42,17 +42,21 @@ const UpcomingSessionCard: React.FC<UpcomingSessionCardProps> = ({
           {formatTime(session.startTime)}
         </span>
       </div>
-      <Button
-        variant="link"
-        className="p-0 h-auto text-primary mt-2"
-        asChild
-        onClick={(e) => e.stopPropagation()}
-      >
-        <a href={session.zoomLink} target="_blank" rel="noopener noreferrer">
-          <Video className="h-4 w-4 mr-1 inline" />
-          Join Class
-        </a>
-      </Button>
+      {session.zoomLink ? (
+        <Button
+          variant="link"
+          className="p-0 h-auto text-primary mt-2"
+          asChild
+          onClick={(e) => e.stopPropagation()}
+        >
+          <a href={session.zoomLink} target="_blank" rel="noopener noreferrer">
+            <Video className="h-4 w-4 mr-1 inline" />
+            Join Class
+          </a>
+        </Button>
+      ) : (
+        <span className="text-xs text-muted-foreground mt-2">Zoom link not available</span>
+      )}
     </div>
   );
 };
