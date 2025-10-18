@@ -6,6 +6,7 @@ import CalendarWithEvents from '@/components/CalendarWithEvents';
 import { useRealtimeManager } from '@/hooks/useRealtimeManager';
 import { fetchScheduledClasses } from '@/services/class/fetch';
 import { ClassEvent } from '@/types/tutorTypes';
+import StudentClassDetailsDialog from './StudentClassDetailsDialog';
 
 interface ClassCalendarContainerProps {
   studentId?: string | null;
@@ -14,6 +15,9 @@ interface ClassCalendarContainerProps {
 
 export const ClassCalendarContainer: React.FC<ClassCalendarContainerProps> = ({ studentId, onSelectClass }) => {
   const [sessions, setSessions] = useState<ClassEvent[]>([]);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedClass, setSelectedClass] = useState<ClassSession | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { user } = useAuth();
 
   // Use simplified realtime manager
@@ -38,7 +42,23 @@ export const ClassCalendarContainer: React.FC<ClassCalendarContainerProps> = ({ 
     }
   }, [classData]);
 
-  const handleClassSelect = (session: ClassSession) => {
+  const mapEventToSession = (event: ClassEvent): ClassSession => ({
+    id: event.id,
+    title: event.title,
+    subjectId: (event.subject as unknown as string) || '',
+    tutorName: event.tutorName || '',
+    date: event.date,
+    startTime: event.startTime,
+    endTime: event.endTime,
+    zoomLink: event.zoomLink || '',
+    recurring: Boolean(event.recurring),
+    recurringDays: event.recurringDays,
+  });
+
+  const handleClassSelect = (event: ClassEvent) => {
+    const session = mapEventToSession(event);
+    setSelectedClass(session);
+    setIsDialogOpen(true);
     onSelectClass?.(session);
   };
 
@@ -47,13 +67,20 @@ export const ClassCalendarContainer: React.FC<ClassCalendarContainerProps> = ({ 
   }
 
   return (
-    <CalendarWithEvents 
-      selectedDate={new Date()}
-      setSelectedDate={() => {}}
-      scheduledClasses={sessions as any}
-      onSelectEvent={handleClassSelect as any}
-      onAddEventClick={() => {}}
-      getUnreadMessageCount={() => 0}
-    />
+    <>
+      <CalendarWithEvents 
+        selectedDate={selectedDate}
+        setSelectedDate={setSelectedDate}
+        scheduledClasses={sessions}
+        onSelectEvent={handleClassSelect}
+        onAddEventClick={() => {}}
+        getUnreadMessageCount={() => 0}
+      />
+      <StudentClassDetailsDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        classSession={selectedClass}
+      />
+    </>
   );
 };
