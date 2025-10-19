@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ClassEvent } from '@/types/tutorTypes';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -197,6 +197,9 @@ export const useSimplifiedTutorScheduler = () => {
   const mockAsyncFunction = async () => true;
   const mockFunction = () => {};
 
+  // Memoize currentUser to prevent unnecessary re-renders
+  const currentUser = useMemo(() => ({ first_name: 'Current', last_name: 'Tutor' } as any), []);
+
   return {
     scheduledClasses,
     selectedEvent,
@@ -227,7 +230,7 @@ export const useSimplifiedTutorScheduler = () => {
     studentUploads: [],
     isLoading: false,
     refetchClasses: refreshData,
-    currentUser: { first_name: 'Current', last_name: 'Tutor' } as any,
+    currentUser,
     
     // Handlers
     handleSelectEvent,

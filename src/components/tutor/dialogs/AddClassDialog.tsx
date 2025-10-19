@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { format, addHours, setMinutes, setHours } from 'date-fns';
 import { ClassEvent } from '@/types/tutorTypes';
@@ -40,10 +40,14 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [studentOptions, setStudentOptions] = useState<StudentOption[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const initializedRef = useRef(false);
   
-  // Set default values when dialog opens
+  // Set default values when dialog opens (only once)
   useEffect(() => {
     if (!isOpen || !user?.id) return;
+    
+    // Only initialize once per dialog open
+    if (initializedRef.current) return;
     
     // Set next hour as default time
     const now = new Date();
@@ -122,7 +126,15 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
     };
     
     loadRelationshipsAndStudents();
-  }, [isOpen, user?.id, setNewEvent, currentUser]);
+    initializedRef.current = true;
+  }, [isOpen, user?.id]);
+  
+  // Reset initialization flag when dialog closes
+  useEffect(() => {
+    if (!isOpen) {
+      initializedRef.current = false;
+    }
+  }, [isOpen]);
   
   // Handle student selection to update both studentId and relationshipId
   const handleStudentChange = (studentId: string) => {

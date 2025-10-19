@@ -78,7 +78,7 @@ const TutorScheduler: React.FC = () => {
         tutorName
       });
     }
-  }, [user?.id, newEvent, setNewEvent, currentUser]);
+  }, [user?.id, newEvent, setNewEvent]);
 
   const handleAddEventClick = () => {
     setNewEvent((prev) => ({ ...prev, date: selectedDate }));
