@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 type PricingTierProps = {
   name: string;
   price: string;
+  monthlyTotal: string;
   description: string;
   features: string[];
   buttonText: string;
@@ -15,6 +16,7 @@ type PricingTierProps = {
 const PricingTier: React.FC<PricingTierProps> = ({
   name,
   price,
+  monthlyTotal,
   description,
   features,
   buttonText,
@@ -27,11 +29,11 @@ const PricingTier: React.FC<PricingTierProps> = ({
       }`}
     >
       <h3 className="text-xl font-bold mb-2">{name}</h3>
-      <div className="mb-4">
-        <span className="text-3xl font-bold">{price}</span>
-        <span className="text-gray-500">/month</span>
+      <div className="mb-2">
+        <span className="text-4xl font-bold">{price}</span>
       </div>
-      <p className="text-gray-600 mb-6">{description}</p>
+      <p className="text-sm text-muted-foreground mb-1">{monthlyTotal}</p>
+      <p className="text-sm text-muted-foreground mb-6">{description}</p>
       <ul className="space-y-3 mb-6">
         {features.map((feature, index) => (
           <li key={index} className="flex items-start">
@@ -98,11 +100,12 @@ const Pricing = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
           <PricingTier
             name="Basic"
-            price="$140"
+            price="$35/class"
+            monthlyTotal="$140/month"
             description="Perfect for beginners looking to improve in one subject"
             features={[
               'Access to one subject area',
-              '1 hour of tutoring per week',
+              '4 classes per month',
               'Basic study materials',
               'Email support',
             ]}
@@ -111,11 +114,12 @@ const Pricing = () => {
 
           <PricingTier
             name="Standard"
-            price="$240"
+            price="$30/class"
+            monthlyTotal="$240/month"
             description="Our most popular plan for dedicated students"
             features={[
               'Access to all subject areas',
-              '2 hours of tutoring per week',
+              '8 classes per month',
               'Advanced study materials',
               'Practice tests and assessments',
               'Priority email support',
@@ -126,11 +130,12 @@ const Pricing = () => {
 
           <PricingTier
             name="Premium"
-            price="$300"
+            price="$25/class"
+            monthlyTotal="$300/month"
             description="Comprehensive support for academic excellence"
             features={[
               'Access to all subject areas',
-              '3 hours of tutoring per week',
+              '12 classes per month',
               'Premium study materials',
               'Personalized study plan',
               'Practice tests and assessments',
