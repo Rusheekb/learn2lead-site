@@ -25,14 +25,27 @@ serve(async (req) => {
     const signature = req.headers.get("stripe-signature");
 
     if (!signature) {
-      throw new Error("No Stripe signature found");
+      logStep("ERROR: Missing signature", { headers: req.headers });
+      throw new Error("No Stripe signature found in request headers");
     }
 
-    // Verify webhook signature - you'll need to set STRIPE_WEBHOOK_SECRET
-    // const event = stripe.webhooks.constructEvent(body, signature, Deno.env.get("STRIPE_WEBHOOK_SECRET") || "");
-    
-    // For now, parse the event directly (set up webhook secret in production)
-    const event = JSON.parse(body);
+    // Verify webhook signature for security
+    const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
+    if (!webhookSecret) {
+      logStep("ERROR: Webhook secret not configured");
+      throw new Error("STRIPE_WEBHOOK_SECRET is not set");
+    }
+
+    let event;
+    try {
+      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+      logStep("Webhook signature verified successfully");
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      logStep("ERROR: Signature verification failed", { error: errorMessage });
+      throw new Error(`Webhook signature verification failed: ${errorMessage}`);
+    }
+
     logStep("Event type", { type: event.type });
 
     switch (event.type) {
