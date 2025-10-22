@@ -85,7 +85,7 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
       )}
 
       <Button
-        onClick={() => navigate('/book')}
+        onClick={() => navigate('/pricing')}
         className="w-full mt-2 bg-tutoring-blue hover:bg-blue-700 text-white"
       >
         Book a Session

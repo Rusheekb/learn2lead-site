@@ -6,7 +6,7 @@ const DesktopBookButton = () => {
 
   return (
     <Button
-      onClick={() => navigate('/book')}
+      onClick={() => navigate('/pricing')}
       className="bg-tutoring-blue hover:bg-blue-700 text-white"
     >
       Book a Session
