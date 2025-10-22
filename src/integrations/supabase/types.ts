@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      class_credits_ledger: {
+        Row: {
+          amount: number
+          balance_after: number
+          created_at: string | null
+          id: string
+          reason: string
+          related_class_id: string | null
+          student_id: string
+          subscription_id: string | null
+          transaction_type: string
+        }
+        Insert: {
+          amount: number
+          balance_after: number
+          created_at?: string | null
+          id?: string
+          reason: string
+          related_class_id?: string | null
+          student_id: string
+          subscription_id?: string | null
+          transaction_type: string
+        }
+        Update: {
+          amount?: number
+          balance_after?: number
+          created_at?: string | null
+          id?: string
+          reason?: string
+          related_class_id?: string | null
+          student_id?: string
+          subscription_id?: string | null
+          transaction_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_credits_ledger_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "student_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       class_logs: {
         Row: {
           "Additional Info": string | null
@@ -23,6 +67,8 @@ export type Database = {
           Content: string | null
           Date: string
           Day: string | null
+          dispute_reason: string | null
+          disputed: boolean | null
           HW: string | null
           id: string
           "Student Name": string | null
@@ -33,6 +79,8 @@ export type Database = {
           "Tutor Cost": string | null
           "Tutor Name": string | null
           "Tutor Payment": string | null
+          verification_deadline: string | null
+          verified_by_student: boolean | null
         }
         Insert: {
           "Additional Info"?: string | null
@@ -42,6 +90,8 @@ export type Database = {
           Content?: string | null
           Date: string
           Day?: string | null
+          dispute_reason?: string | null
+          disputed?: boolean | null
           HW?: string | null
           id?: string
           "Student Name"?: string | null
@@ -52,6 +102,8 @@ export type Database = {
           "Tutor Cost"?: string | null
           "Tutor Name"?: string | null
           "Tutor Payment"?: string | null
+          verification_deadline?: string | null
+          verified_by_student?: boolean | null
         }
         Update: {
           "Additional Info"?: string | null
@@ -61,6 +113,8 @@ export type Database = {
           Content?: string | null
           Date?: string
           Day?: string | null
+          dispute_reason?: string | null
+          disputed?: boolean | null
           HW?: string | null
           id?: string
           "Student Name"?: string | null
@@ -71,6 +125,8 @@ export type Database = {
           "Tutor Cost"?: string | null
           "Tutor Name"?: string | null
           "Tutor Payment"?: string | null
+          verification_deadline?: string | null
+          verified_by_student?: boolean | null
         }
         Relationships: []
       }
@@ -365,6 +421,59 @@ export type Database = {
         }
         Relationships: []
       }
+      student_subscriptions: {
+        Row: {
+          created_at: string | null
+          credits_allocated: number
+          credits_remaining: number
+          current_period_end: string
+          current_period_start: string
+          id: string
+          plan_id: string | null
+          status: string
+          stripe_customer_id: string
+          stripe_subscription_id: string
+          student_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          credits_allocated: number
+          credits_remaining?: number
+          current_period_end: string
+          current_period_start: string
+          id?: string
+          plan_id?: string | null
+          status: string
+          stripe_customer_id: string
+          stripe_subscription_id: string
+          student_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          credits_allocated?: number
+          credits_remaining?: number
+          current_period_end?: string
+          current_period_start?: string
+          id?: string
+          plan_id?: string | null
+          status?: string
+          stripe_customer_id?: string
+          stripe_subscription_id?: string
+          student_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       students: {
         Row: {
           active: boolean
@@ -398,6 +507,48 @@ export type Database = {
           name?: string
           payment_status?: string
           subjects?: string[]
+        }
+        Relationships: []
+      }
+      subscription_plans: {
+        Row: {
+          active: boolean | null
+          classes_per_month: number
+          created_at: string | null
+          description: string | null
+          features: string[] | null
+          id: string
+          monthly_price: number
+          name: string
+          price_per_class: number
+          stripe_price_id: string
+          stripe_product_id: string
+        }
+        Insert: {
+          active?: boolean | null
+          classes_per_month: number
+          created_at?: string | null
+          description?: string | null
+          features?: string[] | null
+          id?: string
+          monthly_price: number
+          name: string
+          price_per_class: number
+          stripe_price_id: string
+          stripe_product_id: string
+        }
+        Update: {
+          active?: boolean | null
+          classes_per_month?: number
+          created_at?: string | null
+          description?: string | null
+          features?: string[] | null
+          id?: string
+          monthly_price?: number
+          name?: string
+          price_per_class?: number
+          stripe_price_id?: string
+          stripe_product_id?: string
         }
         Relationships: []
       }
@@ -492,10 +643,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      check_upcoming_classes: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      check_upcoming_classes: { Args: never; Returns: undefined }
       complete_class_atomic: {
         Args: {
           p_additional_info: string
@@ -517,18 +665,9 @@ export type Database = {
         Args: { reason?: string; tutor_user_id: string }
         Returns: Json
       }
-      generate_class_notifications: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      get_auth_user_role: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
-      get_ics_feed: {
-        Args: { feed_id: string }
-        Returns: string
-      }
+      generate_class_notifications: { Args: never; Returns: undefined }
+      get_auth_user_role: { Args: never; Returns: string }
+      get_ics_feed: { Args: { feed_id: string }; Returns: string }
       get_student_classes: {
         Args: { requesting_user_id?: string }
         Returns: {
@@ -586,14 +725,8 @@ export type Database = {
           tutor_name: string
         }[]
       }
-      get_user_calendar_events: {
-        Args: { user_id: string }
-        Returns: string
-      }
-      handle_rest_get_ics: {
-        Args: { request: Json }
-        Returns: Json
-      }
+      get_user_calendar_events: { Args: { user_id: string }; Returns: string }
+      handle_rest_get_ics: { Args: { request: Json }; Returns: Json }
       log_critical_security_event: {
         Args: { details?: Json; event_type: string; user_id: string }
         Returns: undefined
@@ -606,14 +739,8 @@ export type Database = {
         Args: { reason?: string; student_user_id: string }
         Returns: Json
       }
-      require_admin_access: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      sync_user_roles: {
-        Args: Record<PropertyKey, never>
-        Returns: Json
-      }
+      require_admin_access: { Args: never; Returns: undefined }
+      sync_user_roles: { Args: never; Returns: Json }
       validate_file_access_permissions: {
         Args: { file_path: string; requested_by?: string }
         Returns: boolean
