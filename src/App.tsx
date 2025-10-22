@@ -12,6 +12,7 @@ const NotFound = React.lazy(() => import('./pages/NotFound'));
 const Login = React.lazy(() => import('./pages/Login'));
 const Pricing = React.lazy(() => import('./pages/Pricing'));
 import { AuthProvider } from './contexts/AuthContext';
+import { SubscriptionProvider } from './contexts/SubscriptionContext';
 import PrivateRoute from './components/PrivateRoute';
 import { useRoleSync } from './hooks/useRoleSync';
 import { RoutePersistence } from './components/shared/RoutePersistence';
@@ -69,8 +70,9 @@ function App() {
         <TooltipProvider>
           <BrowserRouter>
             <AuthProvider>
-              <RoutePersistence />
-              <SidebarProvider>
+              <SubscriptionProvider>
+                <RoutePersistence />
+                <SidebarProvider>
                 <Routes>
                     {/* Public routes with optimized loading */}
                     <Route path="/" element={
@@ -144,6 +146,7 @@ function App() {
                     } />
                 </Routes>
               </SidebarProvider>
+              </SubscriptionProvider>
             </AuthProvider>
           </BrowserRouter>
         </TooltipProvider>

@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Check } from 'lucide-react';
+import { Check, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 type PricingTierProps = {
   name: string;
@@ -11,6 +14,9 @@ type PricingTierProps = {
   features: string[];
   buttonText: string;
   highlighted?: boolean;
+  priceId: string;
+  onCheckout: (priceId: string) => void;
+  isLoading: boolean;
 };
 
 const PricingTier: React.FC<PricingTierProps> = ({
@@ -21,6 +27,9 @@ const PricingTier: React.FC<PricingTierProps> = ({
   features,
   buttonText,
   highlighted = false,
+  priceId,
+  onCheckout,
+  isLoading,
 }) => {
   return (
     <div
@@ -47,16 +56,63 @@ const PricingTier: React.FC<PricingTierProps> = ({
           className={`w-full ${
             highlighted ? 'bg-tutoring-teal hover:bg-tutoring-teal/90' : ''
           }`}
+          onClick={() => onCheckout(priceId)}
+          disabled={isLoading}
         >
-          {buttonText}
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Processing...
+            </>
+          ) : (
+            buttonText
+          )}
         </Button>
       </div>
     </div>
   );
 };
 
+const PRICE_IDS = {
+  basic: 'price_1Qg8kcJDlZ7pxe9g1LLc5W1a',
+  standard: 'price_1Qg8knJDlZ7pxe9gQJV7oJHJ',
+  premium: 'price_1Qg8ktJDlZ7pxe9gE2fMqwcB',
+};
+
 const Pricing = () => {
   const navigate = useNavigate();
+  const { user, session } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const handleCheckout = async (priceId: string) => {
+    if (!user || !session) {
+      navigate('/login?returnUrl=/pricing');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { priceId },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      } else {
+        throw new Error('No checkout URL returned');
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      toast.error('Failed to start checkout. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
   
   return (
     <div className="min-h-screen bg-gray-50">
@@ -110,6 +166,9 @@ const Pricing = () => {
               'Email support',
             ]}
             buttonText="Get Started"
+            priceId={PRICE_IDS.basic}
+            onCheckout={handleCheckout}
+            isLoading={isLoading}
           />
 
           <PricingTier
@@ -126,6 +185,9 @@ const Pricing = () => {
             ]}
             buttonText="Choose Standard"
             highlighted={true}
+            priceId={PRICE_IDS.standard}
+            onCheckout={handleCheckout}
+            isLoading={isLoading}
           />
 
           <PricingTier
@@ -143,6 +205,9 @@ const Pricing = () => {
               '24/7 priority support',
             ]}
             buttonText="Choose Premium"
+            priceId={PRICE_IDS.premium}
+            onCheckout={handleCheckout}
+            isLoading={isLoading}
           />
         </div>
 
