@@ -81,13 +81,14 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
         return 1; // Default to 1 hour
       })();
       
-// Prepare completion data
+      // Prepare completion data with student ID for credit deduction
       const localDate = parseDateToLocal(classEvent.date as any);
       const completionData: CompleteClassData = {
         classId: classEvent.id,
         classNumber: classEvent.title,
         tutorName,
         studentName: classEvent.studentName || 'Unknown Student',
+        studentId: classEvent.studentId || '', // Required for credit deduction
         date: formatDateForDatabase(localDate),
         day: localDate.toLocaleDateString('en-US', { weekday: 'long' }),
         timeCst: classEvent.startTime,
@@ -97,6 +98,12 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
         hw: homework.trim() || '',
         additionalInfo: classEvent.notes || '',
       };
+
+      // Validate student ID is present
+      if (!completionData.studentId) {
+        toast.error('Cannot complete class: Student ID not found');
+        return;
+      }
 
       // Use the new service function
       const success = await completeClass(completionData);

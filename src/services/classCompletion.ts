@@ -6,6 +6,7 @@ export interface CompleteClassData {
   classNumber: string;
   tutorName: string;
   studentName: string;
+  studentId: string; // Added for credit deduction
   date: string;
   day: string;
   timeCst: string;
@@ -34,6 +35,58 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
       toast.error('Class no longer exists or has already been completed');
       return false;
     }
+
+    // Deduct class credit before completing
+    const { data: session } = await supabase.auth.getSession();
+    if (!session.session) {
+      toast.error('You must be logged in to complete classes');
+      return false;
+    }
+
+    const { data: creditResult, error: creditError } = await supabase.functions.invoke(
+      'deduct-class-credit',
+      {
+        body: {
+          student_id: data.studentId,
+          class_id: data.classId,
+          class_title: data.classNumber
+        },
+        headers: {
+          Authorization: `Bearer ${session.session.access_token}`
+        }
+      }
+    );
+
+    if (creditError || !creditResult?.success) {
+      const errorCode = creditResult?.code || 'UNKNOWN';
+      
+      if (errorCode === 'NO_SUBSCRIPTION') {
+        toast.error('Student has no active subscription', {
+          description: 'Please subscribe to continue taking classes',
+          action: {
+            label: 'View Plans',
+            onClick: () => window.location.href = '/pricing'
+          }
+        });
+        return false;
+      }
+      
+      if (errorCode === 'INSUFFICIENT_CREDITS') {
+        toast.error('Student has no remaining credits', {
+          description: 'Please purchase more credits to continue',
+          action: {
+            label: 'View Plans',
+            onClick: () => window.location.href = '/pricing'
+          }
+        });
+        return false;
+      }
+
+      throw new Error(creditResult?.error || 'Failed to deduct class credit');
+    }
+
+    const creditsRemaining = creditResult.credits_remaining;
+    const isAdminOverride = creditResult.admin_override;
 
     // Check if class log already exists
     const { data: existingLog, error: logCheckError } = await supabase
@@ -93,7 +146,27 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
       throw new Error('Failed to remove completed class from schedule');
     }
 
-    toast.success('Class completed successfully');
+    // Show appropriate success message
+    if (isAdminOverride) {
+      toast.success('Class completed (Admin Override)', {
+        description: 'Completed with 0 credits using admin privileges'
+      });
+    } else if (creditsRemaining === 0) {
+      toast.success('Class completed - No credits remaining', {
+        description: 'Student needs to purchase more credits',
+        action: {
+          label: 'View Plans',
+          onClick: () => window.location.href = '/pricing'
+        }
+      });
+    } else if (creditsRemaining < 3) {
+      toast.success(`Class completed - ${creditsRemaining} ${creditsRemaining === 1 ? 'class' : 'classes'} remaining`, {
+        description: 'Student is running low on credits'
+      });
+    } else {
+      toast.success(`Class completed - ${creditsRemaining} classes remaining`);
+    }
+    
     return true;
 
   } catch (error) {
