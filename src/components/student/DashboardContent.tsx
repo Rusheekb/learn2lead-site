@@ -5,6 +5,7 @@ import { ClassCalendarContainer } from './ClassCalendarContainer';
 import ClassHistory from '@/components/shared/ClassHistory';
 import { subjects } from '@/constants/subjectsData';
 import { SubscriptionStatusCard } from './SubscriptionStatusCard';
+import { CreditHistory } from './CreditHistory';
 
 interface DashboardContentProps {
   studentId: string | null;
@@ -24,7 +25,9 @@ const DashboardContent: React.FC<DashboardContentProps> = memo(
           onSubjectClick={onSubjectClick}
         />
         <ClassCalendarContainer studentId={studentId} />
-        <div className="mt-8">
+        
+        <div className="mt-8 space-y-6">
+          <CreditHistory />
           <ClassHistory userRole="student" />
         </div>
       </>
