@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -6,13 +6,51 @@ import { useSubscription } from '@/contexts/SubscriptionContext';
 import { PlanBadge } from '@/components/shared/PlanBadge';
 import { CreditBadge } from '@/components/shared/CreditBadge';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, TrendingUp, AlertCircle } from 'lucide-react';
+import { Calendar, TrendingUp, AlertCircle, ExternalLink } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export const SubscriptionStatusCard: React.FC = () => {
   const { subscribed, planName, creditsRemaining, subscriptionEnd, isLoading, error } = useSubscription();
   const navigate = useNavigate();
+  const [isOpeningPortal, setIsOpeningPortal] = useState(false);
+
+  const handleManageSubscription = async () => {
+    try {
+      setIsOpeningPortal(true);
+      
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) {
+        toast.error('Please log in to manage your subscription');
+        return;
+      }
+
+      const { data, error: portalError } = await supabase.functions.invoke(
+        'customer-portal',
+        {
+          headers: {
+            Authorization: `Bearer ${session.session.access_token}`
+          }
+        }
+      );
+
+      if (portalError || !data?.url) {
+        throw portalError || new Error('Failed to create portal session');
+      }
+
+      // Open Stripe Customer Portal in new tab
+      window.open(data.url, '_blank');
+      
+      toast.success('Opening subscription management portal...');
+    } catch (err) {
+      console.error('Error opening customer portal:', err);
+      toast.error('Failed to open subscription management portal');
+    } finally {
+      setIsOpeningPortal(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -125,10 +163,11 @@ export const SubscriptionStatusCard: React.FC = () => {
           <Button 
             variant="secondary" 
             className="flex-1"
-            disabled
-            title="Coming soon - manage your subscription"
+            onClick={handleManageSubscription}
+            disabled={isOpeningPortal}
           >
-            Manage Subscription
+            <ExternalLink className="mr-2 h-4 w-4" />
+            {isOpeningPortal ? 'Opening...' : 'Manage Subscription'}
           </Button>
         </div>
       </CardContent>
