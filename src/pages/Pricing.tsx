@@ -74,9 +74,9 @@ const PricingTier: React.FC<PricingTierProps> = ({
 };
 
 const PRICE_IDS = {
-  basic: 'price_1Qg8kcJDlZ7pxe9g1LLc5W1a',
-  standard: 'price_1Qg8knJDlZ7pxe9gQJV7oJHJ',
-  premium: 'price_1Qg8ktJDlZ7pxe9gE2fMqwcB',
+  basic: 'price_1SL6a21fzLklBERMSslJBHZr',    // $140/month - Basic Plan (4 classes)
+  standard: 'price_1SL6aZ1fzLklBERMrn7hS8ua', // $240/month - Standard Plan (8 classes)
+  premium: 'price_1SL6as1fzLklBERMpT5U2zj3',  // $300/month - Premium Plan (12 classes)
 };
 
 const Pricing = () => {
