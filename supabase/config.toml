@@ -19,6 +19,8 @@ project_id = "lnhtlbatcufmsyoujuqh"
   verify_jwt = false
   [functions.secure-file-upload]
   verify_jwt = true
+  [functions.manual-credit-allocation]
+  verify_jwt = true
 
 [auth]
   enabled = true

@@ -17,6 +17,7 @@ const TutorsManager = lazy(() => import('@/components/admin/TutorsManager'));
 const StudentsManager = lazy(() => import('@/components/admin/StudentsManager'));
 const AssignmentManager = lazy(() => import('@/components/admin/AssignmentManager'));
 const AdminSettings = lazy(() => import('@/pages/AdminSettings'));
+const ManualCreditAllocation = lazy(() => import('@/components/admin/ManualCreditAllocation').then(m => ({ default: m.ManualCreditAllocation })));
 
 type User = (Student | Tutor) & { role: 'student' | 'tutor' };
 
@@ -124,6 +125,12 @@ const AdminDashboard: React.FC = () => {
         return (
           <Suspense fallback={<LoadingSpinner />}>
             <AdminSettings />
+          </Suspense>
+        );
+      case 'testing':
+        return (
+          <Suspense fallback={<LoadingSpinner />}>
+            <ManualCreditAllocation />
           </Suspense>
         );
       default:
