@@ -53,8 +53,9 @@ serve(async (req) => {
         const invoice = event.data.object;
         const subscriptionId = invoice.subscription;
         const customerId = invoice.customer;
+        const invoiceId = invoice.id;
 
-        logStep("Payment succeeded", { subscriptionId, customerId });
+        logStep("Payment succeeded", { subscriptionId, customerId, invoiceId });
 
         // Get subscription details
         const subscription = await stripe.subscriptions.retrieve(subscriptionId);
@@ -89,6 +90,13 @@ serve(async (req) => {
           .single();
 
         if (planError || !plan) {
+          logStep('ERROR: No subscription plan found', { 
+            priceId, 
+            customerId, 
+            customerEmail,
+            invoiceId,
+            planError: planError?.message 
+          });
           throw new Error(`Plan not found for price: ${priceId}`);
         }
 
@@ -103,12 +111,20 @@ serve(async (req) => {
           // Update existing subscription and add credits
           const newCredits = existingSub.credits_remaining + plan.classes_per_month;
           
+          // Safety: handle potentially missing/invalid period dates
+          const currentPeriodStart = subscription.current_period_start 
+            ? new Date(subscription.current_period_start * 1000).toISOString()
+            : null;
+          const currentPeriodEnd = subscription.current_period_end
+            ? new Date(subscription.current_period_end * 1000).toISOString()
+            : null;
+
           const { error: updateError } = await supabaseClient
             .from('student_subscriptions')
             .update({
               status: subscription.status,
-              current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-              current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+              current_period_start: currentPeriodStart,
+              current_period_end: currentPeriodEnd,
               credits_remaining: newCredits,
               credits_allocated: plan.classes_per_month,
             })
@@ -130,9 +146,17 @@ serve(async (req) => {
 
           if (ledgerError) throw ledgerError;
 
-          logStep("Subscription updated and credits added", { newCredits });
+          logStep("Subscription updated and credits added", { newCredits, invoiceId });
         } else {
           // Create new subscription record
+          // Safety: handle potentially missing/invalid period dates
+          const currentPeriodStart = subscription.current_period_start 
+            ? new Date(subscription.current_period_start * 1000).toISOString()
+            : null;
+          const currentPeriodEnd = subscription.current_period_end
+            ? new Date(subscription.current_period_end * 1000).toISOString()
+            : null;
+
           const { data: newSub, error: insertError } = await supabaseClient
             .from('student_subscriptions')
             .insert({
@@ -141,8 +165,8 @@ serve(async (req) => {
               stripe_subscription_id: subscriptionId,
               stripe_customer_id: customerId,
               status: subscription.status,
-              current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-              current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+              current_period_start: currentPeriodStart,
+              current_period_end: currentPeriodEnd,
               credits_remaining: plan.classes_per_month,
               credits_allocated: plan.classes_per_month,
             })
@@ -165,7 +189,7 @@ serve(async (req) => {
 
           if (ledgerError) throw ledgerError;
 
-          logStep("New subscription created with credits", { subscriptionId: newSub.id });
+          logStep("New subscription created with credits", { subscriptionId: newSub.id, invoiceId });
         }
 
         break;
@@ -211,13 +235,21 @@ serve(async (req) => {
 
         logStep("Subscription updated", { subscriptionId, status: subscription.status });
 
+        // Safety: handle potentially missing/invalid period dates
+        const currentPeriodStart = subscription.current_period_start 
+          ? new Date(subscription.current_period_start * 1000).toISOString()
+          : null;
+        const currentPeriodEnd = subscription.current_period_end
+          ? new Date(subscription.current_period_end * 1000).toISOString()
+          : null;
+
         // Sync status changes
         const { error } = await supabaseClient
           .from('student_subscriptions')
           .update({
             status: subscription.status,
-            current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+            current_period_start: currentPeriodStart,
+            current_period_end: currentPeriodEnd,
           })
           .eq('stripe_subscription_id', subscriptionId);
 

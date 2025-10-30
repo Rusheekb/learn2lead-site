@@ -21,6 +21,8 @@ project_id = "lnhtlbatcufmsyoujuqh"
   verify_jwt = true
   [functions.manual-credit-allocation]
   verify_jwt = true
+  [functions.stripe-webhooks]
+  verify_jwt = false
 
 [auth]
   enabled = true
