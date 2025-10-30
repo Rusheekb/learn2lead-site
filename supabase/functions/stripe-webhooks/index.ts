@@ -38,7 +38,7 @@ serve(async (req) => {
 
     let event;
     try {
-      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+      event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
       logStep("Webhook signature verified successfully");
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
@@ -73,7 +73,7 @@ serve(async (req) => {
         const { data: profiles, error: profileError } = await supabaseClient
           .from('profiles')
           .select('id')
-          .eq('email', customerEmail)
+          .ilike('email', customerEmail)
           .single();
 
         if (profileError || !profiles) {
@@ -141,7 +141,7 @@ serve(async (req) => {
               transaction_type: 'credit',
               amount: plan.classes_per_month,
               balance_after: newCredits,
-              reason: `Monthly subscription renewal - ${plan.name}`,
+              reason: `Monthly subscription renewal - ${plan.name} (invoice: ${invoiceId})`,
             });
 
           if (ledgerError) throw ledgerError;
@@ -184,7 +184,7 @@ serve(async (req) => {
               transaction_type: 'credit',
               amount: plan.classes_per_month,
               balance_after: plan.classes_per_month,
-              reason: `Initial subscription - ${plan.name}`,
+              reason: `Initial subscription - ${plan.name} (invoice: ${invoiceId})`,
             });
 
           if (ledgerError) throw ledgerError;
