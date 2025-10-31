@@ -50,23 +50,89 @@ serve(async (req) => {
 
     switch (event.type) {
       case "invoice.payment_succeeded": {
-        const invoice = event.data.object;
-        const subscriptionId = invoice.subscription;
-        const customerId = invoice.customer;
+        const invoice = event.data.object as Stripe.Invoice;
         const invoiceId = invoice.id;
+        const customerId = typeof invoice.customer === 'string'
+          ? invoice.customer
+          : (invoice.customer as any)?.id;
+
+        // The subscription field can be missing on some invoices; resolve robustly
+        let subscriptionId: string | null = typeof invoice.subscription === 'string'
+          ? invoice.subscription
+          : (invoice.subscription as any)?.id ?? null;
+        let subscription: Stripe.Subscription | null = null;
 
         logStep("Payment succeeded", { subscriptionId, customerId, invoiceId });
 
-        // Get subscription details
-        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-        const priceId = subscription.items.data[0].price.id;
+        try {
+          if (subscriptionId) {
+            subscription = await stripe.subscriptions.retrieve(subscriptionId);
+          } else {
+            logStep("Subscription ID missing on invoice, hydrating invoice", { invoiceId });
+            const hydrated = await stripe.invoices.retrieve(invoiceId, {
+              expand: ['subscription', 'lines.data.price']
+            });
+            subscriptionId = typeof hydrated.subscription === 'string'
+              ? hydrated.subscription
+              : (hydrated.subscription as any)?.id ?? null;
+            if (!subscription && typeof hydrated.subscription !== 'string') {
+              subscription = (hydrated.subscription as Stripe.Subscription) || null;
+            }
+            if (!subscription && subscriptionId) {
+              subscription = await stripe.subscriptions.retrieve(subscriptionId);
+            }
+            // Final fallback: list active subs for the customer
+            if (!subscription && customerId) {
+              const subs = await stripe.subscriptions.list({
+                customer: customerId,
+                status: 'active',
+                limit: 1,
+              });
+              if (subs.data.length) {
+                subscription = subs.data[0];
+                subscriptionId = subscription.id;
+              }
+            }
+          }
+        } catch (e) {
+          logStep('ERROR resolving subscription', { invoiceId, customerId, error: (e as Error).message });
+        }
 
-        // Get customer email
+        // Determine price id from subscription first, then invoice lines
+        let priceId: string | null = null;
+        if (subscription) {
+          priceId = subscription.items?.data?.[0]?.price?.id ?? null;
+          logStep('Resolved subscription', { subscriptionId: subscription.id, priceId });
+        }
+        if (!priceId) {
+          priceId = invoice.lines?.data?.[0]?.price?.id ?? null;
+          logStep('Price resolved from invoice lines', { priceId });
+        }
+        if (!priceId) {
+          logStep('ERROR: Unable to determine price for invoice', { invoiceId, customerId });
+          // Return 200 to acknowledge; Stripe will not retry and we avoid double credits later
+          break;
+        }
+
+        // Fetch customer email
         const customer = await stripe.customers.retrieve(customerId);
-        const customerEmail = typeof customer !== 'string' && 'email' in customer ? customer.email : null;
-
+        const customerEmail = typeof customer !== 'string' && 'email' in customer ? (customer as any).email as string | null : null;
         if (!customerEmail) {
-          throw new Error("Customer email not found");
+          logStep('ERROR: Customer email not found', { customerId, invoiceId });
+          break;
+        }
+
+        // Idempotency guard: if a ledger entry already references this invoice, skip
+        const { data: dupRows, error: dupError } = await supabaseClient
+          .from('class_credits_ledger')
+          .select('id')
+          .ilike('reason', `%${invoiceId}%`);
+        if (dupError) {
+          logStep('WARNING: Dup check failed', { error: dupError.message });
+        }
+        if (dupRows && dupRows.length > 0) {
+          logStep('Duplicate invoice detected, skipping crediting', { invoiceId });
+          break;
         }
 
         // Get user from email
@@ -77,12 +143,13 @@ serve(async (req) => {
           .single();
 
         if (profileError || !profiles) {
+          logStep('ERROR: User not found for email', { customerEmail, invoiceId });
           throw new Error(`User not found for email: ${customerEmail}`);
         }
 
         const userId = profiles.id;
 
-        // Get plan details
+        // Get plan details by price id
         const { data: plan, error: planError } = await supabaseClient
           .from('subscription_plans')
           .select('*')
@@ -90,12 +157,12 @@ serve(async (req) => {
           .single();
 
         if (planError || !plan) {
-          logStep('ERROR: No subscription plan found', { 
-            priceId, 
-            customerId, 
+          logStep('ERROR: No subscription plan found', {
+            priceId,
+            customerId,
             customerEmail,
             invoiceId,
-            planError: planError?.message 
+            planError: planError?.message
           });
           throw new Error(`Plan not found for price: ${priceId}`);
         }
@@ -110,19 +177,17 @@ serve(async (req) => {
         if (existingSub) {
           // Update existing subscription and add credits
           const newCredits = existingSub.credits_remaining + plan.classes_per_month;
-          
-          // Safety: handle potentially missing/invalid period dates
-          const currentPeriodStart = subscription.current_period_start 
+          const currentPeriodStart = subscription?.current_period_start
             ? new Date(subscription.current_period_start * 1000).toISOString()
             : null;
-          const currentPeriodEnd = subscription.current_period_end
+          const currentPeriodEnd = subscription?.current_period_end
             ? new Date(subscription.current_period_end * 1000).toISOString()
             : null;
 
           const { error: updateError } = await supabaseClient
             .from('student_subscriptions')
             .update({
-              status: subscription.status,
+              status: subscription?.status ?? 'active',
               current_period_start: currentPeriodStart,
               current_period_end: currentPeriodEnd,
               credits_remaining: newCredits,
@@ -132,7 +197,6 @@ serve(async (req) => {
 
           if (updateError) throw updateError;
 
-          // Log credit addition
           const { error: ledgerError } = await supabaseClient
             .from('class_credits_ledger')
             .insert({
@@ -149,11 +213,10 @@ serve(async (req) => {
           logStep("Subscription updated and credits added", { newCredits, invoiceId });
         } else {
           // Create new subscription record
-          // Safety: handle potentially missing/invalid period dates
-          const currentPeriodStart = subscription.current_period_start 
+          const currentPeriodStart = subscription?.current_period_start
             ? new Date(subscription.current_period_start * 1000).toISOString()
             : null;
-          const currentPeriodEnd = subscription.current_period_end
+          const currentPeriodEnd = subscription?.current_period_end
             ? new Date(subscription.current_period_end * 1000).toISOString()
             : null;
 
@@ -164,7 +227,7 @@ serve(async (req) => {
               plan_id: plan.id,
               stripe_subscription_id: subscriptionId,
               stripe_customer_id: customerId,
-              status: subscription.status,
+              status: subscription?.status ?? 'active',
               current_period_start: currentPeriodStart,
               current_period_end: currentPeriodEnd,
               credits_remaining: plan.classes_per_month,
@@ -175,7 +238,6 @@ serve(async (req) => {
 
           if (insertError) throw insertError;
 
-          // Log initial credit allocation
           const { error: ledgerError } = await supabaseClient
             .from('class_credits_ledger')
             .insert({
