@@ -179,9 +179,13 @@ serve(async (req) => {
           const newCredits = existingSub.credits_remaining + plan.classes_per_month;
           const currentPeriodStart = subscription?.current_period_start
             ? new Date(subscription.current_period_start * 1000).toISOString()
+            : invoice.lines?.data?.[0]?.period?.start
+            ? new Date(invoice.lines.data[0].period.start * 1000).toISOString()
             : null;
           const currentPeriodEnd = subscription?.current_period_end
             ? new Date(subscription.current_period_end * 1000).toISOString()
+            : invoice.lines?.data?.[0]?.period?.end
+            ? new Date(invoice.lines.data[0].period.end * 1000).toISOString()
             : null;
 
           const { error: updateError } = await supabaseClient
@@ -195,7 +199,14 @@ serve(async (req) => {
             })
             .eq('id', existingSub.id);
 
-          if (updateError) throw updateError;
+          if (updateError) {
+            logStep('ERROR updating subscription', {
+              message: updateError.message,
+              code: updateError.code,
+              details: updateError.details,
+            });
+            throw updateError;
+          }
 
           const { error: ledgerError } = await supabaseClient
             .from('class_credits_ledger')
@@ -208,16 +219,27 @@ serve(async (req) => {
               reason: `Monthly subscription renewal - ${plan.name} (invoice: ${invoiceId})`,
             });
 
-          if (ledgerError) throw ledgerError;
+          if (ledgerError) {
+            logStep('ERROR creating ledger entry for existing subscription', {
+              message: ledgerError.message,
+              code: ledgerError.code,
+              details: ledgerError.details,
+            });
+            throw ledgerError;
+          }
 
           logStep("Subscription updated and credits added", { newCredits, invoiceId });
         } else {
           // Create new subscription record
           const currentPeriodStart = subscription?.current_period_start
             ? new Date(subscription.current_period_start * 1000).toISOString()
+            : invoice.lines?.data?.[0]?.period?.start
+            ? new Date(invoice.lines.data[0].period.start * 1000).toISOString()
             : null;
           const currentPeriodEnd = subscription?.current_period_end
             ? new Date(subscription.current_period_end * 1000).toISOString()
+            : invoice.lines?.data?.[0]?.period?.end
+            ? new Date(invoice.lines.data[0].period.end * 1000).toISOString()
             : null;
 
           const { data: newSub, error: insertError } = await supabaseClient
@@ -236,7 +258,14 @@ serve(async (req) => {
             .select()
             .single();
 
-          if (insertError) throw insertError;
+          if (insertError) {
+            logStep('ERROR creating new subscription', {
+              message: insertError.message,
+              code: insertError.code,
+              details: insertError.details,
+            });
+            throw insertError;
+          }
 
           const { error: ledgerError } = await supabaseClient
             .from('class_credits_ledger')
@@ -249,7 +278,14 @@ serve(async (req) => {
               reason: `Initial subscription - ${plan.name} (invoice: ${invoiceId})`,
             });
 
-          if (ledgerError) throw ledgerError;
+          if (ledgerError) {
+            logStep('ERROR creating initial ledger entry', {
+              message: ledgerError.message,
+              code: ledgerError.code,
+              details: ledgerError.details,
+            });
+            throw ledgerError;
+          }
 
           logStep("New subscription created with credits", { subscriptionId: newSub.id, invoiceId });
         }
@@ -330,7 +366,8 @@ serve(async (req) => {
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR in webhook", { message: errorMessage });
+    const errorDetails = error instanceof Error ? error : { raw: error };
+    logStep("ERROR in webhook", { message: errorMessage, details: errorDetails });
     return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { "Content-Type": "application/json" },
       status: 400,

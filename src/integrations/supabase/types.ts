@@ -426,8 +426,8 @@ export type Database = {
           created_at: string | null
           credits_allocated: number
           credits_remaining: number
-          current_period_end: string
-          current_period_start: string
+          current_period_end: string | null
+          current_period_start: string | null
           id: string
           plan_id: string | null
           status: string
@@ -440,8 +440,8 @@ export type Database = {
           created_at?: string | null
           credits_allocated: number
           credits_remaining?: number
-          current_period_end: string
-          current_period_start: string
+          current_period_end?: string | null
+          current_period_start?: string | null
           id?: string
           plan_id?: string | null
           status: string
@@ -454,8 +454,8 @@ export type Database = {
           created_at?: string | null
           credits_allocated?: number
           credits_remaining?: number
-          current_period_end?: string
-          current_period_start?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
           id?: string
           plan_id?: string | null
           status?: string
