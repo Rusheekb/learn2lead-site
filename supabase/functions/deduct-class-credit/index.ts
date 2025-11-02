@@ -60,6 +60,35 @@ Deno.serve(async (req) => {
 
     logStep("Input validated", { student_id, class_id, class_title });
 
+    // Check for duplicate completion (idempotency)
+    const { data: existingDebit, error: debitCheckError } = await supabaseClient
+      .from("class_credits_ledger")
+      .select("id, balance_after, created_at")
+      .eq("related_class_id", class_id)
+      .eq("transaction_type", "debit")
+      .maybeSingle();
+
+    if (debitCheckError) {
+      logStep("ERROR: Failed to check for existing debit", { error: debitCheckError });
+    }
+
+    if (existingDebit) {
+      logStep("Class already completed (idempotent response)", { 
+        transaction_id: existingDebit.id, 
+        balance_after: existingDebit.balance_after 
+      });
+      return new Response(
+        JSON.stringify({
+          success: true,
+          credits_remaining: existingDebit.balance_after,
+          transaction_id: existingDebit.id,
+          idempotent: true,
+          message: `Class already completed. ${existingDebit.balance_after} class${existingDebit.balance_after === 1 ? '' : 'es'} remaining.`
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+      );
+    }
+
     // Get active subscription with current credits
     const { data: subscription, error: subError } = await supabaseClient
       .from("student_subscriptions")
@@ -75,34 +104,6 @@ Deno.serve(async (req) => {
           success: false,
           error: "No active subscription found",
           code: "NO_SUBSCRIPTION"
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 402 }
-      );
-    }
-
-    if (subscription.credits_remaining <= 0) {
-      logStep("Insufficient credits", { credits_remaining: subscription.credits_remaining });
-      
-      // Allow admin override
-      if (profile.role === 'admin') {
-        logStep("Admin override - allowing completion with 0 credits");
-        return new Response(
-          JSON.stringify({
-            success: true,
-            credits_remaining: 0,
-            admin_override: true,
-            message: "Class completed with admin override (0 credits)"
-          }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
-        );
-      }
-
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: "Insufficient credits",
-          code: "INSUFFICIENT_CREDITS",
-          credits_remaining: 0
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 402 }
       );
@@ -158,12 +159,23 @@ Deno.serve(async (req) => {
 
     logStep("Transaction logged", { transaction_id: ledgerEntry.id });
 
+    // Determine appropriate message based on balance
+    let message = '';
+    if (newBalance < 0) {
+      message = `Credit deducted. Account is ${Math.abs(newBalance)} class${Math.abs(newBalance) === 1 ? '' : 'es'} overdrawn. Credits will renew at next billing cycle.`;
+    } else if (newBalance === 0) {
+      message = `Credit deducted. No classes remaining. Credits will renew at next billing cycle.`;
+    } else {
+      message = `Credit deducted. ${newBalance} class${newBalance === 1 ? '' : 'es'} remaining.`;
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
         credits_remaining: newBalance,
         transaction_id: ledgerEntry.id,
-        message: `Credit deducted. ${newBalance} class${newBalance === 1 ? '' : 'es'} remaining.`
+        is_negative: newBalance < 0,
+        message
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );

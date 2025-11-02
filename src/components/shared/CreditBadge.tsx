@@ -12,15 +12,23 @@ export const CreditBadge: React.FC<CreditBadgeProps> = ({ credits, className }) 
   if (credits === null) return null;
 
   const getVariant = () => {
+    if (credits < 0) return 'destructive';
     if (credits === 0) return 'destructive';
     if (credits < 3) return 'secondary';
     return 'default';
   };
 
+  const getText = () => {
+    if (credits < 0) {
+      return `${Math.abs(credits)} ${Math.abs(credits) === 1 ? 'class' : 'classes'} overdrawn`;
+    }
+    return `${credits} ${credits === 1 ? 'class' : 'classes'} remaining`;
+  };
+
   return (
     <Badge variant={getVariant()} className={cn('flex items-center gap-1.5', className)}>
       <CreditCard className="h-3.5 w-3.5" />
-      <span>{credits} {credits === 1 ? 'class' : 'classes'} remaining</span>
+      <span>{getText()}</span>
     </Badge>
   );
 };

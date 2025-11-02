@@ -104,6 +104,7 @@ export const SubscriptionStatusCard: React.FC = () => {
 
   const getBorderColor = () => {
     if (creditsRemaining === null) return '';
+    if (creditsRemaining < 0) return 'border-destructive';
     if (creditsRemaining === 0) return 'border-destructive';
     if (creditsRemaining < 3) return 'border-orange-500';
     return 'border-primary';
@@ -135,10 +136,18 @@ export const SubscriptionStatusCard: React.FC = () => {
           )}
         </div>
 
+        {creditsRemaining !== null && creditsRemaining < 0 && (
+          <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
+            <p className="text-sm text-destructive font-medium">
+              Your account is {Math.abs(creditsRemaining)} {Math.abs(creditsRemaining) === 1 ? 'class' : 'classes'} overdrawn. Credits will renew on your next billing date.
+            </p>
+          </div>
+        )}
+
         {creditsRemaining !== null && creditsRemaining === 0 && (
           <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
             <p className="text-sm text-destructive font-medium">
-              You've used all your classes this period. Upgrade to continue!
+              You've used all your classes this period. Credits will renew on your next billing date.
             </p>
           </div>
         )}
