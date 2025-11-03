@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Separator } from '@/components/ui/separator';
 import { SubscriptionStatusCard } from '@/components/student/SubscriptionStatusCard';
+import { CreditHistory } from '@/components/student/CreditHistory';
 
 interface SettingsTabProps {
   profile: Profile;
@@ -57,7 +58,10 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ profile, updateProfile }) => 
     <div className="space-y-6">
       {/* Subscription Management - Only shown for students */}
       {profile.role === 'student' && (
-        <SubscriptionStatusCard />
+        <>
+          <SubscriptionStatusCard />
+          <CreditHistory />
+        </>
       )}
 
       {/* Account Security */}
