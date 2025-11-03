@@ -7,6 +7,7 @@ import { Profile } from '@/hooks/useProfile';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Separator } from '@/components/ui/separator';
+import { SubscriptionStatusCard } from '@/components/student/SubscriptionStatusCard';
 
 interface SettingsTabProps {
   profile: Profile;
@@ -54,6 +55,11 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ profile, updateProfile }) => 
 
   return (
     <div className="space-y-6">
+      {/* Subscription Management - Only shown for students */}
+      {profile.role === 'student' && (
+        <SubscriptionStatusCard />
+      )}
+
       {/* Account Security */}
       <Card>
         <CardHeader>

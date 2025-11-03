@@ -4,7 +4,7 @@ import SubjectCards from './SubjectCards';
 import { ClassCalendarContainer } from './ClassCalendarContainer';
 import ClassHistory from '@/components/shared/ClassHistory';
 import { subjects } from '@/constants/subjectsData';
-import { SubscriptionStatusCard } from './SubscriptionStatusCard';
+import { SimpleCreditsCounter } from './SimpleCreditsCounter';
 import { CreditHistory } from './CreditHistory';
 
 interface DashboardContentProps {
@@ -18,7 +18,7 @@ const DashboardContent: React.FC<DashboardContentProps> = memo(
     return (
       <>
         <h2 className="text-2xl font-bold mb-6">My Learning Portal</h2>
-        <SubscriptionStatusCard />
+        <SimpleCreditsCounter />
         <SubjectCards
           subjects={subjects}
           selectedSubject={selectedSubject}
