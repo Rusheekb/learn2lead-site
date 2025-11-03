@@ -26,6 +26,7 @@ export default defineConfig(({ mode }) => ({
           supabase: ['@supabase/supabase-js'],
           query: ['@tanstack/react-query'],
           forms: ['react-hook-form', '@hookform/resolvers', 'zod'],
+          dates: ['date-fns'],
         },
       },
     },

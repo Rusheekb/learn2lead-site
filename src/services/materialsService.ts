@@ -1,7 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Uploads a file to the materials storage bucket and returns the URL
@@ -17,7 +16,7 @@ export async function uploadMaterial(
     }
 
     const fileExt = file.name.split('.').pop();
-    const fileName = `${classId}/${uuidv4()}.${fileExt}`;
+    const fileName = `${classId}/${crypto.randomUUID()}.${fileExt}`;
     const filePath = `${fileName}`;
 
     const { error: uploadError } = await supabase.storage
