@@ -4,7 +4,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Edit3, Save } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { CheckCircle, Edit3, Save, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -31,6 +32,7 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
   const [isRemoving, setIsRemoving] = useState(false);
   const [content, setContent] = useState(classEvent.content || '');
   const [homework, setHomework] = useState(classEvent.homework || '');
+  const [confirmChecked, setConfirmChecked] = useState(false);
   
   // Use stable completion status hook to prevent flashing
   const { isCompleted, isLoading: isCheckingStatus, setIsCompleted } = useClassCompletionStatus(classEvent.id);
@@ -189,6 +191,17 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
           </DialogHeader>
           
           <div className="space-y-4">
+            <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg flex gap-3">
+              <AlertTriangle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="font-medium text-sm text-destructive">This action is permanent</p>
+                <p className="text-sm text-muted-foreground">
+                  Credits will be deducted from the student's account and cannot be automatically restored. 
+                  Please verify all class information is correct before completing.
+                </p>
+              </div>
+            </div>
+
             <div className="p-4 bg-muted rounded-lg">
               <h4 className="font-medium mb-2">Class Details</h4>
               <div className="grid grid-cols-2 gap-4 text-sm">
@@ -230,17 +243,34 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
               />
             </div>
 
+            <div className="flex items-start space-x-3 p-4 border rounded-lg">
+              <Checkbox
+                id="confirm"
+                checked={confirmChecked}
+                onCheckedChange={(checked) => setConfirmChecked(checked === true)}
+              />
+              <label
+                htmlFor="confirm"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+              >
+                I confirm that all class information is accurate and understand that this action cannot be undone
+              </label>
+            </div>
+
             <div className="flex justify-end gap-2 pt-4">
               <Button
                 variant="outline"
-                onClick={() => setIsDialogOpen(false)}
+                onClick={() => {
+                  setIsDialogOpen(false);
+                  setConfirmChecked(false);
+                }}
                 disabled={isCompleting}
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleMarkComplete}
-                disabled={isCompleting || !content.trim()}
+                disabled={isCompleting || !content.trim() || !confirmChecked}
                 className="flex items-center gap-2"
               >
                 <Save className="h-4 w-4" />
