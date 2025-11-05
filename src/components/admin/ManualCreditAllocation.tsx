@@ -19,6 +19,12 @@ export const ManualCreditAllocation = () => {
   const [adjustReason, setAdjustReason] = useState('');
   const [adjustLoading, setAdjustLoading] = useState(false);
 
+  // Direct payment states
+  const [directEmail, setDirectEmail] = useState('');
+  const [directCredits, setDirectCredits] = useState('');
+  const [directNote, setDirectNote] = useState('');
+  const [directLoading, setDirectLoading] = useState(false);
+
   const handleAllocateCredits = async () => {
     if (!email.trim()) {
       toast.error('Please enter an email address');
@@ -150,6 +156,115 @@ export const ManualCreditAllocation = () => {
     }
   };
 
+  const handleDirectPayment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setDirectLoading(true);
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      // Validate inputs
+      if (!directEmail || !directCredits) {
+        toast.error('Please provide student email and number of credits');
+        return;
+      }
+
+      const credits = parseInt(directCredits);
+      if (isNaN(credits) || credits <= 0) {
+        toast.error('Credits must be a positive number');
+        return;
+      }
+
+      // Find student profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, email, first_name, last_name')
+        .eq('email', directEmail.toLowerCase().trim())
+        .maybeSingle();
+
+      if (profileError) throw profileError;
+      if (!profile) {
+        toast.error(`No student found with email: ${directEmail}`);
+        return;
+      }
+
+      // Find or create subscription
+      let { data: subscription, error: subError } = await supabase
+        .from('student_subscriptions')
+        .select('id, credits_remaining')
+        .eq('student_id', profile.id)
+        .eq('status', 'active')
+        .maybeSingle();
+
+      if (subError) throw subError;
+
+      // Create manual subscription if none exists
+      if (!subscription) {
+        const { data: newSub, error: createError } = await supabase
+          .from('student_subscriptions')
+          .insert({
+            student_id: profile.id,
+            stripe_subscription_id: `manual_${crypto.randomUUID()}`,
+            stripe_customer_id: `manual_${crypto.randomUUID()}`,
+            plan_id: null,
+            status: 'active',
+            credits_allocated: 0,
+            credits_remaining: 0,
+            current_period_start: new Date().toISOString(),
+            current_period_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+          })
+          .select('id, credits_remaining')
+          .single();
+
+        if (createError) throw createError;
+        subscription = newSub;
+      }
+
+      const newBalance = (subscription.credits_remaining || 0) + credits;
+
+      // Update credits
+      const { error: updateError } = await supabase
+        .from('student_subscriptions')
+        .update({ credits_remaining: newBalance })
+        .eq('id', subscription.id);
+
+      if (updateError) throw updateError;
+
+      // Create ledger entry
+      const { error: ledgerError } = await supabase
+        .from('class_credits_ledger')
+        .insert({
+          student_id: profile.id,
+          subscription_id: subscription.id,
+          transaction_type: 'direct_payment',
+          amount: credits,
+          balance_after: newBalance,
+          reason: directNote || 'Direct payment (Zelle)',
+        });
+
+      if (ledgerError) throw ledgerError;
+
+      const studentName = profile.first_name || profile.email;
+      toast.success(`Successfully added ${credits} credits to ${studentName}`, {
+        description: `New balance: ${newBalance} credits`,
+      });
+
+      // Reset form
+      setDirectEmail('');
+      setDirectCredits('');
+      setDirectNote('');
+
+    } catch (error: any) {
+      console.error('Direct payment error:', error);
+      toast.error('Failed to add credits', {
+        description: error.message || 'Unknown error occurred',
+      });
+    } finally {
+      setDirectLoading(false);
+    }
+  };
+
   return (
     <Card className="border-warning/20">
       <CardHeader>
@@ -162,10 +277,11 @@ export const ManualCreditAllocation = () => {
       </CardHeader>
       <CardContent>
         <Tabs defaultValue="allocate" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="allocate">Initial Allocation</TabsTrigger>
-            <TabsTrigger value="adjust">Credit Adjustment</TabsTrigger>
-          </TabsList>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="allocate">Initial Allocation</TabsTrigger>
+          <TabsTrigger value="adjust">Credit Adjustment</TabsTrigger>
+          <TabsTrigger value="direct">Direct Payment</TabsTrigger>
+        </TabsList>
 
           <TabsContent value="allocate" className="space-y-4 mt-4">
             <div className="space-y-2">
@@ -268,6 +384,79 @@ export const ManualCreditAllocation = () => {
               <p>• Creates a permanent ledger entry with your reason</p>
               <p>• Used for compensations, corrections, or special circumstances</p>
               <p>• Cannot be undone - consider the impact before adjusting</p>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="direct" className="space-y-4 mt-4">
+            <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
+              <p className="text-sm text-blue-900 dark:text-blue-100">
+                💰 Add credits for students who paid via Zelle or other direct payment methods.
+              </p>
+            </div>
+
+            <form onSubmit={handleDirectPayment} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="direct-email">Student Email</Label>
+                <Input
+                  id="direct-email"
+                  type="email"
+                  placeholder="student@example.com"
+                  value={directEmail}
+                  onChange={(e) => setDirectEmail(e.target.value)}
+                  disabled={directLoading}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="direct-credits">Number of Credits</Label>
+                <Input
+                  id="direct-credits"
+                  type="number"
+                  min="1"
+                  placeholder="4"
+                  value={directCredits}
+                  onChange={(e) => setDirectCredits(e.target.value)}
+                  disabled={directLoading}
+                  required
+                />
+                <p className="text-sm text-muted-foreground">
+                  Common packages: 4, 8, 12 credits
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="direct-note">Note (Optional)</Label>
+                <Textarea
+                  id="direct-note"
+                  placeholder="e.g., Zelle payment Jan 2025, Confirmation #ABC123"
+                  value={directNote}
+                  onChange={(e) => setDirectNote(e.target.value)}
+                  disabled={directLoading}
+                  rows={2}
+                />
+              </div>
+
+              <Button 
+                type="submit" 
+                className="w-full"
+                disabled={directLoading}
+              >
+                {directLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Adding Credits...
+                  </>
+                ) : (
+                  'Add Credits'
+                )}
+              </Button>
+            </form>
+
+            <div className="text-xs text-muted-foreground space-y-1 pt-2 border-t">
+              <p>• Creates or updates student subscription automatically</p>
+              <p>• Credits available immediately after adding</p>
+              <p>• Full audit trail maintained in credit ledger</p>
             </div>
           </TabsContent>
         </Tabs>
