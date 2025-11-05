@@ -269,10 +269,10 @@ export const ManualCreditAllocation = () => {
     <Card className="border-warning/20">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          ⚠️ Manual Credit Management
+          💳 Credit Management
         </CardTitle>
         <CardDescription>
-          Allocate initial credits or make manual adjustments for special circumstances.
+          Manage student credits for subscriptions, adjustments, and direct payments.
         </CardDescription>
       </CardHeader>
       <CardContent>

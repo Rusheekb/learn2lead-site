@@ -127,7 +127,7 @@ const AdminDashboard: React.FC = () => {
             <AdminSettings />
           </Suspense>
         );
-      case 'testing':
+      case 'credits':
         return (
           <Suspense fallback={<LoadingSpinner />}>
             <ManualCreditAllocation />
