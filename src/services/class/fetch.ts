@@ -47,29 +47,46 @@ export const fetchScheduledClasses = async (
     // Debug log the raw data returned from Supabase
     console.log(`Fetched raw scheduled_classes data (count: ${data?.length || 0}):`, data);
 
-    // Fetch tutor and student profiles separately to get names
-    const classEvents: ClassEvent[] = await Promise.all((data || []).map(async (cls) => {
-      // Get tutor profile
-      const { data: tutorProfile } = await supabase
-        .from('profiles')
-        .select('first_name, last_name')
-        .eq('id', cls.tutor_id)
-        .single();
-      
-      // Get student profile
-      const { data: studentProfile } = await supabase
-        .from('profiles')
-        .select('first_name, last_name')
-        .eq('id', cls.student_id)
-        .single();
+    if (!data || data.length === 0) {
+      return [];
+    }
 
-      const tutorName = tutorProfile 
-        ? `${tutorProfile.first_name || ''} ${tutorProfile.last_name || ''}`.trim() 
-        : 'Unknown Tutor';
-        
-      const studentName = studentProfile 
-        ? `${studentProfile.first_name || ''} ${studentProfile.last_name || ''}`.trim() 
-        : 'Unknown Student';
+    // **OPTIMIZATION: Batch fetch all unique tutor and student profiles**
+    // Collect unique tutor and student IDs
+    const tutorIds = [...new Set(data.map(cls => cls.tutor_id).filter(Boolean))];
+    const studentIds = [...new Set(data.map(cls => cls.student_id).filter(Boolean))];
+
+    // Fetch all profiles in two batch queries instead of N individual queries
+    const [tutorProfilesResponse, studentProfilesResponse] = await Promise.all([
+      supabase
+        .from('profiles')
+        .select('id, first_name, last_name')
+        .in('id', tutorIds),
+      supabase
+        .from('profiles')
+        .select('id, first_name, last_name')
+        .in('id', studentIds)
+    ]);
+
+    // Create lookup maps for O(1) access
+    const tutorProfileMap = new Map(
+      (tutorProfilesResponse.data || []).map(profile => [
+        profile.id,
+        `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Unknown Tutor'
+      ])
+    );
+
+    const studentProfileMap = new Map(
+      (studentProfilesResponse.data || []).map(profile => [
+        profile.id,
+        `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Unknown Student'
+      ])
+    );
+
+    // Transform data using the lookup maps (no more async operations)
+    const classEvents: ClassEvent[] = data.map((cls) => {
+      const tutorName = tutorProfileMap.get(cls.tutor_id) || 'Unknown Tutor';
+      const studentName = studentProfileMap.get(cls.student_id) || 'Unknown Student';
       
       // Safely handle potentially null values
       const status = cls.status || 'scheduled';
@@ -100,7 +117,7 @@ export const fetchScheduledClasses = async (
         materials: [],
         materialsUrl: cls.materials_url || [], // Include materials_url from database
       };
-    }));
+    });
 
     console.log('Transformed class events:', classEvents);
     return classEvents;
