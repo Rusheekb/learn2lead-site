@@ -27,7 +27,7 @@ export const useSimplifiedClassLogs = () => {
       const { data, error } = await supabase
         .from('class_logs')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('Date', { ascending: false });
       
       if (error) throw error;
       return data as any;
