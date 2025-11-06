@@ -14,7 +14,7 @@ interface DailyClassSessionsProps {
 const DailyClassSessions: React.FC<DailyClassSessionsProps> = ({ selectedDate, sessions }) => {
 const getSessionsForDate = (date: Date) => {
   return sessions.filter((session) => {
-    const sessionDate = parseDateToLocal(session.date as any);
+    const sessionDate = parseDateToLocal(session.date);
 
     return (
       sessionDate.getDate() === date.getDate() &&

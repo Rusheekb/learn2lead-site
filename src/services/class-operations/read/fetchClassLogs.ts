@@ -20,7 +20,7 @@ export const fetchClassLogs = async (): Promise<ClassEvent[]> => {
     }
 
     // Transform each record to our ClassEvent type
-    const transformedLogs = data.map(item => transformDbRecordToClassEvent(item as any));
+    const transformedLogs = data.map(item => transformDbRecordToClassEvent(item));
     console.log('Transformed class logs:', transformedLogs);
 
     // Sort logs by date (most recent first)

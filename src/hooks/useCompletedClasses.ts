@@ -39,7 +39,7 @@ export const useCompletedClasses = (userRole: 'student' | 'tutor' | 'admin') => 
       if (error) throw error;
 
       // Transform to ClassEvent format
-      const transformedClasses = (data || []).map(item => transformDbRecordToClassEvent(item as any));
+      const transformedClasses = (data || []).map(item => transformDbRecordToClassEvent(item));
       setCompletedClasses(transformedClasses);
     } catch (error) {
       console.error('Error fetching completed classes:', error);

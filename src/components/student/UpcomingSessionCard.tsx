@@ -38,7 +38,7 @@ const UpcomingSessionCard: React.FC<UpcomingSessionCardProps> = ({
       <div className="flex items-center text-sm text-muted-foreground mt-2">
         <CalendarIcon className="h-4 w-4 mr-1" />
 <span>
-          {format(parseDateToLocal(session.date as any), 'EEE, MMM d')} •{' '}
+          {format(parseDateToLocal(session.date), 'EEE, MMM d')} •{' '}
           {formatTime(session.startTime)}
         </span>
       </div>

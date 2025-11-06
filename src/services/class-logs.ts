@@ -15,7 +15,7 @@ export async function fetchClassLogs(): Promise<ClassEvent[]> {
   
   // We need to transform the database records to ClassEvent type
   // Using the utility function from classEventMapper
-  return result.data ? result.data.map(record => transformDbRecordToClassEvent(record as any)) : [];
+  return result.data ? result.data.map(record => transformDbRecordToClassEvent(record)) : [];
 }
 
 export async function createClassLog(
@@ -68,7 +68,7 @@ export async function createClassLog(
   }
   
   // Transform the DB record to a ClassEvent
-  return transformDbRecordToClassEvent(result.data as any);
+  return transformDbRecordToClassEvent(result.data);
 }
 
 export async function updateClassLog(
@@ -94,7 +94,7 @@ export async function updateClassLog(
     .single();
     
   // Transform to our application type
-  return transformDbRecordToClassEvent(handleResult(result) as any);
+  return transformDbRecordToClassEvent(handleResult(result));
 }
 
 export async function deleteClassLog(id: string): Promise<ClassEvent> {
@@ -106,5 +106,5 @@ export async function deleteClassLog(id: string): Promise<ClassEvent> {
     .single();
     
   // Transform to our application type
-  return transformDbRecordToClassEvent(handleResult(result) as any);
+  return transformDbRecordToClassEvent(handleResult(result));
 }

@@ -84,7 +84,7 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
       })();
       
       // Prepare completion data with student ID for credit deduction
-      const localDate = parseDateToLocal(classEvent.date as any);
+      const localDate = parseDateToLocal(classEvent.date);
       const completionData: CompleteClassData = {
         classId: classEvent.id,
         classNumber: classEvent.title,
@@ -215,7 +215,7 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
                   <span className="font-medium">Student:</span> {classEvent.studentName}
                 </div>
                 <div>
-<span className="font-medium">Date:</span> {parseDateToLocal(classEvent.date as any).toLocaleDateString()}
+<span className="font-medium">Date:</span> {parseDateToLocal(classEvent.date).toLocaleDateString()}
                 </div>
               </div>
             </div>

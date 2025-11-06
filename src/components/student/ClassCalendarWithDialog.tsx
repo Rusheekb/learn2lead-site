@@ -34,7 +34,7 @@ const ClassCalendarWithDialog: React.FC<ClassCalendarWithDialogProps> = ({
 
 const getSessionsForDate = (date: Date) => {
   return sessions.filter((session) => {
-    const sessionDate = parseDateToLocal(session.date as any);
+    const sessionDate = parseDateToLocal(session.date);
 
     return (
       sessionDate.getDate() === date.getDate() &&
@@ -46,7 +46,7 @@ const getSessionsForDate = (date: Date) => {
 
 const getDatesWithSessions = () => {
   const dates = sessions.map((session) => {
-    return parseDateToLocal(session.date as any);
+    return parseDateToLocal(session.date);
   });
   return dates;
 };

@@ -41,5 +41,5 @@ export const updateClassLog = async (
   }
 
   // Transform the DB record to a ClassEvent
-  return transformDbRecordToClassEvent(data as any);
+  return transformDbRecordToClassEvent(data);
 };

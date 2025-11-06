@@ -56,7 +56,7 @@ const CalendarWithEvents: React.FC<CalendarWithEventsProps> = ({
       try {
         const { data, error } = await supabase.from('class_logs').select('*');
         if (!error && data) {
-          const transformedClasses = data.map(item => transformDbRecordToClassEvent(item as any));
+          const transformedClasses = data.map(item => transformDbRecordToClassEvent(item));
           setCompletedClasses(transformedClasses);
         }
       } catch (error) {

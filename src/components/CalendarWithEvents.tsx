@@ -25,7 +25,7 @@ export const getUpcomingEvents = (events: ClassEvent[]): ClassEvent[] => {
   const nextWeek = addDays(today, 7);
 
   return events.filter((event) => {
-    const eventDate = parseDateToLocal(event.date as any);
+    const eventDate = parseDateToLocal(event.date);
     const eventDay = startOfDay(eventDate);
     return eventDay >= today && eventDay <= nextWeek;
   });
@@ -51,7 +51,7 @@ const CalendarWithEvents: React.FC<CalendarWithEventsProps> = ({
   const hasEventsOnDate = (date: Date) => {
     return scheduledClasses.some((event) => {
       // Handle both Date objects and string dates
-      const eventDate = parseDateToLocal(event.date as any);
+      const eventDate = parseDateToLocal(event.date);
       return isSameDay(date, eventDate);
     });
   };
@@ -60,7 +60,7 @@ const CalendarWithEvents: React.FC<CalendarWithEventsProps> = ({
     // Find events for the selected date
     const events = scheduledClasses.filter((event) => {
       // Handle both Date objects and string dates
-      const eventDate = parseDateToLocal(event.date as any);
+      const eventDate = parseDateToLocal(event.date);
       const result = isSameDay(selectedDate, eventDate);
       
       return result;

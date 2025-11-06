@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { ClassEvent } from '@/types/tutorTypes';
+import { Profile } from '@/types/profile';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useRealtimeManager } from './useRealtimeManager';
@@ -198,7 +199,10 @@ export const useSimplifiedTutorScheduler = () => {
   const mockFunction = () => {};
 
   // Memoize currentUser to prevent unnecessary re-renders
-  const currentUser = useMemo(() => ({ first_name: 'Current', last_name: 'Tutor' } as any), []);
+  const currentUser = useMemo<Pick<Profile, 'first_name' | 'last_name'>>(() => ({ 
+    first_name: 'Current', 
+    last_name: 'Tutor' 
+  }), []);
 
   return {
     scheduledClasses,

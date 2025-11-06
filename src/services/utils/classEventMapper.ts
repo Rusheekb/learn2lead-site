@@ -32,49 +32,56 @@ interface DbRecord {
   'Additional Info'?: string | null;
 }
 
-export const transformDbRecordToClassEvent = (record: DbRecord): ClassEvent => {
+export const transformDbRecordToClassEvent = (record: unknown): ClassEvent => {
+  // Type guard to ensure we have a valid record
+  if (!record || typeof record !== 'object' || !('id' in record)) {
+    console.error('Invalid record format:', record);
+    return createErrorClassEvent('unknown');
+  }
+  
+  const dbRecord = record as DbRecord;
   try {
     let dateObj: Date;
 
-    if (record.Date) {
+    if (dbRecord.Date) {
       try {
-        dateObj = parseDateWithFormats(record.Date);
-      } catch (e: any) {
-        console.error('Error parsing date:', record.Date, e);
+        dateObj = parseDateWithFormats(dbRecord.Date);
+      } catch (e) {
+        console.error('Error parsing date:', dbRecord.Date, e);
         dateObj = new Date();
       }
     } else {
       dateObj = new Date();
     }
 
-    const duration = parseNumericString(record['Time (hrs)']);
-    const startTime = record['Time (CST)'] || '';
+    const duration = parseNumericString(dbRecord['Time (hrs)']);
+    const startTime = dbRecord['Time (CST)'] || '';
     const endTime = calculateEndTime(startTime, duration);
 
     // Cast payment statuses using the validators
-    const studentPayment = record['Student Payment'] || 'pending';
-    const tutorPayment = record['Tutor Payment'] || 'pending';
+    const studentPayment = dbRecord['Student Payment'] || 'pending';
+    const tutorPayment = dbRecord['Tutor Payment'] || 'pending';
 
     // Handle null values for parseNumericString
-    const classCost = parseNumericString(record['Class Cost']);
-    const tutorCost = parseNumericString(record['Tutor Cost']);
+    const classCost = parseNumericString(dbRecord['Class Cost']);
+    const tutorCost = parseNumericString(dbRecord['Tutor Cost']);
 
     return {
-      id: record.id,
-      title: record['Class Number'] || '',
-      tutorName: record['Tutor Name'] || '',
-      studentName: record['Student Name'] || '',
+      id: dbRecord.id,
+      title: dbRecord['Class Number'] || '',
+      tutorName: dbRecord['Tutor Name'] || '',
+      studentName: dbRecord['Student Name'] || '',
       date: dateObj,
       startTime,
       endTime,
       duration,
-      subject: record.Subject || '',
-      content: record.Content || '',
-      homework: record.HW || '',
+      subject: dbRecord.Subject || '',
+      content: dbRecord.Content || '',
+      homework: dbRecord.HW || '',
       status: 'completed' as ClassStatus,
       attendance: 'present' as AttendanceStatus,
       zoomLink: '',
-      notes: record['Additional Info'] || '',
+      notes: dbRecord['Additional Info'] || '',
       classCost,
       tutorCost,
       studentPayment: isValidPaymentStatus(studentPayment)
@@ -86,30 +93,35 @@ export const transformDbRecordToClassEvent = (record: DbRecord): ClassEvent => {
       recurring: false,
       materials: [],
     };
-  } catch (error: any) {
-    console.error('Error transforming record:', error, record);
-    return {
-      id: record.id || 'unknown',
-      title: 'Error Loading',
-      tutorName: 'Error Loading',
-      studentName: 'Error Loading',
-      date: new Date(),
-      startTime: '',
-      endTime: '',
-      duration: 0,
-      subject: 'Error Loading',
-      content: 'Error loading content',
-      homework: '',
-      status: 'pending' as ClassStatus,
-      attendance: 'pending' as AttendanceStatus,
-      zoomLink: '',
-      notes: 'Error loading class data',
-      classCost: 0,
-      tutorCost: 0,
-      studentPayment: 'pending' as PaymentStatus,
-      tutorPayment: 'pending' as PaymentStatus,
-      recurring: false,
-      materials: [],
-    };
+  } catch (error) {
+    console.error('Error transforming record:', error, dbRecord);
+    return createErrorClassEvent(dbRecord.id);
   }
 };
+
+// Helper function to create error class event
+function createErrorClassEvent(id: string): ClassEvent {
+  return {
+    id: id || 'unknown',
+    title: 'Error Loading',
+    tutorName: 'Error Loading',
+    studentName: 'Error Loading',
+    date: new Date(),
+    startTime: '',
+    endTime: '',
+    duration: 0,
+    subject: 'Error Loading',
+    content: 'Error loading content',
+    homework: '',
+    status: 'pending' as ClassStatus,
+    attendance: 'pending' as AttendanceStatus,
+    zoomLink: '',
+    notes: 'Error loading class data',
+    classCost: 0,
+    tutorCost: 0,
+    studentPayment: 'pending' as PaymentStatus,
+    tutorPayment: 'pending' as PaymentStatus,
+    recurring: false,
+    materials: [],
+  };
+}

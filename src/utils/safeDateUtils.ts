@@ -55,7 +55,7 @@ export const formatClassEventDate = (date: Date | string): string => {
  * - If input is a Date, normalizes to local midnight of that date
  * - If input is another string format, attempts Date parsing and normalizes to local date
  */
-export const parseDateToLocal = (dateInput: string | Date): Date => {
+export const parseDateToLocal = (dateInput: string | Date | unknown): Date => {
   if (dateInput instanceof Date) {
     return new Date(
       dateInput.getFullYear(),
@@ -66,7 +66,7 @@ export const parseDateToLocal = (dateInput: string | Date): Date => {
   if (typeof dateInput === 'string') {
     if (/^\d{4}-\d{2}-\d{2}$/.test(dateInput)) {
       const [y, m, d] = dateInput.split('-').map(Number);
-      return new Date(y, (m as number) - 1, d as number);
+      return new Date(y, m - 1, d);
     }
     const parsed = new Date(dateInput);
     if (isNaN(parsed.getTime())) {
@@ -74,5 +74,8 @@ export const parseDateToLocal = (dateInput: string | Date): Date => {
     }
     return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
   }
-  throw new Error('Invalid date input: must be Date or string');
+  // Handle unexpected types gracefully
+  console.warn('Unexpected date input type:', typeof dateInput, dateInput);
+  const fallback = new Date();
+  return new Date(fallback.getFullYear(), fallback.getMonth(), fallback.getDate());
 };

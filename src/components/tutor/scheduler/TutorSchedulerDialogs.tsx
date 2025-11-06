@@ -29,7 +29,7 @@ interface TutorSchedulerDialogsProps {
   onDownloadFile: (uploadId: string) => Promise<void>;
   getUnreadMessageCount: (classId: string) => number;
   refreshEvent?: () => Promise<void>;
-  currentUser?: Profile | null; // Using the Profile type from @/types/profile
+  currentUser?: Pick<Profile, 'first_name' | 'last_name'> | Profile | null;
 }
 
 const TutorSchedulerDialogs: React.FC<TutorSchedulerDialogsProps> = ({

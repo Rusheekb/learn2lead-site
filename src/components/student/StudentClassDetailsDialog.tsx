@@ -277,7 +277,7 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
                 <div className="flex items-center text-sm text-muted-foreground">
                   <CalendarIcon className="h-4 w-4 mr-2" />
                   <span>
-                    {format(parseDateToLocal(classSession.date as any), 'EEEE, MMMM d, yyyy')}
+                    {format(parseDateToLocal(classSession.date), 'EEEE, MMMM d, yyyy')}
                   </span>
                 </div>
 

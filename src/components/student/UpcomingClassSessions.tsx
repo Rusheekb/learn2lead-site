@@ -21,7 +21,7 @@ const UpcomingClassSessions: React.FC<UpcomingClassSessionsProps> = ({
 
 return sessions
   .filter((session) => {
-    const sessionDate = startOfDay(parseDateToLocal(session.date as any));
+    const sessionDate = startOfDay(parseDateToLocal(session.date));
 
     return (
       (isToday(sessionDate) || isBefore(today, sessionDate)) &&
@@ -29,8 +29,8 @@ return sessions
     );
   })
   .sort((a, b) => {
-    const dateA = parseDateToLocal(a.date as any).getTime();
-    const dateB = parseDateToLocal(b.date as any).getTime();
+    const dateA = parseDateToLocal(a.date).getTime();
+    const dateB = parseDateToLocal(b.date).getTime();
     return dateA - dateB;
   });
   };

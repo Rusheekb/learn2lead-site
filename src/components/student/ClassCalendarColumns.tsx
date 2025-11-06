@@ -24,7 +24,7 @@ const ClassCalendarColumns: React.FC<ClassCalendarColumnsProps> = ({
 // Function to get sessions for a specific date
   const getSessionsForDate = (date: Date, sessions: ClassSession[]) => {
     return sessions.filter((session) => {
-      const sessionDate = parseDateToLocal(session.date as any);
+      const sessionDate = parseDateToLocal(session.date);
 
       // Check if it's the exact date
       if (

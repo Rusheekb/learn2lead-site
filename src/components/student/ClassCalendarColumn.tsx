@@ -25,7 +25,7 @@ const ClassCalendarColumn: React.FC<ClassCalendarColumnProps> = ({
 // Function to get sessions for a specific date
   const getSessionsForDate = (date: Date, sessions: ClassSession[]) => {
     return sessions.filter((session) => {
-      const sessionDate = parseDateToLocal(session.date as any);
+      const sessionDate = parseDateToLocal(session.date);
       return isSameDay(sessionDate, date);
     });
   };

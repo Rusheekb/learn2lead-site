@@ -60,5 +60,5 @@ export const updateClassLog = async (
   }
 
   // Add explicit type assertion since we know the structure
-  return transformDbRecordToClassEvent(data as any);
+  return transformDbRecordToClassEvent(data);
 };
