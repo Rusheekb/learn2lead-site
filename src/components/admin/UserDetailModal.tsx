@@ -25,7 +25,7 @@ interface Props {
 
 export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
   const { userRole } = useAuth();
-  const [stats, setStats] = useState<{ totalSessions: number; avgDuration: number } | null>(null);
+  const [stats, setStats] = useState<{ classesCompleted: number; totalCredits: number } | null>(null);
   const [showRoleDialog, setShowRoleDialog] = useState(false);
 
   useEffect(() => {
@@ -73,11 +73,13 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
                 Analytics
               </h4>
               <p className="text-sm">
-                <strong>Total Sessions:</strong> {stats?.totalSessions ?? 'Loading...'}
+                <strong>Classes Completed:</strong> {stats?.classesCompleted ?? 'Loading...'}
               </p>
-              <p className="text-sm">
-                <strong>Avg. Duration:</strong> {stats?.avgDuration ?? 'Loading...'} mins
-              </p>
+              {user.role === 'student' && (
+                <p className="text-sm">
+                  <strong>Total Credits:</strong> {stats?.totalCredits ?? 'Loading...'}
+                </p>
+              )}
             </div>
 
             {isAdmin && (canPromote || canDemote) && (

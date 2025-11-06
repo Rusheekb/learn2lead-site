@@ -39,8 +39,8 @@ export interface BusinessAnalytics {
 
 // New interface for user analytics
 export interface UserAnalytics {
-  totalSessions: number;
-  avgDuration: number;
+  classesCompleted: number;
+  totalCredits: number;
 }
 
 class AnalyticsService {
@@ -113,22 +113,80 @@ class AnalyticsService {
 
   // Add the missing functions that are imported in UserDetailModal.tsx
   async fetchStudentAnalytics(studentId: string): Promise<UserAnalytics> {
-    console.log(`Fetching analytics for student: ${studentId}`);
-    // This would normally fetch data from an API or database
-    // For now, return mock data
+    const { supabase } = await import('@/integrations/supabase/client');
+    
+    // Get profile to match student name
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('first_name, last_name, email')
+      .eq('id', studentId)
+      .single();
+
+    if (!profile) {
+      return { classesCompleted: 0, totalCredits: 0 };
+    }
+
+    // Construct full name or fallback to email
+    const fullName = profile.first_name && profile.last_name 
+      ? `${profile.first_name} ${profile.last_name}`.trim()
+      : profile.email;
+
+    // Count completed classes from class_logs
+    const { data: classLogs, error: logsError } = await supabase
+      .from('class_logs')
+      .select('id', { count: 'exact', head: true })
+      .or(`"Student Name".eq.${fullName},"Student Name".eq.${profile.email}`);
+
+    const classesCompleted = logsError ? 0 : (classLogs as any) || 0;
+
+    // Get total credits from class_credits_ledger
+    const { data: ledger } = await supabase
+      .from('class_credits_ledger')
+      .select('balance_after')
+      .eq('student_id', studentId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    const totalCredits = ledger?.balance_after ?? 0;
+
     return {
-      totalSessions: Math.floor(Math.random() * 20) + 1, // 1-20 sessions
-      avgDuration: Math.floor(Math.random() * 60) + 30 // 30-90 minutes
+      classesCompleted,
+      totalCredits
     };
   }
 
   async fetchTutorAnalytics(tutorId: string): Promise<UserAnalytics> {
-    console.log(`Fetching analytics for tutor: ${tutorId}`);
-    // This would normally fetch data from an API or database
-    // For now, return mock data
+    const { supabase } = await import('@/integrations/supabase/client');
+    
+    // Get profile to match tutor name
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('first_name, last_name, email')
+      .eq('id', tutorId)
+      .single();
+
+    if (!profile) {
+      return { classesCompleted: 0, totalCredits: 0 };
+    }
+
+    // Construct full name or fallback to email
+    const fullName = profile.first_name && profile.last_name 
+      ? `${profile.first_name} ${profile.last_name}`.trim()
+      : profile.email;
+
+    // Count completed classes from class_logs
+    const { data: classLogs, error: logsError } = await supabase
+      .from('class_logs')
+      .select('id', { count: 'exact', head: true })
+      .or(`"Tutor Name".eq.${fullName},"Tutor Name".eq.${profile.email}`);
+
+    const classesCompleted = logsError ? 0 : (classLogs as any) || 0;
+
+    // Tutors don't have credits, so return 0
     return {
-      totalSessions: Math.floor(Math.random() * 50) + 10, // 10-60 sessions
-      avgDuration: Math.floor(Math.random() * 45) + 45 // 45-90 minutes
+      classesCompleted,
+      totalCredits: 0
     };
   }
 }
