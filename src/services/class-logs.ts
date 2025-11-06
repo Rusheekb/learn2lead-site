@@ -1,7 +1,7 @@
 
 import { supabase, handleResult } from './supabaseClient';
 import { ClassEvent, DbClassLog } from '@/types/tutorTypes';
-import { transformDbRecordToClassEvent } from './class-operations/utils/classEventMapper';
+import { transformDbRecordToClassEvent } from './utils/classEventMapper';
 import { format } from 'date-fns';
 
 export async function fetchClassLogs(): Promise<ClassEvent[]> {

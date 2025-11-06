@@ -1,7 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { ClassEvent } from '@/types/tutorTypes';
-import { transformDbRecordToClassEvent } from '../utils/classEventMapper';
+import { transformDbRecordToClassEvent } from '@/services/utils/classEventMapper';
 
 export const fetchClassLog = async (id: string): Promise<ClassEvent | null> => {
   const { data, error } = await supabase

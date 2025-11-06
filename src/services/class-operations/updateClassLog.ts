@@ -2,7 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { ClassEvent } from '@/types/tutorTypes';
 import { format } from 'date-fns';
-import { transformDbRecordToClassEvent } from '../utils/classEventMapper';
+import { transformDbRecordToClassEvent } from '@/services/utils/classEventMapper';
 
 /**
  * Update an existing class log in the database

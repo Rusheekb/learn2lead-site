@@ -1,7 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { ClassEvent } from '@/types/tutorTypes';
-import { transformDbRecordToClassEvent } from '../utils/classEventMapper';
+import { transformDbRecordToClassEvent } from '@/services/utils/classEventMapper';
 
 /**
  * Fetch all class logs from the database

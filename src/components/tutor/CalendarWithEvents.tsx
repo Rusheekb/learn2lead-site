@@ -7,7 +7,7 @@ import { ClassEvent } from '@/types/tutorTypes';
 import ClassEventCard from './ClassEventCard';
 import EmptyDayPanel from './EmptyDayPanel';
 import { supabase } from '@/integrations/supabase/client';
-import { transformDbRecordToClassEvent } from '@/services/class-operations/utils/classEventMapper';
+import { transformDbRecordToClassEvent } from '@/services/utils/classEventMapper';
 
 interface CalendarWithEventsProps {
   selectedDate: Date;

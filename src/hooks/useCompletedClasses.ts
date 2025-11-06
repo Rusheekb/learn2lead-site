@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { ClassEvent } from '@/types/tutorTypes';
-import { transformDbRecordToClassEvent } from '@/services/class-operations/utils/classEventMapper';
+import { transformDbRecordToClassEvent } from '@/services/utils/classEventMapper';
 
 export const useCompletedClasses = (userRole: 'student' | 'tutor' | 'admin') => {
   const { user } = useAuth();
