@@ -237,10 +237,10 @@ export const ManualCreditAllocation = () => {
         .insert({
           student_id: profile.id,
           subscription_id: subscription.id,
-          transaction_type: 'direct_payment',
+          transaction_type: 'credit',
           amount: credits,
           balance_after: newBalance,
-          reason: directNote || 'Direct payment (Zelle)',
+          reason: `Direct payment (Zelle) - ${directNote || 'Manual payment'}`,
         });
 
       if (ledgerError) throw ledgerError;
