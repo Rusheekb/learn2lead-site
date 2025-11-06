@@ -131,13 +131,17 @@ class AnalyticsService {
       ? `${profile.first_name} ${profile.last_name}`.trim()
       : profile.email;
 
-    // Count completed classes from class_logs
+    // Count completed classes from class_logs with proper escaping
+    // Escape double quotes in values to prevent SQL injection
+    const escapedFullName = fullName.replace(/"/g, '""');
+    const escapedEmail = profile.email.replace(/"/g, '""');
+    
     const { data: classLogs, error: logsError } = await supabase
       .from('class_logs')
-      .select('id', { count: 'exact', head: true })
-      .or(`"Student Name".eq.${fullName},"Student Name".eq.${profile.email}`);
+      .select('id')
+      .or(`"Student Name".eq."${escapedFullName}","Student Name".eq."${escapedEmail}"`);
 
-    const classesCompleted = logsError ? 0 : (classLogs as any) || 0;
+    const classesCompleted = logsError || !classLogs ? 0 : classLogs.length;
 
     // Get total credits from class_credits_ledger
     const { data: ledger } = await supabase
@@ -175,13 +179,17 @@ class AnalyticsService {
       ? `${profile.first_name} ${profile.last_name}`.trim()
       : profile.email;
 
-    // Count completed classes from class_logs
+    // Count completed classes from class_logs with proper escaping
+    // Escape double quotes in values to prevent SQL injection
+    const escapedFullName = fullName.replace(/"/g, '""');
+    const escapedEmail = profile.email.replace(/"/g, '""');
+    
     const { data: classLogs, error: logsError } = await supabase
       .from('class_logs')
-      .select('id', { count: 'exact', head: true })
-      .or(`"Tutor Name".eq.${fullName},"Tutor Name".eq.${profile.email}`);
+      .select('id')
+      .or(`"Tutor Name".eq."${escapedFullName}","Tutor Name".eq."${escapedEmail}"`);
 
-    const classesCompleted = logsError ? 0 : (classLogs as any) || 0;
+    const classesCompleted = logsError || !classLogs ? 0 : classLogs.length;
 
     // Tutors don't have credits, so return 0
     return {
