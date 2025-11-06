@@ -113,89 +113,101 @@ class AnalyticsService {
 
   // Add the missing functions that are imported in UserDetailModal.tsx
   async fetchStudentAnalytics(studentId: string): Promise<UserAnalytics> {
-    const { supabase } = await import('@/integrations/supabase/client');
-    
-    // Get profile to match student name
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('first_name, last_name, email')
-      .eq('id', studentId)
-      .single();
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      // Get profile to match student name
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('first_name, last_name, email')
+        .eq('id', studentId)
+        .single();
 
-    if (!profile) {
+      if (profileError || !profile) {
+        console.error('Error fetching student profile:', profileError);
+        return { classesCompleted: 0, totalCredits: 0 };
+      }
+
+      // Construct full name or fallback to email
+      const fullName = profile.first_name && profile.last_name 
+        ? `${profile.first_name} ${profile.last_name}`.trim()
+        : profile.email;
+
+      // Count completed classes from class_logs with proper escaping
+      // Escape double quotes in values to prevent SQL injection
+      const escapedFullName = fullName.replace(/"/g, '""');
+      const escapedEmail = profile.email.replace(/"/g, '""');
+      
+      const { data: classLogs, error: logsError } = await supabase
+        .from('class_logs')
+        .select('id')
+        .or(`"Student Name".eq."${escapedFullName}","Student Name".eq."${escapedEmail}"`);
+
+      const classesCompleted = logsError || !classLogs ? 0 : classLogs.length;
+
+      // Get total credits from class_credits_ledger
+      const { data: ledger } = await supabase
+        .from('class_credits_ledger')
+        .select('balance_after')
+        .eq('student_id', studentId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const totalCredits = ledger?.balance_after ?? 0;
+
+      return {
+        classesCompleted,
+        totalCredits
+      };
+    } catch (error) {
+      console.error('Error fetching student analytics:', error);
       return { classesCompleted: 0, totalCredits: 0 };
     }
-
-    // Construct full name or fallback to email
-    const fullName = profile.first_name && profile.last_name 
-      ? `${profile.first_name} ${profile.last_name}`.trim()
-      : profile.email;
-
-    // Count completed classes from class_logs with proper escaping
-    // Escape double quotes in values to prevent SQL injection
-    const escapedFullName = fullName.replace(/"/g, '""');
-    const escapedEmail = profile.email.replace(/"/g, '""');
-    
-    const { data: classLogs, error: logsError } = await supabase
-      .from('class_logs')
-      .select('id')
-      .or(`"Student Name".eq."${escapedFullName}","Student Name".eq."${escapedEmail}"`);
-
-    const classesCompleted = logsError || !classLogs ? 0 : classLogs.length;
-
-    // Get total credits from class_credits_ledger
-    const { data: ledger } = await supabase
-      .from('class_credits_ledger')
-      .select('balance_after')
-      .eq('student_id', studentId)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
-
-    const totalCredits = ledger?.balance_after ?? 0;
-
-    return {
-      classesCompleted,
-      totalCredits
-    };
   }
 
   async fetchTutorAnalytics(tutorId: string): Promise<UserAnalytics> {
-    const { supabase } = await import('@/integrations/supabase/client');
-    
-    // Get profile to match tutor name
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('first_name, last_name, email')
-      .eq('id', tutorId)
-      .single();
+    try {
+      const { supabase } = await import('@/integrations/supabase/client');
+      
+      // Get profile to match tutor name
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('first_name, last_name, email')
+        .eq('id', tutorId)
+        .single();
 
-    if (!profile) {
+      if (profileError || !profile) {
+        console.error('Error fetching tutor profile:', profileError);
+        return { classesCompleted: 0, totalCredits: 0 };
+      }
+
+      // Construct full name or fallback to email
+      const fullName = profile.first_name && profile.last_name 
+        ? `${profile.first_name} ${profile.last_name}`.trim()
+        : profile.email;
+
+      // Count completed classes from class_logs with proper escaping
+      // Escape double quotes in values to prevent SQL injection
+      const escapedFullName = fullName.replace(/"/g, '""');
+      const escapedEmail = profile.email.replace(/"/g, '""');
+      
+      const { data: classLogs, error: logsError } = await supabase
+        .from('class_logs')
+        .select('id')
+        .or(`"Tutor Name".eq."${escapedFullName}","Tutor Name".eq."${escapedEmail}"`);
+
+      const classesCompleted = logsError || !classLogs ? 0 : classLogs.length;
+
+      // Tutors don't have credits, so return 0
+      return {
+        classesCompleted,
+        totalCredits: 0
+      };
+    } catch (error) {
+      console.error('Error fetching tutor analytics:', error);
       return { classesCompleted: 0, totalCredits: 0 };
     }
-
-    // Construct full name or fallback to email
-    const fullName = profile.first_name && profile.last_name 
-      ? `${profile.first_name} ${profile.last_name}`.trim()
-      : profile.email;
-
-    // Count completed classes from class_logs with proper escaping
-    // Escape double quotes in values to prevent SQL injection
-    const escapedFullName = fullName.replace(/"/g, '""');
-    const escapedEmail = profile.email.replace(/"/g, '""');
-    
-    const { data: classLogs, error: logsError } = await supabase
-      .from('class_logs')
-      .select('id')
-      .or(`"Tutor Name".eq."${escapedFullName}","Tutor Name".eq."${escapedEmail}"`);
-
-    const classesCompleted = logsError || !classLogs ? 0 : classLogs.length;
-
-    // Tutors don't have credits, so return 0
-    return {
-      classesCompleted,
-      totalCredits: 0
-    };
   }
 }
 

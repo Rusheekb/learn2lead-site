@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { fetchPaymentsData } from '@/services/dataService';
+import { toast } from 'sonner';
 
 interface Payment {
   id: string;
@@ -34,6 +35,7 @@ export const usePaymentManager = (classes: any[]) => {
         setFilteredPayments(data);
       } catch (error) {
         console.error('Error loading payments:', error);
+        toast.error('Failed to load payments data. Please try again.');
       } finally {
         setIsLoading(false);
       }
@@ -88,8 +90,10 @@ export const usePaymentManager = (classes: any[]) => {
       const data = await fetchPaymentsData();
       setPayments(data);
       setFilteredPayments(data);
+      toast.success('Payments data refreshed successfully');
     } catch (error) {
       console.error('Error refreshing payments:', error);
+      toast.error('Failed to refresh payments data. Please try again.');
     } finally {
       setIsLoading(false);
     }
