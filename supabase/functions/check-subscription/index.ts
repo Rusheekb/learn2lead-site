@@ -141,18 +141,33 @@ serve(async (req) => {
       productId = subscription.items.data[0].price.product as string;
       logStep("Determined subscription tier", { productId });
 
-      // Get credits from database
+      // Get credits from ledger (single source of truth)
+      const { data: ledgerData, error: ledgerError } = await supabaseClient
+        .from('class_credits_ledger')
+        .select('balance_after')
+        .eq('student_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (ledgerData && !ledgerError) {
+        creditsRemaining = ledgerData.balance_after || 0;
+        logStep("Retrieved credits from ledger", { creditsRemaining });
+      } else {
+        logStep("No ledger entries found, checking subscription table");
+      }
+
+      // Get plan details
       const { data: subData, error: subError } = await supabaseClient
         .from('student_subscriptions')
-        .select('credits_remaining, plan_id, subscription_plans(name, classes_per_month)')
+        .select('subscription_plans(name, classes_per_month)')
         .eq('student_id', user.id)
         .eq('status', 'active')
-        .single();
+        .maybeSingle();
 
       if (subData && !subError) {
-        creditsRemaining = subData.credits_remaining || 0;
         planName = subData.subscription_plans?.name || null;
-        logStep("Retrieved credits from database", { creditsRemaining, planName });
+        logStep("Retrieved plan details", { planName });
       }
     } else {
       logStep("No active subscription found");
