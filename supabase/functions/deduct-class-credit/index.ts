@@ -114,24 +114,11 @@ Deno.serve(async (req) => {
       credits_before: subscription.credits_remaining 
     });
 
-    // Atomic credit deduction transaction
-    const { data: updatedSub, error: updateError } = await supabaseClient
-      .from("student_subscriptions")
-      .update({ credits_remaining: subscription.credits_remaining - 1 })
-      .eq("id", subscription.id)
-      .eq("credits_remaining", subscription.credits_remaining) // Optimistic locking
-      .select("credits_remaining")
-      .single();
+    // Calculate new balance (ledger is now the single source of truth)
+    const newBalance = subscription.credits_remaining - 1;
+    logStep("Calculated new balance", { credits_before: subscription.credits_remaining, credits_after: newBalance });
 
-    if (updateError || !updatedSub) {
-      logStep("ERROR: Failed to deduct credit", { error: updateError });
-      throw new Error("Failed to deduct credit - possible concurrent update");
-    }
-
-    const newBalance = updatedSub.credits_remaining;
-    logStep("Credit deducted", { credits_after: newBalance });
-
-    // Log transaction in ledger
+    // Log transaction in ledger (trigger will auto-sync subscription table)
     const { data: ledgerEntry, error: ledgerError } = await supabaseClient
       .from("class_credits_ledger")
       .insert({
@@ -148,12 +135,6 @@ Deno.serve(async (req) => {
 
     if (ledgerError) {
       logStep("ERROR: Failed to log transaction", { error: ledgerError });
-      // Try to rollback credit deduction
-      await supabaseClient
-        .from("student_subscriptions")
-        .update({ credits_remaining: subscription.credits_remaining })
-        .eq("id", subscription.id);
-      
       throw new Error("Failed to log credit transaction");
     }
 

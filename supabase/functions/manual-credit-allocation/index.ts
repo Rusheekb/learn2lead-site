@@ -129,7 +129,7 @@ serve(async (req) => {
       });
     }
 
-    // Create subscription record
+    // Create subscription record (credits will be set by ledger trigger)
     const { data: newSub, error: subError } = await supabaseClient
       .from("student_subscriptions")
       .insert({
@@ -141,7 +141,7 @@ serve(async (req) => {
         current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
         current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
         credits_allocated: plan.classes_per_month,
-        credits_remaining: plan.classes_per_month,
+        credits_remaining: 0, // Will be set by ledger trigger
       })
       .select()
       .single();

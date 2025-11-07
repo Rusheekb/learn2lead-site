@@ -175,7 +175,7 @@ serve(async (req) => {
           .single();
 
         if (existingSub) {
-          // Update existing subscription and add credits
+          // Update existing subscription period (credits will be added via ledger + trigger)
           const newCredits = existingSub.credits_remaining + plan.classes_per_month;
           const currentPeriodStart = subscription?.current_period_start
             ? new Date(subscription.current_period_start * 1000).toISOString()
@@ -194,7 +194,6 @@ serve(async (req) => {
               status: subscription?.status ?? 'active',
               current_period_start: currentPeriodStart,
               current_period_end: currentPeriodEnd,
-              credits_remaining: newCredits,
               credits_allocated: plan.classes_per_month,
             })
             .eq('id', existingSub.id);
@@ -230,7 +229,7 @@ serve(async (req) => {
 
           logStep("Subscription updated and credits added", { newCredits, invoiceId });
         } else {
-          // Create new subscription record
+          // Create new subscription record (credits will be set via ledger + trigger)
           const currentPeriodStart = subscription?.current_period_start
             ? new Date(subscription.current_period_start * 1000).toISOString()
             : invoice.lines?.data?.[0]?.period?.start
@@ -252,7 +251,7 @@ serve(async (req) => {
               status: subscription?.status ?? 'active',
               current_period_start: currentPeriodStart,
               current_period_end: currentPeriodEnd,
-              credits_remaining: plan.classes_per_month,
+              credits_remaining: 0, // Will be set by ledger trigger
               credits_allocated: plan.classes_per_month,
             })
             .select()
