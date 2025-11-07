@@ -53,6 +53,13 @@ export type Database = {
             foreignKeyName: "class_credits_ledger_subscription_id_fkey"
             columns: ["subscription_id"]
             isOneToOne: false
+            referencedRelation: "credit_discrepancies"
+            referencedColumns: ["subscription_id"]
+          },
+          {
+            foreignKeyName: "class_credits_ledger_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
             referencedRelation: "student_subscriptions"
             referencedColumns: ["id"]
           },
@@ -640,7 +647,30 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      credit_discrepancies: {
+        Row: {
+          difference: number | null
+          ledger_credits: number | null
+          student_id: string | null
+          subscription_credits: number | null
+          subscription_id: string | null
+        }
+        Insert: {
+          difference?: never
+          ledger_credits?: never
+          student_id?: string | null
+          subscription_credits?: number | null
+          subscription_id?: string | null
+        }
+        Update: {
+          difference?: never
+          ledger_credits?: never
+          student_id?: string | null
+          subscription_credits?: number | null
+          subscription_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       check_upcoming_classes: { Args: never; Returns: undefined }
@@ -686,6 +716,10 @@ export type Database = {
           tutor_name: string
           zoom_link: string
         }[]
+      }
+      get_student_credit_balance: {
+        Args: { p_student_id: string }
+        Returns: number
       }
       get_tutor_student_relationships: {
         Args: { tutor_uuid: string }
