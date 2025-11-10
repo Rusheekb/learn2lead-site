@@ -37,6 +37,7 @@ const ClassHistory: React.FC<ClassHistoryProps> = ({ userRole }) => {
   const [classHistory, setClassHistory] = useState<ClassHistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedClass, setSelectedClass] = useState<ClassHistoryItem | null>(null);
+  const [expandedClassId, setExpandedClassId] = useState<string | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editContent, setEditContent] = useState('');
   const [editHomework, setEditHomework] = useState('');
@@ -188,70 +189,79 @@ const ClassHistory: React.FC<ClassHistoryProps> = ({ userRole }) => {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
-          {classHistory.map((classItem) => (
-            <Card key={classItem.id} className="hover:shadow-md transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-lg">{classItem['Class Number'] || 'Untitled Class'}</CardTitle>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
-                      <div className="flex items-center gap-1">
-                        <CalendarDays className="h-4 w-4" />
-                        {format(new Date(classItem.Date), 'PPP')}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        {classItem['Time (CST)'] || 'Unknown time'} ({classItem['Time (hrs)'] || '0'}h)
+        <div className="space-y-2">
+          {classHistory.map((classItem) => {
+            const isExpanded = expandedClassId === classItem.id;
+            
+            return (
+              <Card 
+                key={classItem.id} 
+                className="hover:shadow-md transition-shadow cursor-pointer"
+                onClick={() => setExpandedClassId(isExpanded ? null : classItem.id)}
+              >
+                <CardContent className="py-3 px-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-medium text-sm">{classItem['Class Number'] || 'Untitled'}</span>
+                        <Badge variant="outline" className="text-xs">{classItem.Subject || 'Unknown'}</Badge>
+                        <span className="text-xs text-muted-foreground">
+                          {format(new Date(classItem.Date), 'MMM d, yyyy')}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {userRole === 'student' ? (classItem['Tutor Name'] || 'Unknown Tutor') : (classItem['Student Name'] || 'Unknown Student')}
+                        </span>
                       </div>
                     </div>
-                  </div>
-                  {userRole === 'tutor' && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEditClass(classItem)}
-                    >
-                      <Edit3 className="h-4 w-4 mr-2" />
-                      Edit
-                    </Button>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <div className="space-y-3">
-                  <div className="flex items-center gap-4">
-                    <Badge variant="outline">{classItem.Subject || 'Unknown Subject'}</Badge>
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                      <User className="h-4 w-4" />
-                      {userRole === 'student' ? (classItem['Tutor Name'] || 'Unknown Tutor') : (classItem['Student Name'] || 'Unknown Student')}
-                    </div>
+                    {userRole === 'tutor' && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditClass(classItem);
+                        }}
+                      >
+                        <Edit3 className="h-3 w-3" />
+                      </Button>
+                    )}
                   </div>
                   
-                  {classItem.Content && (
-                    <div>
-                      <h4 className="font-medium text-sm mb-1">What was covered:</h4>
-                      <p className="text-sm text-muted-foreground">{classItem.Content}</p>
+                  {isExpanded && (
+                    <div className="mt-3 pt-3 border-t space-y-2">
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {classItem['Time (CST)'] || 'Unknown time'} ({classItem['Time (hrs)'] || '0'}h)
+                        </div>
+                      </div>
+                      
+                      {classItem.Content && (
+                        <div>
+                          <h4 className="font-medium text-sm mb-1">What was covered:</h4>
+                          <p className="text-sm text-muted-foreground">{classItem.Content}</p>
+                        </div>
+                      )}
+                      
+                      {classItem.HW && (
+                        <div>
+                          <h4 className="font-medium text-sm mb-1">Homework assigned:</h4>
+                          <p className="text-sm text-muted-foreground">{classItem.HW}</p>
+                        </div>
+                      )}
+                      
+                      {classItem['Additional Info'] && (
+                        <div>
+                          <h4 className="font-medium text-sm mb-1">Additional notes:</h4>
+                          <p className="text-sm text-muted-foreground">{classItem['Additional Info']}</p>
+                        </div>
+                      )}
                     </div>
                   )}
-                  
-                  {classItem.HW && (
-                    <div>
-                      <h4 className="font-medium text-sm mb-1">Homework assigned:</h4>
-                      <p className="text-sm text-muted-foreground">{classItem.HW}</p>
-                    </div>
-                  )}
-                  
-                  {classItem['Additional Info'] && (
-                    <div>
-                      <h4 className="font-medium text-sm mb-1">Additional notes:</h4>
-                      <p className="text-sm text-muted-foreground">{classItem['Additional Info']}</p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 
