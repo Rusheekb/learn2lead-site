@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { Loader2, Plus, Minus } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export const ManualCreditAllocation = () => {
   const [email, setEmail] = useState('');
@@ -24,6 +25,42 @@ export const ManualCreditAllocation = () => {
   const [directCredits, setDirectCredits] = useState('');
   const [directNote, setDirectNote] = useState('');
   const [directLoading, setDirectLoading] = useState(false);
+
+  // Students list for dropdown
+  const [students, setStudents] = useState<Array<{ email: string; name: string }>>([]);
+  const [loadingStudents, setLoadingStudents] = useState(false);
+
+  // Fetch students for dropdown
+  useEffect(() => {
+    const fetchStudents = async () => {
+      setLoadingStudents(true);
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('email, first_name, last_name')
+          .eq('role', 'student')
+          .order('email');
+
+        if (error) throw error;
+
+        const studentsList = (data || []).map(profile => ({
+          email: profile.email,
+          name: profile.first_name || profile.last_name 
+            ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim()
+            : profile.email
+        }));
+
+        setStudents(studentsList);
+      } catch (error) {
+        console.error('Error fetching students:', error);
+        toast.error('Failed to load students list');
+      } finally {
+        setLoadingStudents(false);
+      }
+    };
+
+    fetchStudents();
+  }, []);
 
   const handleAllocateCredits = async () => {
     if (!email.trim()) {
@@ -396,16 +433,30 @@ export const ManualCreditAllocation = () => {
 
             <form onSubmit={handleDirectPayment} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="direct-email">Student Email</Label>
-                <Input
-                  id="direct-email"
-                  type="email"
-                  placeholder="student@example.com"
+                <Label htmlFor="direct-email">Student</Label>
+                <Select
                   value={directEmail}
-                  onChange={(e) => setDirectEmail(e.target.value)}
-                  disabled={directLoading}
+                  onValueChange={setDirectEmail}
+                  disabled={directLoading || loadingStudents}
                   required
-                />
+                >
+                  <SelectTrigger id="direct-email">
+                    <SelectValue placeholder={loadingStudents ? "Loading students..." : "Select a student"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {students.length > 0 ? (
+                      students.map((student) => (
+                        <SelectItem key={student.email} value={student.email}>
+                          {student.name} ({student.email})
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="no-students" disabled>
+                        No students found
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
