@@ -9,11 +9,12 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { UserCheck, Shield, History } from 'lucide-react';
+import { UserCheck, Shield, History, Loader2 } from 'lucide-react';
 import { fetchStudentAnalytics, fetchTutorAnalytics } from '@/services/analyticsService';
 import { Student, Tutor } from '@/types/tutorTypes';
 import { useAuth } from '@/contexts/AuthContext';
 import { RolePromotionDialog } from './RolePromotionDialog';
+import { supabase } from '@/integrations/supabase/client';
 
 type User = (Student | Tutor) & { role: 'student' | 'tutor' };
 
@@ -27,11 +28,47 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
   const { userRole } = useAuth();
   const [stats, setStats] = useState<{ classesCompleted: number; totalCredits: number } | null>(null);
   const [showRoleDialog, setShowRoleDialog] = useState(false);
+  const [isLoadingStats, setIsLoadingStats] = useState(false);
 
   useEffect(() => {
     if (!user) return;
-    const fn = user.role === 'student' ? fetchStudentAnalytics : fetchTutorAnalytics;
-    fn(user.id).then(setStats).catch(console.error);
+    
+    // Fetch profile UUID using email, then get analytics
+    const fetchAnalytics = async () => {
+      setIsLoadingStats(true);
+      try {
+        // Look up the profile UUID using the email
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('email', user.email)
+          .maybeSingle();
+
+        if (profileError) {
+          console.error('Error fetching profile:', profileError);
+          setStats(null);
+          return;
+        }
+
+        if (!profile) {
+          console.warn(`No profile found for email: ${user.email}`);
+          setStats({ classesCompleted: 0, totalCredits: 0 });
+          return;
+        }
+
+        // Now fetch analytics using the profile UUID
+        const fn = user.role === 'student' ? fetchStudentAnalytics : fetchTutorAnalytics;
+        const analytics = await fn(profile.id);
+        setStats(analytics);
+      } catch (error) {
+        console.error('Error fetching user analytics:', error);
+        setStats(null);
+      } finally {
+        setIsLoadingStats(false);
+      }
+    };
+
+    fetchAnalytics();
   }, [user]);
 
   const isAdmin = userRole === 'admin';
@@ -72,13 +109,22 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
                 <History className="h-4 w-4" />
                 Analytics
               </h4>
-              <p className="text-sm">
-                <strong>Classes Completed:</strong> {stats?.classesCompleted ?? 'Loading...'}
-              </p>
-              {user.role === 'student' && (
-                <p className="text-sm">
-                  <strong>Total Credits:</strong> {stats?.totalCredits ?? 'Loading...'}
-                </p>
+              {isLoadingStats ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Loading analytics...
+                </div>
+              ) : (
+                <>
+                  <p className="text-sm">
+                    <strong>Classes Completed:</strong> {stats?.classesCompleted ?? 0}
+                  </p>
+                  {user.role === 'student' && (
+                    <p className="text-sm">
+                      <strong>Total Credits:</strong> {stats?.totalCredits ?? 0}
+                    </p>
+                  )}
+                </>
               )}
             </div>
 
