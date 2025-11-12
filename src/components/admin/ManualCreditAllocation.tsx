@@ -322,15 +322,29 @@ export const ManualCreditAllocation = () => {
 
           <TabsContent value="allocate" className="space-y-4 mt-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Student Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="student@example.com"
+              <Label htmlFor="email">Student</Label>
+              <Select
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={loading}
-              />
+                onValueChange={setEmail}
+                disabled={loading || loadingStudents}
+              >
+                <SelectTrigger id="email">
+                  <SelectValue placeholder={loadingStudents ? "Loading students..." : "Select a student"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {students.length > 0 ? (
+                    students.map((student) => (
+                      <SelectItem key={student.email} value={student.email}>
+                        {student.name} ({student.email})
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="no-students" disabled>
+                      No students found
+                    </SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
             </div>
             <Button
               onClick={handleAllocateCredits}
@@ -355,15 +369,29 @@ export const ManualCreditAllocation = () => {
 
           <TabsContent value="adjust" className="space-y-4 mt-4">
             <div className="space-y-2">
-              <Label htmlFor="adjust-email">Student Email</Label>
-              <Input
-                id="adjust-email"
-                type="email"
-                placeholder="student@example.com"
+              <Label htmlFor="adjust-email">Student</Label>
+              <Select
                 value={adjustEmail}
-                onChange={(e) => setAdjustEmail(e.target.value)}
-                disabled={adjustLoading}
-              />
+                onValueChange={setAdjustEmail}
+                disabled={adjustLoading || loadingStudents}
+              >
+                <SelectTrigger id="adjust-email">
+                  <SelectValue placeholder={loadingStudents ? "Loading students..." : "Select a student"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {students.length > 0 ? (
+                    students.map((student) => (
+                      <SelectItem key={student.email} value={student.email}>
+                        {student.name} ({student.email})
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="no-students" disabled>
+                      No students found
+                    </SelectItem>
+                  )}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="amount">Credit Amount</Label>
