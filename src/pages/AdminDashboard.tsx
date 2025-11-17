@@ -92,12 +92,6 @@ const AdminDashboard: React.FC = () => {
             <ClassLogs />
           </Suspense>
         );
-      case 'payments':
-        return (
-          <Suspense fallback={<LoadingSpinner />}>
-            <PaymentsManager />
-          </Suspense>
-        );
       case 'tutors':
         return (
           <Suspense fallback={<LoadingSpinner />}>
