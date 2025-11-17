@@ -22,11 +22,13 @@ import ClassFilters from './class-logs/ClassFilters';
 import ClassTable from './class-logs/ClassTable';
 import ClassDetailsDialog from './class-logs/ClassDetailsDialog';
 import CsvUploader from './class-logs/CsvUploader';
+import { ExportDialog } from './class-logs/ExportDialog';
 import { useClassLogs } from '@/hooks/useClassLogs';
 import { ExportFormat } from '@/types/classTypes';
 
 const ClassLogs: React.FC = () => {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [isExportOpen, setIsExportOpen] = useState(false);
   const {
     searchTerm,
     setSearchTerm,
@@ -84,10 +86,15 @@ const ClassLogs: React.FC = () => {
     );
   }, [filteredClasses]);
 
-  const handleExportCSV = () => {
+  const handleExportCSV = (startDate?: Date, endDate?: Date) => {
     try {
-      exportClassLogsToCSV(filteredClasses);
-      toast.success('Class logs exported successfully');
+      exportClassLogsToCSV(filteredClasses, startDate, endDate);
+      
+      if (startDate && endDate) {
+        toast.success(`Exported ${filteredClasses.length} class logs from ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}`);
+      } else {
+        toast.success(`Exported ${filteredClasses.length} class logs`);
+      }
     } catch (error) {
       console.error('Error exporting CSV:', error);
       toast.error('Failed to export class logs');
@@ -102,7 +109,7 @@ const ClassLogs: React.FC = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={handleExportCSV}
+            onClick={() => setIsExportOpen(true)}
             className="flex items-center gap-2"
             disabled={filteredClasses.length === 0}
           >
@@ -238,6 +245,13 @@ const ClassLogs: React.FC = () => {
           />
         </DialogContent>
       </Dialog>
+
+      <ExportDialog
+        open={isExportOpen}
+        onOpenChange={setIsExportOpen}
+        onExport={handleExportCSV}
+        totalRecords={filteredClasses.length}
+      />
     </div>
   );
 };
