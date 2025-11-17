@@ -69,6 +69,25 @@ Deno.serve(async (req) => {
       errors: [] as Array<{ row: number; error: string; data: any }>,
     };
 
+    // Helper function to parse payment field (date or status)
+    const parsePaymentField = (value: string | undefined): { status: string; date: string | null } => {
+      if (!value || value.trim() === '') {
+        return { status: 'Pending', date: null };
+      }
+
+      // Try to parse as date
+      const trimmedValue = value.trim();
+      const dateTest = new Date(trimmedValue);
+      
+      // Check if it's a valid date (common formats like MM/DD/YY, MM/DD/YYYY, etc.)
+      if (!isNaN(dateTest.getTime()) && (trimmedValue.includes('/') || trimmedValue.includes('-'))) {
+        return { status: 'Paid', date: trimmedValue };
+      }
+
+      // Otherwise, treat as status text
+      return { status: trimmedValue, date: null };
+    };
+
     // Process each row
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i] as ClassLogRow;
@@ -91,6 +110,22 @@ Deno.serve(async (req) => {
           throw new Error(`Invalid date: ${row['Date']}`);
         }
 
+        // Parse payment fields
+        const studentPayment = parsePaymentField(row['Student Payment']);
+        const tutorPayment = parsePaymentField(row['Tutor Payment']);
+
+        // Build additional info with payment dates if they exist
+        const additionalInfoParts: string[] = [];
+        if (row['Additional Info']) {
+          additionalInfoParts.push(row['Additional Info']);
+        }
+        if (studentPayment.date) {
+          additionalInfoParts.push(`Student paid: ${studentPayment.date}`);
+        }
+        if (tutorPayment.date) {
+          additionalInfoParts.push(`Tutor paid: ${tutorPayment.date}`);
+        }
+
         // Prepare the record for insertion
         const record = {
           'Class Number': row['Class Number'] || null,
@@ -105,9 +140,9 @@ Deno.serve(async (req) => {
           'HW': row['HW'] || null,
           'Class Cost': row['Class Cost'] || null,
           'Tutor Cost': row['Tutor Cost'] || null,
-          'Student Payment': row['Student Payment'] || 'Pending',
-          'Tutor Payment': row['Tutor Payment'] || 'Pending',
-          'Additional Info': row['Additional Info'] || null,
+          'Student Payment': studentPayment.status,
+          'Tutor Payment': tutorPayment.status,
+          'Additional Info': additionalInfoParts.length > 0 ? additionalInfoParts.join(' | ') : null,
         };
 
         // Insert into database
