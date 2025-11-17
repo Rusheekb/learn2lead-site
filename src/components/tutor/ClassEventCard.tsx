@@ -2,7 +2,7 @@
 import React from 'react';
 import { Clock, MessageSquare, User, Video } from 'lucide-react';
 import { ClassEvent } from '@/types/tutorTypes';
-import { formatTime } from '@/utils/dateTimeUtils';
+import { formatTimeRange } from '@/utils/dateTimeUtils';
 import { RecurringBadge, MessageBadge } from '@/components/shared/ClassBadges';
 
 export interface ClassEventCardProps {
@@ -41,7 +41,7 @@ const ClassEventCard: React.FC<ClassEventCardProps> = ({
       <div className="flex items-center text-sm text-gray-600 mt-2">
         <Clock className="h-4 w-4 mr-2" />
         <span>
-          {formatTime(event.startTime)} - {formatTime(event.endTime)}
+          {formatTimeRange(event.startTime, event.endTime)}
         </span>
       </div>
 

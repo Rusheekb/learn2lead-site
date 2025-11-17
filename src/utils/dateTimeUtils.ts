@@ -3,10 +3,14 @@ import { format, parse } from 'date-fns';
 export const formatTime = (time: string): string => {
   try {
     // Handle empty or invalid time
-    if (!time) return '';
+    if (!time || time === 'NaN' || time.includes('NaN')) return '';
 
-    // Format 24-hour time (HH:MM) to 12-hour time (h:MM AM/PM)
+    // Format 24-hour time (HH:MM) to 12-hour time (h:mm a)
     const [hours, minutes] = time.split(':').map(Number);
+    
+    // Validate parsed values
+    if (isNaN(hours) || isNaN(minutes)) return '';
+    
     const date = new Date();
     date.setHours(hours);
     date.setMinutes(minutes);
@@ -14,7 +18,34 @@ export const formatTime = (time: string): string => {
     return format(date, 'h:mm a');
   } catch (error) {
     console.error('Error formatting time:', error);
-    return time; // Return original time if formatting fails
+    return ''; // Return empty string for invalid times
+  }
+};
+
+// Format time range intelligently (e.g., "6:00 - 7:00 PM" or "11:00 AM - 1:00 PM")
+export const formatTimeRange = (startTime: string, endTime: string): string => {
+  try {
+    if (!startTime || !endTime || endTime.includes('NaN')) return 'Time not set';
+
+    const start = formatTime(startTime);
+    const end = formatTime(endTime);
+    
+    if (!start || !end) return 'Time not set';
+
+    // Extract AM/PM from both times
+    const startPeriod = start.slice(-2);
+    const endPeriod = end.slice(-2);
+    
+    // If same period, show AM/PM only at the end
+    if (startPeriod === endPeriod) {
+      return `${start.slice(0, -3)} - ${end}`;
+    }
+    
+    // Different periods, show both
+    return `${start} - ${end}`;
+  } catch (error) {
+    console.error('Error formatting time range:', error);
+    return 'Time not set';
   }
 };
 
@@ -23,8 +54,11 @@ export const parseTime24to12 = (time24: string): string => {
     // Handle empty or invalid time
     if (!time24) return '';
 
-    // Format 24-hour time (HH:MM) to 12-hour time (h:MM AM/PM)
+    // Format 24-hour time (HH:MM) to 12-hour time (h:mm a)
     const [hours, minutes] = time24.split(':').map(Number);
+    
+    if (isNaN(hours) || isNaN(minutes)) return '';
+    
     const date = new Date();
     date.setHours(hours);
     date.setMinutes(minutes);
