@@ -1,7 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileDown, Printer, RefreshCw, Download, Upload, Loader } from 'lucide-react';
+import { FileDown, RefreshCw, Upload } from 'lucide-react';
+import { exportClassLogsToCSV } from '@/utils/csvExport';
+import { toast } from 'sonner';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -82,11 +84,31 @@ const ClassLogs: React.FC = () => {
     );
   }, [filteredClasses]);
 
+  const handleExportCSV = () => {
+    try {
+      exportClassLogsToCSV(filteredClasses);
+      toast.success('Class logs exported successfully');
+    } catch (error) {
+      console.error('Error exporting CSV:', error);
+      toast.error('Failed to export class logs');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Class Logs & Payments</h2>
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportCSV}
+            className="flex items-center gap-2"
+            disabled={filteredClasses.length === 0}
+          >
+            <FileDown className="h-4 w-4" />
+            Export CSV
+          </Button>
           <Button
             variant="outline"
             size="sm"
