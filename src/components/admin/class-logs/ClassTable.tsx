@@ -91,9 +91,33 @@ const ClassTable: React.FC<ClassTableProps> = ({
       ),
     },
     {
-      header: 'Attendance',
+      header: 'Payments',
       cell: (cls) => (
-        <AttendanceBadge attendance={cls.attendance || 'pending'} />
+        <div className="space-y-1 text-sm">
+          <div className="flex justify-between gap-2">
+            <span className="text-muted-foreground">Class:</span>
+            <span className="font-medium">${cls.classCost?.toFixed(2) || '0.00'}</span>
+          </div>
+          <div className="flex justify-between gap-2">
+            <span className="text-muted-foreground">Tutor:</span>
+            <span className="font-medium">${cls.tutorCost?.toFixed(2) || '0.00'}</span>
+          </div>
+        </div>
+      ),
+    },
+    {
+      header: 'Payment Status',
+      cell: (cls) => (
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">Student:</span>
+            <StatusBadge status={cls.studentPayment || 'pending'} />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">Tutor:</span>
+            <StatusBadge status={cls.tutorPayment || 'pending'} />
+          </div>
+        </div>
       ),
     },
     {

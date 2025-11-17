@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileDown, Printer, RefreshCw, Download, Upload, Loader } from 'lucide-react';
 import {
   DropdownMenu,
@@ -64,10 +65,29 @@ const ClassLogs: React.FC = () => {
   } = useClassLogs();
 
 
+  // Calculate payment totals from filtered classes
+  const paymentTotals = useMemo(() => {
+    return filteredClasses.reduce(
+      (totals, cls) => {
+        const classCost = cls.classCost || 0;
+        const tutorCost = cls.tutorCost || 0;
+        const isPaid = cls.studentPayment?.toLowerCase() === 'paid';
+        
+        return {
+          classCost: totals.classCost + classCost,
+          tutorCost: totals.tutorCost + tutorCost,
+          profit: totals.profit + (classCost - tutorCost),
+          pending: totals.pending + (isPaid ? 0 : classCost),
+        };
+      },
+      { classCost: 0, tutorCost: 0, profit: 0, pending: 0 }
+    );
+  }, [filteredClasses]);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Class Logs</h2>
+        <h2 className="text-2xl font-bold">Class Logs & Payments</h2>
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
@@ -89,6 +109,58 @@ const ClassLogs: React.FC = () => {
             {isLoading ? 'Refreshing...' : 'Refresh'}
           </Button>
         </div>
+      </div>
+
+      {/* Payment Summary Cards */}
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Total Revenue
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              ${paymentTotals.classCost.toFixed(2)}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Tutor Payments
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              ${paymentTotals.tutorCost.toFixed(2)}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Net Profit
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              ${paymentTotals.profit.toFixed(2)}
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Pending Collections
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              ${paymentTotals.pending.toFixed(2)}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <ClassFilters
