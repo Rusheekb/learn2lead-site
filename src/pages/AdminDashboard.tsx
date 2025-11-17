@@ -12,7 +12,6 @@ import { fetchTutorsWithProfileIds, fetchStudentsWithProfileIds, TutorWithProfil
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 // Dynamically import heavy components
 const ClassLogs = lazy(() => import('@/components/admin/ClassLogs'));
-const PaymentsManager = lazy(() => import('@/components/admin/PaymentsManager'));
 const TutorsManager = lazy(() => import('@/components/admin/TutorsManager'));
 const StudentsManager = lazy(() => import('@/components/admin/StudentsManager'));
 const AssignmentManager = lazy(() => import('@/components/admin/AssignmentManager'));
