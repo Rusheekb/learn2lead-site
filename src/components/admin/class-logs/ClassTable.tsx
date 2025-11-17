@@ -85,12 +85,6 @@ const ClassTable: React.FC<ClassTableProps> = ({
       ),
     },
     {
-      header: 'Status',
-      cell: (cls) => (
-        <StatusBadge status={cls.status || 'unknown'} />
-      ),
-    },
-    {
       header: 'Payments',
       cell: (cls) => (
         <div className="space-y-1 text-sm">

@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
     // Helper function to parse payment field (date or status)
     const parsePaymentField = (value: string | undefined): { status: string; date: string | null } => {
       if (!value || value.trim() === '') {
-        return { status: 'Pending', date: null };
+        return { status: 'pending', date: null };
       }
 
       // Try to parse as date
@@ -81,11 +81,11 @@ Deno.serve(async (req) => {
       
       // Check if it's a valid date (common formats like MM/DD/YY, MM/DD/YYYY, etc.)
       if (!isNaN(dateTest.getTime()) && (trimmedValue.includes('/') || trimmedValue.includes('-'))) {
-        return { status: 'Paid', date: trimmedValue };
+        return { status: 'paid', date: trimmedValue };
       }
 
-      // Otherwise, treat as status text
-      return { status: trimmedValue, date: null };
+      // Otherwise, treat as status text (normalize to lowercase)
+      return { status: trimmedValue.toLowerCase(), date: null };
     };
 
     // Process each row
@@ -138,8 +138,8 @@ Deno.serve(async (req) => {
           'Subject': row['Subject'] || null,
           'Content': row['Content'] || null,
           'HW': row['HW'] || null,
-          'Class Cost': row['Class Cost'] || null,
-          'Tutor Cost': row['Tutor Cost'] || null,
+          'Class Cost': row['Class Cost'] ? parseFloat(row['Class Cost'].replace(/[^0-9.-]/g, '')) || null : null,
+          'Tutor Cost': row['Tutor Cost'] ? parseFloat(row['Tutor Cost'].replace(/[^0-9.-]/g, '')) || null : null,
           'Student Payment': studentPayment.status,
           'Tutor Payment': tutorPayment.status,
           'Additional Info': additionalInfoParts.length > 0 ? additionalInfoParts.join(' | ') : null,
