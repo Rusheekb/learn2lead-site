@@ -3,7 +3,7 @@ import React from 'react';
 import DataTable, { ColumnDefinition } from '@/components/common/DataTable';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
-import { formatTime } from '@/utils/dateTimeUtils';
+import { formatTimeRange } from '@/utils/dateTimeUtils';
 
 interface ClassItem {
   id: number;
@@ -45,9 +45,7 @@ const UpcomingClassesTable: React.FC<UpcomingClassesTableProps> = ({
     },
     {
       header: 'Time',
-      cell: (cls) => (
-        `${formatTime(cls.startTime)} - ${formatTime(cls.endTime)}`
-      ),
+      cell: (cls) => formatTimeRange(cls.startTime, cls.endTime),
     },
     {
       header: 'Tutor',

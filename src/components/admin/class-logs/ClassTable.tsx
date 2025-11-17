@@ -6,6 +6,7 @@ import { StatusBadge, AttendanceBadge } from './BadgeComponents';
 import { CircleMessageBadge } from '@/components/shared/ClassBadges';
 import { Button } from '@/components/ui/button';
 import { ClassEvent } from '@/types/tutorTypes';
+import { formatTimeRange } from '@/utils/dateTimeUtils';
 
 interface ClassTableProps {
   classes: ClassEvent[];
@@ -78,9 +79,7 @@ const ClassTable: React.FC<ClassTableProps> = ({
         <div className="space-y-1">
           <div>{formatDate(cls.date)}</div>
           <div className="text-sm text-muted-foreground">
-            {cls.startTime && cls.endTime
-              ? `${formatTime(cls.startTime)} - ${formatTime(cls.endTime)}`
-              : 'Time not set'}
+            {formatTimeRange(cls.startTime, cls.endTime)}
           </div>
         </div>
       ),
