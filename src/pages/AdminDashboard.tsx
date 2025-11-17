@@ -35,7 +35,7 @@ const fetchAssignments = async () => {
 
 const AdminDashboard: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const activeTab = searchParams.get('tab') || 'analytics';
+  const activeTab = searchParams.get('tab') || 'schedule';
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   const { 
@@ -78,13 +78,6 @@ const AdminDashboard: React.FC = () => {
   // Render the appropriate content based on the active tab
   const renderContent = () => {
     switch (activeTab) {
-      case 'analytics':
-        return (
-          <div className="space-y-6">
-            <h3 className="text-lg font-semibold">Analytics Overview</h3>
-            <p className="text-muted-foreground">Basic analytics coming soon...</p>
-          </div>
-        );
       case 'schedule':
         return (
           <Suspense fallback={<LoadingSpinner />}>

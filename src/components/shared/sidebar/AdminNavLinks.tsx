@@ -19,21 +19,7 @@ const AdminNavLinks: React.FC<AdminNavLinksProps> = ({
   return (
     <nav className="space-y-1" aria-label="Admin navigation">
       <NavLink 
-        to="/admin-dashboard?tab=analytics" 
-        className={() => 
-          isLinkActive('/admin-dashboard', { key: 'tab', value: 'analytics' }) || 
-          isLinkActive('/admin-dashboard') || 
-          isLinkActive('/admin-dashboard', { key: 'tab' })
-            ? `${baseClasses} ${expandedClasses} ${activeClasses}`
-            : `${baseClasses} ${expandedClasses}`
-        }
-        aria-label="Analytics"
-      >
-        <BarChart3 className="h-5 w-5" aria-hidden="true" />
-        {isExpanded && <span className="ml-3">Analytics</span>}
-      </NavLink>
-      <NavLink 
-        to="/admin-dashboard?tab=schedule" 
+        to="/admin-dashboard?tab=schedule"
         className={() => 
           isLinkActive('/admin-dashboard', { key: 'tab', value: 'schedule' })
             ? `${baseClasses} ${expandedClasses} ${activeClasses}`
@@ -44,19 +30,7 @@ const AdminNavLinks: React.FC<AdminNavLinksProps> = ({
         <FileText className="h-5 w-5" aria-hidden="true" />
         {isExpanded && <span className="ml-3">Class Logs</span>}
       </NavLink>
-      <NavLink 
-        to="/admin-dashboard?tab=payments" 
-        className={() => 
-          isLinkActive('/admin-dashboard', { key: 'tab', value: 'payments' })
-            ? `${baseClasses} ${expandedClasses} ${activeClasses}`
-            : `${baseClasses} ${expandedClasses}`
-        }
-        aria-label="Payments"
-      >
-        <LayoutDashboard className="h-5 w-5" aria-hidden="true" />
-        {isExpanded && <span className="ml-3">Payments</span>}
-      </NavLink>
-      <NavLink 
+      <NavLink
         to="/admin-dashboard?tab=credits" 
         className={() => 
           isLinkActive('/admin-dashboard', { key: 'tab', value: 'credits' })

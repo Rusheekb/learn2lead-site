@@ -13,8 +13,6 @@ export interface ClassFiltersProps {
   setDateFilter: (date: Date | undefined) => void;
   clearFilters: () => void;
   allSubjects: string[];
-  showCodeLogs: boolean;
-  setShowCodeLogs: (show: boolean) => void;
   paymentFilter?: string;
   setPaymentFilter?: (status: string) => void;
 }
@@ -30,8 +28,6 @@ const ClassFilters: React.FC<ClassFiltersProps> = ({
   setDateFilter,
   clearFilters,
   allSubjects,
-  showCodeLogs,
-  setShowCodeLogs,
   paymentFilter,
   setPaymentFilter,
 }) => {
@@ -73,12 +69,6 @@ const ClassFilters: React.FC<ClassFiltersProps> = ({
         showDateFilter={true}
         dateFilter={dateFilter}
         setDateFilter={setDateFilter}
-        
-        showToggle={true}
-        toggleLabel="Show code logs"
-        toggleState={showCodeLogs}
-        setToggleState={setShowCodeLogs}
-        toggleId="code-logs"
         
         clearFilters={clearFilters}
       />

@@ -14,7 +14,6 @@ export const useSimplifiedClassLogs = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [subjectFilter, setSubjectFilter] = useState('');
   const [dateFilter, setDateFilter] = useState<Date | null>(null);
-  const [showCodeLogs, setShowCodeLogs] = useState(false);
   const [activeDetailsTab, setActiveDetailsTab] = useState('details');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -101,8 +100,6 @@ export const useSimplifiedClassLogs = () => {
     setSubjectFilter,
     dateFilter,
     setDateFilter,
-    showCodeLogs,
-    setShowCodeLogs,
     clearFilters,
     
     // Details dialog
