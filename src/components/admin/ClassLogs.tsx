@@ -34,8 +34,6 @@ const ClassLogs: React.FC = () => {
     setSubjectFilter,
     dateFilter,
     setDateFilter,
-    showCodeLogs,
-    setShowCodeLogs,
     isDetailsOpen,
     setIsDetailsOpen,
     selectedClass,
@@ -174,8 +172,6 @@ const ClassLogs: React.FC = () => {
         setDateFilter={(date) => setDateFilter(date || null)}
         clearFilters={clearFilters}
         allSubjects={allSubjects}
-        showCodeLogs={showCodeLogs}
-        setShowCodeLogs={setShowCodeLogs}
       />
 
       <ClassTable
