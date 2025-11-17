@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useRealtimeManager } from './useRealtimeManager';
 import { useAuth } from '@/contexts/AuthContext';
+import { transformDbRecordToClassEvent } from '@/services/utils/classEventMapper';
 
 export const useSimplifiedClassLogs = () => {
   const [classes, setClasses] = useState<ClassEvent[]>([]);
@@ -30,7 +31,9 @@ export const useSimplifiedClassLogs = () => {
         .order('Date', { ascending: false });
       
       if (error) throw error;
-      return data as any;
+      
+      // Transform database records to ClassEvent format
+      return data ? data.map(record => transformDbRecordToClassEvent(record)) : [];
     },
   });
 
