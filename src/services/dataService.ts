@@ -148,8 +148,8 @@ export const fetchPaymentsData = async () => {
     date: record['Date'] || '',
     tutorName: record['Tutor Name'] || '',
     studentName: record['Student Name'] || '',
-    classCost: parseFloat(record['Class Cost'] || '0'),
-    tutorCost: parseFloat(record['Tutor Cost'] || '0'),
+    classCost: (record['Class Cost'] as number) || 0,
+    tutorCost: (record['Tutor Cost'] as number) || 0,
     studentPaymentStatus: record['Student Payment'] || 'Pending',
     tutorPaymentStatus: record['Tutor Payment'] || 'Pending',
   }));

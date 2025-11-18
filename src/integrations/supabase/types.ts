@@ -68,7 +68,7 @@ export type Database = {
       class_logs: {
         Row: {
           "Additional Info": string | null
-          "Class Cost": string | null
+          "Class Cost": number | null
           "Class ID": string | null
           "Class Number": string | null
           Content: string | null
@@ -83,7 +83,7 @@ export type Database = {
           Subject: string | null
           "Time (CST)": string | null
           "Time (hrs)": string | null
-          "Tutor Cost": string | null
+          "Tutor Cost": number | null
           "Tutor Name": string | null
           "Tutor Payment": string | null
           verification_deadline: string | null
@@ -91,7 +91,7 @@ export type Database = {
         }
         Insert: {
           "Additional Info"?: string | null
-          "Class Cost"?: string | null
+          "Class Cost"?: number | null
           "Class ID"?: string | null
           "Class Number"?: string | null
           Content?: string | null
@@ -106,7 +106,7 @@ export type Database = {
           Subject?: string | null
           "Time (CST)"?: string | null
           "Time (hrs)"?: string | null
-          "Tutor Cost"?: string | null
+          "Tutor Cost"?: number | null
           "Tutor Name"?: string | null
           "Tutor Payment"?: string | null
           verification_deadline?: string | null
@@ -114,7 +114,7 @@ export type Database = {
         }
         Update: {
           "Additional Info"?: string | null
-          "Class Cost"?: string | null
+          "Class Cost"?: number | null
           "Class ID"?: string | null
           "Class Number"?: string | null
           Content?: string | null
@@ -129,7 +129,7 @@ export type Database = {
           Subject?: string | null
           "Time (CST)"?: string | null
           "Time (hrs)"?: string | null
-          "Tutor Cost"?: string | null
+          "Tutor Cost"?: number | null
           "Tutor Name"?: string | null
           "Tutor Payment"?: string | null
           verification_deadline?: string | null

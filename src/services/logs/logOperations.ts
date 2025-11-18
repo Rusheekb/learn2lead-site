@@ -31,9 +31,9 @@ export const updateClassLog = async (
   if (classEvent.homework !== undefined)
     updateData['HW'] = classEvent.homework || null;
   if (classEvent.classCost !== undefined)
-    updateData['Class Cost'] = classEvent.classCost?.toString() || null;
+    updateData['Class Cost'] = classEvent.classCost ?? null;
   if (classEvent.tutorCost !== undefined)
-    updateData['Tutor Cost'] = classEvent.tutorCost?.toString() || null;
+    updateData['Tutor Cost'] = classEvent.tutorCost ?? null;
   if (classEvent.notes !== undefined)
     updateData['Additional Info'] = classEvent.notes || null;
 
