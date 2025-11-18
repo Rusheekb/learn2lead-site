@@ -24,8 +24,8 @@ export interface DbCodeLog {
   class_id: string | null;
   class_cost: string | null;
   tutor_cost: string | null;
-  student_payment: string | null;
-  tutor_payment: string | null;
+  student_payment_date: string | null;
+  tutor_payment_date: string | null;
   additional_info: string | null;
 }
 
@@ -44,13 +44,15 @@ export interface TransformedClassLog {
   classId: string;
   classCost: number;
   tutorCost: number;
+  studentPaymentDate: Date | null;
+  tutorPaymentDate: Date | null;
   studentPayment: string;
   tutorPayment: string;
   additionalInfo: string | null;
   isCodeLog: boolean;
   // Add these to match ClassEvent interface
   title?: string;
-  endTime: string; // Changed from string | undefined to string
+  endTime: string;
   zoomLink?: string | null;
   notes?: string | null;
 }

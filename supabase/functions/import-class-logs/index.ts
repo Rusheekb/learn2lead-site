@@ -69,23 +69,24 @@ Deno.serve(async (req) => {
       errors: [] as Array<{ row: number; error: string; data: any }>,
     };
 
-    // Helper function to parse payment field (date or status)
-    const parsePaymentField = (value: string | undefined): { status: string; date: string | null } => {
+    // Helper function to parse payment date from string (MM/DD/YY or MM/DD/YYYY format)
+    const parsePaymentDate = (value: string | undefined): string | null => {
       if (!value || value.trim() === '') {
-        return { status: 'pending', date: null };
+        return null;
       }
 
-      // Try to parse as date
       const trimmedValue = value.trim();
-      const dateTest = new Date(trimmedValue);
       
-      // Check if it's a valid date (common formats like MM/DD/YY, MM/DD/YYYY, etc.)
-      if (!isNaN(dateTest.getTime()) && (trimmedValue.includes('/') || trimmedValue.includes('-'))) {
-        return { status: 'paid', date: trimmedValue };
+      // Try to parse as date (common formats like MM/DD/YY, MM/DD/YYYY)
+      const dateMatch = trimmedValue.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+      if (dateMatch) {
+        const [, month, day, year] = dateMatch;
+        // Convert 2-digit year to 4-digit (assume 20XX)
+        const fullYear = year.length === 2 ? `20${year}` : year;
+        return `${fullYear}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
       }
 
-      // Otherwise, treat as status text (normalize to lowercase)
-      return { status: trimmedValue.toLowerCase(), date: null };
+      return null;
     };
 
     // Process each row
@@ -110,21 +111,9 @@ Deno.serve(async (req) => {
           throw new Error(`Invalid date: ${row['Date']}`);
         }
 
-        // Parse payment fields
-        const studentPayment = parsePaymentField(row['Student Payment']);
-        const tutorPayment = parsePaymentField(row['Tutor Payment']);
-
-        // Build additional info with payment dates if they exist
-        const additionalInfoParts: string[] = [];
-        if (row['Additional Info']) {
-          additionalInfoParts.push(row['Additional Info']);
-        }
-        if (studentPayment.date) {
-          additionalInfoParts.push(`Student paid: ${studentPayment.date}`);
-        }
-        if (tutorPayment.date) {
-          additionalInfoParts.push(`Tutor paid: ${tutorPayment.date}`);
-        }
+        // Parse payment dates from Student Payment and Tutor Payment columns
+        const studentPaymentDate = parsePaymentDate(row['Student Payment']);
+        const tutorPaymentDate = parsePaymentDate(row['Tutor Payment']);
 
         // Prepare the record for insertion
         const record = {
@@ -140,9 +129,9 @@ Deno.serve(async (req) => {
           'HW': row['HW'] || null,
           'Class Cost': row['Class Cost'] ? parseFloat(row['Class Cost'].toString().replace(/[^0-9.-]/g, '')) || null : null,
           'Tutor Cost': row['Tutor Cost'] ? parseFloat(row['Tutor Cost'].toString().replace(/[^0-9.-]/g, '')) || null : null,
-          'Student Payment': studentPayment.status,
-          'Tutor Payment': tutorPayment.status,
-          'Additional Info': additionalInfoParts.length > 0 ? additionalInfoParts.join(' | ') : null,
+          'student_payment_date': studentPaymentDate,
+          'tutor_payment_date': tutorPaymentDate,
+          'Additional Info': row['Additional Info'] || null,
         };
 
         // Insert into database

@@ -102,14 +102,20 @@ const ClassTable: React.FC<ClassTableProps> = ({
     {
       header: 'Payment Status',
       cell: (cls) => (
-        <div className="space-y-1">
+        <div className="space-y-2">
           <div className="flex items-center gap-2">
+            <div className={`w-2 h-2 rounded-full ${cls.studentPaymentDate ? 'bg-green-500' : 'bg-red-500'}`} />
             <span className="text-xs text-muted-foreground">Student:</span>
-            <StatusBadge status={cls.studentPayment || 'pending'} />
+            <span className="text-sm font-medium">
+              {cls.studentPaymentDate ? format(cls.studentPaymentDate, 'M/d/yy') : ''}
+            </span>
           </div>
           <div className="flex items-center gap-2">
+            <div className={`w-2 h-2 rounded-full ${cls.tutorPaymentDate ? 'bg-green-500' : 'bg-red-500'}`} />
             <span className="text-xs text-muted-foreground">Tutor:</span>
-            <StatusBadge status={cls.tutorPayment || 'pending'} />
+            <span className="text-sm font-medium">
+              {cls.tutorPaymentDate ? format(cls.tutorPaymentDate, 'M/d/yy') : ''}
+            </span>
           </div>
         </div>
       ),
