@@ -79,13 +79,13 @@ export type Database = {
           HW: string | null
           id: string
           "Student Name": string | null
-          "Student Payment": string | null
+          student_payment_date: string | null
           Subject: string | null
           "Time (CST)": string | null
           "Time (hrs)": string | null
           "Tutor Cost": number | null
           "Tutor Name": string | null
-          "Tutor Payment": string | null
+          tutor_payment_date: string | null
           verification_deadline: string | null
           verified_by_student: boolean | null
         }
@@ -102,13 +102,13 @@ export type Database = {
           HW?: string | null
           id?: string
           "Student Name"?: string | null
-          "Student Payment"?: string | null
+          student_payment_date?: string | null
           Subject?: string | null
           "Time (CST)"?: string | null
           "Time (hrs)"?: string | null
           "Tutor Cost"?: number | null
           "Tutor Name"?: string | null
-          "Tutor Payment"?: string | null
+          tutor_payment_date?: string | null
           verification_deadline?: string | null
           verified_by_student?: boolean | null
         }
@@ -125,13 +125,13 @@ export type Database = {
           HW?: string | null
           id?: string
           "Student Name"?: string | null
-          "Student Payment"?: string | null
+          student_payment_date?: string | null
           Subject?: string | null
           "Time (CST)"?: string | null
           "Time (hrs)"?: string | null
           "Tutor Cost"?: number | null
           "Tutor Name"?: string | null
-          "Tutor Payment"?: string | null
+          tutor_payment_date?: string | null
           verification_deadline?: string | null
           verified_by_student?: boolean | null
         }

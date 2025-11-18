@@ -28,20 +28,21 @@ export interface ClassEvent extends BaseEvent {
   endTime: string;
   subject: string;
   zoomLink?: string | null;
-  notes: string | null; // Changed from string | null | undefined to match BaseEvent
+  notes: string | null;
   status?: ClassStatus;
   attendance?: AttendanceStatus;
   materials?: string[] | null;
   materialsUrl?: string[] | null;
   recurring?: boolean;
   recurringDays?: string[];
-  relationshipId?: string; // Added relationshipId property to fix the TypeScript error
-  // Add missing properties to fix type errors
+  relationshipId?: string;
   duration?: number;
   content?: string;
   homework?: string;
   classCost?: number;
   tutorCost?: number;
+  studentPaymentDate?: Date | null;
+  tutorPaymentDate?: Date | null;
   studentPayment?: PaymentStatus;
   tutorPayment?: PaymentStatus;
   isCodeLog?: boolean;

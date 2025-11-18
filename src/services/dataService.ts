@@ -143,15 +143,15 @@ export const fetchPaymentsData = async () => {
     return [];
   }
 
-  return data.map((record) => ({
+  return data.map((record: any) => ({
     id: `${record['Class Number'] || ''}`,
     date: record['Date'] || '',
     tutorName: record['Tutor Name'] || '',
     studentName: record['Student Name'] || '',
     classCost: (record['Class Cost'] as number) || 0,
     tutorCost: (record['Tutor Cost'] as number) || 0,
-    studentPaymentStatus: record['Student Payment'] || 'Pending',
-    tutorPaymentStatus: record['Tutor Payment'] || 'Pending',
+    studentPaymentStatus: 'pending',
+    tutorPaymentStatus: 'pending',
   }));
 };
 
