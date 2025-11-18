@@ -13,6 +13,7 @@ import {
   parseDateWithFormats,
 } from '@/services/utils/dateTimeTransformers';
 import { parseNumericString } from '@/utils/numberUtils';
+import { parseStartTime } from './timeFormatUtils';
 
 interface DbRecord {
   id: string;
@@ -25,8 +26,8 @@ interface DbRecord {
   Subject?: string | null;
   Content?: string | null;
   HW?: string | null;
-  'Class Cost'?: string | number | null;
-  'Tutor Cost'?: string | number | null;
+  'Class Cost'?: number | null;
+  'Tutor Cost'?: number | null;
   'Student Payment'?: string | null;
   'Tutor Payment'?: string | null;
   'Additional Info'?: string | null;
@@ -55,16 +56,17 @@ export const transformDbRecordToClassEvent = (record: unknown): ClassEvent => {
     }
 
     const duration = parseNumericString(dbRecord['Time (hrs)']);
-    const startTime = dbRecord['Time (CST)'] || '';
+    const rawStartTime = dbRecord['Time (CST)'] || '';
+    const startTime = parseStartTime(rawStartTime);
     const endTime = calculateEndTime(startTime, duration);
 
     // Cast payment statuses using the validators
     const studentPayment = dbRecord['Student Payment'] || 'pending';
     const tutorPayment = dbRecord['Tutor Payment'] || 'pending';
 
-    // Handle null values for parseNumericString
-    const classCost = parseNumericString(dbRecord['Class Cost']);
-    const tutorCost = parseNumericString(dbRecord['Tutor Cost']);
+    // Costs are already numeric from the database
+    const classCost = dbRecord['Class Cost'] ?? 0;
+    const tutorCost = dbRecord['Tutor Cost'] ?? 0;
 
     return {
       id: dbRecord.id,
