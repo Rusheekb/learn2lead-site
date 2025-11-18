@@ -28,8 +28,8 @@ interface DbRecord {
   HW?: string | null;
   'Class Cost'?: number | null;
   'Tutor Cost'?: number | null;
-  'Student Payment'?: string | null;
-  'Tutor Payment'?: string | null;
+  student_payment_date?: string | Date | null;
+  tutor_payment_date?: string | Date | null;
   'Additional Info'?: string | null;
 }
 
@@ -60,9 +60,22 @@ export const transformDbRecordToClassEvent = (record: unknown): ClassEvent => {
     const startTime = parseStartTime(rawStartTime);
     const endTime = calculateEndTime(startTime, duration);
 
-    // Cast payment statuses using the validators
-    const studentPayment = dbRecord['Student Payment'] || 'pending';
-    const tutorPayment = dbRecord['Tutor Payment'] || 'pending';
+    // Parse payment dates
+    const studentPaymentDate = dbRecord.student_payment_date 
+      ? (typeof dbRecord.student_payment_date === 'string' 
+          ? new Date(dbRecord.student_payment_date) 
+          : dbRecord.student_payment_date)
+      : null;
+
+    const tutorPaymentDate = dbRecord.tutor_payment_date 
+      ? (typeof dbRecord.tutor_payment_date === 'string' 
+          ? new Date(dbRecord.tutor_payment_date) 
+          : dbRecord.tutor_payment_date)
+      : null;
+
+    // Derive payment status from dates
+    const studentPayment = studentPaymentDate ? 'paid' : 'unpaid';
+    const tutorPayment = tutorPaymentDate ? 'paid' : 'unpaid';
 
     // Costs are already numeric from the database
     const classCost = dbRecord['Class Cost'] ?? 0;
@@ -86,12 +99,10 @@ export const transformDbRecordToClassEvent = (record: unknown): ClassEvent => {
       notes: dbRecord['Additional Info'] || '',
       classCost,
       tutorCost,
-      studentPayment: isValidPaymentStatus(studentPayment)
-        ? studentPayment
-        : 'pending',
-      tutorPayment: isValidPaymentStatus(tutorPayment)
-        ? tutorPayment
-        : 'pending',
+      studentPaymentDate,
+      tutorPaymentDate,
+      studentPayment: studentPayment as PaymentStatus,
+      tutorPayment: tutorPayment as PaymentStatus,
       recurring: false,
       materials: [],
     };
@@ -121,6 +132,8 @@ function createErrorClassEvent(id: string): ClassEvent {
     notes: 'Error loading class data',
     classCost: 0,
     tutorCost: 0,
+    studentPaymentDate: null,
+    tutorPaymentDate: null,
     studentPayment: 'pending' as PaymentStatus,
     tutorPayment: 'pending' as PaymentStatus,
     recurring: false,
