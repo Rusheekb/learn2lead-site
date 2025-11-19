@@ -11,8 +11,6 @@ export const useSimplifiedClassLogs = () => {
   const [selectedClass, setSelectedClass] = useState<ClassEvent | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [subjectFilter, setSubjectFilter] = useState('');
   const [dateFilter, setDateFilter] = useState<Date | null>(null);
   const [activeDetailsTab, setActiveDetailsTab] = useState('details');
   const [page, setPage] = useState(1);
@@ -64,11 +62,9 @@ export const useSimplifiedClassLogs = () => {
     queryClient.invalidateQueries({ queryKey: ['class-logs'] });
   };
 
-  // Mock filter functions
+  // Filter classes by search term and date
   const filteredClasses = classes.filter(c => 
-    (!searchTerm || c.title?.toLowerCase().includes(searchTerm.toLowerCase())) &&
-    (!statusFilter || c.status === statusFilter) &&
-    (!subjectFilter || c.subject === subjectFilter)
+    (!searchTerm || c.title?.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const totalItems = filteredClasses.length;
@@ -78,8 +74,6 @@ export const useSimplifiedClassLogs = () => {
   const formatTime = (time: string) => time;
   const clearFilters = () => {
     setSearchTerm('');
-    setStatusFilter('');
-    setSubjectFilter('');
     setDateFilter(null);
   };
 
@@ -94,10 +88,6 @@ export const useSimplifiedClassLogs = () => {
     // Filters
     searchTerm,
     setSearchTerm,
-    statusFilter,
-    setStatusFilter,
-    subjectFilter,
-    setSubjectFilter,
     dateFilter,
     setDateFilter,
     clearFilters,

@@ -5,14 +5,9 @@ import FilterControls from '@/components/common/FilterControls';
 export interface ClassFiltersProps {
   searchTerm: string;
   setSearchTerm: (term: string) => void;
-  statusFilter: string;
-  setStatusFilter: (status: string) => void;
-  subjectFilter: string;
-  setSubjectFilter: (subject: string) => void;
   dateFilter: Date | undefined;
   setDateFilter: (date: Date | undefined) => void;
   clearFilters: () => void;
-  allSubjects: string[];
   paymentFilter?: string;
   setPaymentFilter?: (status: string) => void;
 }
@@ -20,34 +15,17 @@ export interface ClassFiltersProps {
 const ClassFilters: React.FC<ClassFiltersProps> = ({
   searchTerm,
   setSearchTerm,
-  statusFilter,
-  setStatusFilter,
-  subjectFilter,
-  setSubjectFilter,
   dateFilter,
   setDateFilter,
   clearFilters,
-  allSubjects,
   paymentFilter,
   setPaymentFilter,
 }) => {
-  // Common status options with guaranteed non-empty values
-  const statusOptions = [
-    { value: 'completed', label: 'Completed' },
-    { value: 'upcoming', label: 'Upcoming' },
-    { value: 'cancelled', label: 'Cancelled' },
-  ];
-
   // Payment filter options
   const paymentOptions = [
     { value: 'paid', label: 'Paid' },
     { value: 'pending', label: 'Pending' },
   ];
-
-  // Filter out empty subjects and ensure all have valid values
-  const validSubjects = allSubjects.filter(
-    (subject) => subject && subject.trim() !== ''
-  );
 
   return (
     <div className="space-y-4">
@@ -55,16 +33,6 @@ const ClassFilters: React.FC<ClassFiltersProps> = ({
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         searchPlaceholder="Search by title, tutor, or student"
-        
-        showStatusFilter={true}
-        statusFilter={statusFilter}
-        setStatusFilter={setStatusFilter}
-        statusOptions={statusOptions}
-        
-        showSubjectFilter={true}
-        subjectFilter={subjectFilter}
-        setSubjectFilter={setSubjectFilter}
-        subjectOptions={validSubjects}
         
         showDateFilter={true}
         dateFilter={dateFilter}
