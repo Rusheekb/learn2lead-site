@@ -10,8 +10,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StudentContent } from '@/components/shared/StudentContent.tsx';
-import { StatusBadge, AttendanceBadge } from './BadgeComponents';
-import { MessageCountBadge } from '@/components/shared/ClassBadges';
 
 import { format } from 'date-fns';
 import { FileText, ExternalLink } from 'lucide-react';
@@ -81,61 +79,47 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
           </TabsList>
 
           <TabsContent value="details" className="space-y-4 pt-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-3">
               <div>
-                <h4 className="text-sm font-medium text-gray-500">Subject</h4>
-                <p>{selectedClass.subject}</p>
+                <h4 className="text-sm font-medium text-muted-foreground">Subject</h4>
+                <p className="text-foreground">{selectedClass.subject}</p>
               </div>
               <div>
-                <h4 className="text-sm font-medium text-gray-500">Status</h4>
-                <div>
-                  <StatusBadge status={selectedClass.status} />
-                </div>
+                <h4 className="text-sm font-medium text-muted-foreground">Tutor</h4>
+                <p className="text-foreground">{selectedClass.tutorName}</p>
               </div>
               <div>
-                <h4 className="text-sm font-medium text-gray-500">Tutor</h4>
-                <p>{selectedClass.tutorName}</p>
+                <h4 className="text-sm font-medium text-muted-foreground">Student</h4>
+                <p className="text-foreground">{selectedClass.studentName}</p>
               </div>
               <div>
-                <h4 className="text-sm font-medium text-gray-500">Student</h4>
-                <p>{selectedClass.studentName}</p>
+                <h4 className="text-sm font-medium text-muted-foreground">Date</h4>
+                <p className="text-foreground">{formatDate(selectedClass.date)}</p>
               </div>
               <div>
-                <h4 className="text-sm font-medium text-gray-500">Date</h4>
-                <p>{formatDate(selectedClass.date)}</p>
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-gray-500">Time</h4>
-                <p>
+                <h4 className="text-sm font-medium text-muted-foreground">Time</h4>
+                <p className="text-foreground">
                   {formatTime(selectedClass.startTime)} -{' '}
                   {formatTime(selectedClass.endTime)}
                 </p>
               </div>
-              <div>
-                <h4 className="text-sm font-medium text-gray-500">
-                  Attendance
-                </h4>
-                <div>
-                  <AttendanceBadge attendance={selectedClass.attendance} />
-                </div>
-              </div>
             </div>
 
             <div>
-              <h4 className="text-sm font-medium text-gray-500">Zoom Link</h4>
+              <h4 className="text-sm font-medium text-muted-foreground">Zoom Link</h4>
               <a
                 href={selectedClass.zoomLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-tutoring-blue hover:underline"
+                className="text-primary hover:underline"
               >
                 {selectedClass.zoomLink}
               </a>
             </div>
 
             <div>
-              <h4 className="text-sm font-medium text-gray-500">Notes</h4>
-              <p className="mt-1 text-gray-700">
+              <h4 className="text-sm font-medium text-muted-foreground">Notes</h4>
+              <p className="mt-1 text-foreground">
                 {selectedClass.notes || 'No notes recorded for this class.'}
               </p>
             </div>
@@ -143,26 +127,25 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
 
           <TabsContent value="materials" className="space-y-4 pt-4">
             <div>
-              <h4 className="text-sm font-medium text-gray-500">Class Materials</h4>
+              <h4 className="text-sm font-medium text-muted-foreground">Class Materials</h4>
               {selectedClass.materialsUrl && selectedClass.materialsUrl.length > 0 ? (
                 <ul className="mt-2 space-y-2">
                   {selectedClass.materialsUrl.map((url: string, index: number) => (
-                    <li key={index} className="flex items-center p-2 border rounded-md">
-                      <FileText className="h-4 w-4 mr-2 text-tutoring-blue" />
+                    <li key={index} className="p-2 border border-border rounded-md">
                       <a
                         href={url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-tutoring-blue hover:underline flex items-center"
+                        className="text-primary hover:underline flex items-center gap-1"
                       >
-                        <span className="mr-1">{getFilenameFromUrl(url)}</span>
+                        <span>{getFilenameFromUrl(url)}</span>
                         <ExternalLink className="h-3 w-3" />
                       </a>
                     </li>
                   ))}
                 </ul>
               ) : (
-                <p className="text-gray-500 mt-2">No materials uploaded for this class.</p>
+                <p className="text-muted-foreground mt-2">No materials uploaded for this class.</p>
               )}
             </div>
           </TabsContent>
