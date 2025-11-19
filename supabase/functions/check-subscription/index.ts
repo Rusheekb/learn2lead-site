@@ -111,53 +111,77 @@ serve(async (req) => {
       status: "active",
       limit: 1,
     });
-    const hasActiveSub = subscriptions.data.length > 0;
+    
+    let hasActiveSub = subscriptions.data.length > 0;
     let productId = null;
     let subscriptionEnd = null;
     let creditsRemaining = 0;
     let planName = null;
+    let isManualSubscription = false;
 
-    if (hasActiveSub) {
-      const subscription = subscriptions.data[0];
+    // Check for manual subscriptions if no Stripe subscription found
+    if (!hasActiveSub) {
+      const { data: manualSub, error: manualError } = await supabaseClient
+        .from('student_subscriptions')
+        .select('id, stripe_subscription_id, status, current_period_end, plan_id')
+        .eq('student_id', user.id)
+        .eq('status', 'active')
+        .ilike('stripe_subscription_id', 'manual_%')
+        .maybeSingle();
       
-      // Handle potential null or invalid current_period_end
-      if (subscription.current_period_end) {
-        try {
-          subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
-          logStep("Active subscription found", { subscriptionId: subscription.id, endDate: subscriptionEnd });
-        } catch (error) {
-          logStep("Warning: Invalid subscription end date", { 
-            subscriptionId: subscription.id, 
-            current_period_end: subscription.current_period_end,
-            error: error instanceof Error ? error.message : String(error)
-          });
+      if (manualSub && !manualError) {
+        hasActiveSub = true;
+        isManualSubscription = true;
+        productId = manualSub.plan_id || 'manual';
+        subscriptionEnd = manualSub.current_period_end;
+        logStep("Manual subscription found", { subscriptionId: manualSub.stripe_subscription_id });
+      }
+    }
+
+    // ALWAYS retrieve credits from ledger (single source of truth)
+    const { data: ledgerData, error: ledgerError } = await supabaseClient
+      .from('class_credits_ledger')
+      .select('balance_after')
+      .eq('student_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (ledgerData && !ledgerError) {
+      creditsRemaining = ledgerData.balance_after || 0;
+      logStep("Retrieved credits from ledger", { creditsRemaining });
+    } else {
+      logStep("No ledger entries found");
+    }
+
+    // Get subscription details if active
+    if (hasActiveSub) {
+      if (!isManualSubscription && subscriptions.data.length > 0) {
+        // Stripe subscription - get metadata
+        const subscription = subscriptions.data[0];
+        
+        if (subscription.current_period_end) {
+          try {
+            subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
+            logStep("Active Stripe subscription found", { subscriptionId: subscription.id, endDate: subscriptionEnd });
+          } catch (error) {
+            logStep("Warning: Invalid subscription end date", { 
+              subscriptionId: subscription.id, 
+              current_period_end: subscription.current_period_end,
+              error: error instanceof Error ? error.message : String(error)
+            });
+            subscriptionEnd = null;
+          }
+        } else {
+          logStep("Active Stripe subscription found without end date", { subscriptionId: subscription.id });
           subscriptionEnd = null;
         }
-      } else {
-        logStep("Active subscription found without end date", { subscriptionId: subscription.id });
-        subscriptionEnd = null;
-      }
-      
-      productId = subscription.items.data[0].price.product as string;
-      logStep("Determined subscription tier", { productId });
-
-      // Get credits from ledger (single source of truth)
-      const { data: ledgerData, error: ledgerError } = await supabaseClient
-        .from('class_credits_ledger')
-        .select('balance_after')
-        .eq('student_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (ledgerData && !ledgerError) {
-        creditsRemaining = ledgerData.balance_after || 0;
-        logStep("Retrieved credits from ledger", { creditsRemaining });
-      } else {
-        logStep("No ledger entries found, checking subscription table");
+        
+        productId = subscription.items.data[0].price.product as string;
+        logStep("Determined subscription tier", { productId });
       }
 
-      // Get plan details
+      // Get plan details (works for both Stripe and manual)
       const { data: subData, error: subError } = await supabaseClient
         .from('student_subscriptions')
         .select('subscription_plans(name, classes_per_month)')
@@ -166,8 +190,10 @@ serve(async (req) => {
         .maybeSingle();
 
       if (subData && !subError) {
-        planName = subData.subscription_plans?.name || null;
-        logStep("Retrieved plan details", { planName });
+        planName = subData.subscription_plans?.name || (isManualSubscription ? 'Direct Payment' : null);
+        logStep("Retrieved plan details", { planName, isManual: isManualSubscription });
+      } else if (isManualSubscription) {
+        planName = 'Direct Payment';
       }
     } else {
       logStep("No active subscription found");
