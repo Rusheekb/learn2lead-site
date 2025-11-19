@@ -32,10 +32,6 @@ const ClassLogs: React.FC = () => {
   const {
     searchTerm,
     setSearchTerm,
-    statusFilter,
-    setStatusFilter,
-    subjectFilter,
-    setSubjectFilter,
     dateFilter,
     setDateFilter,
     isDetailsOpen,
@@ -51,7 +47,6 @@ const ClassLogs: React.FC = () => {
     classes,
     filteredClasses,
     paginatedClasses,
-    allSubjects,
     page,
     pageSize,
     totalPages,
@@ -183,14 +178,9 @@ const ClassLogs: React.FC = () => {
       <ClassFilters
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
-        statusFilter={statusFilter}
-        setStatusFilter={setStatusFilter}
-        subjectFilter={subjectFilter}
-        setSubjectFilter={setSubjectFilter}
         dateFilter={dateFilter || undefined}
         setDateFilter={(date) => setDateFilter(date || null)}
         clearFilters={clearFilters}
-        allSubjects={allSubjects}
       />
 
       <ClassTable
