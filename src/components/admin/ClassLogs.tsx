@@ -125,16 +125,6 @@ const ClassLogs: React.FC = () => {
             <Upload className="h-4 w-4" />
             Import CSV
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRefreshData}
-            className="flex items-center gap-2"
-            disabled={isLoading}
-          >
-            <RefreshCw className="h-4 w-4" />
-            {isLoading ? 'Refreshing...' : 'Refresh'}
-          </Button>
         </div>
       </div>
 

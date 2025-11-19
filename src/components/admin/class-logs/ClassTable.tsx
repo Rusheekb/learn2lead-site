@@ -2,7 +2,6 @@
 import React from 'react';
 import DataTable, { ColumnDefinition } from '@/components/common/DataTable';
 import { format } from 'date-fns';
-import { StatusBadge, AttendanceBadge } from './BadgeComponents';
 import { CircleMessageBadge } from '@/components/shared/ClassBadges';
 import { Button } from '@/components/ui/button';
 import { ClassEvent } from '@/types/tutorTypes';
