@@ -23,6 +23,74 @@ interface ClassLogRow {
   'Additional Info': string;
 }
 
+// Utility functions for ID generation (duplicated from frontend for edge function use)
+function getInitials(name: string): string {
+  const cleaned = name.trim();
+  const parts = cleaned.split(/\s+/);
+  
+  if (parts.length === 1) {
+    return cleaned.substring(0, 2).toUpperCase();
+  }
+  
+  const firstInitial = parts[0][0] || '';
+  const lastInitial = parts[parts.length - 1][0] || '';
+  
+  return (firstInitial + lastInitial).toUpperCase();
+}
+
+function formatDateForId(dateStr: string): string {
+  const date = new Date(dateStr);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  
+  return `${year}${month}${day}`;
+}
+
+function generateBaseId(studentName: string, tutorName: string, dateStr: string): string {
+  const studentInitials = getInitials(studentName);
+  const tutorInitials = getInitials(tutorName);
+  const formattedDate = formatDateForId(dateStr);
+  
+  return `${studentInitials}-${tutorInitials}-${formattedDate}`;
+}
+
+async function getNextSequence(
+  supabase: any,
+  baseId: string
+): Promise<number> {
+  const { data: existingLogs } = await supabase
+    .from('class_logs')
+    .select('Class Number')
+    .like('Class Number', `${baseId}-%`);
+  
+  if (!existingLogs || existingLogs.length === 0) {
+    return 1;
+  }
+  
+  const pattern = new RegExp(`^${baseId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}-(\\d+)$`);
+  const sequences = existingLogs
+    .map((log: any) => {
+      const match = log['Class Number']?.match(pattern);
+      return match ? parseInt(match[1], 10) : 0;
+    })
+    .filter((seq: number) => seq > 0);
+  
+  return sequences.length > 0 ? Math.max(...sequences) + 1 : 1;
+}
+
+async function generateClassId(
+  supabase: any,
+  studentName: string,
+  tutorName: string,
+  dateStr: string
+): Promise<string> {
+  const baseId = generateBaseId(studentName, tutorName, dateStr);
+  const sequence = await getNextSequence(supabase, baseId);
+  
+  return `${baseId}-${sequence}`;
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -66,6 +134,8 @@ Deno.serve(async (req) => {
     const results = {
       success: 0,
       failed: 0,
+      updated: 0,
+      inserted: 0,
       errors: [] as Array<{ row: number; error: string; data: any }>,
     };
 
@@ -98,6 +168,10 @@ Deno.serve(async (req) => {
         if (!row['Date']) {
           throw new Error('Date is required');
         }
+        
+        if (!row['Student Name'] || !row['Tutor Name']) {
+          throw new Error('Student Name and Tutor Name are required');
+        }
 
         // Parse and validate date
         let parsedDate: string;
@@ -111,15 +185,29 @@ Deno.serve(async (req) => {
           throw new Error(`Invalid date: ${row['Date']}`);
         }
 
+        // Generate or use existing Class Number
+        let classNumber = row['Class Number'];
+        
+        if (!classNumber || classNumber.trim() === '') {
+          // Generate new ID if not provided
+          classNumber = await generateClassId(
+            supabase,
+            row['Student Name'],
+            row['Tutor Name'],
+            parsedDate
+          );
+          console.log(`Generated new Class Number: ${classNumber}`);
+        }
+
         // Parse payment dates from Student Payment and Tutor Payment columns
         const studentPaymentDate = parsePaymentDate(row['Student Payment']);
         const tutorPaymentDate = parsePaymentDate(row['Tutor Payment']);
 
-        // Prepare the record for insertion
+        // Prepare the record for upsert
         const record = {
-          'Class Number': row['Class Number'] || null,
-          'Tutor Name': row['Tutor Name'] || null,
-          'Student Name': row['Student Name'] || null,
+          'Class Number': classNumber,
+          'Tutor Name': row['Tutor Name'],
+          'Student Name': row['Student Name'],
           'Date': parsedDate,
           'Day': row['Day'] || null,
           'Time (CST)': row['Time (CST)'] || null,
@@ -134,17 +222,41 @@ Deno.serve(async (req) => {
           'Additional Info': row['Additional Info'] || null,
         };
 
-        // Insert into database
-        const { error: insertError } = await supabase
+        // Check if record exists with this Class Number
+        const { data: existing } = await supabase
           .from('class_logs')
-          .insert(record);
+          .select('id')
+          .eq('Class Number', classNumber)
+          .maybeSingle();
 
-        if (insertError) {
-          throw insertError;
+        if (existing) {
+          // Update existing record
+          const { error: updateError } = await supabase
+            .from('class_logs')
+            .update(record)
+            .eq('Class Number', classNumber);
+
+          if (updateError) {
+            throw updateError;
+          }
+
+          results.updated++;
+          console.log(`Row ${i + 1}: Updated existing record ${classNumber}`);
+        } else {
+          // Insert new record
+          const { error: insertError } = await supabase
+            .from('class_logs')
+            .insert(record);
+
+          if (insertError) {
+            throw insertError;
+          }
+
+          results.inserted++;
+          console.log(`Row ${i + 1}: Inserted new record ${classNumber}`);
         }
 
         results.success++;
-        console.log(`Row ${i + 1}: Success`);
       } catch (error) {
         results.failed++;
         results.errors.push({
@@ -156,7 +268,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    console.log(`Import completed: ${results.success} success, ${results.failed} failed`);
+    console.log(`Import completed: ${results.success} success (${results.inserted} inserted, ${results.updated} updated), ${results.failed} failed`);
 
     return new Response(JSON.stringify(results), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
