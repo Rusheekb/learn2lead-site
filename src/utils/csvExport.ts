@@ -63,8 +63,18 @@ export const exportClassLogsToCSV = (
     });
     const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' });
 
+    // Format payment dates as M/d/yy or blank if no date
+    const formatPaymentDate = (paymentDate: Date | null | undefined): string => {
+      if (!paymentDate) return '';
+      const d = new Date(paymentDate);
+      const month = d.getMonth() + 1;
+      const day = d.getDate();
+      const year = d.getFullYear().toString().slice(-2);
+      return `${month}/${day}/${year}`;
+    };
+
     return [
-      cls.title || '',
+      cls.classNumber || cls.title || '',
       cls.tutorName || '',
       cls.studentName || '',
       formattedDate,
@@ -76,8 +86,8 @@ export const exportClassLogsToCSV = (
       escapeCSVField(cls.homework || ''),
       cls.classCost?.toString() || '',
       cls.tutorCost?.toString() || '',
-      cls.studentPayment || '',
-      cls.tutorPayment || '',
+      formatPaymentDate(cls.studentPaymentDate),
+      formatPaymentDate(cls.tutorPaymentDate),
       escapeCSVField(cls.notes || '')
     ];
   });

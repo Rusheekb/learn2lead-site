@@ -83,6 +83,7 @@ export const transformDbRecordToClassEvent = (record: unknown): ClassEvent => {
 
     return {
       id: dbRecord.id,
+      classNumber: dbRecord['Class Number'] || '',
       title: dbRecord['Class Number'] || '',
       tutorName: dbRecord['Tutor Name'] || '',
       studentName: dbRecord['Student Name'] || '',
