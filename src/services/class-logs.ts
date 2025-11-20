@@ -3,6 +3,7 @@ import { supabase, handleResult } from './supabaseClient';
 import { ClassEvent, DbClassLog } from '@/types/tutorTypes';
 import { transformDbRecordToClassEvent } from './utils/classEventMapper';
 import { format } from 'date-fns';
+import { generateClassId } from '@/utils/classIdGenerator';
 
 export async function fetchClassLogs(): Promise<ClassEvent[]> {
   const result = await supabase.from('class_logs').select('*');
@@ -32,11 +33,35 @@ export async function createClassLog(
   // Then calculate day based on the formatted date
   const dayValue = classLog.day || classLog.Day || 
     new Date(formattedDate).toLocaleDateString('en-US', { weekday: 'long' });
+  
+  // Generate or use existing Class Number
+  let classNumber = classLog['Class Number'];
+  
+  if (!classNumber) {
+    // Fetch existing class numbers for ID generation
+    const { data: existingLogs } = await supabase
+      .from('class_logs')
+      .select('Class Number')
+      .eq('Date', formattedDate);
+    
+    const existingIds = existingLogs?.map(log => (log as any)['Class Number'] as string).filter(Boolean) || [];
+    
+    // Generate unique class ID
+    const studentName = classLog.studentName || classLog['Student Name'] || 'Unknown';
+    const tutorName = classLog.tutorName || classLog['Tutor Name'] || 'Unknown';
+    
+    classNumber = generateClassId({
+      studentName,
+      tutorName,
+      date: formattedDate,
+      existingIds,
+    });
+  }
     
   // Create a properly formatted object that matches the database schema
   const dbRecord = {
     'Date': formattedDate,
-    'Class Number': classLog.title || classLog['Class Number'] || null,
+    'Class Number': classNumber,
     'Tutor Name': classLog.tutorName || classLog['Tutor Name'] || null,
     'Student Name': classLog.studentName || classLog['Student Name'] || null,
     'Day': dayValue,
