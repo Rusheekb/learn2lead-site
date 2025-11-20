@@ -19,6 +19,7 @@ interface BaseEvent {
 
 // Class event interface
 export interface ClassEvent extends BaseEvent {
+  classNumber?: string;
   tutorId?: string;
   tutorName?: string;
   studentId?: string;
