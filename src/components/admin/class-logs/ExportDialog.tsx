@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, FileText } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -17,6 +17,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
+import { downloadTestCSV } from '@/utils/csvTestData';
 
 interface ExportDialogProps {
   open: boolean;
@@ -125,6 +126,24 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
               Start date must be before end date
             </p>
           )}
+        </div>
+
+        <div className="border-t pt-4 mt-2">
+          <p className="text-sm text-muted-foreground mb-3">
+            Need to test the import/export system?
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              downloadTestCSV();
+              onOpenChange(false);
+            }}
+            className="w-full"
+          >
+            <FileText className="mr-2 h-4 w-4" />
+            Download Test CSV
+          </Button>
         </div>
 
         <DialogFooter className="flex-col sm:flex-row gap-2">
