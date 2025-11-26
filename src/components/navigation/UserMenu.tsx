@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import UserAccountButton from './UserAccountButton';
 import UserDropdownContent from './UserDropdownContent';
 import { AppRole } from '@/hooks/useProfile';
+import { getDashboardPath } from '@/utils/authNavigation';
 
 interface UserMenuProps {
   user: any;
@@ -20,6 +21,11 @@ const UserMenu: React.FC<UserMenuProps> = ({ user, userRole }) => {
 
   const handleLogin = () => {
     navigate('/login');
+  };
+
+  const handleDashboardClick = () => {
+    const dashboardPath = getDashboardPath(userRole);
+    navigate(dashboardPath);
   };
 
   if (!user) {
@@ -38,7 +44,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ user, userRole }) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <UserAccountButton email={user.email} />
+        <UserAccountButton email={user.email} onClick={handleDashboardClick} />
       </DropdownMenuTrigger>
       <UserDropdownContent userRole={userRole} />
     </DropdownMenu>
