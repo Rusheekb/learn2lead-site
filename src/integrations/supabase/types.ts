@@ -217,6 +217,41 @@ export type Database = {
         }
         Relationships: []
       }
+      monthly_reports_sent: {
+        Row: {
+          created_at: string
+          id: string
+          report_content: string | null
+          report_month: string
+          sent_at: string
+          student_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          report_content?: string | null
+          report_month: string
+          sent_at?: string
+          student_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          report_content?: string | null
+          report_month?: string
+          sent_at?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monthly_reports_sent_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string
