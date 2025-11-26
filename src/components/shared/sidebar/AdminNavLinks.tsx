@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { BarChart3, CreditCard, FileText, LayoutDashboard, Settings, User, UserRound, Users, UsersRound } from 'lucide-react';
+import { BarChart3, CreditCard, FileText, LayoutDashboard, Settings, User, UserRound, Users, UsersRound, Mail } from 'lucide-react';
 import { useSidebarStyles } from './useSidebarStyles';
 
 interface AdminNavLinksProps {
@@ -41,6 +41,18 @@ const AdminNavLinks: React.FC<AdminNavLinksProps> = ({
       >
         <CreditCard className="h-5 w-5" aria-hidden="true" />
         {isExpanded && <span className="ml-3">Credits</span>}
+      </NavLink>
+      <NavLink
+        to="/admin-dashboard?tab=reports" 
+        className={() => 
+          isLinkActive('/admin-dashboard', { key: 'tab', value: 'reports' })
+            ? `${baseClasses} ${expandedClasses} ${activeClasses}`
+            : `${baseClasses} ${expandedClasses}`
+        }
+        aria-label="Monthly Reports"
+      >
+        <Mail className="h-5 w-5" aria-hidden="true" />
+        {isExpanded && <span className="ml-3">Reports</span>}
       </NavLink>
       <NavLink 
         to="/admin-dashboard?tab=tutors"

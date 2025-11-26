@@ -23,6 +23,10 @@ project_id = "lnhtlbatcufmsyoujuqh"
   verify_jwt = true
   [functions.stripe-webhooks]
   verify_jwt = false
+  [functions.generate-monthly-report]
+  verify_jwt = true
+  [functions.cron-monthly-reports]
+  verify_jwt = false
 
 [auth]
   enabled = true
