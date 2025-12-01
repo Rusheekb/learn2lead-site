@@ -183,7 +183,7 @@ function generateReportHTML(reportData: StudentReportData, aiRecommendations: st
 
 async function generateReportForStudent(studentId: string, reportMonth: Date, testEmail?: string): Promise<boolean> {
   try {
-    console.log(`Generating report for student ${studentId} for month ${reportMonth.toISOString()}`);
+    console.log(`Generating report for student ${studentId} for month ${reportMonth.toISOString()}${testEmail ? ' (TEST MODE)' : ''}`);
 
     // Get student profile
     const { data: profile, error: profileError } = await supabase
@@ -201,17 +201,19 @@ async function generateReportForStudent(studentId: string, reportMonth: Date, te
       ? `${profile.first_name} ${profile.last_name}`
       : profile.email;
 
-    // Check if report already sent for this month
-    const { data: existingReport } = await supabase
-      .from("monthly_reports_sent")
-      .select("id")
-      .eq("student_id", studentId)
-      .eq("report_month", reportMonth.toISOString().split('T')[0])
-      .maybeSingle();
+    // Check if report already sent for this month (skip in test mode)
+    if (!testEmail) {
+      const { data: existingReport } = await supabase
+        .from("monthly_reports_sent")
+        .select("id")
+        .eq("student_id", studentId)
+        .eq("report_month", reportMonth.toISOString().split('T')[0])
+        .maybeSingle();
 
-    if (existingReport) {
-      console.log(`Report already sent for ${studentName} for ${reportMonth.toISOString()}`);
-      return true;
+      if (existingReport) {
+        console.log(`Report already sent for ${studentName} for ${reportMonth.toISOString()}`);
+        return true;
+      }
     }
 
     // Get class logs for the month
@@ -275,21 +277,23 @@ async function generateReportForStudent(studentId: string, reportMonth: Date, te
 
     console.log("Email sent:", emailResult);
 
-    // Log the sent report
-    const { error: insertError } = await supabase
-      .from("monthly_reports_sent")
-      .insert({
-        student_id: studentId,
-        report_month: reportMonth.toISOString().split('T')[0],
-        report_content: htmlContent,
-      });
+    // Log the sent report (skip in test mode)
+    if (!testEmail) {
+      const { error: insertError } = await supabase
+        .from("monthly_reports_sent")
+        .insert({
+          student_id: studentId,
+          report_month: reportMonth.toISOString().split('T')[0],
+          report_content: htmlContent,
+        });
 
-    if (insertError) {
-      console.error("Error logging report:", insertError);
-      return false;
+      if (insertError) {
+        console.error("Error logging report:", insertError);
+        return false;
+      }
     }
 
-    console.log(`Successfully sent report to ${studentName}`);
+    console.log(`Successfully sent report to ${studentName}${testEmail ? ' (TEST MODE - not logged)' : ''}`);
     return true;
   } catch (error) {
     console.error("Error generating report for student:", error);
