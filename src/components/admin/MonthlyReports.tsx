@@ -6,8 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { FileText, Send, Calendar, User, Mail } from 'lucide-react';
+import { FileText, Send, Calendar, User, Mail, TestTube } from 'lucide-react';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 
 interface MonthlyReport {
@@ -28,6 +29,7 @@ interface Profile {
 const MonthlyReports: React.FC = () => {
   const [selectedStudentId, setSelectedStudentId] = useState<string>('all');
   const [selectedMonth, setSelectedMonth] = useState<string>('');
+  const [testEmail, setTestEmail] = useState<string>('');
   const [isSending, setIsSending] = useState(false);
 
   // Fetch all student profiles
@@ -84,12 +86,16 @@ const MonthlyReports: React.FC = () => {
 
     setIsSending(true);
     try {
-      const payload: { report_month: string; student_id?: string } = {
+      const payload: { report_month: string; student_id?: string; test_email?: string } = {
         report_month: selectedMonth,
       };
 
       if (selectedStudentId !== 'all') {
         payload.student_id = selectedStudentId;
+      }
+
+      if (testEmail.trim()) {
+        payload.test_email = testEmail.trim();
       }
 
       const { data, error } = await supabase.functions.invoke('generate-monthly-report', {
@@ -151,6 +157,19 @@ const MonthlyReports: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Test Mode Alert */}
+          {testEmail && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex items-start gap-2">
+              <TestTube className="h-5 w-5 text-yellow-600 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-yellow-800">Test Mode Active</p>
+                <p className="text-xs text-yellow-700 mt-1">
+                  Reports will be sent to <strong>{testEmail}</strong> instead of actual student emails
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="text-sm font-medium mb-2 block">Student</label>
@@ -187,15 +206,28 @@ const MonthlyReports: React.FC = () => {
               </Select>
             </div>
 
-            <div className="flex items-end">
-              <Button 
-                onClick={handleSendReport} 
-                disabled={isSending || !selectedMonth}
-                className="w-full"
-              >
-                {isSending ? 'Sending...' : 'Generate & Send Report'}
-              </Button>
+            <div>
+              <label className="text-sm font-medium mb-2 flex items-center gap-1">
+                <TestTube className="h-4 w-4" />
+                Test Email (Optional)
+              </label>
+              <Input
+                type="email"
+                placeholder="your@email.com"
+                value={testEmail}
+                onChange={(e) => setTestEmail(e.target.value)}
+              />
             </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <Button 
+              onClick={handleSendReport} 
+              disabled={isSending || !selectedMonth}
+              className="flex-1"
+            >
+              {isSending ? 'Sending...' : testEmail ? 'Send Test Report' : 'Generate & Send Report'}
+            </Button>
           </div>
 
           <div className="text-sm text-muted-foreground">
