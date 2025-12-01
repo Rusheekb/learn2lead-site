@@ -181,7 +181,7 @@ function generateReportHTML(reportData: StudentReportData, aiRecommendations: st
   `;
 }
 
-async function generateReportForStudent(studentId: string, reportMonth: Date): Promise<boolean> {
+async function generateReportForStudent(studentId: string, reportMonth: Date, testEmail?: string): Promise<boolean> {
   try {
     console.log(`Generating report for student ${studentId} for month ${reportMonth.toISOString()}`);
 
@@ -262,10 +262,14 @@ async function generateReportForStudent(studentId: string, reportMonth: Date): P
 
     // Send email via Resend
     const monthName = reportMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    const recipientEmail = testEmail || profile.email;
+    
+    console.log(`Sending report to: ${recipientEmail}${testEmail ? ' (TEST MODE)' : ''}`);
+    
     const emailResult = await resend.emails.send({
       from: "Learn2Lead <onboarding@resend.dev>",
-      to: [profile.email],
-      subject: `Your Monthly Progress Report - ${monthName}`,
+      to: [recipientEmail],
+      subject: `${testEmail ? '[TEST] ' : ''}Your Monthly Progress Report - ${monthName}`,
       html: htmlContent,
     });
 
@@ -299,7 +303,7 @@ serve(async (req) => {
   }
 
   try {
-    const { student_id, report_month } = await req.json();
+    const { student_id, report_month, test_email } = await req.json();
 
     // Parse report month or default to previous month
     let reportMonth: Date;
@@ -312,9 +316,13 @@ serve(async (req) => {
 
     if (student_id) {
       // Generate report for single student
-      const success = await generateReportForStudent(student_id, reportMonth);
+      const success = await generateReportForStudent(student_id, reportMonth, test_email);
       return new Response(
-        JSON.stringify({ success, message: success ? "Report sent" : "Report failed" }),
+        JSON.stringify({ 
+          success, 
+          message: success ? (test_email ? "Test report sent" : "Report sent") : "Report failed",
+          test_mode: !!test_email
+        }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     } else {
@@ -329,7 +337,7 @@ serve(async (req) => {
       }
 
       const results = await Promise.all(
-        students.map(s => generateReportForStudent(s.id, reportMonth))
+        students.map(s => generateReportForStudent(s.id, reportMonth, test_email))
       );
 
       const successCount = results.filter(r => r).length;
