@@ -82,7 +82,16 @@ Keep recommendations concise, encouraging, and specific to the subjects covered.
     }
 
     const data = await response.json();
-    return data.choices?.[0]?.message?.content || "No recommendations generated.";
+    const content = data.choices?.[0]?.message?.content || "No recommendations generated.";
+    
+    // Convert markdown-style formatting to HTML
+    // Convert **text** to <strong>text</strong>
+    const htmlContent = content
+      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+      // Convert * at start of line to bullet point
+      .replace(/^\* /gm, '• ');
+    
+    return htmlContent;
   } catch (error) {
     console.error("Error generating AI recommendations:", error);
     return "Recommendations unavailable at this time.";
