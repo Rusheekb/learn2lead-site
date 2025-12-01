@@ -93,7 +93,7 @@ Keep recommendations concise, encouraging, and specific to the subjects covered.
     
     return htmlContent;
   } catch (error) {
-    console.error("Error generating AI recommendations:", error);
+    console.error("Error generating recommendations:", error);
     return "Recommendations unavailable at this time.";
   }
 }
