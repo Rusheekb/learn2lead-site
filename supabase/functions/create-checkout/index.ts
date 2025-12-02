@@ -19,7 +19,7 @@ serve(async (req) => {
 
   const supabaseClient = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
   );
 
   try {
@@ -35,10 +35,10 @@ serve(async (req) => {
 
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    const { priceId } = await req.json();
+    const { priceId, referralCode } = await req.json();
     if (!priceId) throw new Error("Price ID is required");
 
-    logStep("Creating checkout session", { priceId });
+    logStep("Creating checkout session", { priceId, referralCode: referralCode || 'none' });
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { 
       apiVersion: "2025-08-27.basil" 
@@ -54,7 +54,78 @@ serve(async (req) => {
       logStep("Creating new customer");
     }
 
-    const session = await stripe.checkout.sessions.create({
+    // Validate referral code if provided
+    let stripeCouponId: string | null = null;
+    let referralCodeId: string | null = null;
+    let referrerId: string | null = null;
+    let discountAmount: number | null = null;
+
+    if (referralCode) {
+      logStep("Validating referral code", { code: referralCode });
+
+      // Get referral code details
+      const { data: codeData, error: codeError } = await supabaseClient
+        .from('referral_codes')
+        .select('id, code, stripe_coupon_id, active, expires_at, max_uses, times_used, created_by, discount_amount')
+        .eq('code', referralCode.toUpperCase())
+        .single();
+
+      if (codeError || !codeData) {
+        logStep("Invalid referral code", { code: referralCode });
+        throw new Error("Invalid referral code");
+      }
+
+      // Check if code is active
+      if (!codeData.active) {
+        logStep("Referral code is inactive", { code: referralCode });
+        throw new Error("This referral code is no longer active");
+      }
+
+      // Check expiration
+      if (codeData.expires_at && new Date(codeData.expires_at) < new Date()) {
+        logStep("Referral code expired", { code: referralCode, expires_at: codeData.expires_at });
+        throw new Error("This referral code has expired");
+      }
+
+      // Check max uses
+      if (codeData.max_uses && codeData.times_used >= codeData.max_uses) {
+        logStep("Referral code max uses reached", { code: referralCode, times_used: codeData.times_used, max_uses: codeData.max_uses });
+        throw new Error("This referral code has reached its usage limit");
+      }
+
+      // Check if user has already used any referral code
+      const { data: existingUsage } = await supabaseClient
+        .from('referral_usage')
+        .select('id')
+        .eq('used_by_user_id', user.id)
+        .limit(1);
+
+      if (existingUsage && existingUsage.length > 0) {
+        logStep("User has already used a referral code", { userId: user.id });
+        throw new Error("You have already used a referral code");
+      }
+
+      // Prevent self-referral
+      if (codeData.created_by === user.id) {
+        logStep("Self-referral attempted", { userId: user.id });
+        throw new Error("You cannot use your own referral code");
+      }
+
+      stripeCouponId = codeData.stripe_coupon_id;
+      referralCodeId = codeData.id;
+      referrerId = codeData.created_by;
+      discountAmount = codeData.discount_amount;
+
+      logStep("Referral code validated", { 
+        codeId: referralCodeId, 
+        referrerId, 
+        stripeCouponId,
+        discountAmount 
+      });
+    }
+
+    // Build checkout session config
+    const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       line_items: [
@@ -68,8 +139,19 @@ serve(async (req) => {
       cancel_url: `${req.headers.get("origin")}/pricing?subscription=cancelled`,
       metadata: {
         user_id: user.id,
+        referral_code_id: referralCodeId || '',
+        referrer_id: referrerId || '',
+        discount_amount: discountAmount?.toString() || '',
       },
-    });
+    };
+
+    // Apply coupon if referral code is valid
+    if (stripeCouponId) {
+      sessionConfig.discounts = [{ coupon: stripeCouponId }];
+      logStep("Applying coupon to checkout", { couponId: stripeCouponId });
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionConfig);
 
     logStep("Checkout session created", { sessionId: session.id, url: session.url });
 

@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Check, Loader2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Check, Loader2, ChevronDown, ChevronUp, Tag, Gift } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 type PricingTierProps = {
   name: string;
   price: string;
   monthlyTotal: string;
+  discountedTotal?: string;
   description: string;
   features: string[];
   buttonText: string;
@@ -23,6 +26,7 @@ const PricingTier: React.FC<PricingTierProps> = ({
   name,
   price,
   monthlyTotal,
+  discountedTotal,
   description,
   features,
   buttonText,
@@ -41,7 +45,16 @@ const PricingTier: React.FC<PricingTierProps> = ({
       <div className="mb-2">
         <span className="text-4xl font-bold">{price}</span>
       </div>
-      <p className="text-sm text-muted-foreground mb-1">{monthlyTotal}</p>
+      <div className="mb-1">
+        {discountedTotal ? (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground line-through">{monthlyTotal}</span>
+            <span className="text-sm font-semibold text-green-600">{discountedTotal}</span>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">{monthlyTotal}</p>
+        )}
+      </div>
       <p className="text-sm text-muted-foreground mb-6">{description}</p>
       <ul className="space-y-3 mb-6">
         {features.map((feature, index) => (
@@ -79,11 +92,75 @@ const PRICE_IDS = {
   premium: 'price_1SL6as1fzLklBERMpT5U2zj3',  // $300/month - Premium Plan (12 classes)
 };
 
+const PLAN_PRICES = {
+  basic: 140,
+  standard: 240,
+  premium: 300,
+};
+
 const Pricing = () => {
   const navigate = useNavigate();
   const { user, session } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [referralCode, setReferralCode] = useState('');
+  const [isReferralOpen, setIsReferralOpen] = useState(false);
+  const [validatedDiscount, setValidatedDiscount] = useState<number | null>(null);
+  const [isValidating, setIsValidating] = useState(false);
   
+  const validateReferralCode = async () => {
+    if (!referralCode.trim()) {
+      setValidatedDiscount(null);
+      return;
+    }
+
+    setIsValidating(true);
+    try {
+      const { data, error } = await supabase
+        .from('referral_codes')
+        .select('discount_amount, active, expires_at, max_uses, times_used')
+        .eq('code', referralCode.toUpperCase())
+        .single();
+
+      if (error || !data) {
+        toast.error('Invalid referral code');
+        setValidatedDiscount(null);
+        return;
+      }
+
+      if (!data.active) {
+        toast.error('This referral code is no longer active');
+        setValidatedDiscount(null);
+        return;
+      }
+
+      if (data.expires_at && new Date(data.expires_at) < new Date()) {
+        toast.error('This referral code has expired');
+        setValidatedDiscount(null);
+        return;
+      }
+
+      if (data.max_uses && data.times_used >= data.max_uses) {
+        toast.error('This referral code has reached its usage limit');
+        setValidatedDiscount(null);
+        return;
+      }
+
+      setValidatedDiscount(data.discount_amount);
+      toast.success(`Code applied! $${data.discount_amount} off your first month`);
+    } catch (error) {
+      console.error('Error validating code:', error);
+      toast.error('Error validating code');
+      setValidatedDiscount(null);
+    } finally {
+      setIsValidating(false);
+    }
+  };
+
+  const getDiscountedPrice = (planKey: keyof typeof PLAN_PRICES) => {
+    if (!validatedDiscount) return undefined;
+    return `$${PLAN_PRICES[planKey] - validatedDiscount}/month (first month)`;
+  };
+
   const handleCheckout = async (priceId: string) => {
     if (!user || !session) {
       navigate('/login?returnUrl=/pricing');
@@ -93,7 +170,10 @@ const Pricing = () => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { priceId },
+        body: { 
+          priceId,
+          referralCode: validatedDiscount ? referralCode.toUpperCase() : undefined 
+        },
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
@@ -103,12 +183,14 @@ const Pricing = () => {
 
       if (data?.url) {
         window.open(data.url, '_blank');
+      } else if (data?.error) {
+        throw new Error(data.error);
       } else {
         throw new Error('No checkout URL returned');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Checkout error:', error);
-      toast.error('Failed to start checkout. Please try again.');
+      toast.error(error.message || 'Failed to start checkout. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -153,11 +235,62 @@ const Pricing = () => {
           </p>
         </div>
 
+        {/* Referral Code Section */}
+        <div className="max-w-md mx-auto mb-8">
+          <Collapsible open={isReferralOpen} onOpenChange={setIsReferralOpen}>
+            <CollapsibleTrigger asChild>
+              <Button 
+                variant="ghost" 
+                className="w-full flex items-center justify-center gap-2 text-muted-foreground hover:text-foreground"
+              >
+                <Gift className="h-4 w-4" />
+                Have a referral code?
+                {isReferralOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-4">
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Enter code"
+                    value={referralCode}
+                    onChange={(e) => {
+                      setReferralCode(e.target.value.toUpperCase());
+                      setValidatedDiscount(null);
+                    }}
+                    className="pl-10 uppercase"
+                  />
+                </div>
+                <Button 
+                  onClick={validateReferralCode}
+                  disabled={isValidating || !referralCode.trim()}
+                  variant="outline"
+                >
+                  {isValidating ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Apply'}
+                </Button>
+              </div>
+              {validatedDiscount && (
+                <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-sm text-green-700 flex items-center gap-2">
+                    <Check className="h-4 w-4" />
+                    <span className="font-medium">${validatedDiscount} off</span> your first month!
+                  </p>
+                  <p className="text-xs text-green-600 mt-1">
+                    Plus, your friend gets ${validatedDiscount} credit on their next bill.
+                  </p>
+                </div>
+              )}
+            </CollapsibleContent>
+          </Collapsible>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
           <PricingTier
             name="Basic"
             price="$35/class"
             monthlyTotal="$140/month"
+            discountedTotal={getDiscountedPrice('basic')}
             description="Perfect for beginners looking to improve in one subject"
             features={[
               'Access to one subject area',
@@ -175,6 +308,7 @@ const Pricing = () => {
             name="Standard"
             price="$30/class"
             monthlyTotal="$240/month"
+            discountedTotal={getDiscountedPrice('standard')}
             description="Our most popular plan for dedicated students"
             features={[
               'Access to all subject areas',
@@ -194,6 +328,7 @@ const Pricing = () => {
             name="Premium"
             price="$25/class"
             monthlyTotal="$300/month"
+            discountedTotal={getDiscountedPrice('premium')}
             description="Comprehensive support for academic excellence"
             features={[
               'Access to all subject areas',
