@@ -321,6 +321,98 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_codes: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          created_by: string | null
+          discount_amount: number
+          expires_at: string | null
+          id: string
+          max_uses: number | null
+          stripe_coupon_id: string
+          times_used: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          created_by?: string | null
+          discount_amount?: number
+          expires_at?: string | null
+          id?: string
+          max_uses?: number | null
+          stripe_coupon_id: string
+          times_used?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          discount_amount?: number
+          expires_at?: string | null
+          id?: string
+          max_uses?: number | null
+          stripe_coupon_id?: string
+          times_used?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_codes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referral_usage: {
+        Row: {
+          id: string
+          referral_code_id: string
+          subscription_id: string | null
+          used_at: string
+          used_by_email: string
+          used_by_user_id: string
+        }
+        Insert: {
+          id?: string
+          referral_code_id: string
+          subscription_id?: string | null
+          used_at?: string
+          used_by_email: string
+          used_by_user_id: string
+        }
+        Update: {
+          id?: string
+          referral_code_id?: string
+          subscription_id?: string | null
+          used_at?: string
+          used_by_email?: string
+          used_by_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_usage_referral_code_id_fkey"
+            columns: ["referral_code_id"]
+            isOneToOne: false
+            referencedRelation: "referral_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_usage_used_by_user_id_fkey"
+            columns: ["used_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       role_change_audit: {
         Row: {
           changed_by: string | null
