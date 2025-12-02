@@ -190,6 +190,12 @@ function generateReportHTML(reportData: StudentReportData, aiRecommendations: st
   `;
 }
 
+// Helper to build a display name from first/last name, falling back to email
+function buildDisplayName(firstName: string | null, lastName: string | null, email: string): string {
+  const parts = [firstName, lastName].filter(Boolean).map(s => s!.trim()).filter(s => s.length > 0);
+  return parts.length > 0 ? parts.join(' ') : email;
+}
+
 async function generateReportForStudent(studentId: string, reportMonth: Date, testEmail?: string): Promise<boolean> {
   try {
     console.log(`Generating report for student ${studentId} for month ${reportMonth.toISOString()}${testEmail ? ' (TEST MODE)' : ''}`);
@@ -206,9 +212,7 @@ async function generateReportForStudent(studentId: string, reportMonth: Date, te
       return false;
     }
 
-    const studentName = profile.first_name && profile.last_name 
-      ? `${profile.first_name} ${profile.last_name}`
-      : profile.email;
+    const studentName = buildDisplayName(profile.first_name, profile.last_name, profile.email);
 
     // Check if report already sent for this month (skip in test mode)
     if (!testEmail) {
@@ -247,6 +251,31 @@ async function generateReportForStudent(studentId: string, reportMonth: Date, te
       return true; // Not an error, just no classes
     }
 
+    // Get unique tutor identifiers (could be names or emails) and look up their profiles
+    const tutorIdentifiers = [...new Set(classLogs.map(c => c["Tutor Name"]).filter(Boolean))];
+    const tutorNameMap = new Map<string, string>();
+    
+    if (tutorIdentifiers.length > 0) {
+      // Try to find profiles by email (in case tutor names are stored as emails)
+      const { data: tutorProfiles } = await supabase
+        .from("profiles")
+        .select("email, first_name, last_name")
+        .in("email", tutorIdentifiers);
+      
+      if (tutorProfiles) {
+        for (const tp of tutorProfiles) {
+          const displayName = buildDisplayName(tp.first_name, tp.last_name, tp.email);
+          tutorNameMap.set(tp.email, displayName);
+        }
+      }
+    }
+
+    // Map tutor emails to names in class logs
+    const classLogsWithNames = classLogs.map(c => ({
+      ...c,
+      "Tutor Name": tutorNameMap.get(c["Tutor Name"] || "") || c["Tutor Name"] || "Unknown"
+    }));
+
     // Get tutor notes for the student
     const { data: tutorNotes, error: notesError } = await supabase
       .from("student_notes")
@@ -261,7 +290,7 @@ async function generateReportForStudent(studentId: string, reportMonth: Date, te
       studentName,
       studentEmail: profile.email,
       reportMonth,
-      classes: classLogs as ClassLogData[],
+      classes: classLogsWithNames as ClassLogData[],
       tutorNotes: tutorNotes || [],
     };
 
