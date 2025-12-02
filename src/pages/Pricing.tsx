@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Check, Loader2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Check, Loader2, Tag, ChevronDown, ChevronUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,6 +18,7 @@ type PricingTierProps = {
   priceId: string;
   onCheckout: (priceId: string) => void;
   isLoading: boolean;
+  discount?: number;
 };
 
 const PricingTier: React.FC<PricingTierProps> = ({
@@ -30,6 +32,7 @@ const PricingTier: React.FC<PricingTierProps> = ({
   priceId,
   onCheckout,
   isLoading,
+  discount,
 }) => {
   return (
     <div
@@ -42,6 +45,11 @@ const PricingTier: React.FC<PricingTierProps> = ({
         <span className="text-4xl font-bold">{price}</span>
       </div>
       <p className="text-sm text-muted-foreground mb-1">{monthlyTotal}</p>
+      {discount && (
+        <p className="text-sm text-green-600 font-medium mb-1">
+          First month: ${(parseFloat(monthlyTotal.replace(/[^0-9.]/g, '')) - discount).toFixed(0)} (Save ${discount}!)
+        </p>
+      )}
       <p className="text-sm text-muted-foreground mb-6">{description}</p>
       <ul className="space-y-3 mb-6">
         {features.map((feature, index) => (
@@ -83,7 +91,55 @@ const Pricing = () => {
   const navigate = useNavigate();
   const { user, session } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [referralCode, setReferralCode] = useState('');
+  const [showReferral, setShowReferral] = useState(false);
+  const [validatedDiscount, setValidatedDiscount] = useState<number | null>(null);
+  const [isValidating, setIsValidating] = useState(false);
   
+  const validateReferralCode = async () => {
+    if (!referralCode.trim()) {
+      setValidatedDiscount(null);
+      return;
+    }
+
+    setIsValidating(true);
+    try {
+      const { data, error } = await supabase
+        .from('referral_codes')
+        .select('discount_amount, expires_at, max_uses, times_used')
+        .eq('code', referralCode.toUpperCase().trim())
+        .eq('active', true)
+        .maybeSingle();
+
+      if (error || !data) {
+        toast.error('Invalid referral code');
+        setValidatedDiscount(null);
+        return;
+      }
+
+      if (data.expires_at && new Date(data.expires_at) < new Date()) {
+        toast.error('This referral code has expired');
+        setValidatedDiscount(null);
+        return;
+      }
+
+      if (data.max_uses !== null && data.times_used >= data.max_uses) {
+        toast.error('This referral code has reached its maximum uses');
+        setValidatedDiscount(null);
+        return;
+      }
+
+      setValidatedDiscount(Number(data.discount_amount));
+      toast.success(`Referral code applied! $${data.discount_amount} off your first month`);
+    } catch (error) {
+      console.error('Error validating referral code:', error);
+      toast.error('Failed to validate referral code');
+      setValidatedDiscount(null);
+    } finally {
+      setIsValidating(false);
+    }
+  };
+
   const handleCheckout = async (priceId: string) => {
     if (!user || !session) {
       navigate('/login?returnUrl=/pricing');
@@ -93,13 +149,20 @@ const Pricing = () => {
     setIsLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { priceId },
+        body: { 
+          priceId,
+          referralCode: validatedDiscount ? referralCode.toUpperCase().trim() : undefined
+        },
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
       });
 
       if (error) throw error;
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
 
       if (data?.url) {
         window.open(data.url, '_blank');
@@ -108,7 +171,8 @@ const Pricing = () => {
       }
     } catch (error) {
       console.error('Checkout error:', error);
-      toast.error('Failed to start checkout. Please try again.');
+      const message = error instanceof Error ? error.message : 'Failed to start checkout';
+      toast.error(message);
     } finally {
       setIsLoading(false);
     }
@@ -153,6 +217,55 @@ const Pricing = () => {
           </p>
         </div>
 
+        {/* Referral Code Section */}
+        <div className="max-w-md mx-auto mb-10">
+          <button
+            onClick={() => setShowReferral(!showReferral)}
+            className="flex items-center justify-center w-full text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Tag className="h-4 w-4 mr-2" />
+            Have a referral code?
+            {showReferral ? (
+              <ChevronUp className="h-4 w-4 ml-1" />
+            ) : (
+              <ChevronDown className="h-4 w-4 ml-1" />
+            )}
+          </button>
+          
+          {showReferral && (
+            <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Enter referral code"
+                  value={referralCode}
+                  onChange={(e) => {
+                    setReferralCode(e.target.value);
+                    setValidatedDiscount(null);
+                  }}
+                  className="flex-1"
+                />
+                <Button
+                  variant="outline"
+                  onClick={validateReferralCode}
+                  disabled={isValidating || !referralCode.trim()}
+                >
+                  {isValidating ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    'Apply'
+                  )}
+                </Button>
+              </div>
+              {validatedDiscount && (
+                <p className="mt-2 text-sm text-green-600 flex items-center">
+                  <Check className="h-4 w-4 mr-1" />
+                  ${validatedDiscount} discount will be applied to your first month!
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
           <PricingTier
             name="Basic"
@@ -169,6 +282,7 @@ const Pricing = () => {
             priceId={PRICE_IDS.basic}
             onCheckout={handleCheckout}
             isLoading={isLoading}
+            discount={validatedDiscount || undefined}
           />
 
           <PricingTier
@@ -188,6 +302,7 @@ const Pricing = () => {
             priceId={PRICE_IDS.standard}
             onCheckout={handleCheckout}
             isLoading={isLoading}
+            discount={validatedDiscount || undefined}
           />
 
           <PricingTier
@@ -208,6 +323,7 @@ const Pricing = () => {
             priceId={PRICE_IDS.premium}
             onCheckout={handleCheckout}
             isLoading={isLoading}
+            discount={validatedDiscount || undefined}
           />
         </div>
 
