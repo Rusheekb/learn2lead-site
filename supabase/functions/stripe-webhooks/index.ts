@@ -49,6 +49,33 @@ serve(async (req) => {
     logStep("Event type", { type: event.type });
 
     switch (event.type) {
+      case "checkout.session.completed": {
+        // Handle referral rewards when checkout is completed
+        const session = event.data.object as Stripe.Checkout.Session;
+        const metadata = session.metadata || {};
+        
+        logStep("Checkout session completed", { 
+          sessionId: session.id,
+          customerId: session.customer,
+          metadata 
+        });
+
+        // Process referral if present
+        if (metadata.referral_code_id && metadata.referrer_id) {
+          await processReferralReward(
+            stripe,
+            supabaseClient,
+            metadata.referral_code_id,
+            metadata.referrer_id,
+            session.customer as string,
+            session.customer_email || '',
+            metadata.discount_amount ? parseFloat(metadata.discount_amount) : 25,
+            session.subscription as string
+          );
+        }
+        break;
+      }
+
       case "invoice.payment_succeeded": {
         const invoice = event.data.object as Stripe.Invoice;
         const invoiceId = invoice.id;
@@ -373,3 +400,119 @@ serve(async (req) => {
     });
   }
 });
+
+// Process referral reward - credits the referrer
+async function processReferralReward(
+  stripe: Stripe,
+  supabaseClient: any,
+  referralCodeId: string,
+  referrerId: string,
+  newCustomerStripeId: string,
+  newCustomerEmail: string,
+  discountAmount: number,
+  subscriptionId: string
+) {
+  try {
+    logStep("Processing referral reward", { 
+      referralCodeId, 
+      referrerId, 
+      newCustomerStripeId,
+      newCustomerEmail,
+      discountAmount 
+    });
+
+    // Get referrer's profile to find their email
+    const { data: referrerProfile, error: referrerError } = await supabaseClient
+      .from('profiles')
+      .select('id, email')
+      .eq('id', referrerId)
+      .single();
+
+    if (referrerError || !referrerProfile) {
+      logStep("ERROR: Referrer not found", { referrerId });
+      return;
+    }
+
+    // Find the referrer's Stripe customer ID
+    const referrerCustomers = await stripe.customers.list({ 
+      email: referrerProfile.email, 
+      limit: 1 
+    });
+
+    if (referrerCustomers.data.length === 0) {
+      logStep("ERROR: Referrer has no Stripe customer record", { 
+        referrerId, 
+        email: referrerProfile.email 
+      });
+      return;
+    }
+
+    const referrerCustomerId = referrerCustomers.data[0].id;
+
+    // Apply a credit balance to the referrer's Stripe account
+    // This will be applied to their next invoice
+    const creditAmount = Math.round(discountAmount * 100); // Convert to cents
+    
+    await stripe.customers.createBalanceTransaction(referrerCustomerId, {
+      amount: -creditAmount, // Negative amount = credit
+      currency: 'usd',
+      description: `Referral reward - new customer signup`,
+    });
+
+    logStep("Referrer credited", { 
+      referrerCustomerId, 
+      creditAmount: discountAmount,
+      referrerId 
+    });
+
+    // Get the new user's profile ID from their email
+    const { data: newUserProfile } = await supabaseClient
+      .from('profiles')
+      .select('id')
+      .ilike('email', newCustomerEmail)
+      .single();
+
+    // Record the referral usage
+    const { error: usageError } = await supabaseClient
+      .from('referral_usage')
+      .insert({
+        referral_code_id: referralCodeId,
+        used_by_user_id: newUserProfile?.id || referrerId, // Use referrer as fallback
+        used_by_email: newCustomerEmail,
+        subscription_id: subscriptionId,
+      });
+
+    if (usageError) {
+      logStep("WARNING: Failed to record referral usage", { error: usageError.message });
+    }
+
+    // Increment the times_used counter
+    const { error: updateError } = await supabaseClient
+      .from('referral_codes')
+      .update({ times_used: supabaseClient.rpc('increment', { x: 1 }) })
+      .eq('id', referralCodeId);
+
+    // Alternative: Use raw SQL increment
+    if (updateError) {
+      // Fallback: fetch and update
+      const { data: codeData } = await supabaseClient
+        .from('referral_codes')
+        .select('times_used')
+        .eq('id', referralCodeId)
+        .single();
+      
+      if (codeData) {
+        await supabaseClient
+          .from('referral_codes')
+          .update({ times_used: (codeData.times_used || 0) + 1 })
+          .eq('id', referralCodeId);
+      }
+    }
+
+    logStep("Referral reward processed successfully", { referralCodeId, referrerId });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logStep("ERROR processing referral reward", { error: errorMessage });
+    // Don't throw - we don't want to fail the webhook for referral issues
+  }
+}
