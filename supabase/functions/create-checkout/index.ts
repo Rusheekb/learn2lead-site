@@ -22,6 +22,11 @@ serve(async (req) => {
     Deno.env.get("SUPABASE_ANON_KEY") ?? ""
   );
 
+  const supabaseAdmin = createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+  );
+
   try {
     logStep("Function started");
 
@@ -35,10 +40,10 @@ serve(async (req) => {
 
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    const { priceId } = await req.json();
+    const { priceId, referralCode } = await req.json();
     if (!priceId) throw new Error("Price ID is required");
 
-    logStep("Creating checkout session", { priceId });
+    logStep("Creating checkout session", { priceId, referralCode: referralCode || 'none' });
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { 
       apiVersion: "2025-08-27.basil" 
@@ -54,7 +59,53 @@ serve(async (req) => {
       logStep("Creating new customer");
     }
 
-    const session = await stripe.checkout.sessions.create({
+    // Handle referral code validation
+    let stripeCouponId: string | undefined;
+    let referralCodeRecord: any = null;
+
+    if (referralCode) {
+      logStep("Validating referral code", { referralCode });
+
+      // Check if user has already used a referral code
+      const { data: existingUsage } = await supabaseAdmin
+        .from("referral_usage")
+        .select("id")
+        .eq("used_by_email", user.email)
+        .maybeSingle();
+
+      if (existingUsage) {
+        throw new Error("You have already used a referral code");
+      }
+
+      // Validate the referral code
+      const { data: codeData, error: codeError } = await supabaseAdmin
+        .from("referral_codes")
+        .select("*")
+        .eq("code", referralCode.toUpperCase().trim())
+        .eq("active", true)
+        .maybeSingle();
+
+      if (codeError || !codeData) {
+        throw new Error("Invalid referral code");
+      }
+
+      // Check if code has expired
+      if (codeData.expires_at && new Date(codeData.expires_at) < new Date()) {
+        throw new Error("This referral code has expired");
+      }
+
+      // Check if code has reached max uses
+      if (codeData.max_uses !== null && codeData.times_used >= codeData.max_uses) {
+        throw new Error("This referral code has reached its maximum uses");
+      }
+
+      referralCodeRecord = codeData;
+      stripeCouponId = codeData.stripe_coupon_id;
+      logStep("Referral code validated", { codeId: codeData.id, discount: codeData.discount_amount });
+    }
+
+    // Build checkout session config
+    const sessionConfig: any = {
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       line_items: [
@@ -68,10 +119,40 @@ serve(async (req) => {
       cancel_url: `${req.headers.get("origin")}/pricing?subscription=cancelled`,
       metadata: {
         user_id: user.id,
+        referral_code_id: referralCodeRecord?.id || null,
       },
-    });
+    };
+
+    // Add discount if referral code is valid
+    if (stripeCouponId) {
+      sessionConfig.discounts = [{ coupon: stripeCouponId }];
+      logStep("Applying discount coupon", { couponId: stripeCouponId });
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionConfig);
 
     logStep("Checkout session created", { sessionId: session.id, url: session.url });
+
+    // Record referral usage if code was used (will be confirmed when subscription succeeds)
+    if (referralCodeRecord) {
+      // Update usage count
+      await supabaseAdmin
+        .from("referral_codes")
+        .update({ times_used: referralCodeRecord.times_used + 1 })
+        .eq("id", referralCodeRecord.id);
+
+      // Record the usage
+      await supabaseAdmin
+        .from("referral_usage")
+        .insert({
+          referral_code_id: referralCodeRecord.id,
+          used_by_user_id: user.id,
+          used_by_email: user.email,
+          subscription_id: session.id,
+        });
+
+      logStep("Referral usage recorded", { codeId: referralCodeRecord.id });
+    }
 
     return new Response(JSON.stringify({ url: session.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
