@@ -133,7 +133,7 @@ function generateReportHTML(reportData: StudentReportData, aiRecommendations: st
 </head>
 <body>
   <div class="header">
-    <h1>📚 Monthly Progress Report</h1>
+    <h1>Monthly Progress Report</h1>
     <p>${reportData.studentName} • ${monthName}</p>
   </div>
 
@@ -156,7 +156,7 @@ function generateReportHTML(reportData: StudentReportData, aiRecommendations: st
         <div class="class-meta">
           ${new Date(c.Date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} 
           • ${c["Time (hrs)"]} hours 
-          • Tutor: ${c["Tutor Name"]}
+          • ${c["Tutor Name"]}
         </div>
         ${c.Content ? `<div class="class-content"><strong>Content Covered:</strong> ${c.Content}</div>` : ''}
         ${c.HW ? `<div class="class-content"><strong>Homework:</strong> ${c.HW}</div>` : ''}
@@ -177,7 +177,7 @@ function generateReportHTML(reportData: StudentReportData, aiRecommendations: st
   ` : ''}
 
   <div class="recommendations">
-    <h3>🎯 AI-Generated Recommendations for Next Month</h3>
+    <h3>Recommendations for Next Month</h3>
     <div style="white-space: pre-line;">${aiRecommendations}</div>
   </div>
 
