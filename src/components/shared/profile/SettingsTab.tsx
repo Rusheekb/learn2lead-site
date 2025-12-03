@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { Separator } from '@/components/ui/separator';
 import { SubscriptionStatusCard } from '@/components/student/SubscriptionStatusCard';
 import { CreditHistory } from '@/components/student/CreditHistory';
+import ReferralCodeSection from './ReferralCodeSection';
 
 interface SettingsTabProps {
   profile: Profile;
@@ -112,6 +113,9 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ profile, updateProfile }) => 
           </div>
         </CardContent>
       </Card>
+
+      {/* Referral Program - Available for all users */}
+      <ReferralCodeSection />
     </div>
   );
 };
