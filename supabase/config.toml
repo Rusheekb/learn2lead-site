@@ -1,4 +1,3 @@
-
 project_id = "lnhtlbatcufmsyoujuqh"
 
 [api]
@@ -27,6 +26,8 @@ project_id = "lnhtlbatcufmsyoujuqh"
   verify_jwt = true
   [functions.cron-monthly-reports]
   verify_jwt = false
+  [functions.generate-referral-code]
+  verify_jwt = true
 
 [auth]
   enabled = true
