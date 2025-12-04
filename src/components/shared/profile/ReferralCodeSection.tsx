@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useReferralCode } from '@/hooks/useReferralCode';
@@ -8,7 +9,7 @@ import { Copy, Gift, Users, DollarSign, Loader2, Share2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const ReferralCodeSection: React.FC = () => {
-  const { referralCode, usageStats, isLoading, isGenerating, error, generateCode } = useReferralCode();
+  const { referralCode, usageStats, isLoading, isGenerating, error, requiresSubscription, generateCode } = useReferralCode();
 
   const handleCopyCode = async () => {
     if (!referralCode?.code) return;
@@ -164,29 +165,42 @@ const ReferralCodeSection: React.FC = () => {
             <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
               <Gift className="h-6 w-6 text-primary" />
             </div>
-            <div className="space-y-2">
-              <h3 className="font-semibold">Get Your Referral Code</h3>
-              <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                Generate your unique referral code and earn $25 for each friend who subscribes using your code.
-              </p>
-            </div>
-            <Button
-              onClick={handleGenerateCode}
-              disabled={isGenerating}
-              className="gap-2"
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Gift className="h-4 w-4" />
-                  Generate My Referral Code
-                </>
-              )}
-            </Button>
+            {requiresSubscription ? (
+              <div className="space-y-3">
+                <h3 className="font-semibold">Subscription Required</h3>
+                <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                  Generate your unique referral code by subscribing to one of our plans.
+                  Earn $25 for each friend who subscribes using your code!
+                </p>
+                <Button asChild>
+                  <Link to="/pricing">View Plans</Link>
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <h3 className="font-semibold">Get Your Referral Code</h3>
+                <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                  Generate your unique referral code and earn $25 for each friend who subscribes using your code.
+                </p>
+                <Button
+                  onClick={handleGenerateCode}
+                  disabled={isGenerating}
+                  className="gap-2"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Gift className="h-4 w-4" />
+                      Generate My Referral Code
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </CardContent>

@@ -25,6 +25,7 @@ export function useReferralCode() {
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [requiresSubscription, setRequiresSubscription] = useState(false);
 
   const fetchReferralCode = useCallback(async () => {
     if (!user?.id) {
@@ -120,8 +121,13 @@ export function useReferralCode() {
 
       if (data?.success && data?.code) {
         // Refresh the referral code data
+        setRequiresSubscription(false);
         await fetchReferralCode();
         return data.code;
+      } else if (data?.requires_subscription) {
+        setRequiresSubscription(true);
+        setError('Active Stripe subscription required to generate a referral code');
+        return null;
       } else {
         setError(data?.error || 'Failed to generate referral code');
         return null;
@@ -145,6 +151,7 @@ export function useReferralCode() {
     isLoading,
     isGenerating,
     error,
+    requiresSubscription,
     generateCode,
     refetch: fetchReferralCode,
   };
