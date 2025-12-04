@@ -42,6 +42,56 @@ serve(async (req) => {
     const user = userData.user;
     logStep("User authenticated", { userId: user.id, email: user.email });
 
+    // Initialize Stripe and check subscription status
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeKey) {
+      throw new Error("STRIPE_SECRET_KEY is not configured");
+    }
+
+    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+
+    // Check if user has an active Stripe subscription
+    const customers = await stripe.customers.list({
+      email: user.email,
+      limit: 1,
+    });
+
+    if (customers.data.length === 0) {
+      logStep("No Stripe customer found", { email: user.email });
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Active Stripe subscription required to generate a referral code",
+          requires_subscription: true,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 403 }
+      );
+    }
+
+    const customerId = customers.data[0].id;
+    const subscriptions = await stripe.subscriptions.list({
+      customer: customerId,
+      status: "active",
+      limit: 1,
+    });
+
+    if (subscriptions.data.length === 0) {
+      logStep("No active Stripe subscription found", { customerId });
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Active Stripe subscription required to generate a referral code",
+          requires_subscription: true,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 403 }
+      );
+    }
+
+    logStep("Active Stripe subscription verified", {
+      customerId,
+      subscriptionId: subscriptions.data[0].id,
+    });
+
     // Get user profile for name
     const { data: profile, error: profileError } = await supabaseClient
       .from("profiles")
@@ -102,14 +152,6 @@ serve(async (req) => {
     }
 
     logStep("Generated unique code", { code: uniqueCode });
-
-    // Initialize Stripe
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) {
-      throw new Error("STRIPE_SECRET_KEY is not configured");
-    }
-
-    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
 
     // Create Stripe coupon for this referral code
     const coupon = await stripe.coupons.create({
