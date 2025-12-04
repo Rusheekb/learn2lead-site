@@ -12,6 +12,15 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
   console.log(`[GENERATE-REFERRAL-CODE] ${step}${detailsStr}`);
 };
 
+const generateRandomSuffix = (length: number): string => {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Excluded I, O, 0, 1 for clarity
+  let result = "";
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -128,9 +137,11 @@ serve(async (req) => {
       );
     }
 
-    // Generate unique code based on user's name
+    // Generate unique code based on user's name with random suffix
     const firstName = profile.first_name || profile.email?.split("@")[0] || "USER";
-    const baseCode = firstName.toUpperCase().replace(/[^A-Z]/g, "").slice(0, 6) + "25";
+    const namePart = firstName.toUpperCase().replace(/[^A-Z]/g, "").slice(0, 6);
+    const randomSuffix = generateRandomSuffix(4);
+    const baseCode = `${namePart}-${randomSuffix}`;
     
     let uniqueCode = baseCode;
     let suffix = 1;
