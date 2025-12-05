@@ -10,6 +10,8 @@ export interface SubscriptionState {
   planName: string | null;
   isLoading: boolean;
   error: string | null;
+  isPaused: boolean;
+  pauseResumesAt: string | null;
 }
 
 export interface SubscriptionContextType extends SubscriptionState {
@@ -28,6 +30,8 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     planName: null,
     isLoading: true,
     error: null,
+    isPaused: false,
+    pauseResumesAt: null,
   });
   const pollIntervalRef = useRef<number>(60000); // Start with 60 seconds
   const isRefreshingRef = useRef<boolean>(false);
@@ -63,6 +67,8 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         planName: null,
         isLoading: false,
         error: null,
+        isPaused: false,
+        pauseResumesAt: null,
       });
       return;
     }
@@ -94,6 +100,8 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
             planName: null,
             isLoading: false,
             error: 'Session expired. Please refresh the page.',
+            isPaused: false,
+            pauseResumesAt: null,
           });
           return;
         }
@@ -117,6 +125,8 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
             planName: null,
             isLoading: false,
             error: 'Session expired. Please refresh the page.',
+            isPaused: false,
+            pauseResumesAt: null,
           });
           return;
         }
@@ -133,6 +143,8 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         planName: data.plan_name || null,
         isLoading: false,
         error: null,
+        isPaused: data.is_paused || false,
+        pauseResumesAt: data.pause_resumes_at || null,
       });
     } catch (err) {
       console.error('[SubscriptionProvider] Error fetching subscription:', err);

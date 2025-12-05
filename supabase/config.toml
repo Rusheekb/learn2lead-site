@@ -28,6 +28,8 @@ project_id = "lnhtlbatcufmsyoujuqh"
   verify_jwt = false
   [functions.generate-referral-code]
   verify_jwt = true
+  [functions.pause-subscription]
+  verify_jwt = true
 
 [auth]
   enabled = true
