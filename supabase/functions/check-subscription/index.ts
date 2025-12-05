@@ -106,18 +106,26 @@ serve(async (req) => {
     const customerId = customers.data[0].id;
     logStep("Found Stripe customer", { customerId });
 
+    // Check for active or paused subscriptions
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
-      status: "active",
-      limit: 1,
+      status: "all",
+      limit: 5,
     });
     
-    let hasActiveSub = subscriptions.data.length > 0;
+    // Find active or paused subscription
+    const activeOrPausedSub = subscriptions.data.find(
+      (sub) => sub.status === "active" || sub.status === "paused" || sub.pause_collection
+    );
+    
+    let hasActiveSub = !!activeOrPausedSub;
     let productId = null;
     let subscriptionEnd = null;
     let creditsRemaining = 0;
     let planName = null;
     let isManualSubscription = false;
+    let isPaused = false;
+    let pauseResumesAt = null;
 
     // Check for manual subscriptions if no Stripe subscription found
     if (!hasActiveSub) {
@@ -156,14 +164,26 @@ serve(async (req) => {
 
     // Get subscription details if active
     if (hasActiveSub) {
-      if (!isManualSubscription && subscriptions.data.length > 0) {
+      if (!isManualSubscription && activeOrPausedSub) {
         // Stripe subscription - get metadata
-        const subscription = subscriptions.data[0];
+        const subscription = activeOrPausedSub;
+        
+        // Check if subscription is paused
+        if (subscription.pause_collection) {
+          isPaused = true;
+          if (subscription.pause_collection.resumes_at) {
+            pauseResumesAt = new Date(subscription.pause_collection.resumes_at * 1000).toISOString();
+          }
+          logStep("Subscription is paused", { 
+            subscriptionId: subscription.id, 
+            resumesAt: pauseResumesAt 
+          });
+        }
         
         if (subscription.current_period_end) {
           try {
             subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
-            logStep("Active Stripe subscription found", { subscriptionId: subscription.id, endDate: subscriptionEnd });
+            logStep("Active Stripe subscription found", { subscriptionId: subscription.id, endDate: subscriptionEnd, isPaused });
           } catch (error) {
             logStep("Warning: Invalid subscription end date", { 
               subscriptionId: subscription.id, 
@@ -204,7 +224,9 @@ serve(async (req) => {
       product_id: productId,
       subscription_end: subscriptionEnd,
       credits_remaining: creditsRemaining,
-      plan_name: planName
+      plan_name: planName,
+      is_paused: isPaused,
+      pause_resumes_at: pauseResumesAt
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
