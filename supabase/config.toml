@@ -30,6 +30,10 @@ project_id = "lnhtlbatcufmsyoujuqh"
   verify_jwt = true
   [functions.pause-subscription]
   verify_jwt = true
+  [functions.send-overdraw-reminders]
+  verify_jwt = true
+  [functions.cron-overdraw-reminders]
+  verify_jwt = false
 
 [auth]
   enabled = true
