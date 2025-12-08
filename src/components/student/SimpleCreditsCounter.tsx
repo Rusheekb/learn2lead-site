@@ -5,7 +5,7 @@ import { CreditBadge } from '@/components/shared/CreditBadge';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export const SimpleCreditsCounter: React.FC = () => {
-  const { creditsRemaining, isLoading } = useSubscription();
+  const { creditsRemaining, pricePerClass, isLoading } = useSubscription();
 
   if (isLoading) {
     return (
@@ -21,7 +21,7 @@ export const SimpleCreditsCounter: React.FC = () => {
         <span className="text-sm font-medium text-muted-foreground">
           Credits Available
         </span>
-        <CreditBadge credits={creditsRemaining} />
+        <CreditBadge credits={creditsRemaining} pricePerClass={pricePerClass} />
       </div>
     </Card>
   );

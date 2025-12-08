@@ -282,6 +282,33 @@ export type Database = {
         }
         Relationships: []
       }
+      overdraw_reminders_sent: {
+        Row: {
+          amount_owed: number
+          created_at: string
+          id: string
+          sent_at: string
+          student_id: string
+          threshold: number
+        }
+        Insert: {
+          amount_owed: number
+          created_at?: string
+          id?: string
+          sent_at?: string
+          student_id: string
+          threshold: number
+        }
+        Update: {
+          amount_owed?: number
+          created_at?: string
+          id?: string
+          sent_at?: string
+          student_id?: string
+          threshold?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

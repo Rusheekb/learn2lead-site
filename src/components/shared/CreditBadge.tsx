@@ -5,10 +5,11 @@ import { cn } from '@/lib/utils';
 
 interface CreditBadgeProps {
   credits: number | null;
+  pricePerClass?: number | null;
   className?: string;
 }
 
-export const CreditBadge: React.FC<CreditBadgeProps> = ({ credits, className }) => {
+export const CreditBadge: React.FC<CreditBadgeProps> = ({ credits, pricePerClass, className }) => {
   if (credits === null) return null;
 
   const getVariant = () => {
@@ -20,7 +21,10 @@ export const CreditBadge: React.FC<CreditBadgeProps> = ({ credits, className }) 
 
   const getText = () => {
     if (credits < 0) {
-      return `${Math.abs(credits)} ${Math.abs(credits) === 1 ? 'class' : 'classes'} overdrawn`;
+      const absCredits = Math.abs(credits);
+      const amountOwed = pricePerClass ? absCredits * pricePerClass : null;
+      const owedText = amountOwed ? ` ($${amountOwed.toFixed(0)} owed)` : '';
+      return `${absCredits} ${absCredits === 1 ? 'class' : 'classes'} overdrawn${owedText}`;
     }
     return `${credits} ${credits === 1 ? 'class' : 'classes'} remaining`;
   };

@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 import { PauseSubscriptionDialog } from './PauseSubscriptionDialog';
 
 export const SubscriptionStatusCard: React.FC = () => {
-  const { subscribed, planName, creditsRemaining, subscriptionEnd, isLoading, error, isPaused, pauseResumesAt, refreshSubscription } = useSubscription();
+  const { subscribed, planName, creditsRemaining, pricePerClass, subscriptionEnd, isLoading, error, isPaused, pauseResumesAt, refreshSubscription } = useSubscription();
   const navigate = useNavigate();
   const [isOpeningPortal, setIsOpeningPortal] = useState(false);
   const [showPauseDialog, setShowPauseDialog] = useState(false);
@@ -187,7 +187,7 @@ export const SubscriptionStatusCard: React.FC = () => {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Credits Available</span>
-              <CreditBadge credits={creditsRemaining} />
+              <CreditBadge credits={creditsRemaining} pricePerClass={pricePerClass} />
             </div>
             
             {subscriptionEnd && !isPaused && (

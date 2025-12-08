@@ -8,6 +8,7 @@ export interface SubscriptionState {
   subscriptionEnd: string | null;
   creditsRemaining: number | null;
   planName: string | null;
+  pricePerClass: number | null;
   isLoading: boolean;
   error: string | null;
   isPaused: boolean;
@@ -28,6 +29,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     subscriptionEnd: null,
     creditsRemaining: null,
     planName: null,
+    pricePerClass: null,
     isLoading: true,
     error: null,
     isPaused: false,
@@ -65,6 +67,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         subscriptionEnd: null,
         creditsRemaining: null,
         planName: null,
+        pricePerClass: null,
         isLoading: false,
         error: null,
         isPaused: false,
@@ -98,6 +101,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
             subscriptionEnd: null,
             creditsRemaining: null,
             planName: null,
+            pricePerClass: null,
             isLoading: false,
             error: 'Session expired. Please refresh the page.',
             isPaused: false,
@@ -123,6 +127,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
             subscriptionEnd: null,
             creditsRemaining: null,
             planName: null,
+            pricePerClass: null,
             isLoading: false,
             error: 'Session expired. Please refresh the page.',
             isPaused: false,
@@ -141,6 +146,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         subscriptionEnd: data.subscription_end || null,
         creditsRemaining: data.credits_remaining ?? null,
         planName: data.plan_name || null,
+        pricePerClass: data.price_per_class ?? null,
         isLoading: false,
         error: null,
         isPaused: data.is_paused || false,

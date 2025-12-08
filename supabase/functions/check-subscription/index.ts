@@ -123,6 +123,7 @@ serve(async (req) => {
     let subscriptionEnd = null;
     let creditsRemaining = 0;
     let planName = null;
+    let pricePerClass = null;
     let isManualSubscription = false;
     let isPaused = false;
     let pauseResumesAt = null;
@@ -204,16 +205,18 @@ serve(async (req) => {
       // Get plan details (works for both Stripe and manual)
       const { data: subData, error: subError } = await supabaseClient
         .from('student_subscriptions')
-        .select('subscription_plans(name, classes_per_month)')
+        .select('subscription_plans(name, classes_per_month, price_per_class)')
         .eq('student_id', user.id)
         .eq('status', 'active')
         .maybeSingle();
 
       if (subData && !subError) {
         planName = subData.subscription_plans?.name || (isManualSubscription ? 'Direct Payment' : null);
-        logStep("Retrieved plan details", { planName, isManual: isManualSubscription });
+        pricePerClass = subData.subscription_plans?.price_per_class || null;
+        logStep("Retrieved plan details", { planName, pricePerClass, isManual: isManualSubscription });
       } else if (isManualSubscription) {
         planName = 'Direct Payment';
+        pricePerClass = 35; // Default price for manual subscriptions
       }
     } else {
       logStep("No active subscription found");
@@ -225,6 +228,7 @@ serve(async (req) => {
       subscription_end: subscriptionEnd,
       credits_remaining: creditsRemaining,
       plan_name: planName,
+      price_per_class: pricePerClass,
       is_paused: isPaused,
       pause_resumes_at: pauseResumesAt
     }), {
