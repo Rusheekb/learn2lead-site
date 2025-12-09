@@ -7,9 +7,10 @@ interface CreditBadgeProps {
   credits: number | null;
   pricePerClass?: number | null;
   className?: string;
+  hideAmount?: boolean;
 }
 
-export const CreditBadge: React.FC<CreditBadgeProps> = ({ credits, pricePerClass, className }) => {
+export const CreditBadge: React.FC<CreditBadgeProps> = ({ credits, pricePerClass, className, hideAmount = false }) => {
   if (credits === null) return null;
 
   const getVariant = () => {
@@ -22,7 +23,7 @@ export const CreditBadge: React.FC<CreditBadgeProps> = ({ credits, pricePerClass
   const getText = () => {
     if (credits < 0) {
       const absCredits = Math.abs(credits);
-      const amountOwed = pricePerClass ? absCredits * pricePerClass : null;
+      const amountOwed = !hideAmount && pricePerClass ? absCredits * pricePerClass : null;
       const owedText = amountOwed ? ` ($${amountOwed.toFixed(0)} owed)` : '';
       return `${absCredits} ${absCredits === 1 ? 'class' : 'classes'} overdrawn${owedText}`;
     }

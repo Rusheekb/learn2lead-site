@@ -187,7 +187,7 @@ export const SubscriptionStatusCard: React.FC = () => {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Credits Available</span>
-              <CreditBadge credits={creditsRemaining} pricePerClass={pricePerClass} />
+              <CreditBadge credits={creditsRemaining} pricePerClass={pricePerClass} hideAmount />
             </div>
             
             {subscriptionEnd && !isPaused && (
