@@ -21,7 +21,7 @@ export const SimpleCreditsCounter: React.FC = () => {
         <span className="text-sm font-medium text-muted-foreground">
           Credits Available
         </span>
-        <CreditBadge credits={creditsRemaining} pricePerClass={pricePerClass} />
+        <CreditBadge credits={creditsRemaining} pricePerClass={pricePerClass} hideAmount />
       </div>
     </Card>
   );
