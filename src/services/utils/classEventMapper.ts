@@ -14,6 +14,7 @@ import {
 } from '@/services/utils/dateTimeTransformers';
 import { parseNumericString } from '@/utils/numberUtils';
 import { parseStartTime } from './timeFormatUtils';
+import { parseDateToLocal } from '@/utils/safeDateUtils';
 
 interface DbRecord {
   id: string;
@@ -60,16 +61,16 @@ export const transformDbRecordToClassEvent = (record: unknown): ClassEvent => {
     const startTime = parseStartTime(rawStartTime);
     const endTime = calculateEndTime(startTime, duration);
 
-    // Parse payment dates
+    // Parse payment dates using local time parser
     const studentPaymentDate = dbRecord.student_payment_date 
       ? (typeof dbRecord.student_payment_date === 'string' 
-          ? new Date(dbRecord.student_payment_date) 
+          ? parseDateToLocal(dbRecord.student_payment_date) 
           : dbRecord.student_payment_date)
       : null;
 
     const tutorPaymentDate = dbRecord.tutor_payment_date 
       ? (typeof dbRecord.tutor_payment_date === 'string' 
-          ? new Date(dbRecord.tutor_payment_date) 
+          ? parseDateToLocal(dbRecord.tutor_payment_date) 
           : dbRecord.tutor_payment_date)
       : null;
 
