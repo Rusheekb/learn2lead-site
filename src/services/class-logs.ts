@@ -59,6 +59,7 @@ export async function createClassLog(
   }
     
   // Create a properly formatted object that matches the database schema
+  // Payment dates default to NULL (unpaid) - date-based payment tracking
   const dbRecord = {
     'Date': formattedDate,
     'Class Number': classNumber,
@@ -72,13 +73,10 @@ export async function createClassLog(
     'HW': classLog.homework || classLog.HW || null,
     'Class Cost': classLog.classCost?.toString() || classLog['Class Cost'] || null,
     'Tutor Cost': classLog.tutorCost?.toString() || classLog['Tutor Cost'] || null,
-    'Student Payment': classLog.studentPayment || classLog['Student Payment'] || 'pending',
-    'Tutor Payment': classLog.tutorPayment || classLog['Tutor Payment'] || 'pending',
+    'student_payment_date': classLog.studentPaymentDate || classLog['student_payment_date'] || null,
+    'tutor_payment_date': classLog.tutorPaymentDate || classLog['tutor_payment_date'] || null,
     'Additional Info': classLog.notes || classLog['Additional Info'] || null,
-    'Class ID': classLog.classId || classLog['Class ID'] || null,
-    // Add these to support status and attendance updates
-    'Status': classLog.status || classLog['Status'] || null,
-    'Attendance': classLog.attendance || classLog['Attendance'] || null
+    'Class ID': classLog.classId || classLog['Class ID'] || null
   };
   
   const result = await supabase

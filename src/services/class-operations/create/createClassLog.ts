@@ -24,6 +24,7 @@ export const createClassLog = async (
     existingIds,
   });
   
+  // Payment dates default to NULL (unpaid) - date-based payment tracking
   const record = {
     'Class Number': classNumber,
     'Tutor Name': classEvent.tutorName,
@@ -38,8 +39,6 @@ export const createClassLog = async (
     'Class ID': classEvent.id,
     'Class Cost': classEvent.classCost ?? null,
     'Tutor Cost': classEvent.tutorCost ?? null,
-    'Student Payment': 'Pending',
-    'Tutor Payment': 'Pending',
     'Additional Info': classEvent.notes || null,
   };
 
