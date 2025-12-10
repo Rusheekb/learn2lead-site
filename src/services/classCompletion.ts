@@ -105,7 +105,7 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
       return false;
     }
 
-    // Create class log entry
+    // Create class log entry (payment dates default to NULL = unpaid)
     const { error: insertError } = await supabase
       .from('class_logs')
       .insert({
@@ -120,9 +120,7 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
         'Content': data.content,
         'HW': data.hw,
         'Class ID': data.classId,
-        'Additional Info': data.additionalInfo,
-        'Student Payment': 'Pending',
-        'Tutor Payment': 'Pending'
+        'Additional Info': data.additionalInfo
       });
 
     if (insertError) {
@@ -131,13 +129,12 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
       // CRITICAL: Restore the credit that was deducted since log creation failed
       try {
         const { data: restoreResult, error: restoreError } = await supabase.functions.invoke(
-          'manual-credit-allocation',
+          'restore-class-credit',
           {
             body: {
-              student_email: null, // Will use student_id instead
               student_id: data.studentId,
-              credits: 1,
-              note: `Credit restored - class log creation failed for ${data.classNumber}`
+              class_id: data.classId,
+              reason: `Credit restored - class log creation failed for ${data.classNumber}`
             },
             headers: {
               Authorization: `Bearer ${session.session.access_token}`

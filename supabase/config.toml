@@ -8,32 +8,34 @@ project_id = "lnhtlbatcufmsyoujuqh"
 [functions]
 [functions.check-upcoming-classes]
   verify_jwt = true
-  [functions.db-operations]
+[functions.db-operations]
   verify_jwt = true
-  [functions.auto-backup]
+[functions.auto-backup]
   verify_jwt = false
-  [functions.send-class-reminders]
+[functions.send-class-reminders]
   verify_jwt = true
-  [functions.cron-class-reminders]
+[functions.cron-class-reminders]
   verify_jwt = false
-  [functions.secure-file-upload]
+[functions.secure-file-upload]
   verify_jwt = true
-  [functions.manual-credit-allocation]
+[functions.manual-credit-allocation]
   verify_jwt = true
-  [functions.stripe-webhooks]
+[functions.stripe-webhooks]
   verify_jwt = false
-  [functions.generate-monthly-report]
+[functions.generate-monthly-report]
   verify_jwt = true
-  [functions.cron-monthly-reports]
+[functions.cron-monthly-reports]
   verify_jwt = false
-  [functions.generate-referral-code]
+[functions.generate-referral-code]
   verify_jwt = true
-  [functions.pause-subscription]
+[functions.pause-subscription]
   verify_jwt = true
-  [functions.send-overdraw-reminders]
+[functions.send-overdraw-reminders]
   verify_jwt = true
-  [functions.cron-overdraw-reminders]
+[functions.cron-overdraw-reminders]
   verify_jwt = false
+[functions.restore-class-credit]
+  verify_jwt = true
 
 [auth]
   enabled = true
