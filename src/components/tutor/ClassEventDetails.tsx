@@ -11,6 +11,7 @@ import CalendarLinks from '@/components/shared/CalendarLinks';
 import CompletedClassActions from '@/components/tutor/CompletedClassActions';
 import { uploadMaterial, addMaterialToClass, removeMaterialFromClass } from '@/services/materialsService';
 import { toast } from 'sonner';
+import { parseDateToLocal } from '@/utils/safeDateUtils';
 
 interface ClassEventDetailsProps {
   selectedEvent: ClassEvent;
@@ -114,9 +115,7 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
           <div>
             <h4 className="text-sm font-medium text-gray-500">Date</h4>
             <p>
-              {selectedEvent.date instanceof Date
-                ? selectedEvent.date.toLocaleDateString()
-                : new Date(selectedEvent.date).toLocaleDateString()}
+              {parseDateToLocal(selectedEvent.date).toLocaleDateString()}
             </p>
           </div>
           <div>

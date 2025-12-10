@@ -21,6 +21,7 @@ import { StudentMessage, StudentUpload } from '@/types/classTypes';
 import { format } from 'date-fns';
 import ConfirmationDialog from '@/components/shared/ConfirmationDialog';
 import EditClassDialog from './EditClassDialog';
+import { parseDateToLocal } from '@/utils/safeDateUtils';
 
 interface ViewClassDialogProps {
   isOpen: boolean;
@@ -68,7 +69,7 @@ const ViewClassDialog: React.FC<ViewClassDialogProps> = ({
   const formatEventDate = (date: Date | string | undefined) => {
     if (!date) return '';
     try {
-      const dateObj = date instanceof Date ? date : new Date(date);
+      const dateObj = parseDateToLocal(date);
       if (isNaN(dateObj.getTime())) return String(date);
       return format(dateObj, 'MMMM d, yyyy');
     } catch (e) {

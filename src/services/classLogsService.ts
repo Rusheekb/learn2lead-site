@@ -6,6 +6,7 @@ import { Database } from '@/integrations/supabase/types';
 import { parseNumericString } from '@/utils/numberUtils';
 import { transformClassLog } from './logs/transformers';
 import { DbClassLog, DbCodeLog, TransformedClassLog } from './logs/types';
+import { parseDateToLocal, formatDateForDatabase } from '@/utils/safeDateUtils';
 
 type ClassLogs = Database['public']['Tables']['class_logs']['Row'];
 
@@ -42,12 +43,13 @@ export const fetchClassLogs = async (): Promise<TransformedClassLog[]> => {
 export const createClassLog = async (
   classEvent: ClassEvent
 ): Promise<ClassEvent | null> => {
+  const eventDate = parseDateToLocal(classEvent.date);
   const record = {
     'Class Number': classEvent.title,
     'Tutor Name': classEvent.tutorName,
     'Student Name': classEvent.studentName,
-    Date: format(new Date(classEvent.date), 'yyyy-MM-dd'),
-    Day: format(new Date(classEvent.date), 'EEEE'),
+    Date: formatDateForDatabase(eventDate),
+    Day: format(eventDate, 'EEEE'),
     'Time (CST)': classEvent.startTime,
     'Time (hrs)': classEvent.duration?.toString() || '0',
     Subject: classEvent.subject,

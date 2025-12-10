@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { ErrorHandler } from '@/services/errorHandling';
+import { parseDateToLocal } from '@/utils/safeDateUtils';
 
 interface EditClassDialogProps {
   isOpen: boolean;
@@ -44,9 +45,7 @@ const EditClassDialog: React.FC<EditClassDialogProps> = ({
 
   useEffect(() => {
     if (classEvent && isOpen) {
-      const eventDate = classEvent.date instanceof Date 
-        ? classEvent.date 
-        : new Date(classEvent.date);
+      const eventDate = parseDateToLocal(classEvent.date);
         
       setFormData({
         title: classEvent.title || '',

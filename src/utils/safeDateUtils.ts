@@ -74,8 +74,10 @@ export const parseDateToLocal = (dateInput: string | Date | unknown): Date => {
     }
     return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
   }
-  // Handle unexpected types gracefully
-  console.warn('Unexpected date input type:', typeof dateInput, dateInput);
+  // Handle unexpected types gracefully - only log in development
+  if (process.env.NODE_ENV === 'development') {
+    console.warn('Unexpected date input type:', typeof dateInput, dateInput);
+  }
   const fallback = new Date();
   return new Date(fallback.getFullYear(), fallback.getMonth(), fallback.getDate());
 };
