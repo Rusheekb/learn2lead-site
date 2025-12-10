@@ -37,28 +37,25 @@ export const calculateEndTime = (startTime: string, duration: number): string =>
 };
 
 // Parse a date string using multiple possible formats
+// IMPORTANT: Parses dates as LOCAL time to avoid timezone shifts
 export const parseDateWithFormats = (dateString: string): Date => {
+  // Handle YYYY-MM-DD format as local time (not UTC)
+  // This prevents the date from shifting back a day due to timezone conversion
+  const isoDateMatch = dateString.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (isoDateMatch) {
+    const [, year, month, day] = isoDateMatch;
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  }
+
   // List of possible date formats to try
   const formats = [
-    'yyyy-MM-dd',
     'MM/dd/yyyy',
     'M/d/yyyy',
     'MMM d, yyyy',
     'MMMM d, yyyy',
-    'yyyy-MM-dd\'T\'HH:mm:ss.SSSX',
   ];
 
-  // Try ISO format first
-  try {
-    const date = parseISO(dateString);
-    if (!isNaN(date.getTime())) {
-      return date;
-    }
-  } catch (e) {
-    // Continue to next approach
-  }
-
-  // Try each format
+  // Try each format using parse (treats as local time)
   for (const formatString of formats) {
     try {
       const date = parse(dateString, formatString, new Date());
@@ -68,6 +65,16 @@ export const parseDateWithFormats = (dateString: string): Date => {
     } catch (e) {
       // Try next format
     }
+  }
+
+  // Try ISO format with time component last (these should keep their timezone info)
+  try {
+    const date = parseISO(dateString);
+    if (!isNaN(date.getTime())) {
+      return date;
+    }
+  } catch (e) {
+    // Continue
   }
 
   // If all parsing attempts fail, throw error
