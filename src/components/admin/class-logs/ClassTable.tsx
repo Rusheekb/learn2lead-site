@@ -6,6 +6,7 @@ import { CircleMessageBadge } from '@/components/shared/ClassBadges';
 import { Button } from '@/components/ui/button';
 import { ClassEvent } from '@/types/tutorTypes';
 import { formatTimeRange } from '@/utils/dateTimeUtils';
+import { parseDateToLocal } from '@/utils/safeDateUtils';
 
 interface ClassTableProps {
   classes: ClassEvent[];
@@ -30,7 +31,7 @@ const formatDate = (date: Date | string) => {
   try {
     if (!date) return 'Date not available';
 
-    const dateObj = date instanceof Date ? date : new Date(date);
+    const dateObj = parseDateToLocal(date);
 
     if (isNaN(dateObj.getTime())) {
       return 'Invalid date';

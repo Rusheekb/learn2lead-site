@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { useQueryClient } from '@tanstack/react-query';
+import { parseDateToLocal } from '@/utils/safeDateUtils';
 
 interface ClassHistoryItem {
   id: string;
@@ -206,7 +207,7 @@ const ClassHistory: React.FC<ClassHistoryProps> = ({ userRole }) => {
                         <span className="font-medium text-sm">{classItem['Class Number'] || 'Untitled'}</span>
                         <Badge variant="outline" className="text-xs">{classItem.Subject || 'Unknown'}</Badge>
                         <span className="text-xs text-muted-foreground">
-                          {format(new Date(classItem.Date), 'MMM d, yyyy')}
+                          {format(parseDateToLocal(classItem.Date), 'MMM d, yyyy')}
                         </span>
                         <span className="text-xs text-muted-foreground">
                           {userRole === 'student' ? (classItem['Tutor Name'] || 'Unknown Tutor') : (classItem['Student Name'] || 'Unknown Student')}

@@ -1,4 +1,5 @@
 import { ClassEvent } from '@/types/tutorTypes';
+import { parseDateToLocal } from '@/utils/safeDateUtils';
 
 /**
  * Convert class logs to CSV format matching Excel template
@@ -16,7 +17,7 @@ export const exportClassLogsToCSV = (
   
   if (startDate || endDate) {
     filteredClasses = classes.filter(cls => {
-      const classDate = new Date(cls.date);
+      const classDate = parseDateToLocal(cls.date);
       
       if (startDate && classDate < startDate) {
         return false;
@@ -55,7 +56,7 @@ export const exportClassLogsToCSV = (
 
   // Convert filtered classes to CSV rows
   const rows = filteredClasses.map(cls => {
-    const date = new Date(cls.date);
+    const date = parseDateToLocal(cls.date);
     const formattedDate = date.toLocaleDateString('en-US', { 
       month: '2-digit', 
       day: '2-digit', 
@@ -66,7 +67,7 @@ export const exportClassLogsToCSV = (
     // Format payment dates as M/d/yy or blank if no date
     const formatPaymentDate = (paymentDate: Date | null | undefined): string => {
       if (!paymentDate) return '';
-      const d = new Date(paymentDate);
+      const d = parseDateToLocal(paymentDate);
       const month = d.getMonth() + 1;
       const day = d.getDate();
       const year = d.getFullYear().toString().slice(-2);

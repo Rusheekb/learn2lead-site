@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { UpdateDbClassLog, TransformedClassLog } from './types';
 import { transformClassLog } from './transformers';
 import { Database } from '@/integrations/supabase/types';
+import { parseDateToLocal, formatDateForDatabase } from '@/utils/safeDateUtils';
 
 type ClassLogs = Database['public']['Tables']['class_logs']['Row'];
 
@@ -19,8 +20,9 @@ export const updateClassLog = async (
   if (classEvent.studentName)
     updateData['Student Name'] = classEvent.studentName;
   if (classEvent.date) {
-    updateData['Date'] = format(new Date(classEvent.date), 'yyyy-MM-dd');
-    updateData['Day'] = format(new Date(classEvent.date), 'EEEE');
+    const eventDate = parseDateToLocal(classEvent.date);
+    updateData['Date'] = formatDateForDatabase(eventDate);
+    updateData['Day'] = format(eventDate, 'EEEE');
   }
   if (classEvent.startTime) updateData['Time (CST)'] = classEvent.startTime;
   if (classEvent.duration)

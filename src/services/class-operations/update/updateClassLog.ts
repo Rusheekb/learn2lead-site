@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ClassEvent } from '@/types/tutorTypes';
 import { format } from 'date-fns';
 import { transformDbRecordToClassEvent } from '@/services/utils/classEventMapper';
+import { parseDateToLocal, formatDateForDatabase } from '@/utils/safeDateUtils';
 
 export const updateClassLog = async (
   id: string,
@@ -14,8 +15,9 @@ export const updateClassLog = async (
   if (classEvent.tutorName !== undefined) record['Tutor Name'] = classEvent.tutorName;
   if (classEvent.studentName !== undefined) record['Student Name'] = classEvent.studentName;
   if (classEvent.date !== undefined) {
-    record['Date'] = format(new Date(classEvent.date), 'yyyy-MM-dd');
-    record['Day'] = format(new Date(classEvent.date), 'EEEE');
+    const eventDate = parseDateToLocal(classEvent.date);
+    record['Date'] = formatDateForDatabase(eventDate);
+    record['Day'] = format(eventDate, 'EEEE');
   }
   if (classEvent.startTime !== undefined) record['Time (CST)'] = classEvent.startTime;
   if (classEvent.duration !== undefined) record['Time (hrs)'] = classEvent.duration.toString();

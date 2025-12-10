@@ -14,6 +14,7 @@ import { ClassItem } from '@/types/classTypes';
 import CalendarLinks from '@/components/shared/CalendarLinks';
 import { format } from 'date-fns';
 import { AttendanceStatus, ClassStatus, ClassEvent } from '@/types/tutorTypes';
+import { parseDateToLocal } from '@/utils/safeDateUtils';
 
 interface ClassDetailsDialogProps {
   isOpen: boolean;
@@ -89,9 +90,7 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
               <div>
                 <h4 className="text-sm font-medium text-gray-500">Date</h4>
                 <p>
-                  {selectedClass.date instanceof Date
-                    ? format(selectedClass.date, 'MMMM d, yyyy')
-                    : format(new Date(selectedClass.date), 'MMMM d, yyyy')}
+                  {format(parseDateToLocal(selectedClass.date), 'MMMM d, yyyy')}
                 </p>
               </div>
               <div>

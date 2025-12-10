@@ -13,6 +13,7 @@ import { StudentContent } from '@/components/shared/StudentContent.tsx';
 
 import { format } from 'date-fns';
 import { FileText, ExternalLink } from 'lucide-react';
+import { parseDateToLocal } from '@/utils/safeDateUtils';
 
 interface ClassDetailsDialogProps {
   isDetailsOpen: boolean;
@@ -42,7 +43,7 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
   const formatDate = (date: Date | string | undefined) => {
     if (!date) return 'Date not available';
     try {
-      const dateObj = date instanceof Date ? date : new Date(date);
+      const dateObj = parseDateToLocal(date);
       if (isNaN(dateObj.getTime())) return 'Invalid date';
       return format(dateObj, 'MMM d, yyyy');
     } catch (e) {

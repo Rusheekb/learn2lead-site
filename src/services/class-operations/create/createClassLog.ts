@@ -4,15 +4,19 @@ import { ClassEvent } from '@/types/tutorTypes';
 import { format } from 'date-fns';
 import { transformDbRecordToClassEvent } from '@/services/utils/classEventMapper';
 import { generateClassId } from '@/utils/classIdGenerator';
+import { parseDateToLocal, formatDateForDatabase } from '@/utils/safeDateUtils';
 
 export const createClassLog = async (
   classEvent: ClassEvent
 ): Promise<ClassEvent | null> => {
+  const eventDate = parseDateToLocal(classEvent.date);
+  const formattedDate = formatDateForDatabase(eventDate);
+  
   // Fetch existing class numbers for this date/tutor/student combination
   const { data: existingLogs } = await supabase
     .from('class_logs')
     .select('Class Number')
-    .eq('Date', format(new Date(classEvent.date), 'yyyy-MM-dd'));
+    .eq('Date', formattedDate);
   
   const existingIds = existingLogs?.map(log => (log as any)['Class Number'] as string).filter(Boolean) || [];
   
@@ -29,8 +33,8 @@ export const createClassLog = async (
     'Class Number': classNumber,
     'Tutor Name': classEvent.tutorName,
     'Student Name': classEvent.studentName,
-    Date: format(new Date(classEvent.date), 'yyyy-MM-dd'),
-    Day: format(new Date(classEvent.date), 'EEEE'),
+    Date: formattedDate,
+    Day: format(eventDate, 'EEEE'),
     'Time (CST)': classEvent.startTime,
     'Time (hrs)': classEvent.duration?.toString() || '0',
     Subject: classEvent.subject,

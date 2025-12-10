@@ -4,6 +4,7 @@ import { ClassEvent, DbClassLog } from '@/types/tutorTypes';
 import { transformDbRecordToClassEvent } from './utils/classEventMapper';
 import { format } from 'date-fns';
 import { generateClassId } from '@/utils/classIdGenerator';
+import { parseDateToLocal, formatDateForDatabase } from '@/utils/safeDateUtils';
 
 export async function fetchClassLogs(): Promise<ClassEvent[]> {
   const result = await supabase.from('class_logs').select('*');
@@ -22,17 +23,14 @@ export async function fetchClassLogs(): Promise<ClassEvent[]> {
 export async function createClassLog(
   classLog: Record<string, any>
 ): Promise<ClassEvent> {
-  // First, format the date correctly
+  // First, format the date correctly using local time parser
   const dateValue = classLog.Date || classLog.date;
-  const formattedDate = dateValue ? 
-    (typeof dateValue === 'string' ? 
-      dateValue : 
-      format(new Date(dateValue), 'yyyy-MM-dd')) : 
-    format(new Date(), 'yyyy-MM-dd');
+  const parsedDate = dateValue ? parseDateToLocal(dateValue) : new Date();
+  const formattedDate = formatDateForDatabase(parsedDate);
     
-  // Then calculate day based on the formatted date
+  // Then calculate day based on the parsed local date
   const dayValue = classLog.day || classLog.Day || 
-    new Date(formattedDate).toLocaleDateString('en-US', { weekday: 'long' });
+    format(parsedDate, 'EEEE');
   
   // Generate or use existing Class Number
   let classNumber = classLog['Class Number'];
