@@ -4,6 +4,7 @@ import { parseNumericString } from '@/utils/numberUtils';
 import { DbClassLog, DbCodeLog, TransformedClassLog } from './types';
 import { Database } from '@/integrations/supabase/types';
 import { calculateEndTime } from '@/services/utils/dateTimeTransformers';
+import { parseDateToLocal } from '@/utils/safeDateUtils';
 
 type ClassLogs = Database['public']['Tables']['class_logs']['Row'];
 
@@ -41,8 +42,8 @@ export const transformClassLog = (record: DbClassLog): TransformedClassLog => {
       classId: record['Class ID'] ?? '',
       classCost: typeof record['Class Cost'] === 'number' ? record['Class Cost'] : (parseFloat(String(record['Class Cost'] ?? '0')) || 0),
       tutorCost: typeof record['Tutor Cost'] === 'number' ? record['Tutor Cost'] : (parseFloat(String(record['Tutor Cost'] ?? '0')) || 0),
-      studentPaymentDate: record.student_payment_date ? new Date(record.student_payment_date) : null,
-      tutorPaymentDate: record.tutor_payment_date ? new Date(record.tutor_payment_date) : null,
+      studentPaymentDate: record.student_payment_date ? parseDateToLocal(record.student_payment_date) : null,
+      tutorPaymentDate: record.tutor_payment_date ? parseDateToLocal(record.tutor_payment_date) : null,
       studentPayment: record.student_payment_date ? 'paid' : 'unpaid',
       tutorPayment: record.tutor_payment_date ? 'paid' : 'unpaid',
       additionalInfo: record['Additional Info'],
@@ -93,8 +94,8 @@ export const transformCodeLog = (record: DbCodeLog): TransformedClassLog => {
       classId: record.id,
       classCost: typeof record.class_cost === 'number' ? record.class_cost : (parseFloat(record.class_cost ?? '0') || 0),
       tutorCost: typeof record.tutor_cost === 'number' ? record.tutor_cost : (parseFloat(record.tutor_cost ?? '0') || 0),
-      studentPaymentDate: record.student_payment_date ? new Date(record.student_payment_date) : null,
-      tutorPaymentDate: record.tutor_payment_date ? new Date(record.tutor_payment_date) : null,
+      studentPaymentDate: record.student_payment_date ? parseDateToLocal(record.student_payment_date) : null,
+      tutorPaymentDate: record.tutor_payment_date ? parseDateToLocal(record.tutor_payment_date) : null,
       studentPayment: record.student_payment_date ? 'paid' : 'unpaid',
       tutorPayment: record.tutor_payment_date ? 'paid' : 'unpaid',
       additionalInfo: record.additional_info ?? null,
