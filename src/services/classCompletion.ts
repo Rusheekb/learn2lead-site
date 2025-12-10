@@ -127,7 +127,43 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
 
     if (insertError) {
       console.error('Error creating class log:', insertError);
-      throw new Error('Failed to create class log');
+      
+      // CRITICAL: Restore the credit that was deducted since log creation failed
+      try {
+        const { data: restoreResult, error: restoreError } = await supabase.functions.invoke(
+          'manual-credit-allocation',
+          {
+            body: {
+              student_email: null, // Will use student_id instead
+              student_id: data.studentId,
+              credits: 1,
+              note: `Credit restored - class log creation failed for ${data.classNumber}`
+            },
+            headers: {
+              Authorization: `Bearer ${session.session.access_token}`
+            }
+          }
+        );
+        
+        if (restoreError || !restoreResult?.success) {
+          console.error('Failed to restore credit after log creation failure:', restoreError || restoreResult?.error);
+          toast.error('Class log failed and credit could not be restored automatically', {
+            description: 'Please contact admin to restore the credit manually'
+          });
+        } else {
+          console.log('Credit successfully restored after log creation failure');
+          toast.error('Failed to create class log - credit has been restored', {
+            description: 'Please try again or contact support if the issue persists'
+          });
+        }
+      } catch (restoreErr) {
+        console.error('Exception restoring credit:', restoreErr);
+        toast.error('Class log failed and credit restoration encountered an error', {
+          description: 'Please contact admin to restore the credit manually'
+        });
+      }
+      
+      return false;
     }
 
     // Delete the scheduled class
