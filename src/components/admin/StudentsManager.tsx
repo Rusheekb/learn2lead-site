@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { Student } from '@/types/tutorTypes';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { UserCheck } from 'lucide-react';
 import SearchInput from '@/components/shared/filters/SearchInput';
@@ -80,8 +79,6 @@ const StudentsManager: React.FC<StudentsManagerProps> = ({ onSelect }) => {
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead>Grade</TableHead>
-                  <TableHead>Payment Status</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -94,15 +91,6 @@ const StudentsManager: React.FC<StudentsManagerProps> = ({ onSelect }) => {
                   >
                     <TableCell className="font-medium">{student.name}</TableCell>
                     <TableCell>{student.email}</TableCell>
-                    <TableCell>{student.grade || 'N/A'}</TableCell>
-                    <TableCell>
-                      <span className={`inline-block px-2 py-1 text-xs font-semibold rounded-full 
-                        ${student.paymentStatus === 'paid' ? 'bg-green-100 text-green-800' : 
-                          student.paymentStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' : 
-                          'bg-red-100 text-red-800'}`}>
-                        {student.paymentStatus}
-                      </span>
-                    </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
                         {isAdmin && (
