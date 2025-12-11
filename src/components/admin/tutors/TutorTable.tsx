@@ -29,10 +29,6 @@ const TutorTable: React.FC<TutorTableProps> = ({
       ),
     },
     {
-      header: 'Hourly Rate',
-      cell: (tutor) => `$${tutor.hourlyRate}/hr`,
-    },
-    {
       header: 'Actions',
       cell: (tutor) => (
         <div className="flex items-center gap-2">

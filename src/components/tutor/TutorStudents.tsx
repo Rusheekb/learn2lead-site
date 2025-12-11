@@ -31,8 +31,6 @@ const TutorStudents: React.FC = () => {
           name: ts.student_name,
           email: ts.student_email,
           subjects: ts.subjects || [],
-          grade: ts.grade || 'Not specified',
-          paymentStatus: ts.payment_status || 'paid',
           nextSession: undefined // Will be populated if needed
         }));
         
