@@ -29,18 +29,6 @@ const TutorTable: React.FC<TutorTableProps> = ({
       ),
     },
     {
-      header: 'Subjects',
-      cell: (tutor) => tutor.subjects.join(', ') || 'None',
-    },
-    {
-      header: 'Rating',
-      cell: (tutor) => `${tutor.rating}/5`,
-    },
-    {
-      header: 'Classes',
-      accessorKey: 'classes',
-    },
-    {
       header: 'Hourly Rate',
       cell: (tutor) => `$${tutor.hourlyRate}/hr`,
     },

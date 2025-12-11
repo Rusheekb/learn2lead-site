@@ -2,7 +2,6 @@
 import React from 'react';
 import DataTable, { ColumnDefinition } from '@/components/common/DataTable';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Edit2, Trash2 } from 'lucide-react';
 
 export interface Student {
@@ -23,25 +22,6 @@ interface StudentTableProps {
   onDeleteStudent: (studentId: string) => void;
 }
 
-// Map status and payment status to badge variants
-const statusBadgeVariants: Record<
-  string,
-  'default' | 'secondary' | 'outline' | 'destructive'
-> = {
-  active: 'default',
-  inactive: 'secondary',
-  pending: 'outline',
-};
-
-const paymentBadgeVariants: Record<
-  string,
-  'default' | 'secondary' | 'outline' | 'destructive'
-> = {
-  paid: 'default',
-  unpaid: 'outline',
-  overdue: 'destructive',
-};
-
 // Helper function to format date
 const formatDate = (dateString: string | undefined) => {
   if (!dateString) return 'N/A';
@@ -51,9 +31,6 @@ const formatDate = (dateString: string | undefined) => {
     return dateString;
   }
 };
-
-// Helper to capitalize strings
-const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
 
 const StudentTable: React.FC<StudentTableProps> = ({
   students,
@@ -71,34 +48,8 @@ const StudentTable: React.FC<StudentTableProps> = ({
       ),
     },
     {
-      header: 'Grade',
-      accessorKey: 'grade',
-    },
-    {
-      header: 'Subjects',
-      cell: (student) => student.subjects.join(', '),
-      className: 'hidden md:table-cell',
-    },
-    {
-      header: 'Status',
-      cell: (student) => (
-        <Badge variant={statusBadgeVariants[student.status] || 'default'}>
-          {capitalize(student.status)}
-        </Badge>
-      ),
-    },
-    {
-      header: 'Payment',
-      cell: (student) => (
-        <Badge variant={paymentBadgeVariants[student.paymentStatus] || 'default'}>
-          {capitalize(student.paymentStatus)}
-        </Badge>
-      ),
-    },
-    {
       header: 'Last Session',
       cell: (student) => formatDate(student.lastSession),
-      className: 'hidden md:table-cell',
     },
     {
       header: 'Actions',
