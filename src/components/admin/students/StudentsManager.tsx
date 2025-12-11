@@ -21,8 +21,6 @@ import { parse } from 'date-fns';
 const StudentsManager: React.FC = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [paymentFilter, setPaymentFilter] = useState<string>('all');
   const [isLoading, setIsLoading] = useState(true);
   const { classes } = useClassLogs();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -37,30 +35,6 @@ const StudentsManager: React.FC = () => {
           (cls) => cls.studentName === student.name
         );
 
-        let status: 'active' | 'inactive' | 'pending' = 'inactive';
-        if (student.lastSession) {
-          const lastSessionDate = new Date(student.lastSession);
-          const threeMonthsAgo = new Date();
-          threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-          if (lastSessionDate >= threeMonthsAgo) status = 'active';
-        }
-
-        let paymentStatus: 'paid' | 'unpaid' | 'overdue' = 'paid';
-        const unpaidClasses = studentClasses.filter(
-          (cls) => cls.studentPayment?.toLowerCase() !== 'paid'
-        );
-        if (unpaidClasses.length > 0) {
-          const thirtyDaysAgo = new Date();
-          thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-          const overdue = unpaidClasses.some((cls) => {
-            const classDate = cls.date
-              ? parse(String(cls.date), 'yyyy-MM-dd', new Date())
-              : new Date();
-            return classDate < thirtyDaysAgo;
-          });
-          paymentStatus = overdue ? 'overdue' : 'unpaid';
-        }
-
         let enrollDate = student.lastSession;
         studentClasses.forEach((cls) => {
           if (cls.date) {
@@ -72,20 +46,18 @@ const StudentsManager: React.FC = () => {
           }
         });
 
-        const grade = Math.floor(Math.random() * 4) + 9;
-
         return {
           id: student.id,
           name: student.name,
           email:
             student.email ||
             student.name.toLowerCase().replace(/\s+/g, '.') + '@example.com',
-          grade: `${grade}th Grade`,
+          grade: '',
           subjects: student.subjects,
-          status,
+          status: 'active' as const,
           enrollDate: enrollDate || new Date().toISOString().split('T')[0],
           lastSession: student.lastSession || 'N/A',
-          paymentStatus,
+          paymentStatus: 'paid' as const,
         };
       });
 
@@ -123,11 +95,7 @@ const StudentsManager: React.FC = () => {
     const matchesSearch =
       student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus =
-      statusFilter === 'all' || student.status === statusFilter;
-    const matchesPayment =
-      paymentFilter === 'all' || student.paymentStatus === paymentFilter;
-    return matchesSearch && matchesStatus && matchesPayment;
+    return matchesSearch;
   });
 
   return (
@@ -156,10 +124,6 @@ const StudentsManager: React.FC = () => {
           <StudentFilters
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
-            statusFilter={statusFilter}
-            setStatusFilter={setStatusFilter}
-            paymentFilter={paymentFilter}
-            setPaymentFilter={setPaymentFilter}
           />
         </CardHeader>
         <CardContent>
