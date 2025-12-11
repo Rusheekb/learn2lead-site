@@ -86,7 +86,7 @@ serve(async (req) => {
         .select("id, created_at")
         .eq("student_id", student_id)
         .eq("related_class_id", class_id)
-        .eq("transaction_type", "deduction")
+        .eq("transaction_type", "debit")
         .gte("created_at", new Date(Date.now() - 5 * 60 * 1000).toISOString())
         .order("created_at", { ascending: false })
         .limit(1)
