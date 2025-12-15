@@ -106,24 +106,42 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
               </div>
             </div>
 
+            {selectedClass.zoomLink && (
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground">Zoom Link</h4>
+                <a
+                  href={selectedClass.zoomLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline"
+                >
+                  {selectedClass.zoomLink}
+                </a>
+              </div>
+            )}
+
             <div>
-              <h4 className="text-sm font-medium text-muted-foreground">Zoom Link</h4>
-              <a
-                href={selectedClass.zoomLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:underline"
-              >
-                {selectedClass.zoomLink}
-              </a>
+              <h4 className="text-sm font-medium text-muted-foreground">Content Covered</h4>
+              <p className="mt-1 text-foreground whitespace-pre-wrap">
+                {selectedClass.content || 'No content recorded for this class.'}
+              </p>
             </div>
 
             <div>
-              <h4 className="text-sm font-medium text-muted-foreground">Notes</h4>
-              <p className="mt-1 text-foreground">
-                {selectedClass.notes || 'No notes recorded for this class.'}
+              <h4 className="text-sm font-medium text-muted-foreground">Homework / Follow-up</h4>
+              <p className="mt-1 text-foreground whitespace-pre-wrap">
+                {selectedClass.homework || 'No homework assigned.'}
               </p>
             </div>
+
+            {selectedClass.notes && (
+              <div>
+                <h4 className="text-sm font-medium text-muted-foreground">Additional Notes</h4>
+                <p className="mt-1 text-foreground whitespace-pre-wrap">
+                  {selectedClass.notes}
+                </p>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="materials" className="space-y-4 pt-4">
