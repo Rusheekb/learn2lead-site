@@ -17,7 +17,7 @@ const StudentsManager = lazy(() => import('@/components/admin/StudentsManager'))
 const AssignmentManager = lazy(() => import('@/components/admin/AssignmentManager'));
 const AdminSettings = lazy(() => import('@/pages/AdminSettings'));
 const ManualCreditAllocation = lazy(() => import('@/components/admin/ManualCreditAllocation').then(m => ({ default: m.ManualCreditAllocation })));
-const MonthlyReports = lazy(() => import('@/components/admin/MonthlyReports'));
+const QuarterlyReports = lazy(() => import('@/components/admin/QuarterlyReports'));
 
 type User = (Student | Tutor) & { role: 'student' | 'tutor' };
 
@@ -123,7 +123,7 @@ const AdminDashboard: React.FC = () => {
       case 'reports':
         return (
           <Suspense fallback={<LoadingSpinner />}>
-            <MonthlyReports />
+            <QuarterlyReports />
           </Suspense>
         );
       default:
