@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
@@ -17,10 +17,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import SuggestedMatches from './SuggestedMatches';
 
 interface AssignmentManagerProps {
   tutors: Array<{ id: string; profileId: string; name: string }>;
-  students: Array<{ id: string; profileId: string; name: string }>;
+  students: Array<{ id: string; profileId: string; name: string; email?: string }>;
   assignments: TutorStudentAssignment[];
   onAssignmentChange: () => void;
 }
@@ -40,6 +42,7 @@ const AssignmentManager: React.FC<AssignmentManagerProps> = ({
   onAssignmentChange
 }) => {
   const { user } = useAuth();
+  const [selectedStudentEmail, setSelectedStudentEmail] = useState<string>('');
   
   const form = useForm<AssignmentFormValues>({
     resolver: zodResolver(assignmentSchema),
@@ -48,6 +51,37 @@ const AssignmentManager: React.FC<AssignmentManagerProps> = ({
       studentId: '',
     },
   });
+
+  // Watch for student selection changes to update suggested matches
+  const selectedStudentId = form.watch('studentId');
+  
+  useEffect(() => {
+    const loadStudentEmail = async () => {
+      if (selectedStudentId) {
+        const selectedStudent = students.find(s => s.id === selectedStudentId);
+        if (selectedStudent?.email) {
+          setSelectedStudentEmail(selectedStudent.email);
+        } else if (selectedStudent?.profileId) {
+          // Fetch email from profiles
+          const { data } = await supabase
+            .from('profiles')
+            .select('email')
+            .eq('id', selectedStudent.profileId)
+            .single();
+          if (data) {
+            setSelectedStudentEmail(data.email);
+          }
+        }
+      } else {
+        setSelectedStudentEmail('');
+      }
+    };
+    loadStudentEmail();
+  }, [selectedStudentId, students]);
+
+  const handleTutorSelect = (tutorId: string) => {
+    form.setValue('tutorId', tutorId);
+  };
 
   const handleCreateAssignment = async (values: AssignmentFormValues) => {
     try {
@@ -101,61 +135,73 @@ const AssignmentManager: React.FC<AssignmentManagerProps> = ({
         <Form {...form}>
           <form 
             onSubmit={form.handleSubmit(handleCreateAssignment)} 
-            className="flex flex-wrap gap-4 mb-6 items-end"
+            className="space-y-4 mb-6"
           >
-            <FormField
-              control={form.control}
-              name="tutorId"
-              render={({ field }) => (
-                <FormItem className="flex-1 min-w-[200px]">
-                  <FormLabel>Tutor</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select Tutor" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {tutors.map((tutor) => (
-                        <SelectItem key={tutor.id} value={tutor.id}>
-                          {tutor.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="studentId"
-              render={({ field }) => (
-                <FormItem className="flex-1 min-w-[200px]">
-                  <FormLabel>Student</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select Student" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {students.map((student) => (
-                        <SelectItem key={student.id} value={student.id}>
-                          {student.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <Button type="submit" className="mt-auto">
-              Create Assignment
-            </Button>
+            <div className="flex flex-wrap gap-4 items-end">
+              <FormField
+                control={form.control}
+                name="studentId"
+                render={({ field }) => (
+                  <FormItem className="flex-1 min-w-[200px]">
+                    <FormLabel>Student</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Student First" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {students.map((student) => (
+                          <SelectItem key={student.id} value={student.id}>
+                            {student.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="tutorId"
+                render={({ field }) => (
+                  <FormItem className="flex-1 min-w-[200px]">
+                    <FormLabel>Tutor</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select Tutor" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {tutors.map((tutor) => (
+                          <SelectItem key={tutor.id} value={tutor.id}>
+                            {tutor.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <Button type="submit" className="mt-auto">
+                Create Assignment
+              </Button>
+            </div>
+
+            {/* Suggested Matches Panel - Admin Only */}
+            {selectedStudentId && (
+              <SuggestedMatches
+                selectedStudentId={selectedStudentId}
+                studentEmail={selectedStudentEmail}
+                tutors={tutors}
+                onSelectTutor={handleTutorSelect}
+              />
+            )}
           </form>
         </Form>
 
