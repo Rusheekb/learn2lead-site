@@ -29,36 +29,100 @@ interface StudentReportData {
   studentId: string;
   studentName: string;
   studentEmail: string;
-  reportMonth: Date;
+  quarterStart: Date;
+  quarterEnd: Date;
+  quarterLabel: string;
   classes: ClassLogData[];
   tutorNotes: Array<{ title: string; content: string; created_at: string }>;
 }
 
+// Get quarter info from a date
+function getQuarterInfo(date: Date): { quarter: number; year: number; label: string; start: Date; end: Date } {
+  const month = date.getMonth();
+  const year = date.getFullYear();
+  const quarter = Math.floor(month / 3) + 1;
+  
+  // Quarter start and end dates
+  const startMonth = (quarter - 1) * 3;
+  const start = new Date(year, startMonth, 1);
+  const end = new Date(year, startMonth + 3, 0); // Last day of quarter
+  
+  const quarterNames = ['Q1 (Jan-Mar)', 'Q2 (Apr-Jun)', 'Q3 (Jul-Sep)', 'Q4 (Oct-Dec)'];
+  const label = `${quarterNames[quarter - 1]} ${year}`;
+  
+  return { quarter, year, label, start, end };
+}
+
+// Get previous quarter from a date
+function getPreviousQuarter(date: Date): { quarter: number; year: number; label: string; start: Date; end: Date } {
+  const currentQuarter = getQuarterInfo(date);
+  let prevQuarter = currentQuarter.quarter - 1;
+  let prevYear = currentQuarter.year;
+  
+  if (prevQuarter === 0) {
+    prevQuarter = 4;
+    prevYear -= 1;
+  }
+  
+  const startMonth = (prevQuarter - 1) * 3;
+  const start = new Date(prevYear, startMonth, 1);
+  const end = new Date(prevYear, startMonth + 3, 0);
+  
+  const quarterNames = ['Q1 (Jan-Mar)', 'Q2 (Apr-Jun)', 'Q3 (Jul-Sep)', 'Q4 (Oct-Dec)'];
+  const label = `${quarterNames[prevQuarter - 1]} ${prevYear}`;
+  
+  return { quarter: prevQuarter, year: prevYear, label, start, end };
+}
+
 async function generateAIRecommendations(reportData: StudentReportData): Promise<string> {
   try {
-    const prompt = `You are an educational advisor analyzing a student's monthly progress report. 
+    const totalHours = reportData.classes.reduce((sum, c) => sum + parseFloat(c["Time (hrs)"] || "0"), 0).toFixed(1);
+    
+    // Group classes by subject for better analysis
+    const subjectBreakdown: Record<string, { count: number; topics: string[] }> = {};
+    reportData.classes.forEach(c => {
+      const subject = c.Subject || 'General';
+      if (!subjectBreakdown[subject]) {
+        subjectBreakdown[subject] = { count: 0, topics: [] };
+      }
+      subjectBreakdown[subject].count++;
+      if (c.Content) {
+        subjectBreakdown[subject].topics.push(c.Content);
+      }
+    });
+
+    const prompt = `You are an educational advisor analyzing a student's QUARTERLY progress report. This report covers 3 months of tutoring sessions, giving you comprehensive data to identify patterns and provide meaningful recommendations.
 
 Student: ${reportData.studentName}
-Month: ${reportData.reportMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+Quarter: ${reportData.quarterLabel}
 Total Classes: ${reportData.classes.length}
-Total Hours: ${reportData.classes.reduce((sum, c) => sum + parseFloat(c["Time (hrs)"] || "0"), 0).toFixed(1)}
+Total Hours: ${totalHours}
 
-Classes covered:
+Subject Breakdown:
+${Object.entries(subjectBreakdown).map(([subject, data]) => 
+  `- ${subject}: ${data.count} classes
+    Topics covered: ${data.topics.slice(0, 10).join(', ') || 'Not specified'}`
+).join('\n')}
+
+Classes covered (chronologically):
 ${reportData.classes.map(c => `- ${c.Date}: ${c.Subject} - ${c.Content || "N/A"}`).join('\n')}
 
-Homework assigned:
+Homework assigned this quarter:
 ${reportData.classes.map(c => c.HW ? `- ${c.Date}: ${c.HW}` : null).filter(Boolean).join('\n') || "No homework recorded"}
 
-Tutor Notes:
+Tutor Notes (3 months):
 ${reportData.tutorNotes.length > 0 ? reportData.tutorNotes.map(n => `- ${n.title}: ${n.content}`).join('\n') : "No tutor notes"}
 
-Based on this data, provide 3-5 specific, actionable recommendations for the student to improve their learning. Focus on:
-1. Content mastery and areas needing reinforcement
-2. Study habits and homework completion
-3. Skills to practice between sessions
-4. Suggested resources or topics for next month
+Based on 3 months of data, provide 5-7 specific, actionable recommendations for the student. With this comprehensive quarterly view, you can identify:
+1. **Learning patterns and progress trends** - What's improving? What's stagnating?
+2. **Subject mastery assessment** - Which subjects show strong understanding vs. need more focus?
+3. **Study habits analysis** - Based on homework completion and session attendance patterns
+4. **Skill gaps and areas for intensive focus** - What should be prioritized next quarter?
+5. **Long-term learning strategies** - Recommendations for the next 3 months
+6. **Resources and practice suggestions** - Specific materials or exercises
+7. **Celebration of achievements** - Acknowledge progress made this quarter
 
-Keep recommendations concise, encouraging, and specific to the subjects covered. Format as a bulleted list.`;
+Keep recommendations encouraging, specific to the subjects covered, and actionable. Format as a bulleted list with clear headers for each category.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -69,7 +133,7 @@ Keep recommendations concise, encouraging, and specific to the subjects covered.
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: "You are an experienced educational advisor providing personalized learning recommendations." },
+          { role: "system", content: "You are an experienced educational advisor providing personalized quarterly learning recommendations. With 3 months of data, you can identify meaningful patterns and provide comprehensive, actionable guidance." },
           { role: "user", content: prompt }
         ],
         temperature: 0.7,
@@ -85,10 +149,8 @@ Keep recommendations concise, encouraging, and specific to the subjects covered.
     const content = data.choices?.[0]?.message?.content || "No recommendations generated.";
     
     // Convert markdown-style formatting to HTML
-    // Convert **text** to <strong>text</strong>
     const htmlContent = content
       .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-      // Convert * at start of line to bullet point
       .replace(/^\* /gm, '• ');
     
     return htmlContent;
@@ -99,8 +161,21 @@ Keep recommendations concise, encouraging, and specific to the subjects covered.
 }
 
 function generateReportHTML(reportData: StudentReportData, aiRecommendations: string): string {
-  const monthName = reportData.reportMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
   const totalHours = reportData.classes.reduce((sum, c) => sum + parseFloat(c["Time (hrs)"] || "0"), 0).toFixed(1);
+  
+  // Group classes by month for display
+  const classesByMonth: Record<string, ClassLogData[]> = {};
+  reportData.classes.forEach(c => {
+    const date = new Date(c.Date);
+    const monthKey = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    if (!classesByMonth[monthKey]) {
+      classesByMonth[monthKey] = [];
+    }
+    classesByMonth[monthKey].push(c);
+  });
+
+  // Count unique subjects
+  const uniqueSubjects = [...new Set(reportData.classes.map(c => c.Subject).filter(Boolean))];
   
   return `
 <!DOCTYPE html>
@@ -111,12 +186,14 @@ function generateReportHTML(reportData: StudentReportData, aiRecommendations: st
     .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 8px; margin-bottom: 30px; }
     .header h1 { margin: 0 0 10px 0; font-size: 28px; }
     .header p { margin: 0; opacity: 0.9; }
-    .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 30px; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 30px; }
     .stat-card { background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #667eea; }
     .stat-card h3 { margin: 0 0 5px 0; color: #667eea; font-size: 14px; text-transform: uppercase; }
     .stat-card p { margin: 0; font-size: 24px; font-weight: bold; }
     .section { margin-bottom: 30px; }
     .section h2 { color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px; }
+    .month-section { margin-bottom: 25px; }
+    .month-section h3 { color: #555; font-size: 18px; margin-bottom: 15px; border-left: 3px solid #667eea; padding-left: 10px; }
     .class-item { background: white; border: 1px solid #e0e0e0; padding: 15px; margin-bottom: 10px; border-radius: 6px; }
     .class-item h4 { margin: 0 0 8px 0; color: #333; }
     .class-meta { color: #666; font-size: 14px; margin-bottom: 8px; }
@@ -126,15 +203,15 @@ function generateReportHTML(reportData: StudentReportData, aiRecommendations: st
     .recommendations h3 { margin-top: 0; color: #856404; }
     .recommendations ul { margin: 10px 0; padding-left: 20px; }
     .recommendations li { margin-bottom: 10px; }
-    .tutor-notes { background: #e7f3ff; border-left: 4px solid #2196F3; padding: 20px; border-radius: 6px; }
+    .tutor-notes { background: #e7f3ff; border-left: 4px solid #2196F3; padding: 20px; border-radius: 6px; margin-bottom: 20px; }
     .tutor-notes h3 { margin-top: 0; color: #0d47a1; }
     .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e0e0e0; text-align: center; color: #666; font-size: 14px; }
   </style>
 </head>
 <body>
   <div class="header">
-    <h1>Monthly Progress Report</h1>
-    <p>${reportData.studentName} • ${monthName}</p>
+    <h1>Quarterly Progress Report</h1>
+    <p>${reportData.studentName} • ${reportData.quarterLabel}</p>
   </div>
 
   <div class="stats">
@@ -146,27 +223,36 @@ function generateReportHTML(reportData: StudentReportData, aiRecommendations: st
       <h3>Total Hours</h3>
       <p>${totalHours}</p>
     </div>
+    <div class="stat-card">
+      <h3>Subjects Covered</h3>
+      <p>${uniqueSubjects.length}</p>
+    </div>
   </div>
 
   <div class="section">
-    <h2>📖 Classes This Month</h2>
-    ${reportData.classes.map(c => `
-      <div class="class-item">
-        <h4>${c.Subject}</h4>
-        <div class="class-meta">
-          ${new Date(c.Date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} 
-          • ${c["Time (hrs)"]} hours 
-          • ${c["Tutor Name"]}
-        </div>
-        ${c.Content ? `<div class="class-content"><strong>Content Covered:</strong> ${c.Content}</div>` : ''}
-        ${c.HW ? `<div class="class-content"><strong>Homework:</strong> ${c.HW}</div>` : ''}
+    <h2>📖 Classes This Quarter</h2>
+    ${Object.entries(classesByMonth).map(([month, classes]) => `
+      <div class="month-section">
+        <h3>${month}</h3>
+        ${classes.map(c => `
+          <div class="class-item">
+            <h4>${c.Subject}</h4>
+            <div class="class-meta">
+              ${new Date(c.Date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} 
+              • ${c["Time (hrs)"]} hours 
+              • ${c["Tutor Name"]}
+            </div>
+            ${c.Content ? `<div class="class-content"><strong>Content Covered:</strong> ${c.Content}</div>` : ''}
+            ${c.HW ? `<div class="class-content"><strong>Homework:</strong> ${c.HW}</div>` : ''}
+          </div>
+        `).join('')}
       </div>
     `).join('')}
   </div>
 
   ${reportData.tutorNotes.length > 0 ? `
     <div class="tutor-notes">
-      <h3>💡 Tutor Notes</h3>
+      <h3>💡 Tutor Notes (This Quarter)</h3>
       ${reportData.tutorNotes.map(note => `
         <div style="margin-bottom: 15px;">
           <strong>${note.title}</strong>
@@ -177,12 +263,12 @@ function generateReportHTML(reportData: StudentReportData, aiRecommendations: st
   ` : ''}
 
   <div class="recommendations">
-    <h3>Recommendations for Next Month</h3>
+    <h3>🎯 Recommendations for Next Quarter</h3>
     <div style="white-space: pre-line;">${aiRecommendations}</div>
   </div>
 
   <div class="footer">
-    <p>This is an automated monthly progress report. If you have questions, please contact your tutor.</p>
+    <p>This is an automated quarterly progress report. If you have questions, please contact your tutor.</p>
     <p style="margin-top: 10px; font-size: 12px; color: #999;">Generated on ${new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
   </div>
 </body>
@@ -196,9 +282,9 @@ function buildDisplayName(firstName: string | null, lastName: string | null, ema
   return parts.length > 0 ? parts.join(' ') : email;
 }
 
-async function generateReportForStudent(studentId: string, reportMonth: Date, testEmail?: string): Promise<boolean> {
+async function generateReportForStudent(studentId: string, quarterStart: Date, quarterEnd: Date, quarterLabel: string, testEmail?: string): Promise<boolean> {
   try {
-    console.log(`Generating report for student ${studentId} for month ${reportMonth.toISOString()}${testEmail ? ' (TEST MODE)' : ''}`);
+    console.log(`Generating quarterly report for student ${studentId} for ${quarterLabel}${testEmail ? ' (TEST MODE)' : ''}`);
 
     // Get student profile
     const { data: profile, error: profileError } = await supabase
@@ -214,31 +300,33 @@ async function generateReportForStudent(studentId: string, reportMonth: Date, te
 
     const studentName = buildDisplayName(profile.first_name, profile.last_name, profile.email);
 
-    // Check if report already sent for this month (skip in test mode)
+    // Check if report already sent for this quarter (skip in test mode)
     if (!testEmail) {
       const { data: existingReport } = await supabase
         .from("monthly_reports_sent")
         .select("id")
         .eq("student_id", studentId)
-        .eq("report_month", reportMonth.toISOString().split('T')[0])
+        .eq("report_month", quarterStart.toISOString().split('T')[0])
         .maybeSingle();
 
       if (existingReport) {
-        console.log(`Report already sent for ${studentName} for ${reportMonth.toISOString()}`);
+        console.log(`Report already sent for ${studentName} for ${quarterLabel}`);
         return true;
       }
     }
 
-    // Get class logs for the month
-    const startDate = new Date(reportMonth.getFullYear(), reportMonth.getMonth(), 1);
-    const endDate = new Date(reportMonth.getFullYear(), reportMonth.getMonth() + 1, 0);
+    // Get class logs for the entire quarter (3 months)
+    const startDateStr = quarterStart.toISOString().split('T')[0];
+    const endDateStr = quarterEnd.toISOString().split('T')[0];
+
+    console.log(`Fetching classes from ${startDateStr} to ${endDateStr}`);
 
     const { data: classLogs, error: logsError } = await supabase
       .from("class_logs")
       .select("Date, Subject, Content, HW, \"Tutor Name\", \"Time (hrs)\"")
       .eq("Student Name", studentName)
-      .gte("Date", startDate.toISOString().split('T')[0])
-      .lte("Date", endDate.toISOString().split('T')[0])
+      .gte("Date", startDateStr)
+      .lte("Date", endDateStr)
       .order("Date", { ascending: true });
 
     if (logsError) {
@@ -247,16 +335,17 @@ async function generateReportForStudent(studentId: string, reportMonth: Date, te
     }
 
     if (!classLogs || classLogs.length === 0) {
-      console.log(`No classes found for ${studentName} in ${reportMonth.toISOString()}`);
+      console.log(`No classes found for ${studentName} in ${quarterLabel}`);
       return true; // Not an error, just no classes
     }
 
-    // Get unique tutor identifiers (could be names or emails) and look up their profiles
+    console.log(`Found ${classLogs.length} classes for ${studentName}`);
+
+    // Get unique tutor identifiers and look up their profiles
     const tutorIdentifiers = [...new Set(classLogs.map(c => c["Tutor Name"]).filter(Boolean))];
     const tutorNameMap = new Map<string, string>();
     
     if (tutorIdentifiers.length > 0) {
-      // Try to find profiles by email (in case tutor names are stored as emails)
       const { data: tutorProfiles } = await supabase
         .from("profiles")
         .select("email, first_name, last_name")
@@ -276,20 +365,22 @@ async function generateReportForStudent(studentId: string, reportMonth: Date, te
       "Tutor Name": tutorNameMap.get(c["Tutor Name"] || "") || c["Tutor Name"] || "Unknown"
     }));
 
-    // Get tutor notes for the student
+    // Get tutor notes for the student (entire quarter)
     const { data: tutorNotes, error: notesError } = await supabase
       .from("student_notes")
       .select("title, content, created_at")
       .eq("student_id", studentId)
-      .gte("created_at", startDate.toISOString())
-      .lte("created_at", endDate.toISOString())
+      .gte("created_at", quarterStart.toISOString())
+      .lte("created_at", quarterEnd.toISOString())
       .order("created_at", { ascending: false });
 
     const reportData: StudentReportData = {
       studentId,
       studentName,
       studentEmail: profile.email,
-      reportMonth,
+      quarterStart,
+      quarterEnd,
+      quarterLabel,
       classes: classLogsWithNames as ClassLogData[],
       tutorNotes: tutorNotes || [],
     };
@@ -301,15 +392,14 @@ async function generateReportForStudent(studentId: string, reportMonth: Date, te
     const htmlContent = generateReportHTML(reportData, aiRecommendations);
 
     // Send email via Resend
-    const monthName = reportMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
     const recipientEmail = testEmail || profile.email;
     
-    console.log(`Sending report to: ${recipientEmail}${testEmail ? ' (TEST MODE)' : ''}`);
+    console.log(`Sending quarterly report to: ${recipientEmail}${testEmail ? ' (TEST MODE)' : ''}`);
     
     const emailResult = await resend.emails.send({
       from: "Learn2Lead <onboarding@resend.dev>",
       to: [recipientEmail],
-      subject: `${testEmail ? '[TEST] ' : ''}Your Monthly Progress Report - ${monthName}`,
+      subject: `${testEmail ? '[TEST] ' : ''}Your Quarterly Progress Report - ${quarterLabel}`,
       html: htmlContent,
     });
 
@@ -321,7 +411,7 @@ async function generateReportForStudent(studentId: string, reportMonth: Date, te
         .from("monthly_reports_sent")
         .insert({
           student_id: studentId,
-          report_month: reportMonth.toISOString().split('T')[0],
+          report_month: quarterStart.toISOString().split('T')[0],
           report_content: htmlContent,
         });
 
@@ -331,10 +421,10 @@ async function generateReportForStudent(studentId: string, reportMonth: Date, te
       }
     }
 
-    console.log(`Successfully sent report to ${studentName}${testEmail ? ' (TEST MODE - not logged)' : ''}`);
+    console.log(`Successfully sent quarterly report to ${studentName}${testEmail ? ' (TEST MODE - not logged)' : ''}`);
     return true;
   } catch (error) {
-    console.error("Error generating report for student:", error);
+    console.error("Error generating quarterly report for student:", error);
     return false;
   }
 }
@@ -345,24 +435,36 @@ serve(async (req) => {
   }
 
   try {
-    const { student_id, report_month, test_email } = await req.json();
+    const { student_id, report_quarter, test_email } = await req.json();
 
-    // Parse report month or default to previous month
-    let reportMonth: Date;
-    if (report_month) {
-      reportMonth = new Date(report_month);
+    // Parse quarter or default to previous quarter
+    let quarterInfo: { quarter: number; year: number; label: string; start: Date; end: Date };
+    
+    if (report_quarter) {
+      // Parse format: "2024-01-01" (first day of quarter)
+      const date = new Date(report_quarter);
+      quarterInfo = getQuarterInfo(date);
     } else {
-      const now = new Date();
-      reportMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      // Default to previous quarter
+      quarterInfo = getPreviousQuarter(new Date());
     }
+
+    console.log(`Generating reports for ${quarterInfo.label}`);
 
     if (student_id) {
       // Generate report for single student
-      const success = await generateReportForStudent(student_id, reportMonth, test_email);
+      const success = await generateReportForStudent(
+        student_id, 
+        quarterInfo.start, 
+        quarterInfo.end, 
+        quarterInfo.label, 
+        test_email
+      );
       return new Response(
         JSON.stringify({ 
           success, 
           message: success ? (test_email ? "Test report sent" : "Report sent") : "Report failed",
+          quarter: quarterInfo.label,
           test_mode: !!test_email
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -379,7 +481,13 @@ serve(async (req) => {
       }
 
       const results = await Promise.all(
-        students.map(s => generateReportForStudent(s.id, reportMonth, test_email))
+        students.map(s => generateReportForStudent(
+          s.id, 
+          quarterInfo.start, 
+          quarterInfo.end, 
+          quarterInfo.label, 
+          test_email
+        ))
       );
 
       const successCount = results.filter(r => r).length;
@@ -388,13 +496,14 @@ serve(async (req) => {
           success: true, 
           total: students.length, 
           sent: successCount,
-          message: `Sent ${successCount} of ${students.length} reports` 
+          quarter: quarterInfo.label,
+          message: `Sent ${successCount} of ${students.length} quarterly reports` 
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
   } catch (error) {
-    console.error("Error in generate-monthly-report:", error);
+    console.error("Error in generate-quarterly-report:", error);
     return new Response(
       JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

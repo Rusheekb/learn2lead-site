@@ -22,9 +22,9 @@ project_id = "lnhtlbatcufmsyoujuqh"
   verify_jwt = true
 [functions.stripe-webhooks]
   verify_jwt = false
-[functions.generate-monthly-report]
+[functions.generate-quarterly-report]
   verify_jwt = true
-[functions.cron-monthly-reports]
+[functions.cron-quarterly-reports]
   verify_jwt = false
 [functions.generate-referral-code]
   verify_jwt = true
