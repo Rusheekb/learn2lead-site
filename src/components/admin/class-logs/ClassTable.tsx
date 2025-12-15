@@ -62,10 +62,18 @@ const ClassTable: React.FC<ClassTableProps> = ({
 }) => {
   const columns: ColumnDefinition<ClassEvent>[] = [
     {
+      header: 'Class ID',
+      cell: (cls) => (
+        <div className="font-mono text-sm">
+          {cls.classNumber || '-'}
+        </div>
+      ),
+    },
+    {
       header: 'Class Details',
       cell: (cls) => (
         <div className="space-y-1">
-          <div className="font-medium">{cls.title}</div>
+          <div className="font-medium">{cls.title || cls.subject}</div>
           <div className="text-sm text-muted-foreground">
             <div>Tutor: {cls.tutorName}</div>
             <div>Student: {cls.studentName}</div>

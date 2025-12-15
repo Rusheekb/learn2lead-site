@@ -3,7 +3,8 @@ import { toast } from 'sonner';
 
 export interface CompleteClassData {
   classId: string;
-  classNumber: string;
+  classNumber: string; // Unique ID (e.g., AR-MV-20251111-1)
+  title?: string; // Descriptive title from scheduled class
   tutorName: string;
   studentName: string;
   studentId: string; // Added for credit deduction

@@ -15,6 +15,7 @@ import { useClassCompletionStatus } from '@/hooks/useClassCompletionStatus';
 import { ErrorHandler } from '@/services/errorHandling';
 import { completeClass, CompleteClassData } from '@/services/classCompletion';
 import { parseDateToLocal, formatDateForDatabase } from '@/utils/safeDateUtils';
+import { generateClassId } from '@/utils/classIdGenerator';
 
 interface CompletedClassActionsProps {
   classEvent: ClassEvent;
@@ -83,15 +84,37 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
         return 1; // Default to 1 hour
       })();
       
-      // Prepare completion data with student ID for credit deduction
+      // Fetch existing class IDs for the same date to ensure unique ID generation
       const localDate = parseDateToLocal(classEvent.date);
+      const dateStr = formatDateForDatabase(localDate);
+      
+      const { data: existingLogs } = await supabase
+        .from('class_logs')
+        .select('"Class Number"')
+        .eq('Date', dateStr);
+      
+      const existingIds = (existingLogs || [])
+        .map(log => log['Class Number'])
+        .filter(Boolean) as string[];
+      
+      // Generate unique Class ID (e.g., AR-MV-20251111-1)
+      const studentName = classEvent.studentName || 'Unknown Student';
+      const classNumber = generateClassId({
+        studentName,
+        tutorName,
+        date: localDate,
+        existingIds
+      });
+      
+      // Prepare completion data with student ID for credit deduction
       const completionData: CompleteClassData = {
         classId: classEvent.id,
-        classNumber: classEvent.title,
+        classNumber,
+        title: classEvent.title, // Preserve original title
         tutorName,
-        studentName: classEvent.studentName || 'Unknown Student',
+        studentName,
         studentId: classEvent.studentId || '', // Required for credit deduction
-        date: formatDateForDatabase(localDate),
+        date: dateStr,
         day: localDate.toLocaleDateString('en-US', { weekday: 'long' }),
         timeCst: classEvent.startTime,
         timeHrs: duration.toString(),
