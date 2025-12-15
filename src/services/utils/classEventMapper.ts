@@ -19,6 +19,7 @@ import { parseDateToLocal } from '@/utils/safeDateUtils';
 interface DbRecord {
   id: string;
   'Class Number'?: string | null;
+  'Title'?: string | null;
   'Tutor Name'?: string | null;
   'Student Name'?: string | null;
   Date?: string | null;
@@ -85,7 +86,7 @@ export const transformDbRecordToClassEvent = (record: unknown): ClassEvent => {
     return {
       id: dbRecord.id,
       classNumber: dbRecord['Class Number'] || '',
-      title: dbRecord['Class Number'] || '',
+      title: dbRecord['Title'] || dbRecord.Subject || '',
       tutorName: dbRecord['Tutor Name'] || '',
       studentName: dbRecord['Student Name'] || '',
       date: dateObj,
