@@ -111,6 +111,7 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
       .from('class_logs')
       .insert({
         'Class Number': data.classNumber,
+        'Title': data.title || data.subject, // Preserve descriptive title
         'Tutor Name': data.tutorName,
         'Student Name': data.studentName,
         'Date': data.date,

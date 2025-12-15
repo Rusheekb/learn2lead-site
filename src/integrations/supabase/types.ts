@@ -83,6 +83,7 @@ export type Database = {
           Subject: string | null
           "Time (CST)": string | null
           "Time (hrs)": string | null
+          Title: string | null
           "Tutor Cost": number | null
           "Tutor Name": string | null
           tutor_payment_date: string | null
@@ -106,6 +107,7 @@ export type Database = {
           Subject?: string | null
           "Time (CST)"?: string | null
           "Time (hrs)"?: string | null
+          Title?: string | null
           "Tutor Cost"?: number | null
           "Tutor Name"?: string | null
           tutor_payment_date?: string | null
@@ -129,6 +131,7 @@ export type Database = {
           Subject?: string | null
           "Time (CST)"?: string | null
           "Time (hrs)"?: string | null
+          Title?: string | null
           "Tutor Cost"?: number | null
           "Tutor Name"?: string | null
           tutor_payment_date?: string | null
