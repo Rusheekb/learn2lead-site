@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { AVAILABILITY_OPTIONS, GRADE_LEVEL_OPTIONS } from '@/utils/matchingAlgorithm';
-import { Loader2 } from 'lucide-react';
+import { Loader2, CheckCircle2 } from 'lucide-react';
 
 interface PreferencesFormProps {
   role: 'student' | 'tutor';
@@ -165,6 +166,34 @@ const PreferencesForm: React.FC<PreferencesFormProps> = ({ role, userEmail }) =>
     }
   };
 
+  // Calculate profile completeness
+  const completeness = useMemo(() => {
+    if (role === 'student') {
+      const fields = [
+        studentPrefs.learning_pace,
+        studentPrefs.teaching_style_pref,
+        studentPrefs.session_structure_pref,
+        studentPrefs.primary_goal,
+        studentPrefs.availability_windows.length > 0,
+        studentPrefs.communication_pref,
+      ];
+      const filled = fields.filter(Boolean).length;
+      return Math.round((filled / 6) * 100);
+    } else {
+      const fields = [
+        tutorPrefs.teaching_style_strength,
+        tutorPrefs.preferred_pace,
+        true, // pace_flexibility always has a value (boolean)
+        tutorPrefs.session_structure,
+        tutorPrefs.specialty_focus,
+        tutorPrefs.availability_windows.length > 0,
+        tutorPrefs.grade_level_comfort.length > 0,
+      ];
+      const filled = fields.filter(Boolean).length;
+      return Math.round((filled / 7) * 100);
+    }
+  }, [studentPrefs, tutorPrefs, role]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -175,6 +204,35 @@ const PreferencesForm: React.FC<PreferencesFormProps> = ({ role, userEmail }) =>
 
   return (
     <div className="space-y-6">
+      {/* Profile Completeness Indicator */}
+      <Card className={completeness === 100 ? 'border-green-500/50 bg-green-50/50 dark:bg-green-950/20' : ''}>
+        <CardContent className="pt-6">
+          <div className="flex items-center gap-4">
+            {completeness === 100 ? (
+              <CheckCircle2 className="h-8 w-8 text-green-600 flex-shrink-0" />
+            ) : (
+              <div className="h-8 w-8 rounded-full border-2 border-muted-foreground/30 flex items-center justify-center flex-shrink-0">
+                <span className="text-xs font-medium text-muted-foreground">{completeness}%</span>
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-sm font-medium">
+                  {completeness === 100 ? 'Profile Complete!' : 'Profile Completeness'}
+                </span>
+                <span className="text-sm text-muted-foreground">{completeness}%</span>
+              </div>
+              <Progress value={completeness} className="h-2" />
+              {completeness < 100 && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Complete your preferences to help us find the best {role === 'student' ? 'tutor' : 'student'} matches
+                </p>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>Learning Preferences</CardTitle>
