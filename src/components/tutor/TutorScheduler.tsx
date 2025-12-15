@@ -2,7 +2,6 @@
 import React, { useEffect } from 'react';
 import { useTutorScheduler } from '@/hooks/useTutorScheduler';
 import TutorSchedulerHeader from './scheduler/TutorSchedulerHeader';
-import TutorSchedulerFilters from './scheduler/TutorSchedulerFilters';
 import TutorSchedulerCalendar from './scheduler/TutorSchedulerCalendar';
 import TutorSchedulerDialogs from './scheduler/TutorSchedulerDialogs';
 import TableSkeleton from '../common/TableSkeleton';
@@ -27,16 +26,9 @@ const TutorScheduler: React.FC = () => {
     setActiveEventTab,
     isEditMode,
     setIsEditMode,
-    searchTerm,
-    setSearchTerm,
-    subjectFilter,
-    setSubjectFilter,
-    studentFilter,
-    setStudentFilter,
     newEvent,
     setNewEvent,
     filteredClasses,
-    allSubjects,
     studentMessages,
     studentUploads,
     isLoading,
@@ -104,16 +96,6 @@ const TutorScheduler: React.FC = () => {
   return (
     <div className="space-y-4 sm:space-y-6">
       <TutorSchedulerHeader onAddClick={handleAddEventClick} />
-      
-      <TutorSchedulerFilters
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        subjectFilter={subjectFilter}
-        setSubjectFilter={setSubjectFilter}
-        studentFilter={studentFilter}
-        setStudentFilter={setStudentFilter}
-        allSubjects={allSubjects || []}
-      />
       
       <div className="overflow-x-auto">
         <TutorSchedulerCalendar
