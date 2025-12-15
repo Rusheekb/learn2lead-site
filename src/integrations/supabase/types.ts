@@ -638,36 +638,72 @@ export type Database = {
       students: {
         Row: {
           active: boolean
+          availability_windows: string[] | null
+          communication_pref:
+            | Database["public"]["Enums"]["communication_style"]
+            | null
           created_at: string
           email: string
           enrollment_date: string
           grade: string | null
           id: string
+          learning_pace: Database["public"]["Enums"]["learning_pace"] | null
           name: string
           payment_status: string
+          primary_goal: Database["public"]["Enums"]["student_goal"] | null
+          session_structure_pref:
+            | Database["public"]["Enums"]["session_structure"]
+            | null
           subjects: string[]
+          teaching_style_pref:
+            | Database["public"]["Enums"]["teaching_style"]
+            | null
         }
         Insert: {
           active?: boolean
+          availability_windows?: string[] | null
+          communication_pref?:
+            | Database["public"]["Enums"]["communication_style"]
+            | null
           created_at?: string
           email: string
           enrollment_date?: string
           grade?: string | null
           id?: string
+          learning_pace?: Database["public"]["Enums"]["learning_pace"] | null
           name: string
           payment_status?: string
+          primary_goal?: Database["public"]["Enums"]["student_goal"] | null
+          session_structure_pref?:
+            | Database["public"]["Enums"]["session_structure"]
+            | null
           subjects?: string[]
+          teaching_style_pref?:
+            | Database["public"]["Enums"]["teaching_style"]
+            | null
         }
         Update: {
           active?: boolean
+          availability_windows?: string[] | null
+          communication_pref?:
+            | Database["public"]["Enums"]["communication_style"]
+            | null
           created_at?: string
           email?: string
           enrollment_date?: string
           grade?: string | null
           id?: string
+          learning_pace?: Database["public"]["Enums"]["learning_pace"] | null
           name?: string
           payment_status?: string
+          primary_goal?: Database["public"]["Enums"]["student_goal"] | null
+          session_structure_pref?:
+            | Database["public"]["Enums"]["session_structure"]
+            | null
           subjects?: string[]
+          teaching_style_pref?:
+            | Database["public"]["Enums"]["teaching_style"]
+            | null
         }
         Relationships: []
       }
@@ -772,30 +808,67 @@ export type Database = {
       tutors: {
         Row: {
           active: boolean
+          availability_windows: string[] | null
           created_at: string
           email: string
+          grade_level_comfort: string[] | null
           hourly_rate: number | null
           id: string
           name: string
+          pace_flexibility: boolean | null
+          preferred_pace: Database["public"]["Enums"]["learning_pace"] | null
+          session_structure:
+            | Database["public"]["Enums"]["session_structure"]
+            | null
+          specialty_focus: Database["public"]["Enums"]["tutor_specialty"] | null
           subjects: string[] | null
+          teaching_style_strength:
+            | Database["public"]["Enums"]["teaching_style"]
+            | null
         }
         Insert: {
           active?: boolean
+          availability_windows?: string[] | null
           created_at?: string
           email: string
+          grade_level_comfort?: string[] | null
           hourly_rate?: number | null
           id?: string
           name: string
+          pace_flexibility?: boolean | null
+          preferred_pace?: Database["public"]["Enums"]["learning_pace"] | null
+          session_structure?:
+            | Database["public"]["Enums"]["session_structure"]
+            | null
+          specialty_focus?:
+            | Database["public"]["Enums"]["tutor_specialty"]
+            | null
           subjects?: string[] | null
+          teaching_style_strength?:
+            | Database["public"]["Enums"]["teaching_style"]
+            | null
         }
         Update: {
           active?: boolean
+          availability_windows?: string[] | null
           created_at?: string
           email?: string
+          grade_level_comfort?: string[] | null
           hourly_rate?: number | null
           id?: string
           name?: string
+          pace_flexibility?: boolean | null
+          preferred_pace?: Database["public"]["Enums"]["learning_pace"] | null
+          session_structure?:
+            | Database["public"]["Enums"]["session_structure"]
+            | null
+          specialty_focus?:
+            | Database["public"]["Enums"]["tutor_specialty"]
+            | null
           subjects?: string[] | null
+          teaching_style_strength?:
+            | Database["public"]["Enums"]["teaching_style"]
+            | null
         }
         Relationships: []
       }
@@ -936,6 +1009,12 @@ export type Database = {
     }
     Enums: {
       app_role: "student" | "tutor" | "admin"
+      communication_style: "encouraging" | "direct" | "balanced"
+      learning_pace: "slow" | "moderate" | "fast"
+      session_structure: "structured" | "flexible" | "mixed"
+      student_goal: "catch_up" | "maintain" | "get_ahead" | "test_prep"
+      teaching_style: "visual" | "verbal" | "hands_on" | "mixed"
+      tutor_specialty: "struggling" | "maintaining" | "advanced" | "all"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1064,6 +1143,12 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["student", "tutor", "admin"],
+      communication_style: ["encouraging", "direct", "balanced"],
+      learning_pace: ["slow", "moderate", "fast"],
+      session_structure: ["structured", "flexible", "mixed"],
+      student_goal: ["catch_up", "maintain", "get_ahead", "test_prep"],
+      teaching_style: ["visual", "verbal", "hands_on", "mixed"],
+      tutor_specialty: ["struggling", "maintaining", "advanced", "all"],
     },
   },
 } as const
