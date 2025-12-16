@@ -25,7 +25,6 @@ export async function fetchTutors(options: FetchTutorsOptions = {}): Promise<Pag
   query = query.range(offset, offset + pageSize - 1).order('name');
 
   const result = await query;
-  console.log('[fetchTutors]', result); // Debug log
   
   if (result.error) {
     console.error('Error fetching tutors:', result.error);
