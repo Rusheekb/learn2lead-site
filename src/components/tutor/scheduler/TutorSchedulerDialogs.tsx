@@ -1,9 +1,7 @@
-
 import React from 'react';
 import { ClassEvent } from '@/types/tutorTypes';
 import { StudentMessage, StudentUpload } from '@/types/classTypes';
 import { ClassDialogs } from '../ClassDialogs';
-import { mockStudents } from '../mock-data-students';
 import { Profile } from '@/types/profile';
 
 interface TutorSchedulerDialogsProps {
