@@ -30,10 +30,20 @@ class ErrorBoundary extends Component<Props, State> {
       errorInfo,
     });
 
-    // Log to error monitoring service in production
-    if (process.env.NODE_ENV === 'production') {
-      // TODO: Send to error monitoring service
+    // Structured error logging for production
+    const errorData = {
+      message: error.message,
+      stack: error.stack,
+      componentStack: errorInfo.componentStack,
+      timestamp: new Date().toISOString(),
+      url: window.location.href
+    };
+
+    if (import.meta.env.DEV) {
       console.error('Error caught by boundary:', error, errorInfo);
+    } else {
+      // Production: log structured data for debugging
+      console.error('[BOUNDARY_ERROR]', JSON.stringify(errorData));
     }
   }
 

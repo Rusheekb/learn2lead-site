@@ -79,17 +79,27 @@ export class ErrorHandler {
   }
 
   static logError(error: AppError, context?: string): void {
-    if (process.env.NODE_ENV === 'development') {
-      console.error(`[${error.type.toUpperCase()}] ${context || 'Unknown context'}:`, {
-        message: error.message,
-        code: error.code,
-        details: error.details,
-        timestamp: new Date().toISOString()
-      });
+    const errorData = {
+      type: error.type,
+      message: error.message,
+      code: error.code,
+      details: error.details,
+      context: context || 'Unknown',
+      timestamp: new Date().toISOString(),
+      url: typeof window !== 'undefined' ? window.location.href : undefined
+    };
+
+    // Always log in development
+    if (import.meta.env.DEV) {
+      console.error(`[${error.type.toUpperCase()}] ${context || 'Unknown context'}:`, errorData);
     }
     
-    // TODO: Send to error monitoring service in production
-    // Example: Sentry.captureException(error);
+    // In production, only log critical errors to avoid noise
+    // Future: integrate with Sentry or similar service
+    if (import.meta.env.PROD && (error.type === 'server' || error.type === 'unknown')) {
+      // Structured logging for production debugging if needed
+      console.error('[PROD_ERROR]', JSON.stringify(errorData));
+    }
   }
 
   static showUserMessage(error: AppError): void {
