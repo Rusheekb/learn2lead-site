@@ -1,11 +1,8 @@
-
 import React, { useEffect } from 'react';
 import { Navigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import TutorDashboardContent from '@/components/tutor/TutorDashboardContent';
 import TutorStudents from '@/components/tutor/TutorStudents';
-import TutorMaterials from '@/components/tutor/TutorMaterials';
-import TutorOverviewSection from '@/components/tutor/dashboard/TutorOverviewSection';
 import { useQueryClient } from '@tanstack/react-query';
 
 const TutorDashboard: React.FC = () => {
@@ -16,13 +13,10 @@ const TutorDashboard: React.FC = () => {
   
   // Invalidate queries when switching to schedule tab
   useEffect(() => {
-    // When switching to schedule tab, ensure we have fresh data
     if (activeTab === 'schedule' && user?.id) {
-      // Force refresh of scheduled classes data
       queryClient.invalidateQueries({ queryKey: ['scheduledClasses', user.id] });
       queryClient.invalidateQueries({ queryKey: ['tutorStudents', user.id] });
       queryClient.invalidateQueries({ queryKey: ['tutorRelationships', user.id] });
-      console.log("Invalidated queries for tutor schedule", user.id);
     }
   }, [activeTab, queryClient, user?.id]);
 
