@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-
+import { STRIPE_PRICE_IDS, STRIPE_PLAN_PRICES, STRIPE_PLAN_CONFIG, type StripePlanKey } from '@/config/stripe';
 type PricingTierProps = {
   name: string;
   price: string;
@@ -86,17 +86,8 @@ const PricingTier: React.FC<PricingTierProps> = ({
   );
 };
 
-const PRICE_IDS = {
-  basic: 'price_1SL6a21fzLklBERMSslJBHZr',    // $140/month - Basic Plan (4 classes)
-  standard: 'price_1SL6aZ1fzLklBERMrn7hS8ua', // $240/month - Standard Plan (8 classes)
-  premium: 'price_1SL6as1fzLklBERMpT5U2zj3',  // $300/month - Premium Plan (12 classes)
-};
-
-const PLAN_PRICES = {
-  basic: 140,
-  standard: 240,
-  premium: 300,
-};
+// Price IDs and plan prices are now imported from centralized config
+// See src/config/stripe.ts to update when switching to live mode
 
 const Pricing = () => {
   const navigate = useNavigate();
@@ -156,9 +147,9 @@ const Pricing = () => {
     }
   };
 
-  const getDiscountedPrice = (planKey: keyof typeof PLAN_PRICES) => {
+  const getDiscountedPrice = (planKey: StripePlanKey) => {
     if (!validatedDiscount) return undefined;
-    return `$${PLAN_PRICES[planKey] - validatedDiscount}/month (first month)`;
+    return `$${STRIPE_PLAN_PRICES[planKey] - validatedDiscount}/month (first month)`;
   };
 
   const handleCheckout = async (priceId: string) => {
@@ -287,60 +278,43 @@ const Pricing = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
           <PricingTier
-            name="Basic"
-            price="$35/class"
-            monthlyTotal="$140/month"
+            name={STRIPE_PLAN_CONFIG.basic.name}
+            price={STRIPE_PLAN_CONFIG.basic.pricePerClass}
+            monthlyTotal={STRIPE_PLAN_CONFIG.basic.monthlyTotal}
             discountedTotal={getDiscountedPrice('basic')}
-            description="Perfect for beginners looking to improve in one subject"
-            features={[
-              'Access to one subject area',
-              '4 classes per month',
-              'Basic study materials',
-              'Email support',
-            ]}
-            buttonText="Get Started"
-            priceId={PRICE_IDS.basic}
+            description={STRIPE_PLAN_CONFIG.basic.description}
+            features={[...STRIPE_PLAN_CONFIG.basic.features]}
+            buttonText={STRIPE_PLAN_CONFIG.basic.buttonText}
+            highlighted={STRIPE_PLAN_CONFIG.basic.highlighted}
+            priceId={STRIPE_PRICE_IDS.basic}
             onCheckout={handleCheckout}
             isLoading={isLoading}
           />
 
           <PricingTier
-            name="Standard"
-            price="$30/class"
-            monthlyTotal="$240/month"
+            name={STRIPE_PLAN_CONFIG.standard.name}
+            price={STRIPE_PLAN_CONFIG.standard.pricePerClass}
+            monthlyTotal={STRIPE_PLAN_CONFIG.standard.monthlyTotal}
             discountedTotal={getDiscountedPrice('standard')}
-            description="Our most popular plan for dedicated students"
-            features={[
-              'Access to all subject areas',
-              '8 classes per month',
-              'Advanced study materials',
-              'Practice tests and assessments',
-              'Priority email support',
-            ]}
-            buttonText="Choose Standard"
-            highlighted={true}
-            priceId={PRICE_IDS.standard}
+            description={STRIPE_PLAN_CONFIG.standard.description}
+            features={[...STRIPE_PLAN_CONFIG.standard.features]}
+            buttonText={STRIPE_PLAN_CONFIG.standard.buttonText}
+            highlighted={STRIPE_PLAN_CONFIG.standard.highlighted}
+            priceId={STRIPE_PRICE_IDS.standard}
             onCheckout={handleCheckout}
             isLoading={isLoading}
           />
 
           <PricingTier
-            name="Premium"
-            price="$25/class"
-            monthlyTotal="$300/month"
+            name={STRIPE_PLAN_CONFIG.premium.name}
+            price={STRIPE_PLAN_CONFIG.premium.pricePerClass}
+            monthlyTotal={STRIPE_PLAN_CONFIG.premium.monthlyTotal}
             discountedTotal={getDiscountedPrice('premium')}
-            description="Comprehensive support for academic excellence"
-            features={[
-              'Access to all subject areas',
-              '12 classes per month',
-              'Premium study materials',
-              'Personalized study plan',
-              'Practice tests and assessments',
-              '1-on-1 counseling sessions',
-              '24/7 priority support',
-            ]}
-            buttonText="Choose Premium"
-            priceId={PRICE_IDS.premium}
+            description={STRIPE_PLAN_CONFIG.premium.description}
+            features={[...STRIPE_PLAN_CONFIG.premium.features]}
+            buttonText={STRIPE_PLAN_CONFIG.premium.buttonText}
+            highlighted={STRIPE_PLAN_CONFIG.premium.highlighted}
+            priceId={STRIPE_PRICE_IDS.premium}
             onCheckout={handleCheckout}
             isLoading={isLoading}
           />
