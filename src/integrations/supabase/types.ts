@@ -20,6 +20,7 @@ export type Database = {
           balance_after: number
           created_at: string | null
           id: string
+          invoice_id: string | null
           reason: string
           related_class_id: string | null
           student_id: string
@@ -31,6 +32,7 @@ export type Database = {
           balance_after: number
           created_at?: string | null
           id?: string
+          invoice_id?: string | null
           reason: string
           related_class_id?: string | null
           student_id: string
@@ -42,6 +44,7 @@ export type Database = {
           balance_after?: number
           created_at?: string | null
           id?: string
+          invoice_id?: string | null
           reason?: string
           related_class_id?: string | null
           student_id?: string
