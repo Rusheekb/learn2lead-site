@@ -1,11 +1,7 @@
 // Deno.serve is built-in, no import needed
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -13,9 +9,11 @@ const logStep = (step: string, details?: any) => {
 };
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const corsResponse = handleCorsPreflightRequest(req);
+  if (corsResponse) return corsResponse;
+
+  const origin = req.headers.get("origin");
+  const corsHeaders = getCorsHeaders(origin);
 
   try {
     logStep("Function started");
@@ -52,12 +50,13 @@ Deno.serve(async (req) => {
     const customerId = customers.data[0].id;
     logStep("Found Stripe customer", { customerId });
 
-    const origin = req.headers.get("origin") || "http://localhost:3000";
+    // Return to dashboard instead of homepage for better UX
+    const returnUrl = `${origin}/dashboard`;
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: customerId,
-      return_url: `${origin}/`,
+      return_url: returnUrl,
     });
-    logStep("Customer portal session created", { sessionId: portalSession.id, url: portalSession.url });
+    logStep("Customer portal session created", { sessionId: portalSession.id, url: portalSession.url, returnUrl });
 
     return new Response(JSON.stringify({ url: portalSession.url }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

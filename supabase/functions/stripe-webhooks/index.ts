@@ -149,16 +149,29 @@ serve(async (req) => {
           break;
         }
 
-        // Idempotency guard: if a ledger entry already references this invoice, skip
-        const { data: dupRows, error: dupError } = await supabaseClient
+        // IMPROVED: Idempotency guard using exact invoice_id column matching
+        // First try exact match on invoice_id column (preferred)
+        const { data: exactDupRows, error: exactDupError } = await supabaseClient
+          .from('class_credits_ledger')
+          .select('id')
+          .eq('invoice_id', invoiceId);
+        
+        if (!exactDupError && exactDupRows && exactDupRows.length > 0) {
+          logStep('Duplicate invoice detected via invoice_id column, skipping', { invoiceId });
+          break;
+        }
+
+        // Fallback: Check for legacy entries that used reason field (for backwards compatibility)
+        const { data: legacyDupRows, error: legacyDupError } = await supabaseClient
           .from('class_credits_ledger')
           .select('id')
           .ilike('reason', `%${invoiceId}%`);
-        if (dupError) {
-          logStep('WARNING: Dup check failed', { error: dupError.message });
+        
+        if (legacyDupError) {
+          logStep('WARNING: Legacy dup check failed', { error: legacyDupError.message });
         }
-        if (dupRows && dupRows.length > 0) {
-          logStep('Duplicate invoice detected, skipping crediting', { invoiceId });
+        if (legacyDupRows && legacyDupRows.length > 0) {
+          logStep('Duplicate invoice detected via legacy reason field, skipping', { invoiceId });
           break;
         }
 
@@ -234,6 +247,7 @@ serve(async (req) => {
             throw updateError;
           }
 
+          // IMPROVED: Store invoice_id in dedicated column for exact matching
           const { error: ledgerError } = await supabaseClient
             .from('class_credits_ledger')
             .insert({
@@ -242,7 +256,8 @@ serve(async (req) => {
               transaction_type: 'credit',
               amount: plan.classes_per_month,
               balance_after: newCredits,
-              reason: `Monthly subscription renewal - ${plan.name} (invoice: ${invoiceId})`,
+              reason: `Monthly subscription renewal - ${plan.name}`,
+              invoice_id: invoiceId,
             });
 
           if (ledgerError) {
@@ -293,6 +308,7 @@ serve(async (req) => {
             throw insertError;
           }
 
+          // IMPROVED: Store invoice_id in dedicated column for exact matching
           const { error: ledgerError } = await supabaseClient
             .from('class_credits_ledger')
             .insert({
@@ -301,7 +317,8 @@ serve(async (req) => {
               transaction_type: 'credit',
               amount: plan.classes_per_month,
               balance_after: plan.classes_per_month,
-              reason: `Initial subscription - ${plan.name} (invoice: ${invoiceId})`,
+              reason: `Initial subscription - ${plan.name}`,
+              invoice_id: invoiceId,
             });
 
           if (ledgerError) {
@@ -375,6 +392,40 @@ serve(async (req) => {
             current_period_start: currentPeriodStart,
             current_period_end: currentPeriodEnd,
           })
+          .eq('stripe_subscription_id', subscriptionId);
+
+        if (error) throw error;
+
+        break;
+      }
+
+      case "customer.subscription.paused": {
+        // Handle subscription pause events
+        const subscription = event.data.object;
+        const subscriptionId = subscription.id;
+
+        logStep("Subscription paused", { subscriptionId });
+
+        const { error } = await supabaseClient
+          .from('student_subscriptions')
+          .update({ status: 'paused' })
+          .eq('stripe_subscription_id', subscriptionId);
+
+        if (error) throw error;
+
+        break;
+      }
+
+      case "customer.subscription.resumed": {
+        // Handle subscription resume events
+        const subscription = event.data.object;
+        const subscriptionId = subscription.id;
+
+        logStep("Subscription resumed", { subscriptionId });
+
+        const { error } = await supabaseClient
+          .from('student_subscriptions')
+          .update({ status: 'active' })
           .eq('stripe_subscription_id', subscriptionId);
 
         if (error) throw error;

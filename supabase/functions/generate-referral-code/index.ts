@@ -1,11 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@14.21.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import Stripe from "https://esm.sh/stripe@18.5.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : "";
@@ -22,9 +18,11 @@ const generateRandomSuffix = (length: number): string => {
 };
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const corsResponse = handleCorsPreflightRequest(req);
+  if (corsResponse) return corsResponse;
+
+  const origin = req.headers.get("origin");
+  const corsHeaders = getCorsHeaders(origin);
 
   try {
     logStep("Function started");
@@ -57,7 +55,8 @@ serve(async (req) => {
       throw new Error("STRIPE_SECRET_KEY is not configured");
     }
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2023-10-16" });
+    // Updated to use consistent API version
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     // Check if user has an active Stripe subscription
     const customers = await stripe.customers.list({
