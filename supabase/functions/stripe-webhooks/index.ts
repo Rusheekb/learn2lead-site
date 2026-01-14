@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { Resend } from "npm:resend@2.0.0";
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -337,10 +338,13 @@ serve(async (req) => {
       }
 
       case "invoice.payment_failed": {
-        const invoice = event.data.object;
+        const invoice = event.data.object as Stripe.Invoice;
         const subscriptionId = invoice.subscription;
+        const customerId = typeof invoice.customer === 'string'
+          ? invoice.customer
+          : (invoice.customer as any)?.id;
 
-        logStep("Payment failed", { subscriptionId });
+        logStep("Payment failed", { subscriptionId, customerId });
 
         // Mark subscription as past_due
         const { error } = await supabaseClient
@@ -349,6 +353,97 @@ serve(async (req) => {
           .eq('stripe_subscription_id', subscriptionId);
 
         if (error) throw error;
+
+        // Send payment failure email notification
+        try {
+          // Get customer email from Stripe
+          const customer = await stripe.customers.retrieve(customerId);
+          const customerEmail = typeof customer !== 'string' && 'email' in customer 
+            ? (customer as any).email as string | null 
+            : null;
+
+          if (customerEmail) {
+            // Get user profile for name
+            const { data: profile } = await supabaseClient
+              .from('profiles')
+              .select('first_name, last_name')
+              .ilike('email', customerEmail)
+              .maybeSingle();
+
+            const studentName = profile?.first_name 
+              ? `${profile.first_name} ${profile.last_name || ''}`.trim()
+              : 'Valued Student';
+
+            // Get invoice amount
+            const amountDue = (invoice.amount_due || 0) / 100;
+
+            // Send email if Resend is configured
+            const resendApiKey = Deno.env.get("RESEND_API_KEY");
+            if (resendApiKey) {
+              const resend = new Resend(resendApiKey);
+              await resend.emails.send({
+                from: "Learn2Lead <onboarding@resend.dev>",
+                to: [customerEmail],
+                subject: "Action Required: Payment Failed",
+                html: `
+                  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                    <h1 style="color: #dc2626;">Payment Failed</h1>
+                    <p>Dear ${studentName},</p>
+                    <p>We were unable to process your payment of <strong>$${amountDue.toFixed(2)}</strong> for your Learn2Lead subscription.</p>
+                    
+                    <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 20px; margin: 20px 0;">
+                      <p style="margin: 0; font-size: 16px;">
+                        <strong>What to do next:</strong>
+                      </p>
+                      <ul style="margin: 10px 0 0 0;">
+                        <li>Check that your payment method is up to date</li>
+                        <li>Ensure sufficient funds are available</li>
+                        <li>Update your payment information in your account</li>
+                      </ul>
+                    </div>
+                    
+                    <p>Your subscription is currently on hold. Once payment is resolved, your classes will continue as normal.</p>
+                    
+                    <p>If you need assistance or have already updated your payment method, please contact us.</p>
+                    
+                    <p>Thank you for your understanding!</p>
+                    <p><strong>The Learn2Lead Team</strong></p>
+                    
+                    <p style="color: #666; font-size: 12px; margin-top: 30px;">
+                      This is an automated notification regarding your payment status.
+                    </p>
+                  </div>
+                `,
+              });
+              logStep("Payment failure email sent", { email: customerEmail });
+            } else {
+              logStep("RESEND_API_KEY not configured, skipping email");
+            }
+
+            // Create in-app notification
+            const { data: userProfile } = await supabaseClient
+              .from('profiles')
+              .select('id')
+              .ilike('email', customerEmail)
+              .maybeSingle();
+
+            if (userProfile) {
+              await supabaseClient.from("notifications").insert({
+                user_id: userProfile.id,
+                message: `Payment failed for $${amountDue.toFixed(2)}. Please update your payment method to continue classes.`,
+                type: "payment_failed",
+              });
+              logStep("In-app notification created", { userId: userProfile.id });
+            }
+          } else {
+            logStep("Customer email not found, skipping notification");
+          }
+        } catch (notifyError) {
+          // Don't fail the webhook if notification fails
+          logStep("ERROR sending payment failure notification", { 
+            error: notifyError instanceof Error ? notifyError.message : String(notifyError) 
+          });
+        }
 
         break;
       }
