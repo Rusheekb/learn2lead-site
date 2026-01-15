@@ -30,21 +30,43 @@ serve(async (req) => {
       throw new Error("No Stripe signature found in request headers");
     }
 
-    // Verify webhook signature for security
-    const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
-    if (!webhookSecret) {
-      logStep("ERROR: Webhook secret not configured");
-      throw new Error("STRIPE_WEBHOOK_SECRET is not set");
+    // Verify webhook signature for security - supports both live and test secrets
+    const liveSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
+    const testSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET_TEST");
+    
+    if (!liveSecret && !testSecret) {
+      logStep("ERROR: No webhook secret configured");
+      throw new Error("Neither STRIPE_WEBHOOK_SECRET nor STRIPE_WEBHOOK_SECRET_TEST is set");
     }
 
     let event;
-    try {
-      event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
-      logStep("Webhook signature verified successfully");
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
-      logStep("ERROR: Signature verification failed", { error: errorMessage });
-      throw new Error(`Webhook signature verification failed: ${errorMessage}`);
+    let verificationSucceeded = false;
+    
+    // Try live secret first (production)
+    if (liveSecret) {
+      try {
+        event = await stripe.webhooks.constructEventAsync(body, signature, liveSecret);
+        logStep("Webhook signature verified with live secret");
+        verificationSucceeded = true;
+      } catch (liveErr) {
+        logStep("Live secret verification failed, trying test secret...");
+      }
+    }
+    
+    // Fallback to test secret (for CLI testing)
+    if (!verificationSucceeded && testSecret) {
+      try {
+        event = await stripe.webhooks.constructEventAsync(body, signature, testSecret);
+        logStep("Webhook signature verified with test secret");
+        verificationSucceeded = true;
+      } catch (testErr) {
+        const errorMessage = testErr instanceof Error ? testErr.message : String(testErr);
+        logStep("ERROR: Test secret verification also failed", { error: errorMessage });
+      }
+    }
+    
+    if (!verificationSucceeded || !event) {
+      throw new Error("Webhook signature verification failed with all available secrets");
     }
 
     logStep("Event type", { type: event.type });
