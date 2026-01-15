@@ -2,6 +2,7 @@
 import React, { ReactNode, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import AppSidebar from './AppSidebar';
+import PageBreadcrumbs from './PageBreadcrumbs';
 import { useClassNotifications } from '@/hooks/useClassNotifications';
 import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -45,6 +46,11 @@ const DashboardShell: React.FC<DashboardShellProps> = ({ title, children }) => {
       {/* Main Content */}
       <main className="flex-1 overflow-auto p-4 md:p-6">
         <div className="max-w-7xl mx-auto">
+          {/* Breadcrumbs */}
+          <div className="hidden md:block">
+            <PageBreadcrumbs />
+          </div>
+          
           {/* Title visible only on desktop */}
           <div className="hidden md:block mb-6">
             <h1 className="text-2xl font-bold">{title}</h1>
