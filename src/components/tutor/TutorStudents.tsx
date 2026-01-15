@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import StudentList from './StudentList';
 import StudentListSkeleton from './StudentListSkeleton';
@@ -8,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { fetchTutorStudentsByEmail, TutorStudentData } from '@/services/tutors/tutorStudentsService';
 import type { Student } from '@/types/sharedTypes';
 
-const TutorStudents: React.FC = () => {
+const TutorStudents: React.FC = memo(() => {
   const { user } = useAuth();
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false);
@@ -90,6 +89,8 @@ const TutorStudents: React.FC = () => {
       />
     </div>
   );
-};
+});
+
+TutorStudents.displayName = 'TutorStudents';
 
 export default TutorStudents;

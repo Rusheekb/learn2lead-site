@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { memo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Subject } from '@/constants/subjectsData';
@@ -10,7 +9,7 @@ interface SubjectCardsProps {
   onSubjectClick: (subjectId: number) => void;
 }
 
-const SubjectCards: React.FC<SubjectCardsProps> = ({
+const SubjectCards: React.FC<SubjectCardsProps> = memo(({
   subjects,
   selectedSubject,
   onSubjectClick,
@@ -63,6 +62,8 @@ const SubjectCards: React.FC<SubjectCardsProps> = ({
       })}
     </div>
   );
-};
+});
+
+SubjectCards.displayName = 'SubjectCards';
 
 export default SubjectCards;

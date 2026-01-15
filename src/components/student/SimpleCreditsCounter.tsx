@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Card } from '@/components/ui/card';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { CreditBadge } from '@/components/shared/CreditBadge';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export const SimpleCreditsCounter: React.FC = () => {
+export const SimpleCreditsCounter: React.FC = memo(() => {
   const { creditsRemaining, pricePerClass, isLoading } = useSubscription();
 
   if (isLoading) {
@@ -25,4 +25,6 @@ export const SimpleCreditsCounter: React.FC = () => {
       </div>
     </Card>
   );
-};
+});
+
+SimpleCreditsCounter.displayName = 'SimpleCreditsCounter';

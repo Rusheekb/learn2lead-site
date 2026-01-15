@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { memo } from 'react';
 import DataTable, { ColumnDefinition } from '@/components/common/DataTable';
 import { Button } from '@/components/ui/button';
 import { Student } from '@/types/sharedTypes';
@@ -10,7 +9,7 @@ interface StudentListProps {
   onSelectStudent: (student: Student) => void;
 }
 
-const StudentList: React.FC<StudentListProps> = ({
+const StudentList: React.FC<StudentListProps> = memo(({
   students,
   onSelectStudent,
 }) => {
@@ -60,6 +59,8 @@ const StudentList: React.FC<StudentListProps> = ({
       showCard={false}
     />
   );
-};
+});
+
+StudentList.displayName = 'StudentList';
 
 export default StudentList;

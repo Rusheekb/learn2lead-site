@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ClassSession } from '@/types/classTypes';
 import { useAuth } from '@/contexts/AuthContext';
@@ -13,7 +13,7 @@ interface ClassCalendarContainerProps {
   onSelectClass?: (classSession: ClassSession) => void;
 }
 
-export const ClassCalendarContainer: React.FC<ClassCalendarContainerProps> = ({ studentId, onSelectClass }) => {
+export const ClassCalendarContainer: React.FC<ClassCalendarContainerProps> = memo(({ studentId, onSelectClass }) => {
   const [sessions, setSessions] = useState<ClassEvent[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedClass, setSelectedClass] = useState<ClassSession | null>(null);
@@ -83,4 +83,6 @@ export const ClassCalendarContainer: React.FC<ClassCalendarContainerProps> = ({ 
       />
     </>
   );
-};
+});
+
+ClassCalendarContainer.displayName = 'ClassCalendarContainer';

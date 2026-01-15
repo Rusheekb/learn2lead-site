@@ -1,5 +1,4 @@
-
-import React, { useEffect } from 'react';
+import React, { useEffect, memo } from 'react';
 import { useTutorScheduler } from '@/hooks/useTutorScheduler';
 import TutorSchedulerHeader from './scheduler/TutorSchedulerHeader';
 import TutorSchedulerCalendar from './scheduler/TutorSchedulerCalendar';
@@ -8,7 +7,7 @@ import TableSkeleton from '../common/TableSkeleton';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
 
-const TutorScheduler: React.FC = () => {
+const TutorScheduler: React.FC = memo(() => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   
@@ -135,6 +134,8 @@ const TutorScheduler: React.FC = () => {
       />
     </div>
   );
-};
+});
+
+TutorScheduler.displayName = 'TutorScheduler';
 
 export default TutorScheduler;
