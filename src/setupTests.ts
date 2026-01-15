@@ -5,18 +5,42 @@
 // learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom';
 
-// Mock the supabase client
+// Mock the supabase client with enhanced Edge Function support
+const mockFunctionsInvoke = jest.fn();
+const mockAuthGetSession = jest.fn();
+const mockAuthGetUser = jest.fn();
+
 jest.mock('./integrations/supabase/client', () => ({
   supabase: {
     from: jest.fn().mockReturnThis(),
     select: jest.fn().mockReturnThis(),
     insert: jest.fn().mockReturnThis(),
     update: jest.fn().mockReturnThis(),
+    delete: jest.fn().mockReturnThis(),
     eq: jest.fn().mockReturnThis(),
+    neq: jest.fn().mockReturnThis(),
     in: jest.fn().mockReturnThis(),
     single: jest.fn().mockReturnThis(),
+    maybeSingle: jest.fn().mockReturnThis(),
+    order: jest.fn().mockReturnThis(),
+    limit: jest.fn().mockReturnThis(),
+    functions: {
+      invoke: mockFunctionsInvoke,
+    },
+    auth: {
+      getSession: mockAuthGetSession,
+      getUser: mockAuthGetUser,
+      signOut: jest.fn().mockResolvedValue({ error: null }),
+      refreshSession: jest.fn(),
+      onAuthStateChange: jest.fn().mockReturnValue({
+        data: { subscription: { unsubscribe: jest.fn() } },
+      }),
+    },
   },
 }));
+
+// Export mocks for test customization
+export { mockFunctionsInvoke, mockAuthGetSession, mockAuthGetUser };
 
 // Mock the i18next
 jest.mock('react-i18next', () => ({
@@ -48,6 +72,44 @@ Object.defineProperty(document.documentElement, 'classList', {
     add: jest.fn(),
     remove: jest.fn(),
     toggle: jest.fn(),
+    contains: jest.fn(),
   },
-  writable: false
+  writable: false,
+});
+
+// Mock matchMedia for responsive tests
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: jest.fn().mockImplementation((query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: jest.fn(),
+    removeListener: jest.fn(),
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    dispatchEvent: jest.fn(),
+  })),
+});
+
+// Suppress console errors in tests unless explicitly testing error handling
+const originalConsoleError = console.error;
+beforeAll(() => {
+  console.error = (...args: unknown[]) => {
+    // Filter out expected React warnings during tests
+    const message = args[0];
+    if (
+      typeof message === 'string' &&
+      (message.includes('Warning: ReactDOM.render') ||
+        message.includes('Warning: An update to') ||
+        message.includes('act(...)'))
+    ) {
+      return;
+    }
+    originalConsoleError(...args);
+  };
+});
+
+afterAll(() => {
+  console.error = originalConsoleError;
 });
