@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { CalendarDays, Clock, BookOpen, User, FileText, Edit3 } from 'lucide-react';
+import { Clock, BookOpen, Edit3 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { useQueryClient } from '@tanstack/react-query';
 import { parseDateToLocal } from '@/utils/safeDateUtils';
+import { ClassHistorySkeleton } from '@/components/shared/skeletons';
 
 interface ClassHistoryItem {
   id: string;
@@ -161,16 +162,7 @@ const ClassHistory: React.FC<ClassHistoryProps> = ({ userRole }) => {
 
 
   if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <div className="animate-pulse">
-          <div className="h-6 bg-muted rounded w-1/4 mb-4"></div>
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-24 bg-muted rounded mb-4"></div>
-          ))}
-        </div>
-      </div>
-    );
+    return <ClassHistorySkeleton count={5} />;
   }
 
   return (

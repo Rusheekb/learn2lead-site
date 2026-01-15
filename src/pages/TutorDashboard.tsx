@@ -1,14 +1,15 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense } from 'react';
 import { Navigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import TutorDashboardContent from '@/components/tutor/TutorDashboardContent';
 import TutorStudents from '@/components/tutor/TutorStudents';
 import { useQueryClient } from '@tanstack/react-query';
+import { TutorDashboardSkeleton, TableSkeleton } from '@/components/shared/skeletons';
 
 const TutorDashboard: React.FC = () => {
   const [searchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'schedule';
-  const { userRole, user } = useAuth();
+  const { userRole, user, isLoading } = useAuth();
   const queryClient = useQueryClient();
   
   // Invalidate queries when switching to schedule tab
@@ -19,6 +20,15 @@ const TutorDashboard: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['tutorRelationships', user.id] });
     }
   }, [activeTab, queryClient, user?.id]);
+
+  // Show skeleton while auth is loading
+  if (isLoading) {
+    return (
+      <div className="space-y-4 sm:space-y-6">
+        <TutorDashboardSkeleton />
+      </div>
+    );
+  }
 
   // Redirect if not a tutor
   if (userRole && userRole !== 'tutor') {
