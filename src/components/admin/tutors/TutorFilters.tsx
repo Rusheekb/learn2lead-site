@@ -1,6 +1,6 @@
 
 import React from 'react';
-import FilterControls from '@/components/common/FilterControls';
+import FilterControls from '@/components/shared/FilterControls';
 
 interface TutorFiltersProps {
   searchTerm: string;
