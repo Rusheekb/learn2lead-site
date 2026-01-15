@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { memo } from 'react';
 import TutorScheduler from './TutorScheduler';
 import ClassHistory from '@/components/shared/ClassHistory';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-const TutorDashboardContent: React.FC = () => {
+const TutorDashboardContent: React.FC = memo(() => {
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Tutor Dashboard</h2>
@@ -24,6 +24,8 @@ const TutorDashboardContent: React.FC = () => {
       </Tabs>
     </div>
   );
-};
+});
+
+TutorDashboardContent.displayName = 'TutorDashboardContent';
 
 export default TutorDashboardContent;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -33,7 +33,7 @@ interface ClassHistoryProps {
   userRole: 'student' | 'tutor' | 'admin';
 }
 
-const ClassHistory: React.FC<ClassHistoryProps> = ({ userRole }) => {
+const ClassHistory: React.FC<ClassHistoryProps> = memo(({ userRole }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [classHistory, setClassHistory] = useState<ClassHistoryItem[]>([]);
@@ -300,6 +300,8 @@ const ClassHistory: React.FC<ClassHistoryProps> = ({ userRole }) => {
       </Dialog>
     </div>
   );
-};
+});
+
+ClassHistory.displayName = 'ClassHistory';
 
 export default ClassHistory;

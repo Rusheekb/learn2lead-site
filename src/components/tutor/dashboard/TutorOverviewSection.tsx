@@ -1,10 +1,9 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import TutorOverviewCard from './TutorOverviewCard';
 import TutorQuickAccessCard from './TutorQuickAccessCard';
 import TutorOverviewSkeleton from './TutorOverviewSkeleton';
 
-const TutorOverviewSection: React.FC = () => {
+const TutorOverviewSection: React.FC = memo(() => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -74,6 +73,8 @@ const TutorOverviewSection: React.FC = () => {
       </div>
     </section>
   );
-};
+});
+
+TutorOverviewSection.displayName = 'TutorOverviewSection';
 
 export default TutorOverviewSection;
