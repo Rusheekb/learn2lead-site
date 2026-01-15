@@ -131,7 +131,7 @@ const Login = () => {
     <div className="min-h-screen bg-gray-50">
       <NavBar />
 
-      <div className="container mx-auto px-4 pt-20 pb-10">
+      <main id="main-content" tabIndex={-1} className="container mx-auto px-4 pt-20 pb-10 focus:outline-none">
         <div className="max-w-md mx-auto">
           <h1 className="text-3xl font-bold text-center mb-8 text-tutoring-blue">
             Welcome to Learn<span className="text-tutoring-teal">2</span>Lead
@@ -160,7 +160,7 @@ const Login = () => {
             </CardContent>
           </Card>
         </div>
-      </div>
+      </main>
     </div>
   );
 };

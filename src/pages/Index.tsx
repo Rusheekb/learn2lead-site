@@ -41,7 +41,8 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-white">
       <NavBar />
-      <Hero />
+      <main id="main-content" tabIndex={-1} className="focus:outline-none">
+        <Hero />
       <Features />
       <Testimonials />
 
@@ -64,8 +65,9 @@ const Index = () => {
         </div>
       </section>
 
-      <FAQ />
-      <Contact />
+        <FAQ />
+        <Contact />
+      </main>
       <Footer />
     </div>
   );
