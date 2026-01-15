@@ -45,8 +45,8 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     console.log('[SubscriptionProvider] Attempting session refresh...');
     
     try {
-      const { data, error } = await supabase.auth.refreshSession();
-      if (error) throw error;
+      const { error: refreshError } = await supabase.auth.refreshSession();
+      if (refreshError) throw refreshError;
       
       console.log('[SubscriptionProvider] Session refreshed successfully');
       pollIntervalRef.current = 60000; // Reset to normal interval
