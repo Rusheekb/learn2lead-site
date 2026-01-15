@@ -382,7 +382,7 @@ serve(async (req) => {
             if (resendApiKey) {
               const resend = new Resend(resendApiKey);
               await resend.emails.send({
-                from: "Learn2Lead <onboarding@resend.dev>",
+                from: "Learn2Lead <noreply@learn2lead.com>",
                 to: [customerEmail],
                 subject: "Action Required: Payment Failed",
                 html: `
