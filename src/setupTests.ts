@@ -1,4 +1,3 @@
-
 // jest-dom adds custom jest matchers for asserting on DOM nodes.
 // allows you to do things like:
 // expect(element).toHaveTextContent(/react/i)
@@ -9,10 +8,11 @@ import '@testing-library/jest-dom';
 const mockFunctionsInvoke = jest.fn();
 const mockAuthGetSession = jest.fn();
 const mockAuthGetUser = jest.fn();
+const mockAuthRefreshSession = jest.fn();
 
-jest.mock('./integrations/supabase/client', () => ({
-  supabase: {
-    from: jest.fn().mockReturnThis(),
+// Create chainable mock for database queries
+const createChainableMock = () => {
+  const mock = {
     select: jest.fn().mockReturnThis(),
     insert: jest.fn().mockReturnThis(),
     update: jest.fn().mockReturnThis(),
@@ -20,18 +20,25 @@ jest.mock('./integrations/supabase/client', () => ({
     eq: jest.fn().mockReturnThis(),
     neq: jest.fn().mockReturnThis(),
     in: jest.fn().mockReturnThis(),
-    single: jest.fn().mockReturnThis(),
-    maybeSingle: jest.fn().mockReturnThis(),
+    single: jest.fn().mockResolvedValue({ data: null, error: null }),
+    maybeSingle: jest.fn().mockResolvedValue({ data: null, error: null }),
     order: jest.fn().mockReturnThis(),
     limit: jest.fn().mockReturnThis(),
+  };
+  return mock;
+};
+
+jest.mock('./integrations/supabase/client', () => ({
+  supabase: {
+    from: jest.fn(() => createChainableMock()),
     functions: {
-      invoke: mockFunctionsInvoke,
+      invoke: (...args: unknown[]) => mockFunctionsInvoke(...args),
     },
     auth: {
-      getSession: mockAuthGetSession,
-      getUser: mockAuthGetUser,
+      getSession: () => mockAuthGetSession(),
+      getUser: () => mockAuthGetUser(),
       signOut: jest.fn().mockResolvedValue({ error: null }),
-      refreshSession: jest.fn(),
+      refreshSession: () => mockAuthRefreshSession(),
       onAuthStateChange: jest.fn().mockReturnValue({
         data: { subscription: { unsubscribe: jest.fn() } },
       }),
@@ -40,7 +47,7 @@ jest.mock('./integrations/supabase/client', () => ({
 }));
 
 // Export mocks for test customization
-export { mockFunctionsInvoke, mockAuthGetSession, mockAuthGetUser };
+export { mockFunctionsInvoke, mockAuthGetSession, mockAuthGetUser, mockAuthRefreshSession };
 
 // Mock the i18next
 jest.mock('react-i18next', () => ({
@@ -94,6 +101,8 @@ Object.defineProperty(window, 'matchMedia', {
 
 // Suppress console errors in tests unless explicitly testing error handling
 const originalConsoleError = console.error;
+const originalConsoleWarn = console.warn;
+
 beforeAll(() => {
   console.error = (...args: unknown[]) => {
     // Filter out expected React warnings during tests
@@ -102,14 +111,28 @@ beforeAll(() => {
       typeof message === 'string' &&
       (message.includes('Warning: ReactDOM.render') ||
         message.includes('Warning: An update to') ||
-        message.includes('act(...)'))
+        message.includes('act(...)') ||
+        message.includes('inside a test was not wrapped in act'))
     ) {
       return;
     }
     originalConsoleError(...args);
   };
+  
+  console.warn = (...args: unknown[]) => {
+    const message = args[0];
+    if (
+      typeof message === 'string' &&
+      (message.includes('[SubscriptionProvider]') ||
+        message.includes('Warning:'))
+    ) {
+      return;
+    }
+    originalConsoleWarn(...args);
+  };
 });
 
 afterAll(() => {
   console.error = originalConsoleError;
+  console.warn = originalConsoleWarn;
 });

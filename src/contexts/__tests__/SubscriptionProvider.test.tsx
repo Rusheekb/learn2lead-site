@@ -3,12 +3,12 @@
  */
 
 import React from 'react';
-import { render, act } from '@testing-library/react';
+import { render, act, waitFor } from '@testing-library/react';
 import { SubscriptionProvider, SubscriptionContext, SubscriptionContextType } from '../SubscriptionContext/SubscriptionProvider';
 
 // Mock useAuth
 const mockUseAuth = jest.fn();
-jest.mock('../../AuthContext', () => ({
+jest.mock('../AuthContext', () => ({
   useAuth: () => mockUseAuth(),
 }));
 
@@ -19,10 +19,10 @@ const mockRefreshSession = jest.fn();
 jest.mock('@/integrations/supabase/client', () => ({
   supabase: {
     functions: {
-      invoke: mockFunctionsInvoke,
+      invoke: (...args: unknown[]) => mockFunctionsInvoke(...args),
     },
     auth: {
-      refreshSession: mockRefreshSession,
+      refreshSession: () => mockRefreshSession(),
     },
   },
 }));
@@ -32,11 +32,8 @@ let capturedContext: SubscriptionContextType | undefined;
 const TestConsumer: React.FC = () => {
   const context = React.useContext(SubscriptionContext);
   capturedContext = context;
-  return null;
+  return <div data-testid="test-consumer">Consumer</div>;
 };
-
-// Helper to wait for state updates
-const waitForStateUpdate = () => new Promise(resolve => setTimeout(resolve, 0));
 
 describe('SubscriptionProvider', () => {
   beforeEach(() => {
@@ -57,12 +54,12 @@ describe('SubscriptionProvider', () => {
             <TestConsumer />
           </SubscriptionProvider>
         );
-        await waitForStateUpdate();
       });
 
       expect(capturedContext?.subscribed).toBe(false);
       expect(capturedContext?.creditsRemaining).toBeNull();
       expect(capturedContext?.planName).toBeNull();
+      expect(capturedContext?.isLoading).toBe(false);
       expect(mockFunctionsInvoke).not.toHaveBeenCalled();
     });
 
@@ -78,10 +75,10 @@ describe('SubscriptionProvider', () => {
             <TestConsumer />
           </SubscriptionProvider>
         );
-        await waitForStateUpdate();
       });
 
       expect(capturedContext?.subscribed).toBe(false);
+      expect(capturedContext?.isLoading).toBe(false);
       expect(mockFunctionsInvoke).not.toHaveBeenCalled();
     });
   });
@@ -95,7 +92,7 @@ describe('SubscriptionProvider', () => {
     });
 
     it('fetches and populates subscription data on mount', async () => {
-      mockFunctionsInvoke.mockResolvedValueOnce({
+      mockFunctionsInvoke.mockResolvedValue({
         data: {
           subscribed: true,
           credits_remaining: 8,
@@ -115,17 +112,20 @@ describe('SubscriptionProvider', () => {
             <TestConsumer />
           </SubscriptionProvider>
         );
-        await waitForStateUpdate();
       });
 
-      expect(capturedContext?.subscribed).toBe(true);
+      await waitFor(() => {
+        expect(capturedContext?.subscribed).toBe(true);
+      });
+
       expect(capturedContext?.creditsRemaining).toBe(8);
       expect(capturedContext?.planName).toBe('Standard');
       expect(capturedContext?.pricePerClass).toBe(20);
+      expect(capturedContext?.isLoading).toBe(false);
     });
 
     it('handles paused subscription state', async () => {
-      mockFunctionsInvoke.mockResolvedValueOnce({
+      mockFunctionsInvoke.mockResolvedValue({
         data: {
           subscribed: true,
           credits_remaining: 5,
@@ -142,15 +142,17 @@ describe('SubscriptionProvider', () => {
             <TestConsumer />
           </SubscriptionProvider>
         );
-        await waitForStateUpdate();
       });
 
-      expect(capturedContext?.isPaused).toBe(true);
+      await waitFor(() => {
+        expect(capturedContext?.isPaused).toBe(true);
+      });
+
       expect(capturedContext?.pauseResumesAt).toBe('2025-02-01');
     });
 
     it('handles inactive subscription', async () => {
-      mockFunctionsInvoke.mockResolvedValueOnce({
+      mockFunctionsInvoke.mockResolvedValue({
         data: {
           subscribed: false,
           credits_remaining: 0,
@@ -165,7 +167,10 @@ describe('SubscriptionProvider', () => {
             <TestConsumer />
           </SubscriptionProvider>
         );
-        await waitForStateUpdate();
+      });
+
+      await waitFor(() => {
+        expect(capturedContext?.isLoading).toBe(false);
       });
 
       expect(capturedContext?.subscribed).toBe(false);
@@ -182,10 +187,7 @@ describe('SubscriptionProvider', () => {
     });
 
     it('handles function invocation errors', async () => {
-      mockFunctionsInvoke.mockResolvedValueOnce({
-        data: null,
-        error: { message: 'Network error' },
-      });
+      mockFunctionsInvoke.mockRejectedValue(new Error('Network error'));
 
       await act(async () => {
         render(
@@ -193,10 +195,13 @@ describe('SubscriptionProvider', () => {
             <TestConsumer />
           </SubscriptionProvider>
         );
-        await waitForStateUpdate();
       });
 
-      expect(capturedContext?.error).toBeTruthy();
+      await waitFor(() => {
+        expect(capturedContext?.error).toBeTruthy();
+      });
+
+      expect(capturedContext?.isLoading).toBe(false);
     });
 
     it('attempts session refresh on auth error', async () => {
@@ -207,7 +212,6 @@ describe('SubscriptionProvider', () => {
       });
 
       mockRefreshSession.mockResolvedValueOnce({
-        data: { session: { access_token: 'new-token' } },
         error: null,
       });
 
@@ -226,11 +230,11 @@ describe('SubscriptionProvider', () => {
             <TestConsumer />
           </SubscriptionProvider>
         );
-        await waitForStateUpdate();
-        await waitForStateUpdate();
       });
 
-      expect(mockRefreshSession).toHaveBeenCalled();
+      await waitFor(() => {
+        expect(mockRefreshSession).toHaveBeenCalled();
+      });
     });
 
     it('handles auth error in response data', async () => {
@@ -240,7 +244,6 @@ describe('SubscriptionProvider', () => {
       });
 
       mockRefreshSession.mockResolvedValueOnce({
-        data: null,
         error: { message: 'Session expired' },
       });
 
@@ -250,11 +253,11 @@ describe('SubscriptionProvider', () => {
             <TestConsumer />
           </SubscriptionProvider>
         );
-        await waitForStateUpdate();
-        await waitForStateUpdate();
       });
 
-      expect(capturedContext?.error).toContain('Session expired');
+      await waitFor(() => {
+        expect(capturedContext?.error).toContain('Session expired');
+      });
     });
   });
 
@@ -265,7 +268,7 @@ describe('SubscriptionProvider', () => {
         session: { access_token: 'valid-token' },
       });
 
-      mockFunctionsInvoke.mockResolvedValueOnce({
+      mockFunctionsInvoke.mockResolvedValue({
         data: { subscribed: true, credits_remaining: 5 },
         error: null,
       });
@@ -276,7 +279,6 @@ describe('SubscriptionProvider', () => {
             <TestConsumer />
           </SubscriptionProvider>
         );
-        await waitForStateUpdate();
       });
 
       expect(typeof capturedContext?.refreshSubscription).toBe('function');
@@ -304,18 +306,21 @@ describe('SubscriptionProvider', () => {
             <TestConsumer />
           </SubscriptionProvider>
         );
-        await waitForStateUpdate();
       });
 
-      expect(capturedContext?.creditsRemaining).toBe(5);
+      await waitFor(() => {
+        expect(capturedContext?.creditsRemaining).toBe(5);
+      });
 
       // Trigger refresh
       await act(async () => {
         await capturedContext?.refreshSubscription();
-        await waitForStateUpdate();
       });
 
-      expect(capturedContext?.creditsRemaining).toBe(4);
+      await waitFor(() => {
+        expect(capturedContext?.creditsRemaining).toBe(4);
+      });
+
       expect(mockFunctionsInvoke).toHaveBeenCalledTimes(2);
     });
   });
