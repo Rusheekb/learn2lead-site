@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Mail, Phone, MapPin, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface FormData {
   name: string;
@@ -88,8 +89,13 @@ const Contact = () => {
     setIsSubmitting(true);
 
     try {
-      // Simulate form submission (replace with actual API call)
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const { data, error } = await supabase.functions.invoke('send-contact-email', {
+        body: formData,
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Failed to send message');
+      }
 
       toast({
         title: 'Message Sent!',
@@ -99,10 +105,11 @@ const Contact = () => {
       // Reset form
       setFormData({ name: '', email: '', subject: '', message: '' });
       setErrors({});
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Contact form error:', error);
       toast({
         title: 'Error',
-        description: 'Failed to send message. Please try again later.',
+        description: error.message || 'Failed to send message. Please try again later.',
         variant: 'destructive',
       });
     } finally {

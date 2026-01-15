@@ -36,6 +36,8 @@ project_id = "lnhtlbatcufmsyoujuqh"
   verify_jwt = false
 [functions.restore-class-credit]
   verify_jwt = true
+[functions.send-contact-email]
+  verify_jwt = false
 
 [auth]
   enabled = true
