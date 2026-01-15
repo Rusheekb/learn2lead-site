@@ -1,12 +1,12 @@
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Navigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import DashboardContent from '@/components/student/DashboardContent';
 import { ClassCalendarContainer } from '@/components/student/ClassCalendarContainer';
 import StudentContent from '@/components/shared/StudentContent';
 import { useQueryClient } from '@tanstack/react-query';
-import { StudentDashboardSkeleton, CalendarSkeleton } from '@/components/shared/skeletons';
+import { StudentDashboardSkeleton } from '@/components/shared/skeletons';
 
 const Dashboard = () => {
   const [selectedSubject, setSelectedSubject] = useState<number | null>(null);

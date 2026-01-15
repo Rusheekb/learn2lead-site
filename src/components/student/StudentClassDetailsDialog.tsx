@@ -8,10 +8,10 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Clock, Calendar as CalendarIcon, User, Video, Upload, FileText, Download, Eye, Trash2 } from 'lucide-react';
+import { Clock, Calendar as CalendarIcon, User, Video, FileText, Download, Eye, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { parseDateToLocal } from '@/utils/safeDateUtils';
-import { formatTime } from './ClassSessionDetail';
+import { formatTime } from '@/utils/timeUtils';
 import { ClassSession, StudentUpload } from '@/types/classTypes';
 import StudentFileUpload from './StudentFileUpload';
 import { supabase } from '@/integrations/supabase/client';
