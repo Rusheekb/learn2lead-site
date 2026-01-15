@@ -2,11 +2,11 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import DashboardContent from '@/components/student/DashboardContent';
 import ClassCalendar from '@/components/ClassCalendar';
 import StudentContent from '@/components/shared/StudentContent';
 import { useQueryClient } from '@tanstack/react-query';
+import { StudentDashboardSkeleton, CalendarSkeleton } from '@/components/shared/skeletons';
 
 const Dashboard = () => {
   const [selectedSubject, setSelectedSubject] = useState<number | null>(null);
@@ -54,7 +54,7 @@ const Dashboard = () => {
   // Determine which content to show based on the active tab
   const renderContent = () => {
     if (isLoading) {
-      return <LoadingSpinner />;
+      return <StudentDashboardSkeleton />;
     }
 
     switch (activeTab) {

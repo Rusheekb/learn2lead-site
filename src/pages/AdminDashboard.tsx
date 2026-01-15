@@ -1,15 +1,14 @@
 
-import React, { useState, Suspense, lazy, useEffect } from 'react';
+import React, { useState, Suspense, lazy } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { UserDetailModal } from '@/components/admin/UserDetailModal';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Student, Tutor } from '@/types/tutorTypes';
 import { TutorStudentAssignment } from '@/services/assignments/assignmentService';
-import { fetchTutors } from '@/services/tutors/tutorService';
-import { fetchStudents } from '@/services/students/studentService';
-import { fetchTutorsWithProfileIds, fetchStudentsWithProfileIds, TutorWithProfileId, StudentWithProfileId } from '@/services/assignments/fetchService';
-import LoadingSpinner from '@/components/shared/LoadingSpinner';
+import { fetchTutorsWithProfileIds, fetchStudentsWithProfileIds } from '@/services/assignments/fetchService';
+import { AdminDashboardSkeleton, TableSkeleton } from '@/components/shared/skeletons';
+
 // Dynamically import heavy components
 const ClassLogs = lazy(() => import('@/components/admin/ClassLogs'));
 const TutorsManager = lazy(() => import('@/components/admin/TutorsManager'));
@@ -81,25 +80,25 @@ const AdminDashboard: React.FC = () => {
     switch (activeTab) {
       case 'schedule':
         return (
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={<TableSkeleton rows={8} columns={7} />}>
             <ClassLogs />
           </Suspense>
         );
       case 'tutors':
         return (
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={<TableSkeleton rows={5} columns={4} />}>
             <TutorsManager onSelect={handleTutorSelect} />
           </Suspense>
         );
       case 'students':
         return (
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={<TableSkeleton rows={5} columns={4} />}>
             <StudentsManager onSelect={handleStudentSelect} />
           </Suspense>
         );
       case 'assignments':
         return (
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={<TableSkeleton rows={5} columns={5} />}>
             <AssignmentManager
               assignments={assignments}
               tutors={tutorsWithProfileIds}
@@ -110,19 +109,19 @@ const AdminDashboard: React.FC = () => {
         );
       case 'settings':
         return (
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={<AdminDashboardSkeleton />}>
             <AdminSettings />
           </Suspense>
         );
       case 'credits':
         return (
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={<TableSkeleton rows={3} columns={3} />}>
             <ManualCreditAllocation />
           </Suspense>
         );
       case 'reports':
         return (
-          <Suspense fallback={<LoadingSpinner />}>
+          <Suspense fallback={<TableSkeleton rows={4} columns={4} />}>
             <QuarterlyReports />
           </Suspense>
         );
