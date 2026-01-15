@@ -293,6 +293,17 @@ serve(async (req) => {
           }
 
           logStep("Subscription updated and credits added", { newCredits, invoiceId });
+
+          // Send renewal success email notification
+          await sendPaymentSuccessEmail(
+            customerEmail,
+            supabaseClient,
+            plan.name,
+            plan.classes_per_month,
+            newCredits,
+            (invoice.amount_paid || 0) / 100,
+            true // isRenewal
+          );
         } else {
           // Create new subscription record (credits will be set via ledger + trigger)
           const currentPeriodStart = subscription?.current_period_start
@@ -354,6 +365,17 @@ serve(async (req) => {
           }
 
           logStep("New subscription created with credits", { subscriptionId: newSub.id, invoiceId });
+
+          // Send new subscription success email notification
+          await sendPaymentSuccessEmail(
+            customerEmail,
+            supabaseClient,
+            plan.name,
+            plan.classes_per_month,
+            plan.classes_per_month,
+            (invoice.amount_paid || 0) / 100,
+            false // isRenewal
+          );
         }
 
         break;
@@ -682,5 +704,106 @@ async function processReferralReward(
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR processing referral reward", { error: errorMessage });
     // Don't throw - we don't want to fail the webhook for referral issues
+  }
+}
+
+// Send payment success email notification
+async function sendPaymentSuccessEmail(
+  customerEmail: string,
+  supabaseClient: any,
+  planName: string,
+  creditsAdded: number,
+  totalCredits: number,
+  amountPaid: number,
+  isRenewal: boolean
+) {
+  try {
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    if (!resendApiKey) {
+      logStep("Skipping payment success email - RESEND_API_KEY not configured");
+      return;
+    }
+
+    // Get user profile for name
+    const { data: profile } = await supabaseClient
+      .from('profiles')
+      .select('first_name, last_name')
+      .ilike('email', customerEmail)
+      .maybeSingle();
+
+    const studentName = profile?.first_name 
+      ? `${profile.first_name} ${profile.last_name || ''}`.trim()
+      : 'Valued Student';
+
+    const subject = isRenewal 
+      ? "Your Subscription Has Been Renewed!" 
+      : "Welcome to Learn2Lead!";
+
+    const headerText = isRenewal
+      ? "Subscription Renewed Successfully"
+      : "Your Subscription is Active!";
+
+    const introText = isRenewal
+      ? `Your ${planName} subscription has been successfully renewed.`
+      : `Thank you for subscribing to the ${planName} plan!`;
+
+    const resend = new Resend(resendApiKey);
+    await resend.emails.send({
+      from: "Learn2Lead <noreply@learn2lead.com>",
+      to: [customerEmail],
+      subject: subject,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: #16a34a;">${headerText}</h1>
+          <p>Dear ${studentName},</p>
+          <p>${introText}</p>
+          
+          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 20px; margin: 20px 0;">
+            <p style="margin: 0 0 10px 0; font-size: 18px; font-weight: bold;">
+              Payment Summary
+            </p>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #dcfce7;">Plan</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #dcfce7; text-align: right; font-weight: bold;">${planName}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #dcfce7;">Amount Paid</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #dcfce7; text-align: right; font-weight: bold;">$${amountPaid.toFixed(2)}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0; border-bottom: 1px solid #dcfce7;">Credits Added</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #dcfce7; text-align: right; font-weight: bold; color: #16a34a;">+${creditsAdded} classes</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px 0;">Available Balance</td>
+                <td style="padding: 8px 0; text-align: right; font-weight: bold; color: #16a34a;">${totalCredits} classes</td>
+              </tr>
+            </table>
+          </div>
+          
+          <p>Your classes are ready to be scheduled. Log in to your dashboard to view your upcoming sessions or schedule new ones.</p>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="https://learn2lead-site.lovable.app/dashboard" style="background: #16a34a; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+              Go to Dashboard
+            </a>
+          </div>
+          
+          <p>Thank you for being part of Learn2Lead!</p>
+          <p><strong>The Learn2Lead Team</strong></p>
+          
+          <p style="color: #666; font-size: 12px; margin-top: 30px;">
+            This is an automated payment confirmation. If you have questions, please contact us.
+          </p>
+        </div>
+      `,
+    });
+
+    logStep("Payment success email sent", { customerEmail, isRenewal, planName });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logStep("WARNING: Failed to send payment success email", { error: errorMessage });
+    // Don't throw - we don't want to fail the webhook for email issues
   }
 }
