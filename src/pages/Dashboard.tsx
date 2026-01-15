@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Navigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import DashboardContent from '@/components/student/DashboardContent';
-import ClassCalendar from '@/components/ClassCalendar';
+import { ClassCalendarContainer } from '@/components/student/ClassCalendarContainer';
 import StudentContent from '@/components/shared/StudentContent';
 import { useQueryClient } from '@tanstack/react-query';
 import { StudentDashboardSkeleton, CalendarSkeleton } from '@/components/shared/skeletons';
@@ -70,7 +70,7 @@ const Dashboard = () => {
         return (
           <div className="py-4">
             <h3 className="text-lg sm:text-xl md:text-2xl font-bold mb-4 sm:mb-6">My Schedule</h3>
-            <ClassCalendar studentId={user?.id || null} />
+            <ClassCalendarContainer studentId={user?.id || null} />
           </div>
         );
       case 'resources':
