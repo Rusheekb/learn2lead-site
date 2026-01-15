@@ -22,7 +22,7 @@ const DashboardShell: React.FC<DashboardShellProps> = ({ title, children }) => {
   useClassNotifications();
 
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-gray-50">
+    <div className="flex flex-col md:flex-row h-screen bg-gray-50" role="application" aria-label={`${title} dashboard`}>
       {/* Mobile Navigation Trigger */}
       <div className="md:hidden flex items-center p-4 border-b bg-white">
         <Sheet open={isMobileNavOpen} onOpenChange={setIsMobileNavOpen}>

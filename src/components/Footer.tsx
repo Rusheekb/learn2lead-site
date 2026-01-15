@@ -3,7 +3,7 @@ import { smoothScrollToSection } from '@/utils/scrollUtils';
 
 const Footer = () => {
   return (
-    <footer className="bg-gray-900 text-white pt-16 pb-8">
+    <footer role="contentinfo" className="bg-gray-900 text-white pt-16 pb-8">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
           <div>
@@ -16,9 +16,9 @@ const Footer = () => {
             </p>
           </div>
 
-          <div>
+          <nav aria-label="Footer navigation">
             <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
-            <ul className="space-y-2">
+            <ul className="space-y-2" role="list">
               <li>
                 <button
                   onClick={() => smoothScrollToSection('services')}
@@ -52,7 +52,7 @@ const Footer = () => {
                 </button>
               </li>
             </ul>
-          </div>
+          </nav>
 
           <div>
             <h4 className="text-lg font-semibold mb-4">Contact Us</h4>

@@ -75,10 +75,10 @@ const FAQ = () => {
   }, []);
 
   return (
-    <section id="faq" className="py-16 bg-background">
+    <section id="faq" aria-labelledby="faq-heading" className="py-16 bg-background">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+          <h2 id="faq-heading" className="text-3xl md:text-4xl font-bold text-foreground mb-4">
             Frequently Asked Questions
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">

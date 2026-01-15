@@ -6,10 +6,10 @@ import { Mail, Phone, MapPin } from 'lucide-react';
 
 const Contact = () => {
   return (
-    <section id="contact" className="py-20 bg-tutoring-lightGray">
+    <section id="contact" aria-labelledby="contact-heading" className="py-20 bg-tutoring-lightGray">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <h2 id="contact-heading" className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
             Get in Touch
           </h2>
           <p className="text-lg text-gray-600">
@@ -59,7 +59,7 @@ const Contact = () => {
                 Send Us a Message
               </h3>
 
-              <form className="space-y-6">
+              <form className="space-y-6" aria-label="Contact form">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label
