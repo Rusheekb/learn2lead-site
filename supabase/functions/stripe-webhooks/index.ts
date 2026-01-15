@@ -495,8 +495,11 @@ serve(async (req) => {
       case "customer.subscription.deleted": {
         const subscription = event.data.object;
         const subscriptionId = subscription.id;
+        const customerId = typeof subscription.customer === 'string'
+          ? subscription.customer
+          : (subscription.customer as any)?.id;
 
-        logStep("Subscription cancelled", { subscriptionId });
+        logStep("Subscription cancelled", { subscriptionId, customerId });
 
         // Mark subscription as cancelled (keep history)
         const { error } = await supabaseClient
@@ -505,6 +508,14 @@ serve(async (req) => {
           .eq('stripe_subscription_id', subscriptionId);
 
         if (error) throw error;
+
+        // Send cancellation email
+        await sendSubscriptionStatusEmail(
+          stripe,
+          supabaseClient,
+          customerId,
+          'cancelled'
+        );
 
         break;
       }
@@ -542,8 +553,11 @@ serve(async (req) => {
         // Handle subscription pause events
         const subscription = event.data.object;
         const subscriptionId = subscription.id;
+        const customerId = typeof subscription.customer === 'string'
+          ? subscription.customer
+          : (subscription.customer as any)?.id;
 
-        logStep("Subscription paused", { subscriptionId });
+        logStep("Subscription paused", { subscriptionId, customerId });
 
         const { error } = await supabaseClient
           .from('student_subscriptions')
@@ -552,6 +566,14 @@ serve(async (req) => {
 
         if (error) throw error;
 
+        // Send pause confirmation email
+        await sendSubscriptionStatusEmail(
+          stripe,
+          supabaseClient,
+          customerId,
+          'paused'
+        );
+
         break;
       }
 
@@ -559,8 +581,11 @@ serve(async (req) => {
         // Handle subscription resume events
         const subscription = event.data.object;
         const subscriptionId = subscription.id;
+        const customerId = typeof subscription.customer === 'string'
+          ? subscription.customer
+          : (subscription.customer as any)?.id;
 
-        logStep("Subscription resumed", { subscriptionId });
+        logStep("Subscription resumed", { subscriptionId, customerId });
 
         const { error } = await supabaseClient
           .from('student_subscriptions')
@@ -568,6 +593,14 @@ serve(async (req) => {
           .eq('stripe_subscription_id', subscriptionId);
 
         if (error) throw error;
+
+        // Send resume confirmation email
+        await sendSubscriptionStatusEmail(
+          stripe,
+          supabaseClient,
+          customerId,
+          'resumed'
+        );
 
         break;
       }
@@ -804,6 +837,145 @@ async function sendPaymentSuccessEmail(
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("WARNING: Failed to send payment success email", { error: errorMessage });
+    // Don't throw - we don't want to fail the webhook for email issues
+  }
+}
+
+// Send subscription status change email notification
+async function sendSubscriptionStatusEmail(
+  stripe: Stripe,
+  supabaseClient: any,
+  customerId: string,
+  status: 'cancelled' | 'paused' | 'resumed'
+) {
+  try {
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    if (!resendApiKey) {
+      logStep("Skipping subscription status email - RESEND_API_KEY not configured");
+      return;
+    }
+
+    // Get customer email from Stripe
+    const customer = await stripe.customers.retrieve(customerId);
+    const customerEmail = typeof customer !== 'string' && 'email' in customer 
+      ? (customer as any).email as string | null 
+      : null;
+
+    if (!customerEmail) {
+      logStep("Cannot send subscription status email - no customer email", { customerId });
+      return;
+    }
+
+    // Get user profile for name
+    const { data: profile } = await supabaseClient
+      .from('profiles')
+      .select('first_name, last_name')
+      .ilike('email', customerEmail)
+      .maybeSingle();
+
+    const studentName = profile?.first_name 
+      ? `${profile.first_name} ${profile.last_name || ''}`.trim()
+      : 'Valued Student';
+
+    // Email content based on status
+    const emailContent = {
+      cancelled: {
+        subject: "Your Subscription Has Been Cancelled",
+        headerColor: "#dc2626",
+        headerText: "Subscription Cancelled",
+        message: `Your Learn2Lead subscription has been cancelled. We're sorry to see you go!`,
+        details: `
+          <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 20px; margin: 20px 0;">
+            <p style="margin: 0 0 10px 0;"><strong>What this means:</strong></p>
+            <ul style="margin: 0;">
+              <li>Your remaining class credits will stay in your account</li>
+              <li>You can use any remaining credits to schedule classes</li>
+              <li>You will not be charged again unless you resubscribe</li>
+            </ul>
+          </div>
+          <p>If you cancelled by mistake or would like to resubscribe, visit our pricing page anytime.</p>
+        `,
+        buttonText: "View Pricing",
+        buttonUrl: "https://learn2lead-site.lovable.app/pricing",
+        buttonColor: "#6b7280"
+      },
+      paused: {
+        subject: "Your Subscription Has Been Paused",
+        headerColor: "#f59e0b",
+        headerText: "Subscription Paused",
+        message: `Your Learn2Lead subscription has been paused as requested.`,
+        details: `
+          <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 20px; margin: 20px 0;">
+            <p style="margin: 0 0 10px 0;"><strong>While paused:</strong></p>
+            <ul style="margin: 0;">
+              <li>You will not be charged during the pause period</li>
+              <li>Your existing credits remain available</li>
+              <li>Your subscription will automatically resume on your selected date</li>
+            </ul>
+          </div>
+          <p>Enjoy your break! We'll be here when you're ready to continue learning.</p>
+        `,
+        buttonText: "Go to Dashboard",
+        buttonUrl: "https://learn2lead-site.lovable.app/dashboard",
+        buttonColor: "#f59e0b"
+      },
+      resumed: {
+        subject: "Welcome Back! Your Subscription is Active",
+        headerColor: "#16a34a",
+        headerText: "Subscription Resumed",
+        message: `Great news! Your Learn2Lead subscription is now active again.`,
+        details: `
+          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 20px; margin: 20px 0;">
+            <p style="margin: 0 0 10px 0;"><strong>You're all set:</strong></p>
+            <ul style="margin: 0;">
+              <li>Your subscription is now active</li>
+              <li>Regular billing has resumed</li>
+              <li>You can schedule classes as usual</li>
+            </ul>
+          </div>
+          <p>Welcome back! We're excited to continue your learning journey.</p>
+        `,
+        buttonText: "Schedule a Class",
+        buttonUrl: "https://learn2lead-site.lovable.app/dashboard",
+        buttonColor: "#16a34a"
+      }
+    };
+
+    const content = emailContent[status];
+
+    const resend = new Resend(resendApiKey);
+    await resend.emails.send({
+      from: "Learn2Lead <noreply@learn2lead.com>",
+      to: [customerEmail],
+      subject: content.subject,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: ${content.headerColor};">${content.headerText}</h1>
+          <p>Dear ${studentName},</p>
+          <p>${content.message}</p>
+          
+          ${content.details}
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${content.buttonUrl}" style="background: ${content.buttonColor}; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+              ${content.buttonText}
+            </a>
+          </div>
+          
+          <p>If you have any questions, please don't hesitate to contact us.</p>
+          <p><strong>The Learn2Lead Team</strong></p>
+          
+          <p style="color: #666; font-size: 12px; margin-top: 30px;">
+            This is an automated notification regarding your subscription status.
+          </p>
+        </div>
+      `,
+    });
+
+    logStep("Subscription status email sent", { customerEmail, status });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logStep("WARNING: Failed to send subscription status email", { error: errorMessage });
     // Don't throw - we don't want to fail the webhook for email issues
   }
 }
