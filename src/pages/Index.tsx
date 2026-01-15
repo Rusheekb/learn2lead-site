@@ -4,6 +4,7 @@ import NavBar from '@/components/NavBar';
 import Hero from '@/components/Hero';
 import Features from '@/components/Features';
 import Testimonials from '@/components/Testimonials';
+import FAQ from '@/components/FAQ';
 import Contact from '@/components/Contact';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -63,6 +64,7 @@ const Index = () => {
         </div>
       </section>
 
+      <FAQ />
       <Contact />
       <Footer />
     </div>
