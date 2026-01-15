@@ -44,7 +44,7 @@ const DashboardShell: React.FC<DashboardShellProps> = ({ title, children }) => {
       </div>
       
       {/* Main Content */}
-      <main className="flex-1 overflow-auto p-4 md:p-6">
+      <main id="main-content" tabIndex={-1} className="flex-1 overflow-auto p-4 md:p-6 focus:outline-none">
         <div className="max-w-7xl mx-auto">
           {/* Breadcrumbs */}
           <div className="hidden md:block">

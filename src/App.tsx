@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import OptimizedSuspense from './components/shared/OptimizedSuspense';
+import SkipLink from './components/shared/SkipLink';
 
 // Lazy load all pages for optimal code splitting
 const Index = React.lazy(() => import('./pages/Index'));
@@ -164,6 +165,7 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <BrowserRouter>
+            <SkipLink />
             <AuthProvider>
               <SubscriptionProvider>
                 <RoutePersistence />
