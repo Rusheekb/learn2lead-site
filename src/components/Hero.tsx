@@ -19,12 +19,12 @@ const Hero = () => {
   };
 
   return (
-    <section id="home" className="pt-28 pb-16 md:pt-32 md:pb-24">
+    <section id="home" aria-labelledby="hero-heading" className="pt-28 pb-16 md:pt-32 md:pb-24">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row items-center justify-between">
           {/* Left column - Text content */}
           <div className="w-full md:w-1/2 mb-10 md:mb-0 md:pr-10 animate-fade-in">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-4">
+            <h1 id="hero-heading" className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-4">
               Unlock Your
               <span className="text-tutoring-blue"> Academic Potential</span>
             </h1>

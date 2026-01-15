@@ -50,41 +50,43 @@ const NavBar = () => {
   } backdrop-blur-sm border-b border-gray-100`;
 
   return (
-    <nav className={navClasses}>
-      <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center h-16">
-          {/* Logo */}
-          <div className="flex-shrink-0 flex items-center">
-            <Logo />
-          </div>
+    <header role="banner" className={navClasses}>
+      <nav aria-label="Main navigation">
+        <div className="container mx-auto px-4">
+          <div className="flex justify-between items-center h-16">
+            {/* Logo */}
+            <div className="flex-shrink-0 flex items-center">
+              <Logo />
+            </div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            <NavMenu onNavItemClick={handleNavigation} />
-          </div>
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center space-x-8">
+              <NavMenu onNavItemClick={handleNavigation} />
+            </div>
 
-          {/* CTA and Login/User Buttons */}
-          <div className="hidden md:flex items-center space-x-4">
-            <UserMenu user={user} userRole={userRole} />
-            <DesktopBookButton />
-          </div>
+            {/* CTA and Login/User Buttons */}
+            <div className="hidden md:flex items-center space-x-4">
+              <UserMenu user={user} userRole={userRole} />
+              <DesktopBookButton />
+            </div>
 
-          {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center">
-            <MobileMenuButton isOpen={isMenuOpen} onClick={toggleMenu} />
+            {/* Mobile Menu Button */}
+            <div className="md:hidden flex items-center">
+              <MobileMenuButton isOpen={isMenuOpen} onClick={toggleMenu} />
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Mobile Menu */}
-      {isMenuOpen && (
-        <MobileMenu
-          user={user}
-          userRole={userRole}
-          onNavItemClick={handleNavigation}
-        />
-      )}
-    </nav>
+        {/* Mobile Menu */}
+        {isMenuOpen && (
+          <MobileMenu
+            user={user}
+            userRole={userRole}
+            onNavItemClick={handleNavigation}
+          />
+        )}
+      </nav>
+    </header>
   );
 };
 
