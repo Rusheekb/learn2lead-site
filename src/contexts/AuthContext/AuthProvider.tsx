@@ -1,4 +1,3 @@
-
 import React, { createContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Session } from '@supabase/supabase-js';
@@ -13,6 +12,7 @@ import { createTutor } from '@/services/tutors/tutorService';
 import { toast } from 'sonner';
 import { AuthContextType } from '@/types/auth';
 import { getSavedRoute, clearSavedRoute } from '@/hooks/useRoutePersistence';
+import { setUser as setSentryUser, addBreadcrumb } from '@/lib/sentry';
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -38,6 +38,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (event === 'SIGNED_IN' && currentSession?.user) {
         const u = currentSession.user;
+        
+        // Set user context for Sentry
+        setSentryUser({ id: u.id, email: u.email });
+        addBreadcrumb({
+          category: 'auth',
+          message: 'User signed in',
+          level: 'info',
+        });
+        
         setTimeout(async () => {
           try {
             const { data: existingProfile, error: fetchError } = await supabase
@@ -106,6 +115,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       if (event === 'SIGNED_OUT') {
+        // Clear Sentry user context
+        setSentryUser(null);
+        addBreadcrumb({
+          category: 'auth',
+          message: 'User signed out',
+          level: 'info',
+        });
+        
         clearSavedRoute(); // Clear saved route on sign out
         setUserRole(null);
         setUser(null);

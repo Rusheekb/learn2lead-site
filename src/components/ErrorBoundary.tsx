@@ -1,6 +1,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertCircle } from 'lucide-react';
+import { captureException, addBreadcrumb } from '@/lib/sentry';
 
 interface Props {
   children: ReactNode;
@@ -30,20 +31,26 @@ class ErrorBoundary extends Component<Props, State> {
       errorInfo,
     });
 
-    // Structured error logging for production
-    const errorData = {
-      message: error.message,
-      stack: error.stack,
-      componentStack: errorInfo.componentStack,
-      timestamp: new Date().toISOString(),
-      url: window.location.href
-    };
+    // Add breadcrumb for context
+    addBreadcrumb({
+      category: 'error-boundary',
+      message: 'Error caught by ErrorBoundary',
+      level: 'error',
+      data: {
+        componentStack: errorInfo.componentStack?.slice(0, 500),
+      },
+    });
 
+    // Report to Sentry
+    captureException(error, {
+      componentStack: errorInfo.componentStack,
+      url: window.location.href,
+      timestamp: new Date().toISOString(),
+    });
+
+    // Also log to console in development
     if (import.meta.env.DEV) {
       console.error('Error caught by boundary:', error, errorInfo);
-    } else {
-      // Production: log structured data for debugging
-      console.error('[BOUNDARY_ERROR]', JSON.stringify(errorData));
     }
   }
 
