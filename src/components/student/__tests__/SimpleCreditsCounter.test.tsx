@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { SimpleCreditsCounter } from '../SimpleCreditsCounter';
 
 // Mock the useSubscription hook
@@ -21,8 +21,8 @@ describe('SimpleCreditsCounter', () => {
 
     const { container } = render(<SimpleCreditsCounter />);
     
-    // Skeleton should be visible
-    const skeleton = container.querySelector('.animate-pulse');
+    // Skeleton should have animate-pulse class
+    const skeleton = container.querySelector('[class*="animate-pulse"]');
     expect(skeleton).toBeInTheDocument();
   });
 
@@ -33,9 +33,9 @@ describe('SimpleCreditsCounter', () => {
       isLoading: false,
     });
 
-    const { getByText } = render(<SimpleCreditsCounter />);
+    render(<SimpleCreditsCounter />);
     
-    expect(getByText('8 classes remaining')).toBeInTheDocument();
+    expect(screen.getByText('8 classes remaining')).toBeInTheDocument();
   });
 
   it('shows Credits Available label', () => {
@@ -45,9 +45,9 @@ describe('SimpleCreditsCounter', () => {
       isLoading: false,
     });
 
-    const { getByText } = render(<SimpleCreditsCounter />);
+    render(<SimpleCreditsCounter />);
     
-    expect(getByText('Credits Available')).toBeInTheDocument();
+    expect(screen.getByText('Credits Available')).toBeInTheDocument();
   });
 
   it('hides amount in CreditBadge (student privacy)', () => {
@@ -57,11 +57,11 @@ describe('SimpleCreditsCounter', () => {
       isLoading: false,
     });
 
-    const { getByText, queryByText } = render(<SimpleCreditsCounter />);
+    render(<SimpleCreditsCounter />);
     
     // Should show overdrawn but NOT the dollar amount
-    expect(getByText('3 classes overdrawn')).toBeInTheDocument();
-    expect(queryByText(/\$60/)).not.toBeInTheDocument();
+    expect(screen.getByText('3 classes overdrawn')).toBeInTheDocument();
+    expect(screen.queryByText(/\$60/)).not.toBeInTheDocument();
   });
 
   it('renders correctly with zero credits', () => {
@@ -71,9 +71,9 @@ describe('SimpleCreditsCounter', () => {
       isLoading: false,
     });
 
-    const { getByText } = render(<SimpleCreditsCounter />);
+    render(<SimpleCreditsCounter />);
     
-    expect(getByText('0 classes remaining')).toBeInTheDocument();
+    expect(screen.getByText('0 classes remaining')).toBeInTheDocument();
   });
 
   it('handles null credits when not loading', () => {
@@ -83,9 +83,9 @@ describe('SimpleCreditsCounter', () => {
       isLoading: false,
     });
 
-    const { getByText } = render(<SimpleCreditsCounter />);
+    render(<SimpleCreditsCounter />);
     
     // CreditBadge returns null for null credits, so just check the label exists
-    expect(getByText('Credits Available')).toBeInTheDocument();
+    expect(screen.getByText('Credits Available')).toBeInTheDocument();
   });
 });
