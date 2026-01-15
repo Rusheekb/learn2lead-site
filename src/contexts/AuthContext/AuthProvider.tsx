@@ -1,11 +1,9 @@
 import React, { createContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { signInWithEmail, signUpWithEmail, signOut, signInWithProvider } from '@/utils/authActions';
 import { fetchUserRole } from '@/hooks/useUserRole';
 import { getDashboardPath } from '@/utils/authNavigation';
-import { AppRole } from '@/hooks/useProfile';
 import { useAuthState } from '@/hooks/useAuthState';
 import { createStudent } from '@/services/students/studentService';
 import { createTutor } from '@/services/tutors/tutorService';
@@ -49,7 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         setTimeout(async () => {
           try {
-            const { data: existingProfile, error: fetchError } = await supabase
+            const { data: existingProfile } = await supabase
               .from('profiles')
               .select('role, id')
               .eq('id', u.id)
