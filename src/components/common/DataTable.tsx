@@ -11,7 +11,21 @@ import {
 } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+
+// Skeleton row animation variants
+const skeletonRowVariants = {
+  hidden: { opacity: 0 },
+  visible: (i: number) => ({
+    opacity: 1,
+    transition: {
+      delay: i * 0.05,
+      type: 'spring' as const,
+      stiffness: 300,
+      damping: 20,
+    },
+  }),
+};
 
 // Spring-based stagger animation variants for table rows
 const tableRowVariants = {
@@ -142,9 +156,36 @@ function DataTable<T>({
   const renderContent = () => {
     if (isLoading) {
       return loadingState || (
-        <div className="flex justify-center items-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          <p className="ml-2">Loading data...</p>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                {columns.map((column, index) => (
+                  <TableHead key={index} className={column.className}>
+                    {column.header}
+                  </TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {Array.from({ length: 5 }).map((_, rowIndex) => (
+                <motion.tr
+                  key={rowIndex}
+                  custom={rowIndex}
+                  initial="hidden"
+                  animate="visible"
+                  variants={skeletonRowVariants}
+                  className="border-b"
+                >
+                  {columns.map((_, colIndex) => (
+                    <TableCell key={colIndex}>
+                      <Skeleton className="h-4 w-full" />
+                    </TableCell>
+                  ))}
+                </motion.tr>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       );
     }
