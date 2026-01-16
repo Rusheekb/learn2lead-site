@@ -132,7 +132,7 @@ const ClassTable: React.FC<ClassTableProps> = ({
     {
       header: 'Actions',
       cell: (cls) => (
-        <ActionButton variant="ghost" size="sm">
+        <ActionButton variant="ghost" size="sm" tooltip="View class details">
           View Details
         </ActionButton>
       ),

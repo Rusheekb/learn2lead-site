@@ -55,12 +55,13 @@ const StudentTable: React.FC<StudentTableProps> = memo(({
       header: 'Actions',
       cell: (student) => (
         <div className="flex items-center gap-2">
-          <ActionButton variant="ghost" size="icon">
+          <ActionButton variant="ghost" size="icon" tooltip="Edit student">
             <Edit2 className="h-4 w-4" />
           </ActionButton>
           <ActionButton
             variant="ghost"
             size="icon"
+            tooltip="Delete student"
             onClick={(e) => {
               e.stopPropagation();
               onDeleteStudent(student.id);
