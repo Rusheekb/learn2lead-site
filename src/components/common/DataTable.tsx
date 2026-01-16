@@ -179,7 +179,7 @@ function DataTable<T>({
                 >
                   {columns.map((_, colIndex) => (
                     <TableCell key={colIndex}>
-                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-full animate-shimmer bg-gradient-to-r from-muted via-muted-foreground/10 to-muted bg-[length:200%_100%]" />
                     </TableCell>
                   ))}
                 </motion.tr>
