@@ -308,7 +308,12 @@ function VirtualizedDataTable<T>({
                   initial="hidden"
                   animate="visible"
                   variants={tableRowVariants}
-                  className={`border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted ${onRowClick ? 'cursor-pointer hover:bg-muted/60' : ''}`}
+                  whileHover={{ 
+                    backgroundColor: 'hsl(var(--muted) / 0.6)',
+                    scale: 1.005,
+                    transition: { type: 'spring' as const, stiffness: 500, damping: 30 }
+                  }}
+                  className={`border-b transition-colors data-[state=selected]:bg-muted ${onRowClick ? 'cursor-pointer' : ''}`}
                   onClick={onRowClick ? () => onRowClick(row) : undefined}
                 >
                   {columns.map((column, colIndex) => (
