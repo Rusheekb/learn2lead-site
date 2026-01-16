@@ -7,6 +7,7 @@ import { ClassCalendarContainer } from '@/components/student/ClassCalendarContai
 import StudentContent from '@/components/shared/StudentContent';
 import { useQueryClient } from '@tanstack/react-query';
 import { StudentDashboardSkeleton } from '@/components/shared/skeletons';
+import { ContentTransition } from '@/components/shared/PageTransition';
 
 const Dashboard = () => {
   const [selectedSubject, setSelectedSubject] = useState<number | null>(null);
@@ -95,7 +96,9 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      {renderContent()}
+      <ContentTransition transitionKey={activeTab}>
+        {renderContent()}
+      </ContentTransition>
     </div>
   );
 };
