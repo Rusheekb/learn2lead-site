@@ -13,16 +13,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 
-// Stagger animation variants for table rows
+// Spring-based stagger animation variants for table rows
 const tableRowVariants = {
-  hidden: { opacity: 0, y: 10 },
+  hidden: { opacity: 0, y: 12 },
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
     transition: {
-      delay: i * 0.03,
-      duration: 0.2,
-      ease: [0.25, 0.1, 0.25, 1] as const,
+      delay: i * 0.025,
+      type: 'spring' as const,
+      stiffness: 400,
+      damping: 25,
     },
   }),
 };
