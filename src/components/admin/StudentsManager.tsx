@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { memo, useCallback, useState } from 'react';
 import { Student } from '@/types/tutorTypes';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
@@ -16,7 +16,7 @@ interface StudentsManagerProps {
   onSelect: (student: Student) => void;
 }
 
-const StudentsManager: React.FC<StudentsManagerProps> = ({ onSelect }) => {
+const StudentsManager: React.FC<StudentsManagerProps> = memo(({ onSelect }) => {
   const { userRole } = useAuth();
   const [promotionStudent, setPromotionStudent] = useState<Student | null>(null);
   const {
@@ -35,7 +35,7 @@ const StudentsManager: React.FC<StudentsManagerProps> = ({ onSelect }) => {
     refetch,
   } = useStudentsQuery();
   
-  const handleDeleteStudent = async (studentId: string) => {
+  const handleDeleteStudent = useCallback(async (studentId: string) => {
     try {
       await deleteStudent(studentId);
       toast.success("Student deleted successfully");
@@ -43,12 +43,26 @@ const StudentsManager: React.FC<StudentsManagerProps> = ({ onSelect }) => {
       console.error('Error deleting student:', error);
       toast.error("Failed to delete student");
     }
-  };
+  }, [deleteStudent]);
 
-  const handlePromotionSuccess = () => {
+  const handlePromotionSuccess = useCallback(() => {
     setPromotionStudent(null);
     refetch();
-  };
+  }, [refetch]);
+
+  const handlePromoteClick = useCallback((e: React.MouseEvent, student: Student) => {
+    e.stopPropagation();
+    setPromotionStudent(student);
+  }, []);
+
+  const handleDeleteClick = useCallback((e: React.MouseEvent, studentId: string) => {
+    e.stopPropagation();
+    handleDeleteStudent(studentId);
+  }, [handleDeleteStudent]);
+
+  const handleClosePromotion = useCallback(() => {
+    setPromotionStudent(null);
+  }, []);
 
   const isAdmin = userRole === 'admin';
 
@@ -97,10 +111,7 @@ const StudentsManager: React.FC<StudentsManagerProps> = ({ onSelect }) => {
                           <Button
                             variant="default"
                             size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setPromotionStudent(student);
-                            }}
+                            onClick={(e) => handlePromoteClick(e, student)}
                             className="flex items-center gap-1"
                           >
                             <UserCheck className="h-3 w-3" />
@@ -110,10 +121,7 @@ const StudentsManager: React.FC<StudentsManagerProps> = ({ onSelect }) => {
                         <Button
                           variant="destructive"
                           size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteStudent(student.id);
-                          }}
+                          onClick={(e) => handleDeleteClick(e, student.id)}
                         >
                           Delete
                         </Button>
@@ -124,7 +132,7 @@ const StudentsManager: React.FC<StudentsManagerProps> = ({ onSelect }) => {
               </TableBody>
             </Table>
           )}
-
+          
           <PaginationControls
             currentPage={page}
             totalPages={totalPages}
@@ -138,19 +146,23 @@ const StudentsManager: React.FC<StudentsManagerProps> = ({ onSelect }) => {
         </CardContent>
       </Card>
 
-      <RolePromotionDialog
-        isOpen={!!promotionStudent}
-        onClose={() => setPromotionStudent(null)}
-        user={promotionStudent ? {
-          id: promotionStudent.id,
-          email: promotionStudent.email,
-          name: promotionStudent.name,
-          role: 'student' as const
-        } : null}
-        onSuccess={handlePromotionSuccess}
-      />
+      {promotionStudent && (
+        <RolePromotionDialog
+          isOpen={!!promotionStudent}
+          onClose={handleClosePromotion}
+          user={{
+            id: promotionStudent.id,
+            email: promotionStudent.email,
+            name: promotionStudent.name,
+            role: 'student'
+          }}
+          onSuccess={handlePromotionSuccess}
+        />
+      )}
     </div>
   );
-};
+});
+
+StudentsManager.displayName = 'StudentsManager';
 
 export default StudentsManager;

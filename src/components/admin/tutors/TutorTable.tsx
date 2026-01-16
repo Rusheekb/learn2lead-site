@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo, useMemo } from 'react';
 import DataTable, { ColumnDefinition } from '@/components/common/DataTable';
 import { Button } from '@/components/ui/button';
 import { Edit2, Trash2 } from 'lucide-react';
@@ -12,13 +12,13 @@ interface TutorTableProps {
   onSelect: (tutor: Tutor) => void;
 }
 
-const TutorTable: React.FC<TutorTableProps> = ({
+const TutorTable: React.FC<TutorTableProps> = memo(({
   tutors,
   isLoading,
   onDelete,
   onSelect,
 }) => {
-  const columns: ColumnDefinition<Tutor>[] = [
+  const columns: ColumnDefinition<Tutor>[] = useMemo(() => [
     {
       header: 'Tutor',
       cell: (tutor) => (
@@ -48,7 +48,7 @@ const TutorTable: React.FC<TutorTableProps> = ({
         </div>
       ),
     },
-  ];
+  ], [onDelete]);
 
   return (
     <DataTable
@@ -57,13 +57,15 @@ const TutorTable: React.FC<TutorTableProps> = ({
       isLoading={isLoading}
       onRowClick={onSelect}
       emptyState={
-        <div className="text-center py-12 text-gray-500">
+        <div className="text-center py-12 text-muted-foreground">
           <p>No tutors found matching your criteria.</p>
         </div>
       }
       showCard={false}
     />
   );
-};
+});
+
+TutorTable.displayName = 'TutorTable';
 
 export default TutorTable;
