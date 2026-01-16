@@ -22,8 +22,9 @@ const SubjectCards: React.FC<SubjectCardsProps> = memo(({
         return (
           <Card
             key={subject.id}
-            className={`cursor-pointer transition-all hover:shadow-md bg-white ${
-              selectedSubject === subject.id ? 'ring-2 ring-tutoring-blue' : ''
+            interactive
+            className={`bg-card ${
+              selectedSubject === subject.id ? 'ring-2 ring-primary' : ''
             }`}
             onClick={() => onSubjectClick(subject.id)}
           >
