@@ -1,10 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { memo, useCallback } from 'react';
 import { Tutor } from '@/types/tutorTypes';
 import TutorTable from './tutors/TutorTable';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { deleteTutor } from '@/services/tutors/tutorService';
 import SearchInput from '@/components/shared/filters/SearchInput';
 import PaginationControls from '@/components/common/Pagination';
 import { useTutorsQuery } from '@/hooks/queries/useTutorsQuery';
@@ -13,7 +12,7 @@ interface TutorsManagerProps {
   onSelect: (tutor: Tutor) => void;
 }
 
-const TutorsManager: React.FC<TutorsManagerProps> = ({ onSelect }) => {
+const TutorsManager: React.FC<TutorsManagerProps> = memo(({ onSelect }) => {
   const {
     tutors,
     isLoading,
@@ -29,7 +28,7 @@ const TutorsManager: React.FC<TutorsManagerProps> = ({ onSelect }) => {
     setSearchTerm,
   } = useTutorsQuery();
 
-  const handleDeleteTutor = async (tutorId: string) => {
+  const handleDeleteTutor = useCallback(async (tutorId: string) => {
     try {
       await deleteTutorMutation(tutorId);
       toast.success("Tutor deleted successfully");
@@ -37,7 +36,7 @@ const TutorsManager: React.FC<TutorsManagerProps> = ({ onSelect }) => {
       console.error('Error deleting tutor:', error);
       toast.error("Failed to delete tutor");
     }
-  };
+  }, [deleteTutorMutation]);
 
   return (
     <div className="space-y-6">
@@ -77,6 +76,8 @@ const TutorsManager: React.FC<TutorsManagerProps> = ({ onSelect }) => {
       </Card>
     </div>
   );
-};
+});
+
+TutorsManager.displayName = 'TutorsManager';
 
 export default TutorsManager;

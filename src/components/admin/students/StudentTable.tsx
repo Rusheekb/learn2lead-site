@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo, useMemo } from 'react';
 import DataTable, { ColumnDefinition } from '@/components/common/DataTable';
 import { Button } from '@/components/ui/button';
 import { Edit2, Trash2 } from 'lucide-react';
@@ -32,12 +32,12 @@ const formatDate = (dateString: string | undefined) => {
   }
 };
 
-const StudentTable: React.FC<StudentTableProps> = ({
+const StudentTable: React.FC<StudentTableProps> = memo(({
   students,
   isLoading,
   onDeleteStudent,
 }) => {
-  const columns: ColumnDefinition<Student>[] = [
+  const columns: ColumnDefinition<Student>[] = useMemo(() => [
     {
       header: 'Student',
       cell: (student) => (
@@ -71,7 +71,7 @@ const StudentTable: React.FC<StudentTableProps> = ({
         </div>
       ),
     },
-  ];
+  ], [onDeleteStudent]);
 
   return (
     <div className="overflow-x-auto">
@@ -80,7 +80,7 @@ const StudentTable: React.FC<StudentTableProps> = ({
         columns={columns}
         isLoading={isLoading}
         emptyState={
-          <div className="text-center py-12 text-gray-500">
+          <div className="text-center py-12 text-muted-foreground">
             <p>No students found matching your criteria.</p>
           </div>
         }
@@ -88,6 +88,8 @@ const StudentTable: React.FC<StudentTableProps> = ({
       />
     </div>
   );
-};
+});
+
+StudentTable.displayName = 'StudentTable';
 
 export default StudentTable;
