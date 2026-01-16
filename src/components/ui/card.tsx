@@ -1,20 +1,50 @@
-
 import * as React from 'react';
 import { cn } from '@/lib/utils';
+import { motion, HTMLMotionProps } from 'framer-motion';
 
-const Card = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      'rounded-lg border bg-white text-gray-900 shadow-sm',
-      className
-    )}
-    {...props}
-  />
-));
+interface CardProps extends Omit<HTMLMotionProps<'div'>, 'ref'> {
+  interactive?: boolean;
+}
+
+const Card = React.forwardRef<HTMLDivElement, CardProps>(
+  ({ className, interactive = false, ...props }, ref) => (
+    <motion.div
+      ref={ref}
+      className={cn(
+        'rounded-lg border bg-card text-card-foreground shadow-sm',
+        interactive && 'cursor-pointer',
+        className
+      )}
+      whileHover={
+        interactive
+          ? {
+              y: -4,
+              boxShadow:
+                '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+              transition: {
+                type: 'spring',
+                stiffness: 400,
+                damping: 25,
+              },
+            }
+          : undefined
+      }
+      whileTap={
+        interactive
+          ? {
+              scale: 0.98,
+              transition: {
+                type: 'spring',
+                stiffness: 400,
+                damping: 25,
+              },
+            }
+          : undefined
+      }
+      {...props}
+    />
+  )
+);
 Card.displayName = 'Card';
 
 const CardHeader = React.forwardRef<
