@@ -1,7 +1,11 @@
 
 # Learn2Lead Application
 
-## Environment Variables
+![CI](https://github.com/YOUR_USERNAME/YOUR_REPO/actions/workflows/ci.yml/badge.svg)
+![Tests](https://img.shields.io/badge/tests-70%2B-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-50%25-yellow)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)
+
 
 This project uses environment variables for configuration. To keep your credentials safe, **do not commit** any local environment files. Make sure the following entries exist in your `.gitignore`:
 
@@ -58,6 +62,22 @@ Build the optimized production bundle:
 ```bash
 npm run build
 ```
+
+## Testing
+
+Run the test suite:
+
+```bash
+npm run test
+```
+
+Run tests with coverage report:
+
+```bash
+npm run test -- --coverage
+```
+
+The project maintains 50%+ code coverage across branches, functions, lines, and statements.
 
 ## Additional Configuration
 
