@@ -1,6 +1,6 @@
 
 import React, { memo, useMemo } from 'react';
-import DataTable, { ColumnDefinition } from '@/components/common/DataTable';
+import VirtualizedDataTable, { ColumnDefinition } from '@/components/common/VirtualizedDataTable';
 import { Button } from '@/components/ui/button';
 import { Edit2, Trash2 } from 'lucide-react';
 import { Tutor } from '@/types/tutorTypes';
@@ -51,7 +51,7 @@ const TutorTable: React.FC<TutorTableProps> = memo(({
   ], [onDelete]);
 
   return (
-    <DataTable
+    <VirtualizedDataTable
       data={tutors}
       columns={columns}
       isLoading={isLoading}
@@ -62,6 +62,8 @@ const TutorTable: React.FC<TutorTableProps> = memo(({
         </div>
       }
       showCard={false}
+      virtualizationThreshold={30}
+      maxHeight={400}
     />
   );
 });
