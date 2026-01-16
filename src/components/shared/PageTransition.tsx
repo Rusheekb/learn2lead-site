@@ -79,7 +79,7 @@ const scaleVariants: Variants = {
   },
 };
 
-// Stagger container variants
+// Stagger container variants with exit
 const staggerContainerVariants: Variants = {
   initial: {},
   enter: {
@@ -87,15 +87,26 @@ const staggerContainerVariants: Variants = {
       staggerChildren: 0.05,
     },
   },
+  exit: {
+    transition: {
+      staggerChildren: 0.03,
+      staggerDirection: -1,
+    },
+  },
 };
 
-// Stagger item variants
+// Stagger item variants with exit
 const staggerItemVariants: Variants = {
   initial: { opacity: 0, y: 10 },
   enter: { 
     opacity: 1, 
     y: 0,
     transition: { duration: 0.3, ease: 'easeOut' }
+  },
+  exit: {
+    opacity: 0,
+    y: -5,
+    transition: { duration: 0.15, ease: 'easeIn' }
   },
 };
 
@@ -164,7 +175,7 @@ export const ScaleTransition = ({ children, show }: { children: ReactNode; show:
 
 /**
  * Stagger children animation wrapper
- * Animates children in sequence
+ * Animates children in sequence with exit support
  */
 export const StaggerContainer = ({ children, className }: { children: ReactNode; className?: string }) => {
   return (
@@ -172,6 +183,7 @@ export const StaggerContainer = ({ children, className }: { children: ReactNode;
       className={className}
       initial="initial"
       animate="enter"
+      exit="exit"
       variants={staggerContainerVariants}
     >
       {children}

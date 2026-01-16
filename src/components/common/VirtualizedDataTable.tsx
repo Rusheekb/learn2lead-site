@@ -1,5 +1,5 @@
-import React, { useRef, memo } from 'react';
-import { motion } from 'framer-motion';
+import React, { useRef, memo, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import {
   Table,
@@ -25,9 +25,13 @@ const skeletonRowVariants = {
       damping: 20,
     },
   }),
+  exit: {
+    opacity: 0,
+    transition: { duration: 0.15 },
+  },
 };
 
-// Spring-based stagger animation variants for table rows
+// Spring-based stagger animation variants for table rows with exit
 const tableRowVariants = {
   hidden: { opacity: 0, y: 12 },
   visible: (i: number) => ({
@@ -40,6 +44,11 @@ const tableRowVariants = {
       damping: 25,
     },
   }),
+  exit: {
+    opacity: 0,
+    y: -8,
+    transition: { duration: 0.15, ease: 'easeIn' as const },
+  },
 };
 
 export interface ColumnDefinition<T> {
@@ -77,6 +86,8 @@ export interface VirtualizedDataTableProps<T> {
   rowHeight?: number;
   maxHeight?: number;
   virtualizationThreshold?: number;
+  /** Unique key extractor for exit animations. Falls back to row index if not provided. */
+  keyExtractor?: (item: T, index: number) => string | number;
 }
 
 const TablePagination = memo(function TablePagination({
@@ -235,8 +246,18 @@ function VirtualizedDataTable<T>({
   rowHeight = 52,
   maxHeight = 500,
   virtualizationThreshold = 50,
+  keyExtractor,
 }: VirtualizedDataTableProps<T>) {
   const shouldVirtualize = data.length > virtualizationThreshold;
+
+  // Generate stable keys for AnimatePresence
+  const getRowKey = (item: T, index: number): string | number => {
+    if (keyExtractor) return keyExtractor(item, index);
+    // Try to use common id fields as fallback
+    const itemAny = item as Record<string, unknown>;
+    if (itemAny.id) return String(itemAny.id);
+    return index;
+  };
 
   const renderContent = () => {
     if (isLoading) {
@@ -342,32 +363,36 @@ function VirtualizedDataTable<T>({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.map((row, rowIndex) => (
-                <motion.tr
-                  key={rowIndex}
-                  custom={rowIndex}
-                  initial="hidden"
-                  animate="visible"
-                  variants={tableRowVariants}
-                  whileHover={{ 
-                    backgroundColor: 'hsl(var(--muted) / 0.6)',
-                    scale: 1.005,
-                    transition: { type: 'spring' as const, stiffness: 500, damping: 30 }
-                  }}
-                  className={`border-b transition-colors data-[state=selected]:bg-muted ${onRowClick ? 'cursor-pointer' : ''}`}
-                  onClick={onRowClick ? () => onRowClick(row) : undefined}
-                >
-                  {columns.map((column, colIndex) => (
-                    <TableCell key={colIndex} className={column.className}>
-                      {column.cell
-                        ? column.cell(row)
-                        : column.accessorKey
-                        ? String(row[column.accessorKey] || '')
-                        : ''}
-                    </TableCell>
-                  ))}
-                </motion.tr>
-              ))}
+              <AnimatePresence mode="popLayout">
+                {data.map((row, rowIndex) => (
+                  <motion.tr
+                    key={getRowKey(row, rowIndex)}
+                    custom={rowIndex}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    variants={tableRowVariants}
+                    layout
+                    whileHover={{ 
+                      backgroundColor: 'hsl(var(--muted) / 0.6)',
+                      scale: 1.005,
+                      transition: { type: 'spring' as const, stiffness: 500, damping: 30 }
+                    }}
+                    className={`border-b transition-colors data-[state=selected]:bg-muted ${onRowClick ? 'cursor-pointer' : ''}`}
+                    onClick={onRowClick ? () => onRowClick(row) : undefined}
+                  >
+                    {columns.map((column, colIndex) => (
+                      <TableCell key={colIndex} className={column.className}>
+                        {column.cell
+                          ? column.cell(row)
+                          : column.accessorKey
+                          ? String(row[column.accessorKey] || '')
+                          : ''}
+                      </TableCell>
+                    ))}
+                  </motion.tr>
+                ))}
+              </AnimatePresence>
             </TableBody>
           </Table>
         </div>
