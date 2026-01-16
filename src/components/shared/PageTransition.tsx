@@ -30,7 +30,7 @@ const pageVariants: Variants = {
   },
 };
 
-// Fade with subtle scale for polished tab transitions
+// Spring-based fade with subtle scale for polished tab transitions
 const fadeVariants: Variants = {
   initial: {
     opacity: 0,
@@ -40,15 +40,16 @@ const fadeVariants: Variants = {
     opacity: 1,
     scale: 1,
     transition: {
-      duration: 0.2,
-      ease: 'easeOut',
+      type: 'spring',
+      stiffness: 300,
+      damping: 24,
     },
   },
   exit: {
     opacity: 0,
     scale: 0.98,
     transition: {
-      duration: 0.15,
+      duration: 0.12,
       ease: 'easeIn',
     },
   },
