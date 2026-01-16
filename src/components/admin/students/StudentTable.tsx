@@ -1,7 +1,7 @@
 
 import React, { memo, useMemo } from 'react';
 import VirtualizedDataTable, { ColumnDefinition } from '@/components/common/VirtualizedDataTable';
-import { Button } from '@/components/ui/button';
+import { ActionButton } from '@/components/common/ActionButton';
 import { Edit2, Trash2 } from 'lucide-react';
 
 export interface Student {
@@ -55,10 +55,10 @@ const StudentTable: React.FC<StudentTableProps> = memo(({
       header: 'Actions',
       cell: (student) => (
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon">
+          <ActionButton variant="ghost" size="icon">
             <Edit2 className="h-4 w-4" />
-          </Button>
-          <Button
+          </ActionButton>
+          <ActionButton
             variant="ghost"
             size="icon"
             onClick={(e) => {
@@ -66,8 +66,8 @@ const StudentTable: React.FC<StudentTableProps> = memo(({
               onDeleteStudent(student.id);
             }}
           >
-            <Trash2 className="h-4 w-4 text-red-500" />
-          </Button>
+            <Trash2 className="h-4 w-4 text-destructive" />
+          </ActionButton>
         </div>
       ),
     },
