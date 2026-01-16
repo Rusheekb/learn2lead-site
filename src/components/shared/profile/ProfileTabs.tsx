@@ -5,6 +5,7 @@ import { Profile } from '@/hooks/useProfile';
 import ProfileDisplay from './ProfileDisplay';
 import SettingsTab from './SettingsTab';
 import PreferencesForm from './PreferencesForm';
+import { ContentTransition } from '@/components/shared/PageTransition';
 
 interface ProfileTabsProps {
   profile: Profile;
@@ -39,28 +40,34 @@ const ProfileTabs: React.FC<ProfileTabsProps> = ({
       </TabsList>
 
       <TabsContent value="profile" className="pt-6">
-        <ProfileDisplay 
-          profile={profile}
-          isEditMode={isEditMode}
-          setIsEditMode={setIsEditMode}
-          updateProfile={updateProfile}
-        />
+        <ContentTransition transitionKey={activeTab}>
+          <ProfileDisplay 
+            profile={profile}
+            isEditMode={isEditMode}
+            setIsEditMode={setIsEditMode}
+            updateProfile={updateProfile}
+          />
+        </ContentTransition>
       </TabsContent>
 
       {showPreferences && (
         <TabsContent value="preferences" className="pt-6">
-          <PreferencesForm 
-            role={profile.role as 'student' | 'tutor'}
-            userEmail={profile.email}
-          />
+          <ContentTransition transitionKey={activeTab}>
+            <PreferencesForm 
+              role={profile.role as 'student' | 'tutor'}
+              userEmail={profile.email}
+            />
+          </ContentTransition>
         </TabsContent>
       )}
 
       <TabsContent value="settings" className="pt-6">
-        <SettingsTab 
-          profile={profile}
-          updateProfile={updateProfile}
-        />
+        <ContentTransition transitionKey={activeTab}>
+          <SettingsTab 
+            profile={profile}
+            updateProfile={updateProfile}
+          />
+        </ContentTransition>
       </TabsContent>
     </Tabs>
   );

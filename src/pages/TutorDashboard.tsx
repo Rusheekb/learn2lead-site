@@ -5,6 +5,7 @@ import TutorDashboardContent from '@/components/tutor/TutorDashboardContent';
 import TutorStudents from '@/components/tutor/TutorStudents';
 import { useQueryClient } from '@tanstack/react-query';
 import { TutorDashboardSkeleton, TableSkeleton } from '@/components/shared/skeletons';
+import { ContentTransition } from '@/components/shared/PageTransition';
 
 const TutorDashboard: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -56,7 +57,9 @@ const TutorDashboard: React.FC = () => {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      {renderContent()}
+      <ContentTransition transitionKey={activeTab}>
+        {renderContent()}
+      </ContentTransition>
     </div>
   );
 };

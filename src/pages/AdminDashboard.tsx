@@ -8,6 +8,7 @@ import { Student, Tutor } from '@/types/tutorTypes';
 import { TutorStudentAssignment } from '@/services/assignments/assignmentService';
 import { fetchTutorsWithProfileIds, fetchStudentsWithProfileIds } from '@/services/assignments/fetchService';
 import { AdminDashboardSkeleton, TableSkeleton } from '@/components/shared/skeletons';
+import { ContentTransition } from '@/components/shared/PageTransition';
 
 // Dynamically import heavy components
 const ClassLogs = lazy(() => import('@/components/admin/ClassLogs'));
@@ -139,7 +140,9 @@ const AdminDashboard: React.FC = () => {
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Admin Dashboard</h2>
       
-      {renderContent()}
+      <ContentTransition transitionKey={activeTab}>
+        {renderContent()}
+      </ContentTransition>
       
       <UserDetailModal user={selectedUser} onClose={() => setSelectedUser(null)} />
     </div>
