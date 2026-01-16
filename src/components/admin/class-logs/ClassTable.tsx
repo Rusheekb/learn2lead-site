@@ -4,6 +4,7 @@ import DataTable, { ColumnDefinition } from '@/components/common/DataTable';
 import { format } from 'date-fns';
 import { CircleMessageBadge } from '@/components/shared/ClassBadges';
 import { Button } from '@/components/ui/button';
+import { ActionButton } from '@/components/common/ActionButton';
 import { ClassEvent } from '@/types/tutorTypes';
 import { formatTimeRange } from '@/utils/dateTimeUtils';
 import { parseDateToLocal } from '@/utils/safeDateUtils';
@@ -131,9 +132,9 @@ const ClassTable: React.FC<ClassTableProps> = ({
     {
       header: 'Actions',
       cell: (cls) => (
-        <Button variant="ghost" size="sm" className="hover:bg-muted">
+        <ActionButton variant="ghost" size="sm">
           View Details
-        </Button>
+        </ActionButton>
       ),
     },
   ];
