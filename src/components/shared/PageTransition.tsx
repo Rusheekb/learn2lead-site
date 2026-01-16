@@ -30,13 +30,15 @@ const pageVariants: Variants = {
   },
 };
 
-// Fade-only variant for smoother tab transitions
+// Fade with subtle scale for polished tab transitions
 const fadeVariants: Variants = {
   initial: {
     opacity: 0,
+    scale: 0.98,
   },
   enter: {
     opacity: 1,
+    scale: 1,
     transition: {
       duration: 0.2,
       ease: 'easeOut',
@@ -44,6 +46,7 @@ const fadeVariants: Variants = {
   },
   exit: {
     opacity: 0,
+    scale: 0.98,
     transition: {
       duration: 0.15,
       ease: 'easeIn',
