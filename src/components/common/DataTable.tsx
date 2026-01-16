@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { motion } from 'framer-motion';
 import {
   Table,
   TableBody,
@@ -11,6 +12,20 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
+
+// Stagger animation variants for table rows
+const tableRowVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      delay: i * 0.03,
+      duration: 0.2,
+      ease: [0.25, 0.1, 0.25, 1] as const,
+    },
+  }),
+};
 
 export interface TablePaginationProps {
   currentPage: number;
@@ -167,9 +182,13 @@ function DataTable<T>({
             </TableHeader>
             <TableBody>
               {data.map((row, rowIndex) => (
-                <TableRow
+                <motion.tr
                   key={rowIndex}
-                  className={onRowClick ? "cursor-pointer hover:bg-muted/60" : ""}
+                  custom={rowIndex}
+                  initial="hidden"
+                  animate="visible"
+                  variants={tableRowVariants}
+                  className={`border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted ${onRowClick ? "cursor-pointer hover:bg-muted/60" : ""}`}
                   onClick={onRowClick ? () => onRowClick(row) : undefined}
                 >
                   {columns.map((column, colIndex) => (
@@ -181,7 +200,7 @@ function DataTable<T>({
                         : ''}
                     </TableCell>
                   ))}
-                </TableRow>
+                </motion.tr>
               ))}
             </TableBody>
           </Table>
