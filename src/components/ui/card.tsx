@@ -4,27 +4,47 @@ import { motion, HTMLMotionProps } from 'framer-motion';
 
 interface CardProps extends Omit<HTMLMotionProps<'div'>, 'ref'> {
   interactive?: boolean;
+  hoverEffect?: 'lift' | 'glow' | 'scale' | 'none';
 }
 
+// Enhanced shadow values using CSS custom properties for theming
+const hoverEffects = {
+  lift: {
+    y: -8,
+    scale: 1.02,
+    boxShadow: '0 20px 40px -12px hsl(var(--foreground) / 0.15), 0 12px 20px -8px hsl(var(--foreground) / 0.1)',
+  },
+  glow: {
+    scale: 1.01,
+    boxShadow: '0 0 30px -5px hsl(var(--primary) / 0.3), 0 10px 20px -10px hsl(var(--foreground) / 0.1)',
+  },
+  scale: {
+    scale: 1.03,
+    boxShadow: '0 15px 30px -10px hsl(var(--foreground) / 0.12)',
+  },
+  none: {},
+};
+
 const Card = React.forwardRef<HTMLDivElement, CardProps>(
-  ({ className, interactive = false, ...props }, ref) => (
+  ({ className, interactive = false, hoverEffect = 'lift', ...props }, ref) => (
     <motion.div
       ref={ref}
       className={cn(
-        'rounded-lg border bg-card text-card-foreground shadow-sm',
+        'rounded-lg border bg-card text-card-foreground shadow-sm transition-colors',
         interactive && 'cursor-pointer',
         className
       )}
+      initial={{ 
+        boxShadow: '0 1px 3px 0 hsl(var(--foreground) / 0.05), 0 1px 2px -1px hsl(var(--foreground) / 0.05)' 
+      }}
       whileHover={
         interactive
           ? {
-              y: -4,
-              boxShadow:
-                '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+              ...hoverEffects[hoverEffect],
               transition: {
                 type: 'spring',
-                stiffness: 400,
-                damping: 25,
+                stiffness: 300,
+                damping: 20,
               },
             }
           : undefined
@@ -33,10 +53,11 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
         interactive
           ? {
               scale: 0.98,
+              y: 0,
               transition: {
                 type: 'spring',
-                stiffness: 400,
-                damping: 25,
+                stiffness: 500,
+                damping: 30,
               },
             }
           : undefined
