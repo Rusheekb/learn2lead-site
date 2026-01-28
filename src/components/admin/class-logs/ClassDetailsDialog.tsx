@@ -65,124 +65,128 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
 
   return (
     <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>{selectedClass?.title}</DialogTitle>
-        </DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[90vh]">
+        <div className="flex flex-col h-full max-h-[calc(90vh-4rem)]">
+          <DialogHeader className="flex-shrink-0">
+            <DialogTitle>{selectedClass?.title}</DialogTitle>
+          </DialogHeader>
 
-        <Tabs value={activeDetailsTab} onValueChange={setActiveDetailsTab}>
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="details">Class Details</TabsTrigger>
-            <TabsTrigger value="materials">Materials</TabsTrigger>
-            <TabsTrigger value="student-content">
-              Student Content
-            </TabsTrigger>
-          </TabsList>
+          <div className="flex-1 overflow-y-auto py-4">
+            <Tabs value={activeDetailsTab} onValueChange={setActiveDetailsTab}>
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="details">Class Details</TabsTrigger>
+                <TabsTrigger value="materials">Materials</TabsTrigger>
+                <TabsTrigger value="student-content">
+                  Student Content
+                </TabsTrigger>
+              </TabsList>
 
-          <TabsContent value="details" className="space-y-4 pt-4">
-            <div className="space-y-3">
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground">Subject</h4>
-                <p className="text-foreground">{selectedClass.subject}</p>
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground">Tutor</h4>
-                <p className="text-foreground">{selectedClass.tutorName}</p>
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground">Student</h4>
-                <p className="text-foreground">{selectedClass.studentName}</p>
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground">Date</h4>
-                <p className="text-foreground">{formatDate(selectedClass.date)}</p>
-              </div>
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground">Time</h4>
-                <p className="text-foreground">
-                  {formatTime(selectedClass.startTime)} -{' '}
-                  {formatTime(selectedClass.endTime)}
-                </p>
-              </div>
-            </div>
+              <TabsContent value="details" className="space-y-4 pt-4">
+                <div className="space-y-3">
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground">Subject</h4>
+                    <p className="text-foreground">{selectedClass.subject}</p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground">Tutor</h4>
+                    <p className="text-foreground">{selectedClass.tutorName}</p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground">Student</h4>
+                    <p className="text-foreground">{selectedClass.studentName}</p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground">Date</h4>
+                    <p className="text-foreground">{formatDate(selectedClass.date)}</p>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground">Time</h4>
+                    <p className="text-foreground">
+                      {formatTime(selectedClass.startTime)} -{' '}
+                      {formatTime(selectedClass.endTime)}
+                    </p>
+                  </div>
+                </div>
 
-            {selectedClass.zoomLink && (
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground">Zoom Link</h4>
-                <a
-                  href={selectedClass.zoomLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline"
-                >
-                  {selectedClass.zoomLink}
-                </a>
-              </div>
-            )}
+                {selectedClass.zoomLink && (
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground">Zoom Link</h4>
+                    <a
+                      href={selectedClass.zoomLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline"
+                    >
+                      {selectedClass.zoomLink}
+                    </a>
+                  </div>
+                )}
 
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground">Content Covered</h4>
-              <p className="mt-1 text-foreground whitespace-pre-wrap">
-                {selectedClass.content || 'No content recorded for this class.'}
-              </p>
-            </div>
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground">Content Covered</h4>
+                  <p className="mt-1 text-foreground whitespace-pre-wrap">
+                    {selectedClass.content || 'No content recorded for this class.'}
+                  </p>
+                </div>
 
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground">Homework / Follow-up</h4>
-              <p className="mt-1 text-foreground whitespace-pre-wrap">
-                {selectedClass.homework || 'No homework assigned.'}
-              </p>
-            </div>
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground">Homework / Follow-up</h4>
+                  <p className="mt-1 text-foreground whitespace-pre-wrap">
+                    {selectedClass.homework || 'No homework assigned.'}
+                  </p>
+                </div>
 
-            {selectedClass.notes && (
-              <div>
-                <h4 className="text-sm font-medium text-muted-foreground">Additional Notes</h4>
-                <p className="mt-1 text-foreground whitespace-pre-wrap">
-                  {selectedClass.notes}
-                </p>
-              </div>
-            )}
-          </TabsContent>
+                {selectedClass.notes && (
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground">Additional Notes</h4>
+                    <p className="mt-1 text-foreground whitespace-pre-wrap">
+                      {selectedClass.notes}
+                    </p>
+                  </div>
+                )}
+              </TabsContent>
 
-          <TabsContent value="materials" className="space-y-4 pt-4">
-            <div>
-              <h4 className="text-sm font-medium text-muted-foreground">Class Materials</h4>
-              {selectedClass.materialsUrl && selectedClass.materialsUrl.length > 0 ? (
-                <ul className="mt-2 space-y-2">
-                  {selectedClass.materialsUrl.map((url: string, index: number) => (
-                    <li key={index} className="p-2 border border-border rounded-md">
-                      <a
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-primary hover:underline flex items-center gap-1"
-                      >
-                        <span>{getFilenameFromUrl(url)}</span>
-                        <ExternalLink className="h-3 w-3" />
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-muted-foreground mt-2">No materials uploaded for this class.</p>
-              )}
-            </div>
-          </TabsContent>
+              <TabsContent value="materials" className="space-y-4 pt-4">
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground">Class Materials</h4>
+                  {selectedClass.materialsUrl && selectedClass.materialsUrl.length > 0 ? (
+                    <ul className="mt-2 space-y-2">
+                      {selectedClass.materialsUrl.map((url: string, index: number) => (
+                        <li key={index} className="p-2 border border-border rounded-md">
+                          <a
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline flex items-center gap-1"
+                          >
+                            <span>{getFilenameFromUrl(url)}</span>
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="text-muted-foreground mt-2">No materials uploaded for this class.</p>
+                  )}
+                </div>
+              </TabsContent>
 
-          <TabsContent value="student-content" className="space-y-4 pt-4">
-            <StudentContent
-              classId={selectedClass.id}
-              uploads={studentUploads}
-              onDownload={handleDownloadFile}
-            />
-          </TabsContent>
-        </Tabs>
+              <TabsContent value="student-content" className="space-y-4 pt-4">
+                <StudentContent
+                  classId={selectedClass.id}
+                  uploads={studentUploads}
+                  onDownload={handleDownloadFile}
+                />
+              </TabsContent>
+            </Tabs>
+          </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setIsDetailsOpen(false)}>
-            Close
-          </Button>
-        </DialogFooter>
+          <DialogFooter className="flex-shrink-0 pt-4 border-t">
+            <Button variant="outline" onClick={() => setIsDetailsOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );
