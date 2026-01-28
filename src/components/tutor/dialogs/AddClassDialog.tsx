@@ -186,14 +186,14 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="max-w-3xl px-8 bg-white text-gray-900 border">
-        <div className="py-2">
-          <h2 className="text-lg font-semibold">Schedule New Class</h2>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto px-4 sm:px-8 bg-white text-gray-900 border">
+        <div className="py-2 flex flex-col max-h-[calc(90vh-4rem)]">
+          <h2 className="text-lg font-semibold flex-shrink-0">Schedule New Class</h2>
           
           {isLoading ? (
             <div className="py-8 sm:py-12 text-center text-lg">Loading student data...</div>
           ) : (
-            <div className="py-4 sm:py-6 px-3 sm:px-6">
+            <div className="flex-1 overflow-y-auto py-4 sm:py-6 px-3 sm:px-6">
               <NewClassEventForm
                 newEvent={newEvent}
                 setNewEvent={setNewEvent}
@@ -201,7 +201,7 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
                 onStudentSelect={handleStudentChange}
               />
               
-              <div className="flex justify-end space-x-2 mt-6">
+              <div className="flex justify-end space-x-2 mt-6 sticky bottom-0 bg-white py-4 border-t -mx-3 sm:-mx-6 px-3 sm:px-6">
                 <Button variant="outline" onClick={handleCancel}>Cancel</Button>
                 <Button onClick={handleSubmit} disabled={isSubmitting}>
                   {isSubmitting ? 'Creating...' : 'Schedule Class'}
