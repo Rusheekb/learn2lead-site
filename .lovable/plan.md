@@ -1,51 +1,88 @@
 
-Goal
-- Recenter the “Schedule New Class” modal (and any other dialogs) so it appears truly centered instead of shifted down/right (bottom-right look), while keeping the new scroll/sticky-footer behavior safe.
 
-What’s actually causing the “bottom-right” positioning
-- Our Radix DialogContent is centered using Tailwind’s `translate-x-[-50%] translate-y-[-50%]`.
-- But we also wrapped DialogContent in a `framer-motion` `motion.div` to animate scale/y/opacity.
-- Framer Motion writes an inline `transform:` style for animations. Inline `transform` overrides Tailwind’s `transform` (which is where translate-x/y live).
-- Result: the `left: 50%` and `top: 50%` remain, but the `translate(-50%, -50%)` is effectively removed, so the dialog’s top-left ends up at the center of the screen → visually shifted down/right, often appearing “stuck” bottom-right on large modals.
+# Fix: Notes Textarea Appearing Below Buttons
 
-Why the previous AddClassDialog change didn’t fix centering
-- The AddClassDialog changes (max height + internal scroll + sticky footer) fixed the “content off-screen / can’t reach buttons” problem.
-- But centering is broken at a lower layer: the shared `src/components/ui/dialog.tsx` component used everywhere.
+## Problem Identified
 
-Safe fix strategy (minimal, global, correct)
-- Fix the shared `DialogContent` centering in `src/components/ui/dialog.tsx` so Framer Motion animations no longer erase the `translate(-50%, -50%)`.
-- Keep the AddClassDialog scroll/sticky-footer improvements as-is.
+The current layout has **two conflicting scroll containers**:
+1. `DialogContent` has `overflow-y-auto max-h-[90vh]`
+2. The inner form wrapper also has `overflow-y-auto`
 
-Implementation details (what will be changed)
-1) Update `src/components/ui/dialog.tsx` (DialogContent)
-   - Keep `fixed left-1/2 top-1/2` positioning.
-   - Remove Tailwind `translate-x-[-50%] translate-y-[-50%]` from the class list (since Framer Motion will override transform anyway).
-   - Add a Framer Motion `transformTemplate` to permanently prepend `translate(-50%, -50%)` to the animation-generated transform string:
-     - This ensures we always get centering translate + animated scale/y, rather than one overriding the other.
-   - Result: The dialog is properly centered, and animations still work.
+This creates a situation where:
+- The sticky footer buttons don't stick correctly
+- The Notes textarea (which is at the bottom of the form) appears below the button area
+- Scrolling behavior is unpredictable
 
-2) Verify no regressions
-   - Check other dialogs that use `DialogContent` (ViewClassDialog, upload dialogs, admin dialogs).
-   - Ensure the close button positioning remains correct (it’s absolutely positioned within the dialog).
-   - Ensure the AddClassDialog still scrolls properly and the sticky footer remains visible.
+## Solution
 
-Testing checklist (how we’ll confirm it’s fixed)
-- Desktop:
-  - Open “Schedule New Class” on tutor dashboard: modal appears centered (not bottom-right).
-  - Resize window shorter height: modal remains centered; internal content scrolls; footer stays visible.
-- Mobile/smaller view:
-  - Open the same modal: still centered; content scroll works.
-- Spot-check other dialogs:
-  - Open ViewClassDialog or any other dialog: centered correctly.
+Restructure the layout so there is only ONE scroll container (the form area), with the buttons in a truly fixed footer OUTSIDE the scrollable region.
 
-Potential edge cases and mitigations
-- If any dialog relied on custom transform classes passed via `className`, we’ll verify and (if needed) document that transforms should be avoided on DialogContent itself. In practice, dialogs usually customize width/padding, not transforms.
-- If Radix presence/unmount affects exit animations: this change doesn’t alter mounting behavior; it only changes how transforms are composed.
+### Layout Structure
 
-Files involved
-- Primary fix: `src/components/ui/dialog.tsx`
-- No further changes required to `src/components/tutor/dialogs/AddClassDialog.tsx` beyond what’s already done (unless testing reveals a minor spacing tweak).
+```text
+DialogContent (no overflow - just max-height)
+  +-- Header (fixed, non-scrolling)
+  |     "Schedule New Class"
+  +-- Scrollable Form Container (overflow-y-auto, flex-1)
+  |     NewClassEventForm (all fields including Notes)
+  +-- Footer (fixed, non-scrolling)
+        Cancel | Schedule Class buttons
+```
 
-Outcome
-- All Radix DialogContent modals will be centered correctly across the app.
-- The “Schedule New Class” dialog will be centered and remain usable on smaller screens with scrolling + sticky actions preserved.
+### Changes to AddClassDialog.tsx
+
+**Line 189** - Remove overflow from DialogContent:
+```text
+Before: className="max-w-3xl max-h-[90vh] overflow-y-auto px-4 sm:px-8 ..."
+After:  className="max-w-3xl max-h-[90vh] px-4 sm:px-8 ..."
+```
+
+**Lines 190-211** - Restructure the content layout:
+```text
+<div className="flex flex-col h-full max-h-[calc(90vh-4rem)]">
+  {/* Fixed Header */}
+  <h2 className="text-lg font-semibold py-2 flex-shrink-0">
+    Schedule New Class
+  </h2>
+  
+  {isLoading ? (
+    <div className="py-12 text-center">Loading student data...</div>
+  ) : (
+    <>
+      {/* Scrollable Form Area */}
+      <div className="flex-1 overflow-y-auto py-4 px-1">
+        <NewClassEventForm ... />
+      </div>
+      
+      {/* Fixed Footer - Outside scroll container */}
+      <div className="flex-shrink-0 flex justify-end space-x-2 pt-4 border-t bg-white">
+        <Button variant="outline">Cancel</Button>
+        <Button>Schedule Class</Button>
+      </div>
+    </>
+  )}
+</div>
+```
+
+Key improvements:
+- **Single scroll container**: Only the form area scrolls
+- **Fixed footer**: Buttons are outside the scroll area with `flex-shrink-0`
+- **Proper flex layout**: Uses `h-full` and flex to properly distribute space
+- **No sticky positioning**: Buttons don't need sticky since they're outside the scroll container
+
+## Technical Details
+
+### Why sticky wasn't working
+The `sticky bottom-0` approach requires:
+1. A single, direct parent with overflow scroll
+2. Enough height constraint on that parent
+
+With nested overflow containers, sticky positioning breaks because the element sticks to the wrong scroll boundary.
+
+### Files to Modify
+- `src/components/tutor/dialogs/AddClassDialog.tsx` - restructure the dialog content layout
+
+### No changes needed to
+- `src/components/ui/dialog.tsx` - centering fix is correct
+- `src/components/tutor/NewClassEventForm.tsx` - form fields order is correct
+
