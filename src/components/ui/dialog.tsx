@@ -100,8 +100,11 @@ const DialogContent = React.forwardRef<
         animate="visible"
         exit="exit"
         variants={contentVariants}
+        transformTemplate={({ scale, y }) => 
+          `translate(-50%, -50%) scale(${scale ?? 1}) translateY(${y ?? 0})`
+        }
         className={cn(
-          'fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background px-4 sm:px-8 py-6 sm:py-8 shadow-lg sm:rounded-lg overflow-y-auto max-h-[95vh]',
+          'fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg gap-4 border bg-background px-4 sm:px-8 py-6 sm:py-8 shadow-lg sm:rounded-lg overflow-y-auto max-h-[95vh]',
           className
         )}
       >
