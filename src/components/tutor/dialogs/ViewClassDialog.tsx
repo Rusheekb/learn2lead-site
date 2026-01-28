@@ -114,61 +114,67 @@ const ViewClassDialog: React.FC<ViewClassDialogProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="max-w-full sm:max-w-lg md:max-w-2xl lg:max-w-3xl px-4 sm:px-8 w-[calc(100vw-2rem)] sm:w-auto">
-        <DialogHeader className="flex flex-row items-center justify-between">
-          <DialogTitle className="text-xl sm:text-2xl break-words pr-8">{selectedEvent?.title}</DialogTitle>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <MoreVertical className="h-4 w-4" />
+    <>
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="max-w-full sm:max-w-lg md:max-w-2xl lg:max-w-3xl max-h-[90vh] px-4 sm:px-8 w-[calc(100vw-2rem)] sm:w-auto">
+          <div className="flex flex-col h-full max-h-[calc(90vh-4rem)]">
+            <DialogHeader className="flex flex-row items-center justify-between flex-shrink-0">
+              <DialogTitle className="text-xl sm:text-2xl break-words pr-8">{selectedEvent?.title}</DialogTitle>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="min-w-[180px]">
+                  <DropdownMenuItem onClick={handleEdit}>
+                    <Edit2 className="h-4 w-4 mr-2" />
+                    Edit Class
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onDuplicateEvent(selectedEvent)}>
+                    <Copy className="h-4 w-4 mr-2" />
+                    Duplicate Class
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="text-red-600"
+                    onClick={() => handleDelete(false)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Class
+                  </DropdownMenuItem>
+                  {selectedEvent.recurring && (
+                    <DropdownMenuItem
+                      className="text-red-600"
+                      onClick={() => handleDelete(true)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete All Recurring
+                    </DropdownMenuItem>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </DialogHeader>
+
+            <div className="flex-1 overflow-y-auto py-4">
+              <ClassEventDetails
+                selectedEvent={eventWithFormattedDate}
+                studentUploads={studentUploads}
+                onDownloadFile={onDownloadFile}
+                onViewFile={onViewFile}
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                refreshEvent={refreshEvent}
+              />
+            </div>
+
+            <DialogFooter className="flex-shrink-0 pt-4 border-t">
+              <Button variant="outline" onClick={() => setIsOpen(false)} className="w-full sm:w-auto">
+                Close
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="min-w-[180px]">
-              <DropdownMenuItem onClick={handleEdit}>
-                <Edit2 className="h-4 w-4 mr-2" />
-                Edit Class
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onDuplicateEvent(selectedEvent)}>
-                <Copy className="h-4 w-4 mr-2" />
-                Duplicate Class
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-red-600"
-                onClick={() => handleDelete(false)}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete Class
-              </DropdownMenuItem>
-              {selectedEvent.recurring && (
-                <DropdownMenuItem
-                  className="text-red-600"
-                  onClick={() => handleDelete(true)}
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete All Recurring
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </DialogHeader>
-
-        <ClassEventDetails
-          selectedEvent={eventWithFormattedDate}
-          studentUploads={studentUploads}
-          onDownloadFile={onDownloadFile}
-          onViewFile={onViewFile}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          refreshEvent={refreshEvent}
-        />
-
-        <DialogFooter className="mt-4 sm:mt-6">
-          <Button variant="outline" onClick={() => setIsOpen(false)} className="w-full sm:w-auto">
-            Close
-          </Button>
-        </DialogFooter>
-      </DialogContent>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <EditClassDialog
         isOpen={isEditDialogOpen}
@@ -191,7 +197,7 @@ const ViewClassDialog: React.FC<ViewClassDialogProps> = ({
         variant="destructive"
         isLoading={isDeleting}
       />
-    </Dialog>
+    </>
   );
 };
 

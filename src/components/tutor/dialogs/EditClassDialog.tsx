@@ -152,109 +152,111 @@ const EditClassDialog: React.FC<EditClassDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Edit Class</DialogTitle>
-        </DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[90vh]">
+        <div className="flex flex-col h-full max-h-[calc(90vh-4rem)]">
+          <DialogHeader className="flex-shrink-0">
+            <DialogTitle>Edit Class</DialogTitle>
+          </DialogHeader>
 
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="title">Class Title *</Label>
-            <Input
-              id="title"
-              value={formData.title}
-              onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-              placeholder="Enter class title"
-              className={errors.title ? 'border-red-500' : ''}
-            />
-            {errors.title && <p className="text-sm text-red-500 mt-1">{errors.title}</p>}
-          </div>
+          <div className="flex-1 overflow-y-auto py-4 space-y-4">
+            <div>
+              <Label htmlFor="title">Class Title *</Label>
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="Enter class title"
+                className={errors.title ? 'border-red-500' : ''}
+              />
+              {errors.title && <p className="text-sm text-red-500 mt-1">{errors.title}</p>}
+            </div>
 
-          <div>
-            <Label>Date *</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start text-left font-normal"
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {format(formData.date, 'PPP')}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={formData.date}
-                  onSelect={(date) => date && setFormData(prev => ({ ...prev, date }))}
-                  initialFocus
+            <div>
+              <Label>Date *</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start text-left font-normal"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {format(formData.date, 'PPP')}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={formData.date}
+                    onSelect={(date) => date && setFormData(prev => ({ ...prev, date }))}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="startTime">Start Time *</Label>
+                <Input
+                  id="startTime"
+                  type="time"
+                  value={formData.startTime}
+                  onChange={(e) => setFormData(prev => ({ ...prev, startTime: e.target.value }))}
+                  className={errors.startTime ? 'border-red-500' : ''}
                 />
-              </PopoverContent>
-            </Popover>
-          </div>
+                {errors.startTime && <p className="text-sm text-red-500 mt-1">{errors.startTime}</p>}
+              </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="startTime">Start Time *</Label>
-              <Input
-                id="startTime"
-                type="time"
-                value={formData.startTime}
-                onChange={(e) => setFormData(prev => ({ ...prev, startTime: e.target.value }))}
-                className={errors.startTime ? 'border-red-500' : ''}
-              />
-              {errors.startTime && <p className="text-sm text-red-500 mt-1">{errors.startTime}</p>}
+              <div>
+                <Label htmlFor="endTime">End Time *</Label>
+                <Input
+                  id="endTime"
+                  type="time"
+                  value={formData.endTime}
+                  onChange={(e) => setFormData(prev => ({ ...prev, endTime: e.target.value }))}
+                  className={errors.endTime ? 'border-red-500' : ''}
+                />
+                {errors.endTime && <p className="text-sm text-red-500 mt-1">{errors.endTime}</p>}
+              </div>
             </div>
 
             <div>
-              <Label htmlFor="endTime">End Time *</Label>
+              <Label htmlFor="subject">Subject *</Label>
               <Input
-                id="endTime"
-                type="time"
-                value={formData.endTime}
-                onChange={(e) => setFormData(prev => ({ ...prev, endTime: e.target.value }))}
-                className={errors.endTime ? 'border-red-500' : ''}
+                id="subject"
+                value={formData.subject}
+                onChange={(e) => setFormData(prev => ({ ...prev, subject: e.target.value }))}
+                placeholder="Enter subject"
+                className={errors.subject ? 'border-red-500' : ''}
               />
-              {errors.endTime && <p className="text-sm text-red-500 mt-1">{errors.endTime}</p>}
+              {errors.subject && <p className="text-sm text-red-500 mt-1">{errors.subject}</p>}
+            </div>
+
+            <div>
+              <Label htmlFor="zoomLink">Zoom Link</Label>
+              <Input
+                id="zoomLink"
+                value={formData.zoomLink}
+                onChange={(e) => setFormData(prev => ({ ...prev, zoomLink: e.target.value }))}
+                placeholder="https://zoom.us/..."
+                className={errors.zoomLink ? 'border-red-500' : ''}
+              />
+              {errors.zoomLink && <p className="text-sm text-red-500 mt-1">{errors.zoomLink}</p>}
+            </div>
+
+            <div>
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea
+                id="notes"
+                value={formData.notes}
+                onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                placeholder="Additional notes..."
+                rows={3}
+              />
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="subject">Subject *</Label>
-            <Input
-              id="subject"
-              value={formData.subject}
-              onChange={(e) => setFormData(prev => ({ ...prev, subject: e.target.value }))}
-              placeholder="Enter subject"
-              className={errors.subject ? 'border-red-500' : ''}
-            />
-            {errors.subject && <p className="text-sm text-red-500 mt-1">{errors.subject}</p>}
-          </div>
-
-          <div>
-            <Label htmlFor="zoomLink">Zoom Link</Label>
-            <Input
-              id="zoomLink"
-              value={formData.zoomLink}
-              onChange={(e) => setFormData(prev => ({ ...prev, zoomLink: e.target.value }))}
-              placeholder="https://zoom.us/..."
-              className={errors.zoomLink ? 'border-red-500' : ''}
-            />
-            {errors.zoomLink && <p className="text-sm text-red-500 mt-1">{errors.zoomLink}</p>}
-          </div>
-
-          <div>
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea
-              id="notes"
-              value={formData.notes}
-              onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-              placeholder="Additional notes..."
-              rows={3}
-            />
-          </div>
-
-          <div className="flex justify-end gap-2 pt-4">
+          <div className="flex-shrink-0 flex justify-end gap-2 pt-4 border-t">
             <Button
               variant="outline"
               onClick={handleCancel}

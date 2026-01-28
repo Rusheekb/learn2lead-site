@@ -250,211 +250,218 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
 
   if (!classSession) return null;
 
+  const formatDate = (date: string | Date) => format(parseDateToLocal(date), 'EEEE, MMMM d, yyyy');
+  const onClose = () => onOpenChange(false);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <CalendarIcon className="h-5 w-5" />
-            {classSession.title}
-          </DialogTitle>
-        </DialogHeader>
+      <DialogContent className="max-w-3xl max-h-[90vh]">
+        <div className="flex flex-col h-full max-h-[calc(90vh-4rem)]">
+          <DialogHeader className="flex-shrink-0">
+            <DialogTitle className="flex items-center gap-2">
+              <CalendarIcon className="h-5 w-5" />
+              {classSession.title}
+            </DialogTitle>
+          </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="details">Class Details</TabsTrigger>
-            <TabsTrigger value="materials">Materials & Uploads</TabsTrigger>
-          </TabsList>
+          <div className="flex-1 overflow-y-auto py-4">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="details">Class Details</TabsTrigger>
+                <TabsTrigger value="materials">Materials & Uploads</TabsTrigger>
+              </TabsList>
 
-          <TabsContent value="details" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-3">
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <User className="h-4 w-4 mr-2" />
-                  <span>Tutor: {classSession.tutorName}</span>
-                </div>
-                
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <CalendarIcon className="h-4 w-4 mr-2" />
-                  <span>
-                    {format(parseDateToLocal(classSession.date), 'EEEE, MMMM d, yyyy')}
-                  </span>
-                </div>
-
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <Clock className="h-4 w-4 mr-2" />
-                  <span>
-                    {formatTime(classSession.startTime)} - {formatTime(classSession.endTime)}
-                  </span>
-                </div>
-
-                {classSession.recurring && (
-                  <div className="flex items-center">
-                    <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
-                      Recurring Class
-                    </span>
-                    {classSession.recurringDays && (
-                      <span className="text-xs text-muted-foreground ml-2">
-                        Every {classSession.recurringDays.join(', ')}
+              <TabsContent value="details" className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      <User className="h-4 w-4 mr-2" />
+                      <span>Tutor: {classSession.tutorName}</span>
+                    </div>
+                    
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      <CalendarIcon className="h-4 w-4 mr-2" />
+                      <span>
+                        {formatDate(classSession.date)}
                       </span>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-3">
-                {classSession.zoomLink && (
-                  <Button
-                    className="w-full"
-                    asChild
-                  >
-                    <a href={classSession.zoomLink} target="_blank" rel="noopener noreferrer">
-                      <Video className="h-4 w-4 mr-2" />
-                      Join Class
-                    </a>
-                  </Button>
-                )}
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="materials" className="space-y-4">
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h4 className="text-lg font-medium">Class Materials</h4>
-                <StudentFileUpload
-                  classId={classSession.id}
-                  onUpload={handleUpload}
-                />
-              </div>
-
-              {loading ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  Loading materials...
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {/* Tutor Materials */}
-                  {tutorMaterials.length > 0 && (
-                    <div>
-                      <h5 className="text-md font-medium mb-3 text-primary">
-                        📚 Tutor Materials
-                      </h5>
-                      <div className="space-y-3">
-                        {tutorMaterials.map((url, index) => (
-                          <div
-                            key={index}
-                            className="flex items-center justify-between p-3 border rounded-lg bg-accent/20"
-                          >
-                            <div className="flex items-center space-x-3">
-                              <FileText className="h-5 w-5 text-primary" />
-                              <div>
-                                <p className="font-medium">{getFilenameFromUrl(url)}</p>
-                                <p className="text-sm text-muted-foreground">
-                                  Provided by tutor
-                                </p>
-                              </div>
-                            </div>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              asChild
-                            >
-                              <a href={url} target="_blank" rel="noopener noreferrer">
-                                <Download className="h-4 w-4 mr-1" />
-                                View
-                              </a>
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
                     </div>
-                  )}
 
-                  {/* Student Uploads */}
-                  <div>
-                    <h5 className="text-md font-medium mb-3 text-secondary-foreground">
-                      📁 Student Uploads
-                    </h5>
-                    {uploads.length === 0 ? (
-                      <div className="text-center py-6 text-muted-foreground border rounded-lg bg-muted/20">
-                        <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                        <p>No student materials uploaded yet</p>
-                        <p className="text-sm">Use the upload button above to add files</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {uploads.map((upload) => (
-                          <div
-                            key={upload.id}
-                            className="flex items-center justify-between p-3 border rounded-lg bg-card"
-                          >
-                            <div className="flex items-center space-x-3">
-                              <FileText className="h-5 w-5 text-muted-foreground" />
-                              <div>
-                                <p className="font-medium">{upload.fileName}</p>
-                                <p className="text-sm text-muted-foreground">
-                                  {upload.fileSize} • Uploaded on {format(new Date(upload.uploadDate), 'MMM d, yyyy')}
-                                </p>
-                                {upload.note && (
-                                  <p className="text-sm text-muted-foreground italic">
-                                    Note: {upload.note}
-                                  </p>
-                                )}
-                              </div>
-                            </div>
-                            <div className="flex space-x-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleView(upload)}
-                              >
-                                <Eye className="h-4 w-4 mr-1" />
-                                View
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleDownload(upload)}
-                              >
-                                <Download className="h-4 w-4 mr-1" />
-                                Download
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleDelete(upload)}
-                                className="text-destructive hover:text-destructive-foreground hover:bg-destructive"
-                              >
-                                <Trash2 className="h-4 w-4 mr-1" />
-                                Delete
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
+                    <div className="flex items-center text-sm text-muted-foreground">
+                      <Clock className="h-4 w-4 mr-2" />
+                      <span>
+                        {formatTime(classSession.startTime)} - {formatTime(classSession.endTime)}
+                      </span>
+                    </div>
+
+                    {classSession.recurring && (
+                      <div className="flex items-center">
+                        <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
+                          Recurring Class
+                        </span>
+                        {classSession.recurringDays && (
+                          <span className="text-xs text-muted-foreground ml-2">
+                            Every {classSession.recurringDays.join(', ')}
+                          </span>
+                        )}
                       </div>
                     )}
                   </div>
 
-                  {/* No materials at all */}
-                  {tutorMaterials.length === 0 && uploads.length === 0 && (
+                  <div className="space-y-3">
+                    {classSession.zoomLink && (
+                      <Button
+                        className="w-full"
+                        asChild
+                      >
+                        <a href={classSession.zoomLink} target="_blank" rel="noopener noreferrer">
+                          <Video className="h-4 w-4 mr-2" />
+                          Join Class
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="materials" className="space-y-4">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h4 className="text-lg font-medium">Class Materials</h4>
+                    <StudentFileUpload
+                      classId={classSession.id}
+                      onUpload={handleUpload}
+                    />
+                  </div>
+
+                  {loading ? (
                     <div className="text-center py-8 text-muted-foreground">
-                      <FileText className="w-10 h-10 mx-auto mb-2 opacity-50" />
-                      <p>No materials available for this class yet</p>
-                      <p className="text-sm">Your tutor may add materials before class starts</p>
+                      Loading materials...
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      {/* Tutor Materials */}
+                      {tutorMaterials.length > 0 && (
+                        <div>
+                          <h5 className="text-md font-medium mb-3 text-primary">
+                            📚 Tutor Materials
+                          </h5>
+                          <div className="space-y-3">
+                            {tutorMaterials.map((url, index) => (
+                              <div
+                                key={index}
+                                className="flex items-center justify-between p-3 border rounded-lg bg-accent/20"
+                              >
+                                <div className="flex items-center space-x-3">
+                                  <FileText className="h-5 w-5 text-primary" />
+                                  <div>
+                                    <p className="font-medium">{getFilenameFromUrl(url)}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                      Provided by tutor
+                                    </p>
+                                  </div>
+                                </div>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  asChild
+                                >
+                                  <a href={url} target="_blank" rel="noopener noreferrer">
+                                    <Download className="h-4 w-4 mr-1" />
+                                    View
+                                  </a>
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Student Uploads */}
+                      <div>
+                        <h5 className="text-md font-medium mb-3 text-secondary-foreground">
+                          📁 Student Uploads
+                        </h5>
+                        {uploads.length === 0 ? (
+                          <div className="text-center py-6 text-muted-foreground border rounded-lg bg-muted/20">
+                            <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                            <p>No student materials uploaded yet</p>
+                            <p className="text-sm">Use the upload button above to add files</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {uploads.map((upload) => (
+                              <div
+                                key={upload.id}
+                                className="flex items-center justify-between p-3 border rounded-lg bg-card"
+                              >
+                                <div className="flex items-center space-x-3">
+                                  <FileText className="h-5 w-5 text-muted-foreground" />
+                                  <div>
+                                    <p className="font-medium">{upload.fileName}</p>
+                                    <p className="text-sm text-muted-foreground">
+                                      {upload.fileSize} • Uploaded on {format(new Date(upload.uploadDate), 'MMM d, yyyy')}
+                                    </p>
+                                    {upload.note && (
+                                      <p className="text-sm text-muted-foreground italic">
+                                        Note: {upload.note}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex space-x-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleView(upload)}
+                                  >
+                                    <Eye className="h-4 w-4 mr-1" />
+                                    View
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleDownload(upload)}
+                                  >
+                                    <Download className="h-4 w-4 mr-1" />
+                                    Download
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleDelete(upload)}
+                                    className="text-destructive hover:text-destructive-foreground hover:bg-destructive"
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-1" />
+                                    Delete
+                                  </Button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* No materials at all */}
+                      {tutorMaterials.length === 0 && uploads.length === 0 && (
+                        <div className="text-center py-8 text-muted-foreground">
+                          <FileText className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                          <p>No materials available for this class yet</p>
+                          <p className="text-sm">Your tutor may add materials before class starts</p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
-              )}
-            </div>
-          </TabsContent>
-        </Tabs>
+              </TabsContent>
+            </Tabs>
+          </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Close
-          </Button>
-        </DialogFooter>
+          <DialogFooter className="flex-shrink-0 pt-4 border-t">
+            <Button variant="outline" onClick={onClose}>
+              Close
+            </Button>
+          </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );
