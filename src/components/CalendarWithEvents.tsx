@@ -109,13 +109,15 @@ const CalendarWithEvents: React.FC<CalendarWithEventsProps> = ({
         <CardContent>
           {eventsForSelectedDate.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-8 border border-dashed rounded-lg space-y-4">
-              <p className="text-gray-500">No classes scheduled for this day</p>
-              <button 
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                onClick={onAddEventClick}
-              >
-                Add Class
-              </button>
+              <p className="text-muted-foreground">No classes scheduled for this day</p>
+              {userRole === 'tutor' && (
+                <button 
+                  className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+                  onClick={onAddEventClick}
+                >
+                  Add Class
+                </button>
+              )}
             </div>
           ) : (
             <div className="space-y-4">
