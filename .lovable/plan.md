@@ -1,159 +1,158 @@
 
-# Site-Wide Dialog Consistency Fixes
+
+# Static Subject Resources Implementation
 
 ## Summary
 
-After scanning all dialog components in the codebase, I identified 5 dialogs that could benefit from the same scrolling/height constraint fixes applied to AddClassDialog. These dialogs risk content overflow on smaller screens or when displaying extensive data.
+Populate the subject cards with curated external learning resources (Khan Academy, YouTube, study guides) that students can access immediately. This is a zero-AI-cost approach that provides value while keeping the door open for AI practice features later.
 
-## Dialogs Requiring Updates
+## Current State
 
-### 1. EditClassDialog.tsx
-**Issue**: No max-height or internal scroll structure
-**File**: `src/components/tutor/dialogs/EditClassDialog.tsx`
-**Fix**: Add `max-h-[90vh]` to DialogContent, wrap form in flex container with scrollable body and fixed footer
+- Subject cards show topics but the "Explore All Resources" button and topic clicks do nothing
+- The "Resources" tab in the sidebar shows an empty materials list
+- No external learning links exist in the codebase
 
-### 2. ViewClassDialog.tsx  
-**Issue**: No height constraints on DialogContent
-**File**: `src/components/tutor/dialogs/ViewClassDialog.tsx`
-**Fix**: Add `max-h-[90vh]` and ensure ClassEventDetails content is scrollable
+## What Students Will See
 
-### 3. StudentClassDetailsDialog.tsx
-**Issue**: Tabs with materials/uploads can overflow viewport
-**File**: `src/components/student/StudentClassDetailsDialog.tsx`
-**Fix**: Add `max-h-[90vh]` to DialogContent, make TabsContent scrollable
+When clicking a subject card or topic:
+1. Subject card expands to show topics (existing behavior)
+2. Each topic shows curated external resource links
+3. "Explore All Resources" button navigates to a dedicated subject resources page
+4. Resources tab in sidebar shows all subjects organized by category
 
-### 4. ClassDetailsDialog.tsx (Admin)
-**Issue**: Long class content or materials lists can overflow
-**File**: `src/components/admin/class-logs/ClassDetailsDialog.tsx`
-**Fix**: Add `max-h-[90vh]` to DialogContent
+## Implementation Steps
 
-### 5. CalendarHelpDialog.tsx
-**Issue**: Extensive help content can overflow on smaller screens
-**File**: `src/components/shared/CalendarHelpDialog.tsx`
-**Fix**: Add `max-h-[90vh]` and `overflow-y-auto` to content area
+### Step 1: Extend Subject Data Structure
 
-## Implementation Plan
-
-### Step 1: Update EditClassDialog.tsx
+Update `src/constants/subjectsData.ts` to include resource links for each topic:
 
 ```text
-Line 155: Update DialogContent
-Before: <DialogContent className="max-w-2xl">
-After:  <DialogContent className="max-w-2xl max-h-[90vh]">
-
-Lines 160-274: Restructure to flex layout
-- Wrap form content in scrollable container
-- Move footer buttons outside scroll area with flex-shrink-0
+Subject
+├── Topics (existing)
+│   └── Each topic gets resources:
+│       ├── videos (YouTube, Khan Academy)
+│       ├── practice (external sites)
+│       └── reading (articles, guides)
 ```
 
-### Step 2: Update ViewClassDialog.tsx
+Each resource will have:
+- Title
+- URL
+- Source (e.g., "Khan Academy", "YouTube")
+- Type (video, practice, article)
 
-```text
-Line 118: Update DialogContent
-Before: <DialogContent className="max-w-full sm:max-w-lg md:max-w-2xl lg:max-w-3xl px-4 sm:px-8 w-[calc(100vw-2rem)] sm:w-auto">
-After:  <DialogContent className="max-w-full sm:max-w-lg md:max-w-2xl lg:max-w-3xl max-h-[90vh] px-4 sm:px-8 w-[calc(100vw-2rem)] sm:w-auto">
+### Step 2: Create Resource Components
 
-Lines 119-170: Restructure to flex layout
-- Header fixed at top
-- ClassEventDetails in scrollable container
-- Footer fixed at bottom
+**New: `src/components/student/resources/TopicResourceLinks.tsx`**
+- Displays resource links for a specific topic
+- Groups by type (Videos, Practice, Reading)
+- Opens links in new tabs with security attributes
+
+**New: `src/components/student/resources/SubjectResourcesPage.tsx`**
+- Full page view for a subject's resources
+- Shows all topics with their resources
+- Includes search/filter functionality
+
+**New: `src/components/student/resources/ResourceCard.tsx`**
+- Individual resource item with icon, title, source badge
+- External link indicator
+
+### Step 3: Update Existing Components
+
+**Update: `src/components/student/SubjectCards.tsx`**
+- Add resource links under each topic when expanded
+- Make "Explore All Resources" button navigate to subject page
+
+**Update: `src/pages/Dashboard.tsx`**
+- Enhance "resources" tab to show subject-organized content
+- Replace empty StudentContent with new SubjectResourcesList
+
+### Step 4: Add Routing
+
+**Update: `src/App.tsx`**
+- Add route for `/dashboard/subject/:subjectId` for full subject pages
+
+## Resource Data Example
+
+```typescript
+// For Mathematics - Algebra I topic
+{
+  topic: "Algebra I",
+  resources: [
+    {
+      title: "Algebra Basics",
+      url: "https://www.khanacademy.org/math/algebra",
+      source: "Khan Academy",
+      type: "video"
+    },
+    {
+      title: "Algebra Practice Problems", 
+      url: "https://www.mathway.com/Algebra",
+      source: "Mathway",
+      type: "practice"
+    }
+  ]
+}
 ```
 
-### Step 3: Update StudentClassDetailsDialog.tsx
+## Curated Resources by Subject
 
-```text
-Line 255: Update DialogContent
-Before: <DialogContent className="max-w-3xl">
-After:  <DialogContent className="max-w-3xl max-h-[90vh]">
+### Mathematics
+- Khan Academy (all levels)
+- Mathway (practice)
+- Desmos (graphing)
+- YouTube: 3Blue1Brown, Professor Leonard
 
-Lines 256-458: Restructure layout
-- DialogHeader stays fixed
-- Tabs content area becomes scrollable
-- DialogFooter stays fixed
-```
+### Science
+- Khan Academy
+- CrashCourse (YouTube)
+- PhET Simulations
+- Bozeman Science
 
-### Step 4: Update ClassDetailsDialog.tsx (Admin)
+### English
+- Purdue OWL (writing)
+- SparkNotes (literature)
+- Grammar Girl
+- YouTube: TED-Ed
 
-```text
-Line 68: Update DialogContent
-Before: <DialogContent className="max-w-2xl">
-After:  <DialogContent className="max-w-2xl max-h-[90vh]">
+### History
+- Khan Academy
+- CrashCourse (YouTube)
+- History.com
+- National Geographic Education
 
-Lines 69-186: Restructure to flex layout
-- DialogHeader fixed
-- Tabs content scrollable
-- DialogFooter fixed
-```
+### Foreign Languages
+- Duolingo (practice)
+- SpanishDict, WordReference
+- YouTube: Easy Languages series
 
-### Step 5: Update CalendarHelpDialog.tsx
+## Files to Create
 
-```text
-Line 50: Update DialogContent
-Before: <DialogContent className="sm:max-w-lg">
-After:  <DialogContent className="sm:max-w-lg max-h-[90vh]">
+1. `src/components/student/resources/ResourceCard.tsx`
+2. `src/components/student/resources/TopicResourceLinks.tsx`
+3. `src/components/student/resources/SubjectResourcesPage.tsx`
+4. `src/components/student/resources/SubjectResourcesList.tsx`
+5. `src/components/student/resources/index.ts`
 
-Lines 51-160: Add scroll wrapper
-- DialogHeader fixed
-- Help content in scrollable div
-- DialogFooter fixed
-```
+## Files to Modify
 
-## Technical Details
+1. `src/constants/subjectsData.ts` - Add resources data structure
+2. `src/components/student/SubjectCards.tsx` - Show resource links, wire up button
+3. `src/pages/Dashboard.tsx` - Update resources tab content
+4. `src/App.tsx` - Add subject detail route
 
-### Standard Pattern for All Dialogs
+## Future AI Enhancement Hooks
 
-```tsx
-<DialogContent className="max-w-[size] max-h-[90vh]">
-  <div className="flex flex-col h-full max-h-[calc(90vh-4rem)]">
-    {/* Fixed Header */}
-    <DialogHeader className="flex-shrink-0">
-      <DialogTitle>...</DialogTitle>
-    </DialogHeader>
-    
-    {/* Scrollable Content */}
-    <div className="flex-1 overflow-y-auto py-4">
-      {/* Main content here */}
-    </div>
-    
-    {/* Fixed Footer */}
-    <DialogFooter className="flex-shrink-0 pt-4 border-t">
-      <Button>...</Button>
-    </DialogFooter>
-  </div>
-</DialogContent>
-```
+The structure will be designed to easily add later:
+- "AI Practice" badge on topics (coming soon indicator)
+- Plan-gated AI question button
+- Usage tracking integration points
 
-### Why This Pattern Works
+## Benefits of This Approach
 
-1. **max-h-[90vh]** on DialogContent limits overall height to 90% of viewport
-2. **flex flex-col** creates vertical layout
-3. **flex-shrink-0** on header/footer prevents them from shrinking
-4. **flex-1 overflow-y-auto** on content area makes it fill available space and scroll when needed
-5. **max-h-[calc(90vh-4rem)]** accounts for padding/borders
+1. **Zero ongoing costs** - All external links, no API usage
+2. **Immediate value** - Students get useful resources right away  
+3. **SEO-friendly** - Links to reputable educational sites
+4. **Low maintenance** - Static data that rarely needs updates
+5. **Clear upgrade path** - Easy to add AI features later without restructuring
 
-## Files Modified
-
-1. `src/components/tutor/dialogs/EditClassDialog.tsx`
-2. `src/components/tutor/dialogs/ViewClassDialog.tsx`
-3. `src/components/student/StudentClassDetailsDialog.tsx`
-4. `src/components/admin/class-logs/ClassDetailsDialog.tsx`
-5. `src/components/shared/CalendarHelpDialog.tsx`
-
-## Components Already Good
-
-These dialogs are compact and don't need changes:
-- ConfirmationDialog.tsx (AlertDialog, short content)
-- RolePromotionDialog.tsx (compact form)
-- AddTutorDialog.tsx (simple form)
-- ShareDialog.tsx (compact form)
-- PauseSubscriptionDialog.tsx (well-structured)
-- ExportDialog.tsx (properly sized)
-
-## Testing Checklist
-
-After implementation, verify on small screens (height less than 700px):
-- All dialogs center correctly
-- Content scrolls when needed
-- Footer buttons always visible
-- Header remains at top
-- Close button accessible
