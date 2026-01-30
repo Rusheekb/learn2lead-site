@@ -1,13 +1,12 @@
-
 import { useState, useEffect } from 'react';
-import { Navigate, useSearchParams } from 'react-router-dom';
+import { Navigate, useSearchParams, Routes, Route } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import DashboardContent from '@/components/student/DashboardContent';
 import { ClassCalendarContainer } from '@/components/student/ClassCalendarContainer';
-import StudentContent from '@/components/shared/StudentContent';
 import { useQueryClient } from '@tanstack/react-query';
 import { StudentDashboardSkeleton } from '@/components/shared/skeletons';
 import { ContentTransition } from '@/components/shared/PageTransition';
+import { SubjectResourcesList, SubjectResourcesPage } from '@/components/student/resources';
 
 const Dashboard = () => {
   const [selectedSubject, setSelectedSubject] = useState<number | null>(null);
@@ -78,11 +77,7 @@ const Dashboard = () => {
         return (
           <div className="py-4">
             <h3 className="text-lg sm:text-xl md:text-2xl font-bold mb-4 sm:mb-6">Learning Resources</h3>
-            <StudentContent
-              classId={user?.id || ''}
-              showUploadControls={false}
-              uploads={[]}
-            />
+            <SubjectResourcesList />
           </div>
         );
       default:
@@ -95,11 +90,19 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      <ContentTransition transitionKey={activeTab}>
-        {renderContent()}
-      </ContentTransition>
-    </div>
+    <Routes>
+      <Route path="subject/:subjectId" element={<SubjectResourcesPage />} />
+      <Route
+        path="*"
+        element={
+          <div className="space-y-4 sm:space-y-6">
+            <ContentTransition transitionKey={activeTab}>
+              {renderContent()}
+            </ContentTransition>
+          </div>
+        }
+      />
+    </Routes>
   );
 };
 

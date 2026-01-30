@@ -1,7 +1,9 @@
 import React, { memo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Subject } from '@/constants/subjectsData';
+import { TopicResourceLinks } from './resources';
 
 interface SubjectCardsProps {
   subjects: Subject[];
@@ -14,6 +16,13 @@ const SubjectCards: React.FC<SubjectCardsProps> = memo(({
   selectedSubject,
   onSubjectClick,
 }) => {
+  const navigate = useNavigate();
+
+  const handleExploreResources = (e: React.MouseEvent, subjectId: number) => {
+    e.stopPropagation();
+    navigate(`/dashboard/subject/${subjectId}`);
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {subjects.map((subject) => {
@@ -30,29 +39,34 @@ const SubjectCards: React.FC<SubjectCardsProps> = memo(({
           >
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-lg">{subject.name}</CardTitle>
-              <IconComponent className="h-8 w-8 text-tutoring-blue" />
+              <IconComponent className="h-8 w-8 text-primary" />
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-sm text-muted-foreground mb-4">
                 {subject.description}
               </p>
 
               {selectedSubject === subject.id && (
-                <div className="mt-4 space-y-2">
+                <div className="mt-4 space-y-4">
                   <h4 className="font-medium text-sm">Topics:</h4>
-                  <ul className="pl-5 space-y-1">
-                    {subject.topics.map((topic, index) => (
-                      <li key={index} className="text-sm">
-                        <button
-                          onClick={() => {/* Handle topic navigation */}}
-                          className="text-tutoring-blue hover:text-tutoring-teal hover:underline text-left"
-                        >
-                          {topic}
-                        </button>
-                      </li>
+                  <div className="space-y-3">
+                    {subject.topics.slice(0, 3).map((topic, index) => (
+                      <div key={index} className="space-y-2">
+                        <p className="text-sm font-medium text-foreground">{topic.name}</p>
+                        <TopicResourceLinks resources={topic.resources} compact />
+                      </div>
                     ))}
-                  </ul>
-                  <Button className="w-full mt-4" size="sm">
+                    {subject.topics.length > 3 && (
+                      <p className="text-xs text-muted-foreground">
+                        +{subject.topics.length - 3} more topics
+                      </p>
+                    )}
+                  </div>
+                  <Button 
+                    className="w-full mt-4" 
+                    size="sm"
+                    onClick={(e) => handleExploreResources(e, subject.id)}
+                  >
                     Explore All {subject.name} Resources
                   </Button>
                 </div>
