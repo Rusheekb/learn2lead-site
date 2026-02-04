@@ -14,6 +14,7 @@ const Index = React.lazy(() => import('./pages/Index'));
 const NotFound = React.lazy(() => import('./pages/NotFound'));
 const Login = React.lazy(() => import('./pages/Login'));
 const Pricing = React.lazy(() => import('./pages/Pricing'));
+const ReferralLanding = React.lazy(() => import('./pages/ReferralLanding'));
 import { AuthProvider } from './contexts/AuthContext';
 import { SubscriptionProvider } from './contexts/SubscriptionContext';
 import PrivateRoute from './components/PrivateRoute';
@@ -96,6 +97,11 @@ const AnimatedRoutes = () => {
         <Route path="/pricing" element={
           <OptimizedSuspense>
             <AnimatedPage><Pricing /></AnimatedPage>
+          </OptimizedSuspense>
+        } />
+        <Route path="/refer/:code" element={
+          <OptimizedSuspense>
+            <AnimatedPage><ReferralLanding /></AnimatedPage>
           </OptimizedSuspense>
         } />
         

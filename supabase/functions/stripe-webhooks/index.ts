@@ -732,6 +732,14 @@ async function processReferralReward(
       }
     }
 
+    // Send notifications to the referrer
+    await sendReferralNotifications(
+      supabaseClient,
+      referrerProfile,
+      newCustomerEmail,
+      discountAmount
+    );
+
     logStep("Referral reward processed successfully", { referralCodeId, referrerId });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
@@ -977,5 +985,95 @@ async function sendSubscriptionStatusEmail(
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("WARNING: Failed to send subscription status email", { error: errorMessage });
     // Don't throw - we don't want to fail the webhook for email issues
+  }
+}
+
+// Send notifications to referrer when their code is used
+async function sendReferralNotifications(
+  supabaseClient: any,
+  referrerProfile: { id: string; email: string },
+  newCustomerEmail: string,
+  rewardAmount: number
+) {
+  try {
+    // Mask the new customer email for privacy
+    const maskedEmail = newCustomerEmail.replace(/(.{2})(.*)(@.*)/, '$1***$3');
+
+    // Get referrer's first name for personalization
+    const { data: profile } = await supabaseClient
+      .from('profiles')
+      .select('first_name, last_name')
+      .eq('id', referrerProfile.id)
+      .maybeSingle();
+
+    const referrerName = profile?.first_name 
+      ? `${profile.first_name} ${profile.last_name || ''}`.trim()
+      : 'Friend';
+
+    // Create in-app notification
+    const { error: notifError } = await supabaseClient.from("notifications").insert({
+      user_id: referrerProfile.id,
+      message: `🎉 Someone used your referral code! You earned $${rewardAmount} credit toward your next bill.`,
+      type: "referral_reward",
+    });
+
+    if (notifError) {
+      logStep("WARNING: Failed to create referral notification", { error: notifError.message });
+    } else {
+      logStep("Referral in-app notification created", { userId: referrerProfile.id });
+    }
+
+    // Send email notification
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    if (resendApiKey) {
+      const resend = new Resend(resendApiKey);
+      await resend.emails.send({
+        from: "Learn2Lead <noreply@learn2lead.com>",
+        to: [referrerProfile.email],
+        subject: "🎉 You just earned $" + rewardAmount + " from a referral!",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h1 style="color: #16a34a;">Referral Reward Earned! 🎉</h1>
+            <p>Dear ${referrerName},</p>
+            <p>Great news! Someone just subscribed using your referral code.</p>
+            
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center;">
+              <p style="margin: 0; font-size: 24px; font-weight: bold; color: #16a34a;">
+                +$${rewardAmount} Credit
+              </p>
+              <p style="margin: 10px 0 0 0; font-size: 14px; color: #666;">
+                Applied to your next bill
+              </p>
+            </div>
+            
+            <p style="color: #666; font-size: 14px;">
+              <strong>New member:</strong> ${maskedEmail}
+            </p>
+            
+            <p>Keep sharing your code to earn more rewards! Every friend who subscribes earns you $${rewardAmount} credit.</p>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="https://learn2lead-site.lovable.app/profile" style="background: #16a34a; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                View Your Referrals
+              </a>
+            </div>
+            
+            <p>Thank you for spreading the word!</p>
+            <p><strong>The Learn2Lead Team</strong></p>
+            
+            <p style="color: #666; font-size: 12px; margin-top: 30px;">
+              This is an automated referral notification. Keep sharing your code to earn more rewards!
+            </p>
+          </div>
+        `,
+      });
+      logStep("Referral reward email sent", { email: referrerProfile.email, amount: rewardAmount });
+    } else {
+      logStep("Skipping referral email - RESEND_API_KEY not configured");
+    }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    logStep("WARNING: Failed to send referral notifications", { error: errorMessage });
+    // Don't throw - notifications shouldn't fail the main process
   }
 }
