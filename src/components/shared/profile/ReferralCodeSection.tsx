@@ -10,7 +10,7 @@ import { Copy, Gift, Loader2, BarChart3, Share2, Link2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SocialShareButtons, ShareLinkCard, ReferralStats } from '@/components/referral';
 
-const REFERRAL_BASE_URL = 'https://learn2lead-site.lovable.app/refer';
+const REFERRAL_BASE_URL = 'https://learn2lead.vercel.app/refer';
 
 const ReferralCodeSection: React.FC = () => {
   const { 
