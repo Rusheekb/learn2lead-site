@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Check, Loader2, ChevronDown, ChevronUp, Tag, Gift } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -91,12 +91,67 @@ const PricingTier: React.FC<PricingTierProps> = ({
 
 const Pricing = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, session } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [referralCode, setReferralCode] = useState('');
   const [isReferralOpen, setIsReferralOpen] = useState(false);
   const [validatedDiscount, setValidatedDiscount] = useState<number | null>(null);
   const [isValidating, setIsValidating] = useState(false);
+  
+  // Check for referral code in URL params on mount
+  useEffect(() => {
+    const refCode = searchParams.get('ref');
+    if (refCode) {
+      setReferralCode(refCode.toUpperCase());
+      setIsReferralOpen(true);
+      // Auto-validate the code
+      validateReferralCodeFromUrl(refCode.toUpperCase());
+    }
+  }, [searchParams]);
+
+  const validateReferralCodeFromUrl = async (code: string) => {
+    setIsValidating(true);
+    try {
+      const { data, error } = await supabase
+        .from('referral_codes')
+        .select('discount_amount, active, expires_at, max_uses, times_used')
+        .eq('code', code)
+        .single();
+
+      if (error || !data) {
+        toast.error('Invalid referral code');
+        setValidatedDiscount(null);
+        return;
+      }
+
+      if (!data.active) {
+        toast.error('This referral code is no longer active');
+        setValidatedDiscount(null);
+        return;
+      }
+
+      if (data.expires_at && new Date(data.expires_at) < new Date()) {
+        toast.error('This referral code has expired');
+        setValidatedDiscount(null);
+        return;
+      }
+
+      if (data.max_uses && data.times_used >= data.max_uses) {
+        toast.error('This referral code has reached its usage limit');
+        setValidatedDiscount(null);
+        return;
+      }
+
+      setValidatedDiscount(data.discount_amount);
+      toast.success(`Code applied! $${data.discount_amount} off your first month`);
+    } catch (error) {
+      console.error('Error validating code:', error);
+      setValidatedDiscount(null);
+    } finally {
+      setIsValidating(false);
+    }
+  };
   
   const validateReferralCode = async () => {
     if (!referralCode.trim()) {

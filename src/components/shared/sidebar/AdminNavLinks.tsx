@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { BarChart3, CreditCard, FileText, LayoutDashboard, Settings, User, UserRound, Users, UsersRound, Mail } from 'lucide-react';
+import { BarChart3, CreditCard, FileText, LayoutDashboard, Settings, User, UserRound, Users, UsersRound, Mail, Gift } from 'lucide-react';
 import { useSidebarStyles } from './useSidebarStyles';
 
 interface AdminNavLinksProps {
@@ -53,6 +53,18 @@ const AdminNavLinks: React.FC<AdminNavLinksProps> = ({
       >
         <Mail className="h-5 w-5" aria-hidden="true" />
         {isExpanded && <span className="ml-3">Reports</span>}
+      </NavLink>
+      <NavLink
+        to="/admin-dashboard?tab=referrals" 
+        className={() => 
+          isLinkActive('/admin-dashboard', { key: 'tab', value: 'referrals' })
+            ? `${baseClasses} ${expandedClasses} ${activeClasses}`
+            : `${baseClasses} ${expandedClasses}`
+        }
+        aria-label="Referrals"
+      >
+        <Gift className="h-5 w-5" aria-hidden="true" />
+        {isExpanded && <span className="ml-3">Referrals</span>}
       </NavLink>
       <NavLink 
         to="/admin-dashboard?tab=tutors"

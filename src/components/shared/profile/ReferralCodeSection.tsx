@@ -1,15 +1,32 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useReferralCode } from '@/hooks/useReferralCode';
 import { copyToClipboard } from '@/utils/clipboardUtils';
 import { toast } from 'sonner';
-import { Copy, Gift, Users, DollarSign, Loader2, Share2 } from 'lucide-react';
+import { Copy, Gift, Loader2, BarChart3, Share2, Link2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { SocialShareButtons, ShareLinkCard, ReferralStats } from '@/components/referral';
+
+const REFERRAL_BASE_URL = 'https://learn2lead-site.lovable.app/refer';
 
 const ReferralCodeSection: React.FC = () => {
-  const { referralCode, usageStats, isLoading, isGenerating, error, requiresSubscription, generateCode } = useReferralCode();
+  const { 
+    referralCode, 
+    usageStats, 
+    isLoading, 
+    isGenerating, 
+    error, 
+    requiresSubscription, 
+    generateCode 
+  } = useReferralCode();
+  const [activeTab, setActiveTab] = useState('overview');
+
+  const referralUrl = referralCode?.code 
+    ? `${REFERRAL_BASE_URL}/${referralCode.code}` 
+    : '';
 
   const handleCopyCode = async () => {
     if (!referralCode?.code) return;
@@ -19,18 +36,6 @@ const ReferralCodeSection: React.FC = () => {
       toast.success('Referral code copied to clipboard!');
     } else {
       toast.error('Failed to copy code');
-    }
-  };
-
-  const handleCopyShareMessage = async () => {
-    if (!referralCode?.code) return;
-    
-    const message = `Use my referral code ${referralCode.code} for $25 off your first month of tutoring! Sign up at learn2lead.com`;
-    const success = await copyToClipboard(message);
-    if (success) {
-      toast.success('Share message copied to clipboard!');
-    } else {
-      toast.error('Failed to copy message');
     }
   };
 
@@ -58,7 +63,7 @@ const ReferralCodeSection: React.FC = () => {
     );
   }
 
-  if (error) {
+  if (error && !requiresSubscription) {
     return (
       <Card>
         <CardHeader>
@@ -87,78 +92,108 @@ const ReferralCodeSection: React.FC = () => {
       </CardHeader>
       <CardContent className="space-y-6">
         {referralCode ? (
-          <>
-            {/* Code Display */}
-            <div className="rounded-lg border bg-muted/50 p-4">
-              <p className="text-sm text-muted-foreground mb-2">Your Referral Code</p>
-              <div className="flex items-center gap-3">
-                <span className="text-2xl font-bold tracking-wider text-primary">
-                  {referralCode.code}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCopyCode}
-                  className="gap-2"
-                >
-                  <Copy className="h-4 w-4" />
-                  Copy
-                </Button>
-              </div>
-            </div>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="overview" className="gap-2">
+                <Gift className="h-4 w-4 hidden sm:inline" />
+                Overview
+              </TabsTrigger>
+              <TabsTrigger value="stats" className="gap-2">
+                <BarChart3 className="h-4 w-4 hidden sm:inline" />
+                Stats
+              </TabsTrigger>
+              <TabsTrigger value="share" className="gap-2">
+                <Share2 className="h-4 w-4 hidden sm:inline" />
+                Share
+              </TabsTrigger>
+            </TabsList>
 
-            {/* Share Message */}
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Quick Share</p>
-              <div className="flex items-center gap-2">
-                <div className="flex-1 rounded-md border bg-background p-3 text-sm">
-                  Use my referral code <strong>{referralCode.code}</strong> for $25 off your first month!
+            {/* Overview Tab */}
+            <TabsContent value="overview" className="space-y-4 mt-4">
+              {/* Code Display */}
+              <div className="rounded-lg border bg-gradient-to-br from-primary/5 to-primary/10 p-4">
+                <p className="text-sm text-muted-foreground mb-2">Your Referral Code</p>
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl font-bold tracking-wider text-primary">
+                    {referralCode.code}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCopyCode}
+                    className="gap-2"
+                  >
+                    <Copy className="h-4 w-4" />
+                    Copy
+                  </Button>
                 </div>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={handleCopyShareMessage}
-                  className="gap-2"
-                >
-                  <Share2 className="h-4 w-4" />
-                  Share
-                </Button>
               </div>
-            </div>
 
-            {/* Statistics */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="rounded-lg border p-4 text-center">
-                <Users className="h-5 w-5 mx-auto mb-2 text-muted-foreground" />
-                <p className="text-2xl font-bold">{usageStats?.timesUsed || 0}</p>
-                <p className="text-sm text-muted-foreground">Friends Referred</p>
+              {/* Quick Stats */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="rounded-lg border p-4 text-center">
+                  <p className="text-2xl font-bold text-primary">
+                    {usageStats?.timesUsed || 0}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Friends Referred</p>
+                </div>
+                <div className="rounded-lg border p-4 text-center">
+                  <p className="text-2xl font-bold text-green-600">
+                    ${usageStats?.totalEarnings || 0}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Credits Earned</p>
+                </div>
               </div>
-              <div className="rounded-lg border p-4 text-center">
-                <DollarSign className="h-5 w-5 mx-auto mb-2 text-muted-foreground" />
-                <p className="text-2xl font-bold">${usageStats?.totalEarnings || 0}</p>
-                <p className="text-sm text-muted-foreground">Credits Earned</p>
-              </div>
-            </div>
 
-            {/* Usage History */}
-            {usageStats && usageStats.usageHistory.length > 0 && (
+              {/* Quick Share */}
               <div className="space-y-2">
-                <p className="text-sm font-medium">Recent Referrals</p>
-                <div className="rounded-lg border divide-y">
-                  {usageStats.usageHistory.slice(0, 5).map((usage, index) => (
-                    <div key={index} className="p-3 flex justify-between items-center text-sm">
-                      <span className="text-muted-foreground">
-                        {usage.usedByEmail.replace(/(.{2})(.*)(@.*)/, '$1***$3')}
-                      </span>
-                      <span className="text-muted-foreground">
-                        {new Date(usage.usedAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                <p className="text-sm font-medium">Quick Share</p>
+                <SocialShareButtons
+                  referralCode={referralCode.code}
+                  referralUrl={referralUrl}
+                  discountAmount={referralCode.discountAmount}
+                />
               </div>
-            )}
-          </>
+            </TabsContent>
+
+            {/* Stats Tab */}
+            <TabsContent value="stats" className="mt-4">
+              <ReferralStats
+                timesUsed={usageStats?.timesUsed || 0}
+                totalEarnings={usageStats?.totalEarnings || 0}
+                usageHistory={usageStats?.usageHistory || []}
+                createdAt={referralCode.createdAt}
+              />
+            </TabsContent>
+
+            {/* Share Tab */}
+            <TabsContent value="share" className="space-y-4 mt-4">
+              <ShareLinkCard
+                referralCode={referralCode.code}
+                referralUrl={referralUrl}
+              />
+
+              <div className="space-y-2">
+                <p className="text-sm font-medium">Share on Social</p>
+                <SocialShareButtons
+                  referralCode={referralCode.code}
+                  referralUrl={referralUrl}
+                  discountAmount={referralCode.discountAmount}
+                  variant="buttons"
+                />
+              </div>
+
+              {/* Share Message Preview */}
+              <div className="rounded-lg border bg-muted/50 p-4 space-y-2">
+                <p className="text-sm font-medium">Share Message</p>
+                <p className="text-sm text-muted-foreground">
+                  I'm learning with Learn2Lead tutoring! Use my referral code{' '}
+                  <span className="font-semibold text-foreground">{referralCode.code}</span>{' '}
+                  for ${referralCode.discountAmount} off your first month.
+                </p>
+              </div>
+            </TabsContent>
+          </Tabs>
         ) : (
           /* Generate Code CTA */
           <div className="text-center py-6 space-y-4">
