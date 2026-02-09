@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { BarChart3, CreditCard, FileText, LayoutDashboard, Settings, User, UserRound, Users, UsersRound, Mail, Gift } from 'lucide-react';
+import { BarChart3, Calendar, CreditCard, FileText, LayoutDashboard, Settings, User, UserRound, Users, UsersRound, Mail, Gift } from 'lucide-react';
 import { useSidebarStyles } from './useSidebarStyles';
 
 interface AdminNavLinksProps {
@@ -18,6 +18,18 @@ const AdminNavLinks: React.FC<AdminNavLinksProps> = ({
   
   return (
     <nav className="space-y-1" aria-label="Admin navigation">
+      <NavLink 
+        to="/admin-dashboard?tab=calendar"
+        className={() => 
+          isLinkActive('/admin-dashboard', { key: 'tab', value: 'calendar' })
+            ? `${baseClasses} ${expandedClasses} ${activeClasses}`
+            : `${baseClasses} ${expandedClasses}`
+        }
+        aria-label="Calendar"
+      >
+        <Calendar className="h-5 w-5" aria-hidden="true" />
+        {isExpanded && <span className="ml-3">Calendar</span>}
+      </NavLink>
       <NavLink 
         to="/admin-dashboard?tab=schedule"
         className={() => 
