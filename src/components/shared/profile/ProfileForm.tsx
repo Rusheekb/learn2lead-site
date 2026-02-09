@@ -10,6 +10,7 @@ interface ProfileFormProps {
     first_name: string;
     last_name: string;
     bio: string;
+    zoom_link: string;
   };
   profile: Profile;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
@@ -55,6 +56,23 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
           className="resize-none h-32"
         />
       </div>
+
+      {profile.role === 'tutor' && (
+        <div>
+          <Label htmlFor="zoom_link">Zoom Meeting Link</Label>
+          <Input
+            id="zoom_link"
+            name="zoom_link"
+            value={formData.zoom_link}
+            onChange={handleInputChange}
+            placeholder="https://zoom.us/j/your-meeting-id"
+            type="url"
+          />
+          <p className="text-sm text-muted-foreground mt-1">
+            This link will auto-fill when you schedule new classes
+          </p>
+        </div>
+      )}
 
       <div>
         <Label>Email</Label>

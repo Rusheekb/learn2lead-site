@@ -74,7 +74,7 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
         endTime: format(addHours(nextHour, 1), 'HH:mm'),
         title: 'New Class Session',
         subject: '',
-        zoomLink: 'https://zoom.us/',
+        zoomLink: currentUser?.zoom_link || '',
         notes: '',
         studentId: '',
         studentName: '',

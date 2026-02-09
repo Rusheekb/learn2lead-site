@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN zoom_link text DEFAULT NULL;
