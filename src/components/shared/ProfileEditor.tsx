@@ -27,6 +27,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
     first_name: profile.first_name || '',
     last_name: profile.last_name || '',
     bio: profile.bio || '',
+    zoom_link: profile.zoom_link || '',
   });
   const [isSaving, setIsSaving] = useState(false);
 
