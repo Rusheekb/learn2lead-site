@@ -19,6 +19,7 @@ const AdminSettings = lazy(() => import('@/pages/AdminSettings'));
 const ManualCreditAllocation = lazy(() => import('@/components/admin/ManualCreditAllocation').then(m => ({ default: m.ManualCreditAllocation })));
 const QuarterlyReports = lazy(() => import('@/components/admin/QuarterlyReports'));
 const ReferralAnalytics = lazy(() => import('@/components/admin/ReferralAnalytics'));
+const AdminCalendarView = lazy(() => import('@/components/admin/AdminCalendarView'));
 
 type User = (Student | Tutor) & { role: 'student' | 'tutor' };
 
@@ -131,6 +132,12 @@ const AdminDashboard: React.FC = () => {
         return (
           <Suspense fallback={<TableSkeleton rows={5} columns={5} />}>
             <ReferralAnalytics />
+          </Suspense>
+        );
+      case 'calendar':
+        return (
+          <Suspense fallback={<AdminDashboardSkeleton />}>
+            <AdminCalendarView />
           </Suspense>
         );
       default:
