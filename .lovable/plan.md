@@ -1,58 +1,59 @@
 
+# Admin Calendar View
 
-# Update Referral Link to Production URL
+## Overview
 
-## Summary
+Add a new "Calendar" tab to the Admin Dashboard that displays all scheduled classes across the entire platform in one unified calendar view, with multi-user filtering to isolate classes by specific tutors and/or students.
 
-Update the hardcoded referral base URL from the Lovable published URL to your official production domain on Vercel.
+## How It Works
 
-## Current State
+- A new "Calendar" tab appears in the admin sidebar navigation
+- The calendar shows all scheduled classes from every tutor and student
+- Dots on calendar dates indicate days with classes
+- Clicking a date shows all classes for that day in a detail panel
+- Filter dropdowns let you select one or more tutors and/or students to narrow the view
+- A search bar provides quick text filtering by class title, subject, or names
 
-The referral URL is currently set to:
-```
-https://learn2lead-site.lovable.app/refer
-```
+## Filtering System
 
-This generates links like:
-```
-https://learn2lead-site.lovable.app/refer/BAR25
-```
+| Filter | Type | Behavior |
+|--------|------|----------|
+| Tutor | Multi-select dropdown | Show only classes from selected tutors |
+| Student | Multi-select dropdown | Show only classes for selected students |
+| Subject | Single-select dropdown | Filter by subject area |
+| Search | Text input | Quick search across title, tutor, student, subject |
+| Clear All | Button | Reset all filters at once |
 
-## Change Required
+## Technical Details
 
-Update to your production domain:
-```
-https://learn2lead.vercel.app/refer
-```
+### New Files
 
-This will generate links like:
-```
-https://learn2lead.vercel.app/refer/BAR25
-```
+| File | Purpose |
+|------|---------|
+| `src/components/admin/AdminCalendarView.tsx` | Main calendar component with filters and event list |
 
-## File to Modify
+### Files to Modify
 
-**`src/components/shared/profile/ReferralCodeSection.tsx`**
+| File | Change |
+|------|--------|
+| `src/pages/AdminDashboard.tsx` | Add `calendar` tab case, lazy-import AdminCalendarView |
+| `src/components/shared/sidebar/AdminNavLinks.tsx` | Add Calendar nav link |
 
-Line 13 - Change:
-```typescript
-const REFERRAL_BASE_URL = 'https://learn2lead-site.lovable.app/refer';
-```
+### Data Fetching
 
-To:
-```typescript
-const REFERRAL_BASE_URL = 'https://learn2lead.vercel.app/refer';
-```
+- Reuse the existing `fetchScheduledClasses()` from `src/services/class/fetch.ts` with no tutor/student filter (admin RLS policies already grant full access to all scheduled classes)
+- Fetch all profiles for tutor/student dropdown options
+- Use `@tanstack/react-query` for caching
 
-## Impact
+### Component Structure
 
-This single change will automatically update:
-- The referral link displayed in the input field
-- All social share buttons (Twitter, Facebook, WhatsApp, Email, SMS)
-- The QR code content
-- The copied link when users click "Copy Link"
+The `AdminCalendarView` component will:
+1. Fetch all scheduled classes (no filters = admin sees all)
+2. Fetch tutor and student profiles for filter dropdowns
+3. Reuse the existing `Calendar` UI component with event dot modifiers
+4. Display a filtered event list for the selected date
+5. Use `useMemo` to apply client-side filters efficiently
 
-## Alternative Consideration
+### No Database Changes Required
 
-For better maintainability, you could also consider moving this URL to an environment variable in the future, allowing different URLs for development vs. production without code changes.
-
+The existing `scheduled_classes` table and admin RLS policies already support this -- admins have `ALL` access to scheduled classes.
