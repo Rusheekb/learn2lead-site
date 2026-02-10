@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -10,10 +10,13 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StudentContent } from '@/components/shared/StudentContent.tsx';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 
 import { format } from 'date-fns';
-import { FileText, ExternalLink } from 'lucide-react';
+import { FileText, ExternalLink, Pencil, Save } from 'lucide-react';
 import { parseDateToLocal } from '@/utils/safeDateUtils';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface ClassDetailsDialogProps {
   isDetailsOpen: boolean;
@@ -28,6 +31,7 @@ interface ClassDetailsDialogProps {
   studentPaymentMethod?: string;
   onToggleStudentPayment?: (classId: string, currentlyPaid: boolean) => void;
   onToggleTutorPayment?: (classId: string, currentlyPaid: boolean) => void;
+  onCostsUpdated?: () => void;
 }
 
 const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
@@ -43,9 +47,44 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
   studentPaymentMethod,
   onToggleStudentPayment,
   onToggleTutorPayment,
+  onCostsUpdated,
 }) => {
+  const [editingCosts, setEditingCosts] = useState(false);
+  const [classCost, setClassCost] = useState('');
+  const [tutorCost, setTutorCost] = useState('');
+  const [savingCosts, setSavingCosts] = useState(false);
+
+  useEffect(() => {
+    if (selectedClass) {
+      setClassCost(selectedClass.classCost?.toString() || '0');
+      setTutorCost(selectedClass.tutorCost?.toString() || '0');
+      setEditingCosts(false);
+    }
+  }, [selectedClass]);
+
   if (!selectedClass) return null;
 
+  const handleSaveCosts = async () => {
+    setSavingCosts(true);
+    try {
+      const { error } = await supabase
+        .from('class_logs')
+        .update({
+          'Class Cost': parseFloat(classCost) || 0,
+          'Tutor Cost': parseFloat(tutorCost) || 0,
+        })
+        .eq('id', selectedClass.id);
+
+      if (error) throw error;
+      toast.success('Costs updated');
+      setEditingCosts(false);
+      onCostsUpdated?.();
+    } catch (err: any) {
+      toast.error(`Failed to update costs: ${err.message}`);
+    } finally {
+      setSavingCosts(false);
+    }
+  };
   const formatDate = (date: Date | string | undefined) => {
     if (!date) return 'Date not available';
     try {
@@ -160,14 +199,57 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
                   </Badge>
                 </div>
 
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-muted-foreground">Costs</span>
+                  {editingCosts ? (
+                    <Button size="sm" variant="default" onClick={handleSaveCosts} disabled={savingCosts}>
+                      <Save className="h-3 w-3 mr-1" />
+                      {savingCosts ? 'Saving…' : 'Save'}
+                    </Button>
+                  ) : (
+                    <Button size="sm" variant="ghost" onClick={() => setEditingCosts(true)}>
+                      <Pencil className="h-3 w-3 mr-1" />
+                      Edit
+                    </Button>
+                  )}
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-3 rounded-lg border border-border">
                     <div className="text-sm text-muted-foreground">Class Cost</div>
-                    <div className="text-xl font-bold">${selectedClass.classCost?.toFixed(2) || '0.00'}</div>
+                    {editingCosts ? (
+                      <div className="flex items-center gap-1 mt-1">
+                        <span className="text-lg font-bold">$</span>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={classCost}
+                          onChange={(e) => setClassCost(e.target.value)}
+                          className="h-8 text-lg font-bold"
+                        />
+                      </div>
+                    ) : (
+                      <div className="text-xl font-bold">${parseFloat(classCost).toFixed(2)}</div>
+                    )}
                   </div>
                   <div className="p-3 rounded-lg border border-border">
                     <div className="text-sm text-muted-foreground">Tutor Cost</div>
-                    <div className="text-xl font-bold">${selectedClass.tutorCost?.toFixed(2) || '0.00'}</div>
+                    {editingCosts ? (
+                      <div className="flex items-center gap-1 mt-1">
+                        <span className="text-lg font-bold">$</span>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={tutorCost}
+                          onChange={(e) => setTutorCost(e.target.value)}
+                          className="h-8 text-lg font-bold"
+                        />
+                      </div>
+                    ) : (
+                      <div className="text-xl font-bold">${parseFloat(tutorCost).toFixed(2)}</div>
+                    )}
                   </div>
                 </div>
 
