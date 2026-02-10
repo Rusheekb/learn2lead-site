@@ -2,12 +2,17 @@
 import React from 'react';
 import DataTable, { ColumnDefinition } from '@/components/common/DataTable';
 import { format } from 'date-fns';
-import { CircleMessageBadge } from '@/components/shared/ClassBadges';
 import { Button } from '@/components/ui/button';
 import { ActionButton } from '@/components/common/ActionButton';
+import { Badge } from '@/components/ui/badge';
 import { ClassEvent } from '@/types/tutorTypes';
 import { formatTimeRange } from '@/utils/dateTimeUtils';
 import { parseDateToLocal } from '@/utils/safeDateUtils';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 
 interface ClassTableProps {
   classes: ClassEvent[];
@@ -17,7 +22,6 @@ interface ClassTableProps {
   error?: string | null;
   handleClassClick: (cls: ClassEvent) => void;
   clearFilters: () => void;
-  
   formatTime: (time: string) => string;
   page: number;
   pageSize: number;
@@ -25,19 +29,16 @@ interface ClassTableProps {
   totalItems: number;
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
+  studentPaymentMethods?: Record<string, string>;
+  onToggleStudentPayment?: (classId: string, currentlyPaid: boolean) => void;
+  onToggleTutorPayment?: (classId: string, currentlyPaid: boolean) => void;
 }
 
-// Format date helper function
 const formatDate = (date: Date | string) => {
   try {
     if (!date) return 'Date not available';
-
     const dateObj = parseDateToLocal(date);
-
-    if (isNaN(dateObj.getTime())) {
-      return 'Invalid date';
-    }
-
+    if (isNaN(dateObj.getTime())) return 'Invalid date';
     return format(dateObj, 'MMM d, yyyy');
   } catch (e) {
     return String(date);
@@ -52,7 +53,6 @@ const ClassTable: React.FC<ClassTableProps> = ({
   error,
   handleClassClick,
   clearFilters,
-  
   formatTime,
   page,
   pageSize,
@@ -60,7 +60,14 @@ const ClassTable: React.FC<ClassTableProps> = ({
   totalItems,
   onPageChange,
   onPageSizeChange,
+  studentPaymentMethods = {},
+  onToggleStudentPayment,
+  onToggleTutorPayment,
 }) => {
+  const getPaymentMethod = (studentName: string) => {
+    return studentPaymentMethods[studentName] || 'zelle';
+  };
+
   const columns: ColumnDefinition<ClassEvent>[] = [
     {
       header: 'Class ID',
@@ -110,24 +117,83 @@ const ClassTable: React.FC<ClassTableProps> = ({
     },
     {
       header: 'Payment Status',
-      cell: (cls) => (
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${cls.studentPaymentDate ? 'bg-green-500' : 'bg-red-500'}`} />
-            <span className="text-xs text-muted-foreground">Student:</span>
-            <span className="text-sm font-medium">
-              {cls.studentPaymentDate ? format(cls.studentPaymentDate, 'M/d/yy') : ''}
-            </span>
+      cell: (cls) => {
+        const isStripe = getPaymentMethod(cls.studentName || '') === 'stripe';
+        const studentPaid = !!cls.studentPaymentDate;
+        const tutorPaid = !!cls.tutorPaymentDate;
+
+        return (
+          <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
+            {/* Student payment */}
+            <div className="flex items-center gap-2">
+              {isStripe ? (
+                <>
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                  <Badge variant="outline" className="text-[10px] px-1 py-0">Stripe</Badge>
+                </>
+              ) : (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button
+                      className={`w-2.5 h-2.5 rounded-full cursor-pointer ring-2 ring-transparent hover:ring-primary/50 transition-all ${studentPaid ? 'bg-emerald-500' : 'bg-destructive'}`}
+                      title={studentPaid ? 'Student: Paid — click to mark unpaid' : 'Student: Unpaid — click to mark paid'}
+                    />
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-3" side="left">
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium">
+                        {studentPaid ? 'Mark student payment as unpaid?' : 'Mark student payment as paid today?'}
+                      </p>
+                      <Button
+                        size="sm"
+                        variant={studentPaid ? 'outline' : 'default'}
+                        onClick={() => onToggleStudentPayment?.(cls.id, studentPaid)}
+                        className="w-full"
+                      >
+                        {studentPaid ? 'Mark Unpaid' : 'Mark Paid'}
+                      </Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              )}
+              <span className="text-xs text-muted-foreground">Student</span>
+              {!isStripe && studentPaid && cls.studentPaymentDate && (
+                <span className="text-xs font-medium">{format(cls.studentPaymentDate, 'M/d/yy')}</span>
+              )}
+            </div>
+            {/* Tutor payment */}
+            <div className="flex items-center gap-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <button
+                    className={`w-2.5 h-2.5 rounded-full cursor-pointer ring-2 ring-transparent hover:ring-primary/50 transition-all ${tutorPaid ? 'bg-emerald-500' : 'bg-destructive'}`}
+                    title={tutorPaid ? 'Tutor: Paid — click to mark unpaid' : 'Tutor: Unpaid — click to mark paid'}
+                  />
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-3" side="left">
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">
+                      {tutorPaid ? 'Mark tutor payment as unpaid?' : 'Mark tutor payment as paid today?'}
+                    </p>
+                    <Button
+                      size="sm"
+                      variant={tutorPaid ? 'outline' : 'default'}
+                      onClick={() => onToggleTutorPayment?.(cls.id, tutorPaid)}
+                      className="w-full"
+                    >
+                      {tutorPaid ? 'Mark Unpaid' : 'Mark Paid'}
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
+              <span className="text-xs text-muted-foreground">Tutor</span>
+              {tutorPaid && cls.tutorPaymentDate && (
+                <span className="text-xs font-medium">{format(cls.tutorPaymentDate, 'M/d/yy')}</span>
+              )}
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${cls.tutorPaymentDate ? 'bg-green-500' : 'bg-red-500'}`} />
-            <span className="text-xs text-muted-foreground">Tutor:</span>
-            <span className="text-sm font-medium">
-              {cls.tutorPaymentDate ? format(cls.tutorPaymentDate, 'M/d/yy') : ''}
-            </span>
-          </div>
-        </div>
-      ),
+        );
+      },
     },
     {
       header: 'Actions',
@@ -157,7 +223,7 @@ const ClassTable: React.FC<ClassTableProps> = ({
         onPageSizeChange: onPageSizeChange,
       }}
       emptyState={
-        <div className="text-center py-12 text-gray-500">
+        <div className="text-center py-12 text-muted-foreground">
           <p>No class logs found matching your filters</p>
           <Button
             variant="outline"
@@ -170,7 +236,7 @@ const ClassTable: React.FC<ClassTableProps> = ({
         </div>
       }
       errorState={
-        <div className="text-center py-12 text-red-500">
+        <div className="text-center py-12 text-destructive">
           <p>{error}</p>
           <Button
             variant="outline"

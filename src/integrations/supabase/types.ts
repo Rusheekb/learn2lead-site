@@ -658,6 +658,7 @@ export type Database = {
           id: string
           learning_pace: Database["public"]["Enums"]["learning_pace"] | null
           name: string
+          payment_method: string | null
           payment_status: string
           primary_goal: Database["public"]["Enums"]["student_goal"] | null
           session_structure_pref:
@@ -681,6 +682,7 @@ export type Database = {
           id?: string
           learning_pace?: Database["public"]["Enums"]["learning_pace"] | null
           name: string
+          payment_method?: string | null
           payment_status?: string
           primary_goal?: Database["public"]["Enums"]["student_goal"] | null
           session_structure_pref?:
@@ -704,6 +706,7 @@ export type Database = {
           id?: string
           learning_pace?: Database["public"]["Enums"]["learning_pace"] | null
           name?: string
+          payment_method?: string | null
           payment_status?: string
           primary_goal?: Database["public"]["Enums"]["student_goal"] | null
           session_structure_pref?:

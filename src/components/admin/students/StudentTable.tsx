@@ -2,6 +2,7 @@
 import React, { memo, useMemo } from 'react';
 import VirtualizedDataTable, { ColumnDefinition } from '@/components/common/VirtualizedDataTable';
 import { ActionButton } from '@/components/common/ActionButton';
+import { Badge } from '@/components/ui/badge';
 import { Edit2, Trash2 } from 'lucide-react';
 
 export interface Student {
@@ -14,6 +15,7 @@ export interface Student {
   enrollDate: string;
   lastSession: string;
   paymentStatus: 'paid' | 'unpaid' | 'overdue';
+  paymentMethod?: 'stripe' | 'zelle';
 }
 
 interface StudentTableProps {
@@ -45,6 +47,14 @@ const StudentTable: React.FC<StudentTableProps> = memo(({
           <div className="font-medium">{student.name}</div>
           <div className="text-sm text-muted-foreground">{student.email}</div>
         </div>
+      ),
+    },
+    {
+      header: 'Payment Method',
+      cell: (student) => (
+        <Badge variant={student.paymentMethod === 'stripe' ? 'default' : 'secondary'}>
+          {student.paymentMethod === 'stripe' ? 'Stripe' : 'Zelle'}
+        </Badge>
       ),
     },
     {
