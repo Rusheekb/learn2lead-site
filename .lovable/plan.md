@@ -1,75 +1,60 @@
 
-# Auto-Fill Class Costs with Default Rates
 
-## Problem
-Class logs have empty `Class Cost` and `Tutor Cost` fields, making payment totals show $0. Manually entering costs per class is tedious, and rates can change over time due to raises.
+# Move Rate Management into Student & Tutor Detail Modals
 
-## Solution
-Store a **default class rate** on each student and use the existing **tutor hourly rate** to automatically populate costs when a class is created. When rates change (raises), you update the student or tutor record once, and all future classes pick up the new rate. Historical classes keep their original costs.
+## Overview
+Remove the "Apply Default Rates" bulk button from Class Logs and instead let admins view and edit `class_rate` (students) and `hourly_rate` (tutors) directly from their respective detail modals/popups. These stored rates will continue to auto-fill costs on new class creation.
 
-## What Changes
+## Changes
 
-### 1. Database: Add `class_rate` to `students` table
-A new column stores each student's per-class cost (what the parent pays). The `tutors` table already has `hourly_rate`.
+### 1. Remove "Apply Default Rates" from ClassLogs
+- Delete the `handleApplyDefaultRates` function and its button from `src/components/admin/ClassLogs.tsx`
+- Remove the `isBackfilling` state and `Wand2` icon import
 
-```sql
-ALTER TABLE public.students ADD COLUMN class_rate numeric DEFAULT NULL;
-```
+### 2. Expand the Student Detail Modal (UserDetailModal)
+When viewing a student, show and allow editing of:
+- **Class Rate ($)** -- editable input field, saved to `students.class_rate`
+- **Payment Method** -- editable dropdown (Stripe/Zelle), saved to `students.payment_method`
 
-### 2. Student Manager: Set Class Rate
-Add a "Class Rate ($)" input field to the Student Form so you can set each student's rate. The Student Table will also display the rate.
+On save, update the `students` table directly. Future classes for that student will auto-pick up the new rate.
 
-### 3. Auto-Fill Costs on Class Creation
-When a class log is created (via the tutor scheduler or CSV import), the system will:
-- Look up the student's `class_rate` from the `students` table and set it as `Class Cost`
-- Look up the tutor's `hourly_rate` from the `tutors` table and set it as `Tutor Cost`
-- Only auto-fill if the cost fields are not already provided (manual overrides still work)
+### 3. Show Tutor Hourly Rate in Tutor Detail Modal (UserDetailModal)
+When viewing a tutor, show and allow editing of:
+- **Hourly Rate ($)** -- editable input field, saved to `tutors.hourly_rate`
 
-### 4. Bulk Backfill Existing Logs
-Add an admin action ("Apply Default Rates to Empty Logs") that updates all existing class logs where costs are NULL, using the current student/tutor rates. This fills in your historical data in one click.
+On save, update the `tutors` table. Future classes for that tutor will auto-pick up the new rate.
 
-### 5. Rate Change Workflow
-When a tutor or student gets a raise:
-1. Update the rate on their student/tutor record
-2. All **future** classes automatically use the new rate
-3. **Past** classes keep their original rate (accurate historical records)
+### 4. Keep Auto-Fill on Class Creation
+The existing logic in `src/services/class-logs.ts` (lines 59-86) that looks up `students.class_rate` and `tutors.hourly_rate` when creating a class stays unchanged -- it already does the right thing.
+
+### 5. Optionally Show Rates in Tables
+- Student table already shows `Class Rate` column -- keep it
+- Tutor table currently only shows name/email/actions -- add an `Hourly Rate` column
 
 ## Files to Modify
 
 | File | Change |
 |------|--------|
-| `src/components/admin/students/StudentForm.tsx` | Add "Class Rate" number input |
-| `src/components/admin/students/StudentTable.tsx` | Show class rate column |
-| `src/services/class-logs.ts` | Look up student/tutor rates when `Class Cost` or `Tutor Cost` are missing |
-| `src/components/admin/ClassLogs.tsx` | Add "Apply Default Rates" button for backfilling |
+| `src/components/admin/ClassLogs.tsx` | Remove Apply Default Rates button, `handleApplyDefaultRates`, `isBackfilling` state, `Wand2` import |
+| `src/components/admin/UserDetailModal.tsx` | Add editable Class Rate + Payment Method fields for students; editable Hourly Rate for tutors; save to DB on change |
+| `src/components/admin/tutors/TutorTable.tsx` | Add Hourly Rate column |
+
+## How It Works
+
+1. Admin clicks a student row to open their detail modal
+2. They see and can edit the student's Class Rate and Payment Method
+3. Clicking "Save" updates the `students` table
+4. Next time a class is logged for that student, the cost auto-fills from the saved rate
+5. Same flow for tutors -- edit Hourly Rate in their modal, future classes use the new rate
+6. Past classes are never affected by rate changes
 
 ## Technical Details
 
-### Auto-fill logic in `createClassLog`
-Before inserting, if `Class Cost` is null:
-1. Query `students` table by `Student Name` to get `class_rate`
-2. Query `tutors` table by `Tutor Name` to get `hourly_rate`
-3. Set `Class Cost = class_rate` and `Tutor Cost = hourly_rate`
+### UserDetailModal Changes
+- Detect `user.role` to show role-specific fields
+- For students: fetch `class_rate` and `payment_method` from `students` table by name, show editable fields, add a "Save" button that runs `supabase.from('students').update(...)` 
+- For tutors: fetch `hourly_rate` from `tutors` table, show editable field, save with `supabase.from('tutors').update(...)`
+- After save, call `onUserUpdated?.()` to refresh parent data
 
-### Backfill query
-The "Apply Default Rates" button runs:
-```sql
-UPDATE class_logs
-SET "Class Cost" = s.class_rate
-FROM students s
-WHERE class_logs."Student Name" = s.name
-  AND class_logs."Class Cost" IS NULL
-  AND s.class_rate IS NOT NULL;
-
-UPDATE class_logs
-SET "Tutor Cost" = t.hourly_rate
-FROM tutors t
-WHERE class_logs."Tutor Name" = t.name
-  AND class_logs."Tutor Cost" IS NULL
-  AND t.hourly_rate IS NOT NULL;
-```
-
-### No impact on existing data
-- Only fills NULL costs; never overwrites existing values
-- Historical classes with manually entered costs are untouched
-- Rate changes only affect future classes
+### TutorTable Changes
+- Add a column that displays `tutor.hourlyRate` formatted as currency, or a dash if not set
