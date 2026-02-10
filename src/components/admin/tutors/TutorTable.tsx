@@ -29,6 +29,14 @@ const TutorTable: React.FC<TutorTableProps> = memo(({
       ),
     },
     {
+      header: 'Hourly Rate',
+      cell: (tutor) => (
+        <span className="text-sm">
+          {tutor.hourlyRate != null ? `$${Number(tutor.hourlyRate).toFixed(2)}` : '—'}
+        </span>
+      ),
+    },
+    {
       header: 'Actions',
       cell: (tutor) => (
         <div className="flex items-center gap-2">
