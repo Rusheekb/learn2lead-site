@@ -1,89 +1,75 @@
 
+# Auto-Fill Class Costs with Default Rates
 
-# Payment Tracking with Stripe vs. Zelle Differentiation
+## Problem
+Class logs have empty `Class Cost` and `Tutor Cost` fields, making payment totals show $0. Manually entering costs per class is tedious, and rates can change over time due to raises.
 
-## The Key Insight
-
-For **Stripe students**, parent payment is handled automatically -- you only need to manually track **tutor payments**. For **Zelle students**, you need to track **both** parent and tutor payments manually. So the system needs to know which payment method each student uses.
+## Solution
+Store a **default class rate** on each student and use the existing **tutor hourly rate** to automatically populate costs when a class is created. When rates change (raises), you update the student or tutor record once, and all future classes pick up the new rate. Historical classes keep their original costs.
 
 ## What Changes
 
-### 1. Database: Add `payment_method` to `students` table
-
-Add a column to indicate how each student/parent pays:
+### 1. Database: Add `class_rate` to `students` table
+A new column stores each student's per-class cost (what the parent pays). The `tutors` table already has `hourly_rate`.
 
 ```sql
-ALTER TABLE public.students
-ADD COLUMN payment_method text DEFAULT 'zelle'
-CHECK (payment_method IN ('stripe', 'zelle'));
+ALTER TABLE public.students ADD COLUMN class_rate numeric DEFAULT NULL;
 ```
 
-Default is `zelle` so existing students work without changes. You update it to `stripe` as parents migrate over.
+### 2. Student Manager: Set Class Rate
+Add a "Class Rate ($)" input field to the Student Form so you can set each student's rate. The Student Table will also display the rate.
 
-### 2. Student Manager: Set Payment Method
+### 3. Auto-Fill Costs on Class Creation
+When a class log is created (via the tutor scheduler or CSV import), the system will:
+- Look up the student's `class_rate` from the `students` table and set it as `Class Cost`
+- Look up the tutor's `hourly_rate` from the `tutors` table and set it as `Tutor Cost`
+- Only auto-fill if the cost fields are not already provided (manual overrides still work)
 
-In the admin Students tab, add a "Payment Method" dropdown (Stripe / Zelle) so you can flag each student. This is a one-time setup per student.
+### 4. Bulk Backfill Existing Logs
+Add an admin action ("Apply Default Rates to Empty Logs") that updates all existing class logs where costs are NULL, using the current student/tutor rates. This fills in your historical data in one click.
 
-### 3. Smart Payment Indicators in Class Table
-
-The payment dots in the Class Table will behave differently based on the student's payment method:
-
-- **Zelle students**: Both student and tutor dots are clickable (current plan, no change)
-- **Stripe students**: Student dot is always green with a "Stripe" label (auto-managed) -- only the tutor dot is clickable
-
-### 4. Tutor Payment Summary (unchanged)
-
-The batch "Mark All Paid" for biweekly tutor payouts works the same regardless of payment method -- it only touches `tutor_payment_date`.
-
-### 5. Payment Filters Enhanced
-
-Add a "Payment Method" filter option so you can view:
-- All Zelle students with unpaid balances (for manual collection)
-- All students regardless of method (for full overview)
-
-### 6. Class Details Dialog
-
-When viewing a class, the payment section will show:
-- Payment method badge ("Stripe" or "Zelle")
-- For Stripe students: student payment marked as "Managed by Stripe" (non-editable)
-- For Zelle students: both Mark Paid/Unpaid buttons as planned
+### 5. Rate Change Workflow
+When a tutor or student gets a raise:
+1. Update the rate on their student/tutor record
+2. All **future** classes automatically use the new rate
+3. **Past** classes keep their original rate (accurate historical records)
 
 ## Files to Modify
 
 | File | Change |
 |------|--------|
-| `src/components/admin/students/StudentForm.tsx` | Add payment method dropdown |
-| `src/components/admin/students/StudentTable.tsx` | Show payment method column |
-| `src/components/admin/class-logs/ClassTable.tsx` | Conditional student payment dot behavior based on payment method |
-| `src/components/admin/class-logs/ClassDetailsDialog.tsx` | Payment section with method-aware controls |
-| `src/components/admin/class-logs/ClassFilters.tsx` | Add payment method and unpaid filters |
-| `src/components/admin/ClassLogs.tsx` | Wire up payment updates and tutor summary |
-| `src/hooks/useClassLogs.ts` | Add payment mutations and join student payment method |
-| `src/services/class-operations/update/updateClassLog.ts` | Payment date update helper |
+| `src/components/admin/students/StudentForm.tsx` | Add "Class Rate" number input |
+| `src/components/admin/students/StudentTable.tsx` | Show class rate column |
+| `src/services/class-logs.ts` | Look up student/tutor rates when `Class Cost` or `Tutor Cost` are missing |
+| `src/components/admin/ClassLogs.tsx` | Add "Apply Default Rates" button for backfilling |
 
-## New Files
+## Technical Details
 
-| File | Purpose |
-|------|---------|
-| `src/components/admin/class-logs/TutorPaymentSummary.tsx` | Batch tutor payout view |
+### Auto-fill logic in `createClassLog`
+Before inserting, if `Class Cost` is null:
+1. Query `students` table by `Student Name` to get `class_rate`
+2. Query `tutors` table by `Tutor Name` to get `hourly_rate`
+3. Set `Class Cost = class_rate` and `Tutor Cost = hourly_rate`
 
-## How It Works Day-to-Day
+### Backfill query
+The "Apply Default Rates" button runs:
+```sql
+UPDATE class_logs
+SET "Class Cost" = s.class_rate
+FROM students s
+WHERE class_logs."Student Name" = s.name
+  AND class_logs."Class Cost" IS NULL
+  AND s.class_rate IS NOT NULL;
 
-**Biweekly tutor payouts (same for both):**
-1. Go to Class Logs, open Tutor Payment Summary
-2. See each tutor's total owed
-3. Pay them, click "Mark All Paid" -- done
+UPDATE class_logs
+SET "Tutor Cost" = t.hourly_rate
+FROM tutors t
+WHERE class_logs."Tutor Name" = t.name
+  AND class_logs."Tutor Cost" IS NULL
+  AND t.hourly_rate IS NOT NULL;
+```
 
-**Collecting from Zelle parents:**
-1. Filter by "Payment Method: Zelle" + "Student: Unpaid"
-2. See who owes you
-3. When they Zelle you, click the dot to mark paid
-
-**Stripe parents:**
-1. No action needed -- student payment dot auto-shows as managed by Stripe
-2. You only click the tutor payment dot after paying the tutor
-
-## No Changes to Stripe Integration
-
-The existing Stripe webhook and subscription system stays untouched. This is purely an admin tracking layer so you know which students to chase for Zelle payments vs. which are handled automatically.
-
+### No impact on existing data
+- Only fills NULL costs; never overwrites existing values
+- Historical classes with manually entered costs are untouched
+- Rate changes only affect future classes
