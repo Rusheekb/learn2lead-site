@@ -224,6 +224,7 @@ const ClassLogs: React.FC = () => {
         studentPaymentMethod={selectedStudentMethod}
         onToggleStudentPayment={handleToggleStudentPayment}
         onToggleTutorPayment={handleToggleTutorPayment}
+        onCostsUpdated={handleRefreshData}
       />
 
       <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
