@@ -1,65 +1,89 @@
 
 
-# Auto-Fill Zoom Link for Tutor Class Scheduling
+# Payment Tracking with Stripe vs. Zelle Differentiation
 
-## Overview
+## The Key Insight
 
-Add a `zoom_link` field to the tutor's profile so they can save their Zoom link once, and it automatically pre-fills whenever they schedule a new class. Tutors can still override it per class if needed.
+For **Stripe students**, parent payment is handled automatically -- you only need to manually track **tutor payments**. For **Zelle students**, you need to track **both** parent and tutor payments manually. So the system needs to know which payment method each student uses.
 
-## How It Works
+## What Changes
 
-1. Tutors go to their Profile tab and enter their Zoom meeting link in a new "Zoom Link" field
-2. When scheduling a new class, the Zoom link field auto-fills from their saved profile
-3. The tutor can still edit or clear the link for any individual class
+### 1. Database: Add `payment_method` to `students` table
 
-## Changes Required
-
-### 1. Database Migration
-
-Add a `zoom_link` column to the `profiles` table:
+Add a column to indicate how each student/parent pays:
 
 ```sql
-ALTER TABLE profiles ADD COLUMN zoom_link text DEFAULT NULL;
+ALTER TABLE public.students
+ADD COLUMN payment_method text DEFAULT 'zelle'
+CHECK (payment_method IN ('stripe', 'zelle'));
 ```
 
-No RLS changes needed -- tutors can already read/update their own profile.
+Default is `zelle` so existing students work without changes. You update it to `stripe` as parents migrate over.
 
-### 2. Update Profile Type
+### 2. Student Manager: Set Payment Method
 
-**`src/types/profile.ts`** and **`src/hooks/useProfile.ts`**
+In the admin Students tab, add a "Payment Method" dropdown (Stripe / Zelle) so you can flag each student. This is a one-time setup per student.
 
-Add `zoom_link: string | null` to the `Profile` interface in both locations.
+### 3. Smart Payment Indicators in Class Table
 
-### 3. Show Zoom Link Field on Profile Page (Tutors Only)
+The payment dots in the Class Table will behave differently based on the student's payment method:
 
-**`src/components/shared/profile/ProfileForm.tsx`**
+- **Zelle students**: Both student and tutor dots are clickable (current plan, no change)
+- **Stripe students**: Student dot is always green with a "Stripe" label (auto-managed) -- only the tutor dot is clickable
 
-Add a "Zoom Meeting Link" input field that only renders when the user's role is `tutor`. It saves alongside existing profile fields.
+### 4. Tutor Payment Summary (unchanged)
 
-### 4. Auto-Fill Zoom Link When Scheduling Classes
+The batch "Mark All Paid" for biweekly tutor payouts works the same regardless of payment method -- it only touches `tutor_payment_date`.
 
-**`src/components/tutor/dialogs/AddClassDialog.tsx`**
+### 5. Payment Filters Enhanced
 
-When the dialog opens, read `currentUser.zoom_link` (the tutor's profile) and use it as the default value for `zoomLink` instead of the current hardcoded `'https://zoom.us/'`.
+Add a "Payment Method" filter option so you can view:
+- All Zelle students with unpaid balances (for manual collection)
+- All students regardless of method (for full overview)
 
-### 5. Update Profile Editor
+### 6. Class Details Dialog
 
-**`src/components/shared/ProfileEditor.tsx`**
-
-Add `zoom_link` to the form data so it's included when the profile is saved.
+When viewing a class, the payment section will show:
+- Payment method badge ("Stripe" or "Zelle")
+- For Stripe students: student payment marked as "Managed by Stripe" (non-editable)
+- For Zelle students: both Mark Paid/Unpaid buttons as planned
 
 ## Files to Modify
 
 | File | Change |
 |------|--------|
-| `src/types/profile.ts` | Add `zoom_link` to Profile interface |
-| `src/hooks/useProfile.ts` | Add `zoom_link` to Profile interface |
-| `src/components/shared/profile/ProfileForm.tsx` | Add Zoom link input (tutor-only) |
-| `src/components/shared/ProfileEditor.tsx` | Include `zoom_link` in form state |
-| `src/components/tutor/dialogs/AddClassDialog.tsx` | Read `currentUser.zoom_link` as default |
+| `src/components/admin/students/StudentForm.tsx` | Add payment method dropdown |
+| `src/components/admin/students/StudentTable.tsx` | Show payment method column |
+| `src/components/admin/class-logs/ClassTable.tsx` | Conditional student payment dot behavior based on payment method |
+| `src/components/admin/class-logs/ClassDetailsDialog.tsx` | Payment section with method-aware controls |
+| `src/components/admin/class-logs/ClassFilters.tsx` | Add payment method and unpaid filters |
+| `src/components/admin/ClassLogs.tsx` | Wire up payment updates and tutor summary |
+| `src/hooks/useClassLogs.ts` | Add payment mutations and join student payment method |
+| `src/services/class-operations/update/updateClassLog.ts` | Payment date update helper |
 
-## Technical Notes
+## New Files
 
-- The `zoom_link` column is nullable with no default, so existing profiles are unaffected
-- The AddClassDialog already receives `currentUser` (the profile object), so no additional data fetching is needed
-- If no Zoom link is saved, the field behaves exactly as it does today (empty)
+| File | Purpose |
+|------|---------|
+| `src/components/admin/class-logs/TutorPaymentSummary.tsx` | Batch tutor payout view |
+
+## How It Works Day-to-Day
+
+**Biweekly tutor payouts (same for both):**
+1. Go to Class Logs, open Tutor Payment Summary
+2. See each tutor's total owed
+3. Pay them, click "Mark All Paid" -- done
+
+**Collecting from Zelle parents:**
+1. Filter by "Payment Method: Zelle" + "Student: Unpaid"
+2. See who owes you
+3. When they Zelle you, click the dot to mark paid
+
+**Stripe parents:**
+1. No action needed -- student payment dot auto-shows as managed by Stripe
+2. You only click the tutor payment dot after paying the tutor
+
+## No Changes to Stripe Integration
+
+The existing Stripe webhook and subscription system stays untouched. This is purely an admin tracking layer so you know which students to chase for Zelle payments vs. which are handled automatically.
+
