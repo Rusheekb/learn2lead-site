@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileDown, Upload } from 'lucide-react';
+import { FileDown, Upload, Wand2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { exportClassLogsToCSV } from '@/utils/csvExport';
 import { toast } from 'sonner';
 import {
@@ -22,6 +23,7 @@ import { useClassLogs } from '@/hooks/useClassLogs';
 const ClassLogs: React.FC = () => {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
+  const [isBackfilling, setIsBackfilling] = useState(false);
   const {
     searchTerm,
     setSearchTerm,
@@ -99,11 +101,74 @@ const ClassLogs: React.FC = () => {
     ? studentPaymentMethods[selectedClass.studentName] || 'zelle'
     : 'zelle';
 
+  const handleApplyDefaultRates = async () => {
+    setIsBackfilling(true);
+    try {
+      // Fetch all students with class_rate
+      const { data: students } = await supabase
+        .from('students')
+        .select('name, class_rate')
+        .not('class_rate', 'is', null);
+
+      // Fetch all tutors with hourly_rate
+      const { data: tutors } = await supabase
+        .from('tutors')
+        .select('name, hourly_rate')
+        .not('hourly_rate', 'is', null);
+
+      let updatedCount = 0;
+
+      // Update class costs from student rates
+      if (students && students.length > 0) {
+        for (const student of students) {
+          const { data } = await supabase
+            .from('class_logs')
+            .update({ 'Class Cost': student.class_rate } as any)
+            .eq('Student Name', student.name)
+            .is('Class Cost', null)
+            .select('id');
+          updatedCount += data?.length || 0;
+        }
+      }
+
+      // Update tutor costs from tutor rates
+      if (tutors && tutors.length > 0) {
+        for (const tutor of tutors) {
+          const { data } = await supabase
+            .from('class_logs')
+            .update({ 'Tutor Cost': tutor.hourly_rate } as any)
+            .eq('Tutor Name', tutor.name)
+            .is('Tutor Cost', null)
+            .select('id');
+          updatedCount += data?.length || 0;
+        }
+      }
+
+      toast.success(`Applied default rates to ${updatedCount} class log fields`);
+      handleRefreshData();
+    } catch (error) {
+      console.error('Error applying default rates:', error);
+      toast.error('Failed to apply default rates');
+    } finally {
+      setIsBackfilling(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Class Logs & Payments</h2>
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleApplyDefaultRates}
+            disabled={isBackfilling}
+            className="flex items-center gap-2"
+          >
+            <Wand2 className="h-4 w-4" />
+            {isBackfilling ? 'Applying...' : 'Apply Default Rates'}
+          </Button>
           <Button
             variant="outline"
             size="sm"

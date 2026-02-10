@@ -648,6 +648,7 @@ export type Database = {
         Row: {
           active: boolean
           availability_windows: string[] | null
+          class_rate: number | null
           communication_pref:
             | Database["public"]["Enums"]["communication_style"]
             | null
@@ -672,6 +673,7 @@ export type Database = {
         Insert: {
           active?: boolean
           availability_windows?: string[] | null
+          class_rate?: number | null
           communication_pref?:
             | Database["public"]["Enums"]["communication_style"]
             | null
@@ -696,6 +698,7 @@ export type Database = {
         Update: {
           active?: boolean
           availability_windows?: string[] | null
+          class_rate?: number | null
           communication_pref?:
             | Database["public"]["Enums"]["communication_style"]
             | null

@@ -27,6 +27,7 @@ const studentSchema = z.object({
   grade: z.string().min(1, { message: 'Grade is required' }),
   subjects: z.string().min(1, { message: 'At least one subject is required' }),
   paymentMethod: z.enum(['stripe', 'zelle']),
+  classRate: z.string().optional(),
 });
 
 type StudentFormValues = z.infer<typeof studentSchema>;
@@ -40,6 +41,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ onAddStudent }) => {
       grade: '',
       subjects: '',
       paymentMethod: 'zelle',
+      classRate: '',
     },
   });
 
@@ -54,6 +56,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ onAddStudent }) => {
       lastSession: 'N/A',
       paymentStatus: 'paid' as const,
       paymentMethod: values.paymentMethod as 'stripe' | 'zelle',
+      classRate: values.classRate ? parseFloat(values.classRate) : undefined,
     };
 
     onAddStudent(newStudent);
@@ -162,6 +165,27 @@ const StudentForm: React.FC<StudentFormProps> = ({ onAddStudent }) => {
                     <SelectItem value="stripe">Stripe</SelectItem>
                   </SelectContent>
                 </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="classRate"
+            render={({ field }) => (
+              <FormItem className="grid gap-2">
+                <FormLabel htmlFor="classRate">Class Rate ($)</FormLabel>
+                <FormControl>
+                  <Input
+                    id="classRate"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="e.g. 50.00"
+                    {...field}
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
