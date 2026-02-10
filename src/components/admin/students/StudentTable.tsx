@@ -16,6 +16,7 @@ export interface Student {
   lastSession: string;
   paymentStatus: 'paid' | 'unpaid' | 'overdue';
   paymentMethod?: 'stripe' | 'zelle';
+  classRate?: number | null;
 }
 
 interface StudentTableProps {
@@ -55,6 +56,14 @@ const StudentTable: React.FC<StudentTableProps> = memo(({
         <Badge variant={student.paymentMethod === 'stripe' ? 'default' : 'secondary'}>
           {student.paymentMethod === 'stripe' ? 'Stripe' : 'Zelle'}
         </Badge>
+      ),
+    },
+    {
+      header: 'Class Rate',
+      cell: (student) => (
+        <span className="font-medium">
+          {student.classRate != null ? `$${Number(student.classRate).toFixed(2)}` : '—'}
+        </span>
       ),
     },
     {

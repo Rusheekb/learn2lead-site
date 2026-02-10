@@ -56,6 +56,35 @@ export async function createClassLog(
     });
   }
     
+  // Auto-fill costs from student/tutor default rates if not provided
+  let classCost = classLog.classCost?.toString() || classLog['Class Cost'] || null;
+  let tutorCost = classLog.tutorCost?.toString() || classLog['Tutor Cost'] || null;
+
+  const studentName = classLog.studentName || classLog['Student Name'] || null;
+  const tutorName = classLog.tutorName || classLog['Tutor Name'] || null;
+
+  if (!classCost && studentName) {
+    const { data: studentData } = await supabase
+      .from('students')
+      .select('class_rate')
+      .eq('name', studentName)
+      .maybeSingle();
+    if (studentData?.class_rate != null) {
+      classCost = studentData.class_rate.toString();
+    }
+  }
+
+  if (!tutorCost && tutorName) {
+    const { data: tutorData } = await supabase
+      .from('tutors')
+      .select('hourly_rate')
+      .eq('name', tutorName)
+      .maybeSingle();
+    if (tutorData?.hourly_rate != null) {
+      tutorCost = tutorData.hourly_rate.toString();
+    }
+  }
+
   // Create a properly formatted object that matches the database schema
   // Payment dates default to NULL (unpaid) - date-based payment tracking
   const dbRecord = {
@@ -69,8 +98,8 @@ export async function createClassLog(
     'Subject': classLog.subject || classLog.Subject || null,
     'Content': classLog.content || classLog.Content || null,
     'HW': classLog.homework || classLog.HW || null,
-    'Class Cost': classLog.classCost?.toString() || classLog['Class Cost'] || null,
-    'Tutor Cost': classLog.tutorCost?.toString() || classLog['Tutor Cost'] || null,
+    'Class Cost': classCost,
+    'Tutor Cost': tutorCost,
     'student_payment_date': classLog.studentPaymentDate || classLog['student_payment_date'] || null,
     'tutor_payment_date': classLog.tutorPaymentDate || classLog['tutor_payment_date'] || null,
     'Additional Info': classLog.notes || classLog['Additional Info'] || null,

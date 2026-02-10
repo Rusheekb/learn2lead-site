@@ -12,6 +12,7 @@ import { Plus } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { fetchStudents } from '@/services/dataService';
 import { useClassLogs } from '@/hooks/useClassLogs';
+import { supabase } from '@/integrations/supabase/client';
 
 import StudentTable, { Student } from './StudentTable';
 import StudentForm from './StudentForm';
@@ -30,6 +31,15 @@ const StudentsManager: React.FC = () => {
     try {
       const studentData = await fetchStudents();
 
+      // Fetch payment_method and class_rate from students table
+      const { data: studentsTableData } = await supabase
+        .from('students')
+        .select('name, payment_method, class_rate');
+      
+      const studentsLookup = new Map(
+        (studentsTableData || []).map((s: any) => [s.name, { paymentMethod: s.payment_method, classRate: s.class_rate }])
+      );
+
       const enhancedStudents = studentData.map((student) => {
         const studentClasses = classes.filter(
           (cls) => cls.studentName === student.name
@@ -46,6 +56,8 @@ const StudentsManager: React.FC = () => {
           }
         });
 
+        const extraData = studentsLookup.get(student.name);
+
         return {
           id: student.id,
           name: student.name,
@@ -58,6 +70,8 @@ const StudentsManager: React.FC = () => {
           enrollDate: enrollDate || new Date().toISOString().split('T')[0],
           lastSession: student.lastSession || 'N/A',
           paymentStatus: 'paid' as const,
+          paymentMethod: (extraData?.paymentMethod || 'zelle') as 'stripe' | 'zelle',
+          classRate: extraData?.classRate ?? null,
         };
       });
 
