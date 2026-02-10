@@ -1,15 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileDown, RefreshCw, Upload } from 'lucide-react';
+import { FileDown, Upload } from 'lucide-react';
 import { exportClassLogsToCSV } from '@/utils/csvExport';
 import { toast } from 'sonner';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import {
   Dialog,
   DialogContent,
@@ -17,14 +11,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 
-// Import refactored components
 import ClassFilters from './class-logs/ClassFilters';
 import ClassTable from './class-logs/ClassTable';
 import ClassDetailsDialog from './class-logs/ClassDetailsDialog';
 import CsvUploader from './class-logs/CsvUploader';
 import { ExportDialog } from './class-logs/ExportDialog';
+import TutorPaymentSummary from './class-logs/TutorPaymentSummary';
 import { useClassLogs } from '@/hooks/useClassLogs';
-import { ExportFormat } from '@/types/classTypes';
 
 const ClassLogs: React.FC = () => {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
@@ -34,6 +27,10 @@ const ClassLogs: React.FC = () => {
     setSearchTerm,
     dateFilter,
     setDateFilter,
+    paymentFilter,
+    setPaymentFilter,
+    paymentMethodFilter,
+    setPaymentMethodFilter,
     isDetailsOpen,
     setIsDetailsOpen,
     selectedClass,
@@ -59,8 +56,11 @@ const ClassLogs: React.FC = () => {
     handleRefreshData,
     handlePageChange,
     handlePageSizeChange,
-  } = useClassLogs();
 
+    studentPaymentMethods,
+    handleToggleStudentPayment,
+    handleToggleTutorPayment,
+  } = useClassLogs();
 
   // Calculate payment totals from filtered classes
   const paymentTotals = useMemo(() => {
@@ -68,23 +68,22 @@ const ClassLogs: React.FC = () => {
       (totals, cls) => {
         const classCost = cls.classCost || 0;
         const tutorCost = cls.tutorCost || 0;
-        const isPaid = cls.studentPayment?.toLowerCase() === 'paid';
         
         return {
           classCost: totals.classCost + classCost,
           tutorCost: totals.tutorCost + tutorCost,
           profit: totals.profit + (classCost - tutorCost),
-          pending: totals.pending + (isPaid ? 0 : classCost),
+          pendingStudent: totals.pendingStudent + (cls.studentPaymentDate ? 0 : classCost),
+          pendingTutor: totals.pendingTutor + (cls.tutorPaymentDate ? 0 : tutorCost),
         };
       },
-      { classCost: 0, tutorCost: 0, profit: 0, pending: 0 }
+      { classCost: 0, tutorCost: 0, profit: 0, pendingStudent: 0, pendingTutor: 0 }
     );
   }, [filteredClasses]);
 
   const handleExportCSV = (startDate?: Date, endDate?: Date) => {
     try {
       exportClassLogsToCSV(filteredClasses, startDate, endDate);
-      
       if (startDate && endDate) {
         toast.success(`Exported ${filteredClasses.length} class logs from ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}`);
       } else {
@@ -95,6 +94,10 @@ const ClassLogs: React.FC = () => {
       toast.error('Failed to export class logs');
     }
   };
+
+  const selectedStudentMethod = selectedClass?.studentName
+    ? studentPaymentMethods[selectedClass.studentName] || 'zelle'
+    : 'zelle';
 
   return (
     <div className="space-y-6">
@@ -124,56 +127,54 @@ const ClassLogs: React.FC = () => {
       </div>
 
       {/* Payment Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-5">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Revenue
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Revenue</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              ${paymentTotals.classCost.toFixed(2)}
-            </div>
+            <div className="text-2xl font-bold">${paymentTotals.classCost.toFixed(2)}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Tutor Payments
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Tutor Payments</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              ${paymentTotals.tutorCost.toFixed(2)}
-            </div>
+            <div className="text-2xl font-bold">${paymentTotals.tutorCost.toFixed(2)}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Net Profit
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Net Profit</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              ${paymentTotals.profit.toFixed(2)}
-            </div>
+            <div className="text-2xl font-bold">${paymentTotals.profit.toFixed(2)}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Pending Collections
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Pending (Students)</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              ${paymentTotals.pending.toFixed(2)}
-            </div>
+            <div className="text-2xl font-bold text-destructive">${paymentTotals.pendingStudent.toFixed(2)}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Pending (Tutors)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-destructive">${paymentTotals.pendingTutor.toFixed(2)}</div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Tutor Payment Summary */}
+      <TutorPaymentSummary
+        classes={classes}
+        onPaymentUpdated={handleRefreshData}
+      />
 
       <ClassFilters
         searchTerm={searchTerm}
@@ -181,6 +182,10 @@ const ClassLogs: React.FC = () => {
         dateFilter={dateFilter || undefined}
         setDateFilter={(date) => setDateFilter(date || null)}
         clearFilters={clearFilters}
+        paymentFilter={paymentFilter}
+        setPaymentFilter={setPaymentFilter}
+        paymentMethodFilter={paymentMethodFilter}
+        setPaymentMethodFilter={setPaymentMethodFilter}
       />
 
       <ClassTable
@@ -198,6 +203,9 @@ const ClassLogs: React.FC = () => {
         totalItems={totalItems}
         onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}
+        studentPaymentMethods={studentPaymentMethods}
+        onToggleStudentPayment={handleToggleStudentPayment}
+        onToggleTutorPayment={handleToggleTutorPayment}
       />
 
       <ClassDetailsDialog
@@ -210,6 +218,9 @@ const ClassLogs: React.FC = () => {
         studentMessages={studentMessages}
         handleDownloadFile={async () => {}}
         formatTime={formatTime}
+        studentPaymentMethod={selectedStudentMethod}
+        onToggleStudentPayment={handleToggleStudentPayment}
+        onToggleTutorPayment={handleToggleTutorPayment}
       />
 
       <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>

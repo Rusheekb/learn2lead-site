@@ -26,6 +26,7 @@ const studentSchema = z.object({
   email: z.string().email({ message: 'Invalid email address' }),
   grade: z.string().min(1, { message: 'Grade is required' }),
   subjects: z.string().min(1, { message: 'At least one subject is required' }),
+  paymentMethod: z.enum(['stripe', 'zelle']),
 });
 
 type StudentFormValues = z.infer<typeof studentSchema>;
@@ -38,6 +39,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ onAddStudent }) => {
       email: '',
       grade: '',
       subjects: '',
+      paymentMethod: 'zelle',
     },
   });
 
@@ -51,6 +53,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ onAddStudent }) => {
       enrollDate: new Date().toISOString().split('T')[0],
       lastSession: 'N/A',
       paymentStatus: 'paid' as const,
+      paymentMethod: values.paymentMethod as 'stripe' | 'zelle',
     };
 
     onAddStudent(newStudent);
@@ -134,6 +137,31 @@ const StudentForm: React.FC<StudentFormProps> = ({ onAddStudent }) => {
                     {...field}
                   />
                 </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="paymentMethod"
+            render={({ field }) => (
+              <FormItem className="grid gap-2">
+                <FormLabel>Payment Method</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select payment method" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="zelle">Zelle</SelectItem>
+                    <SelectItem value="stripe">Stripe</SelectItem>
+                  </SelectContent>
+                </Select>
                 <FormMessage />
               </FormItem>
             )}

@@ -10,6 +10,8 @@ export interface ClassFiltersProps {
   clearFilters: () => void;
   paymentFilter?: string;
   setPaymentFilter?: (status: string) => void;
+  paymentMethodFilter?: string;
+  setPaymentMethodFilter?: (method: string) => void;
 }
 
 const ClassFilters: React.FC<ClassFiltersProps> = ({
@@ -20,11 +22,15 @@ const ClassFilters: React.FC<ClassFiltersProps> = ({
   clearFilters,
   paymentFilter,
   setPaymentFilter,
+  paymentMethodFilter,
+  setPaymentMethodFilter,
 }) => {
   // Payment filter options
   const paymentOptions = [
-    { value: 'paid', label: 'Paid' },
-    { value: 'pending', label: 'Pending' },
+    { value: 'student_unpaid', label: 'Student: Unpaid' },
+    { value: 'tutor_unpaid', label: 'Tutor: Unpaid' },
+    { value: 'student_paid', label: 'Student: Paid' },
+    { value: 'tutor_paid', label: 'Tutor: Paid' },
   ];
 
   return (
@@ -41,24 +47,40 @@ const ClassFilters: React.FC<ClassFiltersProps> = ({
         clearFilters={clearFilters}
       />
       
-      {/* Additional payment filter */}
-      {paymentFilter !== undefined && setPaymentFilter && (
-        <div className="flex items-center gap-2">
-          <label className="text-sm font-medium">Payment Status:</label>
-          <select
-            value={paymentFilter}
-            onChange={(e) => setPaymentFilter(e.target.value)}
-            className="px-3 py-2 border rounded-md text-sm"
-          >
-            <option value="">All Payments</option>
-            {paymentOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
+      {/* Payment status and method filters */}
+      <div className="flex items-center gap-4 flex-wrap">
+        {paymentFilter !== undefined && setPaymentFilter && (
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium">Payment Status:</label>
+            <select
+              value={paymentFilter}
+              onChange={(e) => setPaymentFilter(e.target.value)}
+              className="px-3 py-2 border border-border rounded-md text-sm bg-background"
+            >
+              <option value="">All</option>
+              {paymentOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+        {paymentMethodFilter !== undefined && setPaymentMethodFilter && (
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium">Method:</label>
+            <select
+              value={paymentMethodFilter}
+              onChange={(e) => setPaymentMethodFilter(e.target.value)}
+              className="px-3 py-2 border border-border rounded-md text-sm bg-background"
+            >
+              <option value="">All Methods</option>
+              <option value="stripe">Stripe</option>
+              <option value="zelle">Zelle</option>
+            </select>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Dialog,
@@ -10,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StudentContent } from '@/components/shared/StudentContent.tsx';
+import { Badge } from '@/components/ui/badge';
 
 import { format } from 'date-fns';
 import { FileText, ExternalLink } from 'lucide-react';
@@ -25,6 +25,9 @@ interface ClassDetailsDialogProps {
   studentMessages: any[];
   handleDownloadFile: (uploadId: string) => Promise<void>;
   formatTime: (time: string) => string;
+  studentPaymentMethod?: string;
+  onToggleStudentPayment?: (classId: string, currentlyPaid: boolean) => void;
+  onToggleTutorPayment?: (classId: string, currentlyPaid: boolean) => void;
 }
 
 const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
@@ -37,6 +40,9 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
   studentMessages,
   handleDownloadFile,
   formatTime,
+  studentPaymentMethod,
+  onToggleStudentPayment,
+  onToggleTutorPayment,
 }) => {
   if (!selectedClass) return null;
 
@@ -52,16 +58,17 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
     }
   };
   
-  // Helper function to get filename from URL
   const getFilenameFromUrl = (url: string) => {
     const parts = url.split('/');
     const filename = parts[parts.length - 1].split('?')[0];
-    // Decode URI components
     const decodedFilename = decodeURIComponent(filename);
-    // Get everything after the last slash and before any query params
     const matches = decodedFilename.match(/[^\/]+\.[^\/\.]+$/);
     return matches ? matches[0] : decodedFilename;
   };
+
+  const isStripe = studentPaymentMethod === 'stripe';
+  const studentPaid = !!selectedClass.studentPaymentDate;
+  const tutorPaid = !!selectedClass.tutorPaymentDate;
 
   return (
     <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
@@ -73,12 +80,11 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
 
           <div className="flex-1 overflow-y-auto py-4">
             <Tabs value={activeDetailsTab} onValueChange={setActiveDetailsTab}>
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="details">Class Details</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="details">Details</TabsTrigger>
+                <TabsTrigger value="payments">Payments</TabsTrigger>
                 <TabsTrigger value="materials">Materials</TabsTrigger>
-                <TabsTrigger value="student-content">
-                  Student Content
-                </TabsTrigger>
+                <TabsTrigger value="student-content">Student</TabsTrigger>
               </TabsList>
 
               <TabsContent value="details" className="space-y-4 pt-4">
@@ -144,6 +150,86 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
                     </p>
                   </div>
                 )}
+              </TabsContent>
+
+              <TabsContent value="payments" className="space-y-6 pt-4">
+                <div className="flex items-center gap-2">
+                  <h4 className="text-sm font-medium text-muted-foreground">Payment Method:</h4>
+                  <Badge variant={isStripe ? 'default' : 'secondary'}>
+                    {isStripe ? 'Stripe' : 'Zelle'}
+                  </Badge>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-3 rounded-lg border border-border">
+                    <div className="text-sm text-muted-foreground">Class Cost</div>
+                    <div className="text-xl font-bold">${selectedClass.classCost?.toFixed(2) || '0.00'}</div>
+                  </div>
+                  <div className="p-3 rounded-lg border border-border">
+                    <div className="text-sm text-muted-foreground">Tutor Cost</div>
+                    <div className="text-xl font-bold">${selectedClass.tutorCost?.toFixed(2) || '0.00'}</div>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-lg border border-border space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium">Student Payment</h4>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-3 h-3 rounded-full ${studentPaid ? 'bg-emerald-500' : 'bg-destructive'}`} />
+                      <span className="text-sm font-medium">
+                        {studentPaid ? 'Paid' : 'Unpaid'}
+                      </span>
+                    </div>
+                  </div>
+                  {isStripe ? (
+                    <p className="text-sm text-muted-foreground">Managed by Stripe — no manual action needed.</p>
+                  ) : (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">
+                        {studentPaid && selectedClass.studentPaymentDate
+                          ? `Paid on ${format(selectedClass.studentPaymentDate, 'M/d/yy')}`
+                          : 'Not yet received'}
+                      </span>
+                      {onToggleStudentPayment && (
+                        <Button
+                          size="sm"
+                          variant={studentPaid ? 'outline' : 'default'}
+                          onClick={() => onToggleStudentPayment(selectedClass.id, studentPaid)}
+                        >
+                          {studentPaid ? 'Mark Unpaid' : 'Mark Paid'}
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="p-4 rounded-lg border border-border space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium">Tutor Payment</h4>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-3 h-3 rounded-full ${tutorPaid ? 'bg-emerald-500' : 'bg-destructive'}`} />
+                      <span className="text-sm font-medium">
+                        {tutorPaid ? 'Paid' : 'Unpaid'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      {tutorPaid && selectedClass.tutorPaymentDate
+                        ? `Paid on ${format(selectedClass.tutorPaymentDate, 'M/d/yy')}`
+                        : 'Not yet paid'}
+                    </span>
+                    {onToggleTutorPayment && (
+                      <Button
+                        size="sm"
+                        variant={tutorPaid ? 'outline' : 'default'}
+                        onClick={() => onToggleTutorPayment(selectedClass.id, tutorPaid)}
+                      >
+                        {tutorPaid ? 'Mark Unpaid' : 'Mark Paid'}
+                      </Button>
+                    )}
+                  </div>
+                </div>
               </TabsContent>
 
               <TabsContent value="materials" className="space-y-4 pt-4">
