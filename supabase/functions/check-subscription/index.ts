@@ -57,14 +57,30 @@ serve(async (req) => {
     
     logStep("Authenticating user with token");
     
-    // Use service role key to validate the token server-side
-    const authSupabase = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: { autoRefreshToken: false, persistSession: false },
-    });
-    
-    const { data: { user }, error: userError } = await authSupabase.auth.getUser(token);
-    if (userError || !user) {
-      logStep("Authentication failed", { error: userError?.message });
+    // Decode JWT payload to extract user info (avoids "Auth session missing!" issue)
+    let jwtPayload: any;
+    try {
+      const payloadBase64 = token.split('.')[1];
+      if (!payloadBase64) throw new Error("Invalid JWT format");
+      jwtPayload = JSON.parse(atob(payloadBase64));
+      if (!jwtPayload.sub) throw new Error("No sub claim in JWT");
+    } catch (e) {
+      logStep("JWT decode failed", { error: e instanceof Error ? e.message : String(e) });
+      return new Response(JSON.stringify({ 
+        subscribed: false,
+        credits_remaining: 0,
+        auth_error: true,
+        error: "Invalid authentication token"
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401,
+      });
+    }
+
+    // Verify user exists via admin API (uses service role key)
+    const { data: adminUserData, error: adminError } = await supabaseClient.auth.admin.getUserById(jwtPayload.sub);
+    if (adminError || !adminUserData?.user) {
+      logStep("Admin user verification failed", { error: adminError?.message });
       return new Response(JSON.stringify({ 
         subscribed: false,
         credits_remaining: 0,
@@ -75,6 +91,8 @@ serve(async (req) => {
         status: 401,
       });
     }
+    
+    const user = adminUserData.user;
     
     const userId = user.id;
     const userEmail = user.email as string;
