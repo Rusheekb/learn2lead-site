@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileDown, Upload } from 'lucide-react';
+import { FileDown, Upload, DollarSign } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { exportClassLogsToCSV } from '@/utils/csvExport';
 import { toast } from 'sonner';
@@ -18,11 +18,13 @@ import ClassDetailsDialog from './class-logs/ClassDetailsDialog';
 import CsvUploader from './class-logs/CsvUploader';
 import { ExportDialog } from './class-logs/ExportDialog';
 import TutorPaymentSummary from './class-logs/TutorPaymentSummary';
+import StudentPaymentRecorder from './class-logs/StudentPaymentRecorder';
 import { useClassLogs } from '@/hooks/useClassLogs';
 
 const ClassLogs: React.FC = () => {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
+  const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   
   const {
     searchTerm,
@@ -107,6 +109,15 @@ const ClassLogs: React.FC = () => {
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold">Class Logs & Payments</h2>
         <div className="flex items-center gap-2">
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => setIsPaymentOpen(true)}
+            className="flex items-center gap-2"
+          >
+            <DollarSign className="h-4 w-4" />
+            Record Payment
+          </Button>
           <Button
             variant="outline"
             size="sm"
@@ -246,6 +257,12 @@ const ClassLogs: React.FC = () => {
         onOpenChange={setIsExportOpen}
         onExport={handleExportCSV}
         totalRecords={filteredClasses.length}
+      />
+
+      <StudentPaymentRecorder
+        open={isPaymentOpen}
+        onOpenChange={setIsPaymentOpen}
+        onPaymentRecorded={handleRefreshData}
       />
     </div>
   );

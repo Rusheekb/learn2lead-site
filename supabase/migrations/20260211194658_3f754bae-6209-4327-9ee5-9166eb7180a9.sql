@@ -1,0 +1,1 @@
+ALTER TABLE students ADD COLUMN prepaid_balance numeric DEFAULT 0;

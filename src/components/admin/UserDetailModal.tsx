@@ -45,7 +45,7 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
   const [classRate, setClassRate] = useState<string>('');
   const [paymentMethod, setPaymentMethod] = useState<string>('zelle');
   const [hourlyRate, setHourlyRate] = useState<string>('');
-
+  const [prepaidBalance, setPrepaidBalance] = useState<number>(0);
   // Fetch rate data when user changes
   useEffect(() => {
     if (!user) return;
@@ -54,12 +54,13 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
       if (user.role === 'student') {
         const { data } = await supabase
           .from('students')
-          .select('class_rate, payment_method')
+          .select('class_rate, payment_method, prepaid_balance')
           .eq('name', user.name)
           .maybeSingle();
         if (data) {
           setClassRate(data.class_rate?.toString() || '');
           setPaymentMethod(data.payment_method || 'zelle');
+          setPrepaidBalance(Number(data.prepaid_balance) || 0);
         }
       } else if (user.role === 'tutor') {
         const { data } = await supabase
@@ -214,6 +215,17 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
                       </SelectContent>
                     </Select>
                   </div>
+                  {prepaidBalance > 0 && (
+                    <div className="space-y-1.5">
+                      <Label>Prepaid Balance</Label>
+                      <p className="text-sm font-medium text-primary">
+                        ${prepaidBalance.toFixed(2)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Surplus from overpayment, auto-applied to future classes.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 
