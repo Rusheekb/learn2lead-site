@@ -62,9 +62,10 @@ serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
     
-    const { data: userData, error: userError } = await authSupabase.auth.getUser(token);
-    if (userError || !userData.user) {
-      logStep("Authentication failed", { error: userError?.message });
+    // Use getClaims for local JWT validation (doesn't require server session)
+    const { data: claimsData, error: claimsError } = await authSupabase.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      logStep("Authentication failed", { error: claimsError?.message });
       return new Response(JSON.stringify({ 
         subscribed: false,
         credits_remaining: 0,
@@ -76,8 +77,10 @@ serve(async (req) => {
       });
     }
     
-    const user = userData.user;
-    if (!user?.email) {
+    const userId = claimsData.claims.sub;
+    const userEmail = claimsData.claims.email as string;
+    
+    if (!userEmail) {
       logStep("User email not available");
       return new Response(JSON.stringify({ 
         subscribed: false,
@@ -89,10 +92,10 @@ serve(async (req) => {
         status: 401,
       });
     }
-    logStep("User authenticated", { userId: user.id, email: user.email });
+    logStep("User authenticated", { userId, email: userEmail });
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    const customers = await stripe.customers.list({ email: userEmail, limit: 1 });
     
     let activeOrPausedSub = null;
 
@@ -130,7 +133,7 @@ serve(async (req) => {
       const { data: manualSub, error: manualError } = await supabaseClient
         .from('student_subscriptions')
         .select('id, stripe_subscription_id, status, current_period_end, plan_id')
-        .eq('student_id', user.id)
+        .eq('student_id', userId)
         .eq('status', 'active')
         .ilike('stripe_subscription_id', 'manual_%')
         .maybeSingle();
@@ -148,7 +151,7 @@ serve(async (req) => {
     const { data: ledgerData, error: ledgerError } = await supabaseClient
       .from('class_credits_ledger')
       .select('balance_after')
-      .eq('student_id', user.id)
+      .eq('student_id', userId)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
