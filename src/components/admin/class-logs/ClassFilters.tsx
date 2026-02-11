@@ -38,7 +38,7 @@ const ClassFilters: React.FC<ClassFiltersProps> = ({
       <FilterControls
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
-        searchPlaceholder="Search by title, tutor, or student"
+        searchPlaceholder="Search by tutor, student, subject (use commas to combine)"
         
         showDateFilter={true}
         dateFilter={dateFilter}
