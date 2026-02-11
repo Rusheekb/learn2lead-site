@@ -106,15 +106,16 @@ export const useSimplifiedClassLogs = () => {
 
   // Filter classes
   const filteredClasses = classes.filter(c => {
-    // Search filter
+    // Search filter (supports comma/& separated AND terms)
     if (searchTerm) {
-      const term = searchTerm.toLowerCase();
-      const match = 
-        c.title?.toLowerCase().includes(term) ||
-        c.tutorName?.toLowerCase().includes(term) ||
-        c.studentName?.toLowerCase().includes(term) ||
-        c.subject?.toLowerCase().includes(term);
-      if (!match) return false;
+      const terms = searchTerm.split(/[,&]/).map(t => t.trim().toLowerCase()).filter(Boolean);
+      const searchableText = [c.title, c.tutorName, c.studentName, c.subject]
+        .filter(Boolean)
+        .map(s => s!.toLowerCase());
+      const allMatch = terms.every(term =>
+        searchableText.some(field => field.includes(term))
+      );
+      if (!allMatch) return false;
     }
 
     // Date filter
