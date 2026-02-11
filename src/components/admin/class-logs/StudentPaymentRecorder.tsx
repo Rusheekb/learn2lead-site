@@ -105,7 +105,7 @@ const StudentPaymentRecorder: React.FC<StudentPaymentRecorderProps> = ({
         const { data: unpaidLogs } = await supabase
           .from('class_logs')
           .select('id, "Date", "Class Cost"')
-          .eq('Student Name', selectedStudent.name)
+          .or(`Student Name.eq.${selectedStudent.name},Student Name.eq.${selectedStudent.email}`)
           .is('student_payment_date', null)
           .order('Date', { ascending: true });
 
@@ -113,7 +113,7 @@ const StudentPaymentRecorder: React.FC<StudentPaymentRecorderProps> = ({
         const { data: lastPaid } = await supabase
           .from('class_logs')
           .select('student_payment_date')
-          .eq('Student Name', selectedStudent.name)
+          .or(`Student Name.eq.${selectedStudent.name},Student Name.eq.${selectedStudent.email}`)
           .not('student_payment_date', 'is', null)
           .order('student_payment_date', { ascending: false })
           .limit(1);
