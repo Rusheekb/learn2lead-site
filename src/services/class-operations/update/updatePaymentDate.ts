@@ -45,3 +45,25 @@ export const batchUpdateTutorPaymentDate = async (
   }
   return true;
 };
+
+/**
+ * Batch update student payment dates for multiple class logs
+ */
+export const batchUpdateStudentPaymentDate = async (
+  classIds: string[],
+  date: Date | null
+): Promise<boolean> => {
+  if (classIds.length === 0) return true;
+  const dateStr = date ? format(date, 'yyyy-MM-dd') : null;
+
+  const { error } = await supabase
+    .from('class_logs')
+    .update({ student_payment_date: dateStr })
+    .in('id', classIds);
+
+  if (error) {
+    console.error('Error batch updating student payment dates:', error);
+    return false;
+  }
+  return true;
+};

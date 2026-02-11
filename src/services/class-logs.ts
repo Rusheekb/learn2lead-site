@@ -117,8 +117,43 @@ export async function createClassLog(
     throw result.error;
   }
   
+  // Auto-apply prepaid balance if student has one
+  const createdLog = result.data;
+  const logStudentName = createdLog['Student Name'];
+  if (logStudentName) {
+    try {
+      const { data: studentData } = await supabase
+        .from('students')
+        .select('prepaid_balance, class_rate')
+        .eq('name', logStudentName)
+        .maybeSingle();
+
+      if (studentData && studentData.class_rate && 
+          (studentData.prepaid_balance ?? 0) >= studentData.class_rate) {
+        const newBalance = (studentData.prepaid_balance ?? 0) - studentData.class_rate;
+        
+        // Mark this class as paid
+        await supabase
+          .from('class_logs')
+          .update({ student_payment_date: format(new Date(), 'yyyy-MM-dd') })
+          .eq('id', createdLog.id);
+
+        // Reduce prepaid balance
+        await supabase
+          .from('students')
+          .update({ prepaid_balance: Math.round(newBalance * 100) / 100 })
+          .eq('name', logStudentName);
+          
+        console.log(`Auto-applied prepaid balance for ${logStudentName}: $${studentData.class_rate}`);
+      }
+    } catch (prepaidError) {
+      // Don't fail class creation if prepaid logic fails
+      console.error('Error auto-applying prepaid balance:', prepaidError);
+    }
+  }
+  
   // Transform the DB record to a ClassEvent
-  return transformDbRecordToClassEvent(result.data);
+  return transformDbRecordToClassEvent(createdLog);
 }
 
 export async function updateClassLog(

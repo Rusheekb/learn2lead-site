@@ -661,6 +661,7 @@ export type Database = {
           name: string
           payment_method: string | null
           payment_status: string
+          prepaid_balance: number | null
           primary_goal: Database["public"]["Enums"]["student_goal"] | null
           session_structure_pref:
             | Database["public"]["Enums"]["session_structure"]
@@ -686,6 +687,7 @@ export type Database = {
           name: string
           payment_method?: string | null
           payment_status?: string
+          prepaid_balance?: number | null
           primary_goal?: Database["public"]["Enums"]["student_goal"] | null
           session_structure_pref?:
             | Database["public"]["Enums"]["session_structure"]
@@ -711,6 +713,7 @@ export type Database = {
           name?: string
           payment_method?: string | null
           payment_status?: string
+          prepaid_balance?: number | null
           primary_goal?: Database["public"]["Enums"]["student_goal"] | null
           session_structure_pref?:
             | Database["public"]["Enums"]["session_structure"]
