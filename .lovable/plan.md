@@ -2,38 +2,29 @@
 
 ## Problem
 
-The "Record Payment" feature shows "$0.00 owed" because of a **name mismatch** between two tables:
+The "Record Payment" dialog shows **$20.00 owed** for 2 unpaid classes, but the Class Records table shows costs of **$10.00** and **$0.00**.
 
-- The `students` table stores the student's name as **"bar"**
-- The `class_logs` table stores the student name as **"bar@gmail.com"** (the email fallback)
+The root cause: the November class has a `NULL` value for `Class Cost` in the database (not `$0`). Two parts of the UI interpret this differently:
 
-When the Record Payment dialog queries for unpaid class logs, it filters by `Student Name = 'bar'`, which doesn't match any records since they're stored under `'bar@gmail.com'`.
+- **Class Records table**: displays NULL as `$0.00` (treating it as zero)
+- **Record Payment calculator**: falls back to the student's default class rate (`$10`) when NULL, resulting in `$10 + $10 = $20`
 
-## Root Cause
+This inconsistency makes the payment amount incorrect from the admin's perspective.
 
-When class logs are created (via the `complete_class_atomic` function or auto-creation), the student name is pulled from the `profiles` table. If the profile has no first/last name set, it falls back to the email address. Meanwhile, the `students` table may have been manually set to a shorter display name.
+## Fix
 
-## Proposed Fix
-
-Update the `StudentPaymentRecorder` component to query unpaid class logs using **both** the student name AND their email, so it catches records regardless of which identifier was used.
+Update the `unpaidTotal` calculation and the payment allocation logic in `StudentPaymentRecorder.tsx` to treat NULL costs as `$0` (consistent with how the table displays them), rather than falling back to the student's default rate.
 
 ### Technical Details
 
 **File: `src/components/admin/class-logs/StudentPaymentRecorder.tsx`**
 
-1. In the summary fetch effect (~line 105), change the unpaid logs query from:
-   ```
-   .eq('Student Name', selectedStudent.name)
-   ```
-   to:
-   ```
-   .or(`Student Name.eq.${selectedStudent.name},Student Name.eq.${selectedStudent.email}`)
-   ```
+1. **Line 289** - Change the `unpaidTotal` calculation:
+   - From: `(sum, c) => sum + (c.classCost ?? selectedStudent.classRate ?? 0)`
+   - To: `(sum, c) => sum + (c.classCost ?? 0)`
 
-2. Apply the same fix to the "last paid date" query (~line 113):
-   ```
-   .or(`Student Name.eq.${selectedStudent.name},Student Name.eq.${selectedStudent.email}`)
-   ```
+2. **Line 186** - Change the payment allocation loop to match:
+   - From: `const cost = cls.classCost ?? rate;`
+   - To: `const cost = cls.classCost ?? 0;`
 
-This is a safe, minimal change -- it broadens the query to match either the display name or the email, without altering any write logic or data.
-
+This ensures that if a class was logged with no cost, it is treated as free everywhere -- both in what the admin sees and in the payment math.
