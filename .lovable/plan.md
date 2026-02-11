@@ -1,51 +1,101 @@
 
 
-# Multi-Term Search in Class Logs
+# Record Payment: Batch Payment + Credits with Confirmation Flow
 
 ## Overview
-Enhance the existing search bar so that comma-separated terms are treated as AND conditions. Each term is matched independently against all text fields (title, tutor, student, subject). No new UI elements needed.
+Add a "Record Payment" dialog to Class Logs that lets admins enter a dollar amount received from a student. The system shows a **preview of current state** before input, then a **confirmation screen** after input showing exactly what will happen -- classes marked paid, credits added, and any surplus stored.
 
-## Example
-- Typing `bob, john, math` shows only classes where ALL three terms appear (across any combination of fields)
-- Typing `bob` continues to work as before (single-term search)
+## Two-Step Flow
 
-## What Changes
+```text
+Step 1: Student Summary (after selecting student)
++------------------------------------------+
+| Student: John Smith                      |
+| Class Rate: $30/class                    |
+| Payment Method: Zelle                    |
+| Current Credits: 5                       |
+| Unpaid Classes: 3 ($90 owed)             |
+| Prepaid Balance: $0                      |
+| Last Paid Date: 1/15/26                  |
+|                                          |
+| Amount Received: $________               |
+| Payment Date: [today]                    |
+|                          [Continue ->]   |
++------------------------------------------+
 
-### 1. Update filter logic in `src/hooks/useSimplifiedClassLogs.ts`
-Replace the single-term search with multi-term AND logic:
-
-```typescript
-if (searchTerm) {
-  const terms = searchTerm.split(/[,&]/).map(t => t.trim().toLowerCase()).filter(Boolean);
-  const searchableText = [c.title, c.tutorName, c.studentName, c.subject]
-    .filter(Boolean)
-    .map(s => s!.toLowerCase());
-  
-  const allMatch = terms.every(term =>
-    searchableText.some(field => field.includes(term))
-  );
-  if (!allMatch) return false;
-}
+Step 2: Confirmation Preview (after entering $300)
++------------------------------------------+
+| Payment Summary for John Smith           |
+|                                          |
+| Amount Received:          $300.00        |
+| Unpaid classes to mark paid: 3 (-$90)    |
+| Remaining after unpaid:   $210.00        |
+| Credits to add:           7 classes      |
+| Surplus (prepaid balance): $0.00         |
+|                                          |
+| BEFORE -> AFTER                          |
+| Credits:     5 -> 12                     |
+| Prepaid:    $0 -> $0                     |
+| Unpaid:      3 -> 0                      |
+|                                          |
+|        [Back]  [Confirm Payment]         |
++------------------------------------------+
 ```
 
-### 2. Update search placeholder
-Change the placeholder text in `src/components/admin/class-logs/ClassFilters.tsx` to hint at the feature:
+## What Happens on Confirm
 
-```
-"Search by tutor, student, subject (use commas to combine)"
+1. **Mark unpaid classes as paid** -- batch update `student_payment_date` on those class logs
+2. **Add credits** -- insert into `class_credits_ledger` with transaction_type "credit" and reason "Direct payment (Zelle) - $300"
+3. **Store surplus** -- update `students.prepaid_balance` if amount exceeds all classes
+4. **Toast summary** -- "Marked 3 classes paid, added 7 credits, $0 surplus"
+
+## Credit Calculation Logic
+
+```text
+total_available = amount_entered + existing_prepaid_balance
+unpaid_cost = unpaid_classes_count * class_rate
+remaining_after_unpaid = total_available - unpaid_cost
+credits_to_add = floor(remaining_after_unpaid / class_rate)
+new_surplus = remaining_after_unpaid - (credits_to_add * class_rate)
 ```
 
-## Files to Modify
+## Database Change
+
+Add `prepaid_balance` column to `students` table:
+
+```sql
+ALTER TABLE students ADD COLUMN prepaid_balance numeric DEFAULT 0;
+```
+
+## Auto-Apply Prepaid on Class Completion
+
+When a new class log is created for a student, check if `prepaid_balance >= class_rate`. If yes, auto-set `student_payment_date` to today and reduce `prepaid_balance`.
+
+## Files to Create / Modify
 
 | File | Change |
 |------|--------|
-| `src/hooks/useSimplifiedClassLogs.ts` | Split search term by `,` or `&`, require ALL terms to match |
-| `src/components/admin/class-logs/ClassFilters.tsx` | Update placeholder text to explain comma syntax |
+| **Migration SQL** | Add `prepaid_balance` to `students` |
+| `src/components/admin/class-logs/StudentPaymentRecorder.tsx` | **New** -- multi-step dialog: student picker, summary, amount input, confirmation preview, apply |
+| `src/components/admin/ClassLogs.tsx` | Add "Record Payment" button, render `StudentPaymentRecorder` |
+| `src/services/class-operations/update/updatePaymentDate.ts` | Add `batchUpdateStudentPaymentDate` function |
+| `src/services/class-logs.ts` | In `createClassLog`, auto-apply prepaid balance after insert |
+| `src/components/admin/UserDetailModal.tsx` | Show prepaid balance (read-only) for students |
 
-## How It Works
-1. Admin types `bob, math` in the search bar
-2. The input is split into `["bob", "math"]`
-3. For each class log, all searchable fields are checked
-4. A log only appears if every term matches at least one field
-5. Single-term searches work exactly as before (no behavior change)
+## Technical Details
+
+### StudentPaymentRecorder Component
+- **Step 1 (Summary)**: On student select, fetch from `students` (class_rate, payment_method, prepaid_balance), `class_logs` (count where student_payment_date IS NULL, last paid date), and `class_credits_ledger` / `student_subscriptions` (current credits). Display all as read-only summary.
+- **Step 2 (Confirm)**: Calculate all derived values (classes to mark, credits to add, surplus). Show before/after comparison. On confirm:
+  1. Batch update `student_payment_date` on unpaid logs (oldest first, up to what the amount covers)
+  2. Insert ledger entry for credits
+  3. Update `students.prepaid_balance` with surplus
+  4. Call `onPaymentRecorded()` callback to refresh parent
+
+### Edge Cases
+- **No class rate set**: Show error, link to UserDetailModal to set it
+- **No unpaid classes**: Entire amount becomes credits + surplus
+- **Partial class**: If $45 left and rate is $30, one credit added, $15 surplus
+- **Stripe students**: Filter to Zelle-only students in the picker
+- **Zero amount**: Disable confirm button
 
