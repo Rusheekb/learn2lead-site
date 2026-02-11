@@ -90,31 +90,26 @@ serve(async (req) => {
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     
+    let activeOrPausedSub = null;
+
     if (customers.data.length === 0) {
-      logStep("No customer found, updating unsubscribed state");
-      return new Response(JSON.stringify({ 
-        subscribed: false,
-        credits_remaining: 0 
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
+      logStep("No Stripe customer found, checking manual subscriptions and ledger");
+    } else {
+      const customerId = customers.data[0].id;
+      logStep("Found Stripe customer", { customerId });
+
+      // Check for active or paused subscriptions
+      const subscriptions = await stripe.subscriptions.list({
+        customer: customerId,
+        status: "all",
+        limit: 5,
       });
+      
+      // Find active or paused subscription
+      activeOrPausedSub = subscriptions.data.find(
+        (sub) => sub.status === "active" || sub.status === "paused" || sub.pause_collection
+      );
     }
-
-    const customerId = customers.data[0].id;
-    logStep("Found Stripe customer", { customerId });
-
-    // Check for active or paused subscriptions
-    const subscriptions = await stripe.subscriptions.list({
-      customer: customerId,
-      status: "all",
-      limit: 5,
-    });
-    
-    // Find active or paused subscription
-    const activeOrPausedSub = subscriptions.data.find(
-      (sub) => sub.status === "active" || sub.status === "paused" || sub.pause_collection
-    );
     
     let hasActiveSub = !!activeOrPausedSub;
     let productId = null;
