@@ -57,9 +57,9 @@ serve(async (req) => {
     
     logStep("Authenticating user with token");
     
-    // Use anon key with auth header for proper JWT validation
-    const authSupabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
+    // Use service role key to validate the token server-side
+    const authSupabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
     });
     
     const { data: { user }, error: userError } = await authSupabase.auth.getUser(token);
