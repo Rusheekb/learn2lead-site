@@ -62,10 +62,9 @@ serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
     
-    // Use getClaims for local JWT validation (doesn't require server session)
-    const { data: claimsData, error: claimsError } = await authSupabase.auth.getClaims(token);
-    if (claimsError || !claimsData?.claims) {
-      logStep("Authentication failed", { error: claimsError?.message });
+    const { data: { user }, error: userError } = await authSupabase.auth.getUser();
+    if (userError || !user) {
+      logStep("Authentication failed", { error: userError?.message });
       return new Response(JSON.stringify({ 
         subscribed: false,
         credits_remaining: 0,
@@ -77,8 +76,8 @@ serve(async (req) => {
       });
     }
     
-    const userId = claimsData.claims.sub;
-    const userEmail = claimsData.claims.email as string;
+    const userId = user.id;
+    const userEmail = user.email as string;
     
     if (!userEmail) {
       logStep("User email not available");
@@ -206,7 +205,7 @@ serve(async (req) => {
       const { data: subData, error: subError } = await supabaseClient
         .from('student_subscriptions')
         .select('subscription_plans(name, classes_per_month, price_per_class)')
-        .eq('student_id', user.id)
+        .eq('student_id', userId)
         .eq('status', 'active')
         .maybeSingle();
 
