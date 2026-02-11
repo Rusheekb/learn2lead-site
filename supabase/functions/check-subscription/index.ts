@@ -15,11 +15,10 @@ serve(async (req) => {
   const origin = req.headers.get("origin");
   const corsHeaders = getCorsHeaders(origin);
 
-  const supabaseClient = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-    { auth: { persistSession: false } }
-  );
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+  const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+  const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  const supabaseClient = createClient(supabaseUrl, supabaseServiceKey, { auth: { persistSession: false } });
 
   try {
     logStep("Function started");
@@ -58,7 +57,12 @@ serve(async (req) => {
     
     logStep("Authenticating user with token");
     
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+    // Use anon key with auth header for proper JWT validation
+    const authSupabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    
+    const { data: userData, error: userError } = await authSupabase.auth.getUser(token);
     if (userError || !userData.user) {
       logStep("Authentication failed", { error: userError?.message });
       return new Response(JSON.stringify({ 
