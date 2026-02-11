@@ -36,7 +36,7 @@ interface Props {
 
 export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
   const { userRole } = useAuth();
-  const [stats, setStats] = useState<{ classesCompleted: number; totalCredits: number } | null>(null);
+  const [stats, setStats] = useState<{ classesCompleted: number; totalCredits: number; classesPaid: number } | null>(null);
   const [showRoleDialog, setShowRoleDialog] = useState(false);
   const [isLoadingStats, setIsLoadingStats] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -96,7 +96,7 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
         }
 
         if (!profile) {
-          setStats({ classesCompleted: 0, totalCredits: 0 });
+          setStats({ classesCompleted: 0, totalCredits: 0, classesPaid: 0 });
           return;
         }
 
@@ -272,12 +272,17 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
                 </div>
               ) : (
                 <>
+                  {user.role === 'student' && (
+                    <p className="text-sm">
+                      <strong>Classes Paid:</strong> {stats?.classesPaid ?? 0}
+                    </p>
+                  )}
                   <p className="text-sm">
                     <strong>Classes Completed:</strong> {stats?.classesCompleted ?? 0}
                   </p>
                   {user.role === 'student' && (
                     <p className="text-sm">
-                      <strong>Total Credits:</strong> {stats?.totalCredits ?? 0}
+                      <strong>Remaining Credits:</strong> {stats?.totalCredits ?? 0}
                     </p>
                   )}
                 </>

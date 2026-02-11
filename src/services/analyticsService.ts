@@ -41,6 +41,7 @@ export interface BusinessAnalytics {
 export interface UserAnalytics {
   classesCompleted: number;
   totalCredits: number;
+  classesPaid: number;
 }
 
 class AnalyticsService {
@@ -125,7 +126,7 @@ class AnalyticsService {
 
       if (profileError || !profile) {
         console.error('Error fetching student profile:', profileError);
-        return { classesCompleted: 0, totalCredits: 0 };
+        return { classesCompleted: 0, totalCredits: 0, classesPaid: 0 };
       }
 
       // Construct full name or fallback to email
@@ -134,7 +135,6 @@ class AnalyticsService {
         : profile.email;
 
       // Count completed classes from class_logs with proper escaping
-      // Escape double quotes in values to prevent SQL injection
       const escapedFullName = fullName.replace(/"/g, '""');
       const escapedEmail = profile.email.replace(/"/g, '""');
       
@@ -145,7 +145,7 @@ class AnalyticsService {
 
       const classesCompleted = logsError || !classLogs ? 0 : classLogs.length;
 
-      // Get total credits from class_credits_ledger
+      // Get total credits (remaining) from class_credits_ledger
       const { data: ledger } = await supabase
         .from('class_credits_ledger')
         .select('balance_after')
@@ -156,13 +156,25 @@ class AnalyticsService {
 
       const totalCredits = ledger?.balance_after ?? 0;
 
+      // Get total credits ever allocated (sum of positive credit amounts)
+      const { data: creditEntries } = await supabase
+        .from('class_credits_ledger')
+        .select('amount')
+        .eq('student_id', studentId)
+        .eq('transaction_type', 'credit');
+
+      const classesPaid = creditEntries 
+        ? creditEntries.reduce((sum, entry) => sum + Math.abs(entry.amount), 0)
+        : 0;
+
       return {
         classesCompleted,
-        totalCredits
+        totalCredits,
+        classesPaid
       };
     } catch (error) {
       console.error('Error fetching student analytics:', error);
-      return { classesCompleted: 0, totalCredits: 0 };
+      return { classesCompleted: 0, totalCredits: 0, classesPaid: 0 };
     }
   }
 
@@ -179,7 +191,7 @@ class AnalyticsService {
 
       if (profileError || !profile) {
         console.error('Error fetching tutor profile:', profileError);
-        return { classesCompleted: 0, totalCredits: 0 };
+        return { classesCompleted: 0, totalCredits: 0, classesPaid: 0 };
       }
 
       // Construct full name or fallback to email
@@ -202,11 +214,12 @@ class AnalyticsService {
       // Tutors don't have credits, so return 0
       return {
         classesCompleted,
-        totalCredits: 0
+        totalCredits: 0,
+        classesPaid: 0
       };
     } catch (error) {
       console.error('Error fetching tutor analytics:', error);
-      return { classesCompleted: 0, totalCredits: 0 };
+      return { classesCompleted: 0, totalCredits: 0, classesPaid: 0 };
     }
   }
 }
