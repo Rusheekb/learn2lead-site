@@ -183,7 +183,7 @@ const StudentPaymentRecorder: React.FC<StudentPaymentRecorderProps> = ({
     let unpaidCost = 0;
     let classesToMark: typeof summary.unpaidClasses = [];
     for (const cls of summary.unpaidClasses) {
-      const cost = cls.classCost ?? rate;
+      const cost = cls.classCost ?? 0;
       if (unpaidCost + cost <= totalAvailable) {
         unpaidCost += cost;
         classesToMark.push(cls);
@@ -286,7 +286,7 @@ const StudentPaymentRecorder: React.FC<StudentPaymentRecorderProps> = ({
   const unpaidTotal = useMemo(() => {
     if (!summary || !selectedStudent) return 0;
     return summary.unpaidClasses.reduce(
-      (sum, c) => sum + (c.classCost ?? selectedStudent.classRate ?? 0),
+      (sum, c) => sum + (c.classCost ?? 0),
       0
     );
   }, [summary, selectedStudent]);
