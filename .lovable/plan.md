@@ -1,60 +1,51 @@
 
 
-# Move Rate Management into Student & Tutor Detail Modals
+# Multi-Term Search in Class Logs
 
 ## Overview
-Remove the "Apply Default Rates" bulk button from Class Logs and instead let admins view and edit `class_rate` (students) and `hourly_rate` (tutors) directly from their respective detail modals/popups. These stored rates will continue to auto-fill costs on new class creation.
+Enhance the existing search bar so that comma-separated terms are treated as AND conditions. Each term is matched independently against all text fields (title, tutor, student, subject). No new UI elements needed.
 
-## Changes
+## Example
+- Typing `bob, john, math` shows only classes where ALL three terms appear (across any combination of fields)
+- Typing `bob` continues to work as before (single-term search)
 
-### 1. Remove "Apply Default Rates" from ClassLogs
-- Delete the `handleApplyDefaultRates` function and its button from `src/components/admin/ClassLogs.tsx`
-- Remove the `isBackfilling` state and `Wand2` icon import
+## What Changes
 
-### 2. Expand the Student Detail Modal (UserDetailModal)
-When viewing a student, show and allow editing of:
-- **Class Rate ($)** -- editable input field, saved to `students.class_rate`
-- **Payment Method** -- editable dropdown (Stripe/Zelle), saved to `students.payment_method`
+### 1. Update filter logic in `src/hooks/useSimplifiedClassLogs.ts`
+Replace the single-term search with multi-term AND logic:
 
-On save, update the `students` table directly. Future classes for that student will auto-pick up the new rate.
+```typescript
+if (searchTerm) {
+  const terms = searchTerm.split(/[,&]/).map(t => t.trim().toLowerCase()).filter(Boolean);
+  const searchableText = [c.title, c.tutorName, c.studentName, c.subject]
+    .filter(Boolean)
+    .map(s => s!.toLowerCase());
+  
+  const allMatch = terms.every(term =>
+    searchableText.some(field => field.includes(term))
+  );
+  if (!allMatch) return false;
+}
+```
 
-### 3. Show Tutor Hourly Rate in Tutor Detail Modal (UserDetailModal)
-When viewing a tutor, show and allow editing of:
-- **Hourly Rate ($)** -- editable input field, saved to `tutors.hourly_rate`
+### 2. Update search placeholder
+Change the placeholder text in `src/components/admin/class-logs/ClassFilters.tsx` to hint at the feature:
 
-On save, update the `tutors` table. Future classes for that tutor will auto-pick up the new rate.
-
-### 4. Keep Auto-Fill on Class Creation
-The existing logic in `src/services/class-logs.ts` (lines 59-86) that looks up `students.class_rate` and `tutors.hourly_rate` when creating a class stays unchanged -- it already does the right thing.
-
-### 5. Optionally Show Rates in Tables
-- Student table already shows `Class Rate` column -- keep it
-- Tutor table currently only shows name/email/actions -- add an `Hourly Rate` column
+```
+"Search by tutor, student, subject (use commas to combine)"
+```
 
 ## Files to Modify
 
 | File | Change |
 |------|--------|
-| `src/components/admin/ClassLogs.tsx` | Remove Apply Default Rates button, `handleApplyDefaultRates`, `isBackfilling` state, `Wand2` import |
-| `src/components/admin/UserDetailModal.tsx` | Add editable Class Rate + Payment Method fields for students; editable Hourly Rate for tutors; save to DB on change |
-| `src/components/admin/tutors/TutorTable.tsx` | Add Hourly Rate column |
+| `src/hooks/useSimplifiedClassLogs.ts` | Split search term by `,` or `&`, require ALL terms to match |
+| `src/components/admin/class-logs/ClassFilters.tsx` | Update placeholder text to explain comma syntax |
 
 ## How It Works
+1. Admin types `bob, math` in the search bar
+2. The input is split into `["bob", "math"]`
+3. For each class log, all searchable fields are checked
+4. A log only appears if every term matches at least one field
+5. Single-term searches work exactly as before (no behavior change)
 
-1. Admin clicks a student row to open their detail modal
-2. They see and can edit the student's Class Rate and Payment Method
-3. Clicking "Save" updates the `students` table
-4. Next time a class is logged for that student, the cost auto-fills from the saved rate
-5. Same flow for tutors -- edit Hourly Rate in their modal, future classes use the new rate
-6. Past classes are never affected by rate changes
-
-## Technical Details
-
-### UserDetailModal Changes
-- Detect `user.role` to show role-specific fields
-- For students: fetch `class_rate` and `payment_method` from `students` table by name, show editable fields, add a "Save" button that runs `supabase.from('students').update(...)` 
-- For tutors: fetch `hourly_rate` from `tutors` table, show editable field, save with `supabase.from('tutors').update(...)`
-- After save, call `onUserUpdated?.()` to refresh parent data
-
-### TutorTable Changes
-- Add a column that displays `tutor.hourlyRate` formatted as currency, or a dash if not set
