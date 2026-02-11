@@ -62,7 +62,7 @@ serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
     
-    const { data: { user }, error: userError } = await authSupabase.auth.getUser();
+    const { data: { user }, error: userError } = await authSupabase.auth.getUser(token);
     if (userError || !user) {
       logStep("Authentication failed", { error: userError?.message });
       return new Response(JSON.stringify({ 
