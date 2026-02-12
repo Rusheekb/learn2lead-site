@@ -14,7 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreVertical, Edit2, Copy, Trash2 } from 'lucide-react';
+import { MoreVertical, Edit2, Trash2, Lock } from 'lucide-react';
 import { ClassEvent } from '@/types/tutorTypes';
 import ClassEventDetails from '../ClassEventDetails';
 import { StudentMessage, StudentUpload } from '@/types/classTypes';
@@ -32,7 +32,7 @@ interface ViewClassDialogProps {
   setActiveTab: (tab: string) => void;
   studentMessages: StudentMessage[];
   studentUploads: StudentUpload[];
-  onDuplicateEvent: (event: ClassEvent) => void;
+  onDuplicateEvent?: (event: ClassEvent) => void;
   onDeleteEvent: (eventId: string, isRecurring?: boolean) => Promise<boolean>;
   onMarkAsRead: (messageId: string) => Promise<void>;
   onDownloadFile: (uploadId: string) => Promise<void>;
@@ -62,6 +62,8 @@ const ViewClassDialog: React.FC<ViewClassDialogProps> = ({
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deleteRecurring, setDeleteRecurring] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const isCompleted = selectedEvent?.status === 'completed';
 
   if (!selectedEvent) return null;
 
@@ -120,39 +122,42 @@ const ViewClassDialog: React.FC<ViewClassDialogProps> = ({
           <div className="flex flex-col h-full max-h-[calc(90vh-4rem)]">
             <DialogHeader className="flex flex-row items-center justify-between flex-shrink-0">
               <DialogTitle className="text-xl sm:text-2xl break-words pr-8">{selectedEvent?.title}</DialogTitle>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="min-w-[180px]">
-                  <DropdownMenuItem onClick={handleEdit}>
-                    <Edit2 className="h-4 w-4 mr-2" />
-                    Edit Class
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => onDuplicateEvent(selectedEvent)}>
-                    <Copy className="h-4 w-4 mr-2" />
-                    Duplicate Class
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    className="text-red-600"
-                    onClick={() => handleDelete(false)}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete Class
-                  </DropdownMenuItem>
-                  {selectedEvent.recurring && (
+              {isCompleted ? (
+                <div className="flex items-center gap-1.5 text-muted-foreground text-sm">
+                  <Lock className="h-4 w-4" />
+                  <span>Completed</span>
+                </div>
+              ) : (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon">
+                      <MoreVertical className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="min-w-[180px]">
+                    <DropdownMenuItem onClick={handleEdit}>
+                      <Edit2 className="h-4 w-4 mr-2" />
+                      Edit Class
+                    </DropdownMenuItem>
                     <DropdownMenuItem
-                      className="text-red-600"
-                      onClick={() => handleDelete(true)}
+                      className="text-destructive"
+                      onClick={() => handleDelete(false)}
                     >
                       <Trash2 className="h-4 w-4 mr-2" />
-                      Delete All Recurring
+                      Delete Class
                     </DropdownMenuItem>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                    {selectedEvent.recurring && (
+                      <DropdownMenuItem
+                        className="text-destructive"
+                        onClick={() => handleDelete(true)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete All Recurring
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </DialogHeader>
 
             <div className="flex-1 overflow-y-auto py-4">
