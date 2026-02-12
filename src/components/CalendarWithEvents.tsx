@@ -6,6 +6,7 @@ import { format, isSameDay, parseISO } from 'date-fns';
 import { ClassEvent } from '@/types/tutorTypes';
 import { toast } from 'sonner';
 import { startOfDay, addDays } from 'date-fns';
+import { CheckCircle } from 'lucide-react';
 import CompletedClassActions from '@/components/tutor/CompletedClassActions';
 import { useAuth } from '@/contexts/AuthContext';
 import { parseDateToLocal } from '@/utils/safeDateUtils';
@@ -48,11 +49,17 @@ const CalendarWithEvents: React.FC<CalendarWithEventsProps> = ({
   };
 
   // Function to check if a date has any scheduled classes
-  const hasEventsOnDate = (date: Date) => {
+  const hasScheduledOnDate = (date: Date) => {
     return scheduledClasses.some((event) => {
-      // Handle both Date objects and string dates
       const eventDate = parseDateToLocal(event.date);
-      return isSameDay(date, eventDate);
+      return isSameDay(date, eventDate) && event.status !== 'completed';
+    });
+  };
+
+  const hasCompletedOnDate = (date: Date) => {
+    return scheduledClasses.some((event) => {
+      const eventDate = parseDateToLocal(event.date);
+      return isSameDay(date, eventDate) && event.status === 'completed';
     });
   };
 
@@ -83,18 +90,24 @@ const CalendarWithEvents: React.FC<CalendarWithEventsProps> = ({
             onSelect={(date) => date && setSelectedDate(date)}
             className="border rounded-md p-2 bg-white"
             modifiers={{
-              hasEvent: (date) => hasEventsOnDate(date),
+              hasScheduled: (date) => hasScheduledOnDate(date),
+              hasCompleted: (date) => hasCompletedOnDate(date),
             }}
             modifiersClassNames={{
-              hasEvent:
-                'relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1 after:w-1 after:bg-tutoring-teal after:rounded-full',
+              hasScheduled:
+                'relative after:absolute after:bottom-1 after:left-[calc(50%-4px)] after:h-1 after:w-1 after:bg-tutoring-teal after:rounded-full',
+              hasCompleted:
+                'relative before:absolute before:bottom-1 before:left-[calc(50%+2px)] before:h-1 before:w-1 before:bg-green-500 before:rounded-full',
             }}
             components={{
               DayContent: ({ date, ...props }) => (
                 <div {...props}>
                   {date.getDate()}
-                  {hasEventsOnDate(date) && (
-                    <span className="sr-only"> (has events)</span>
+                  {hasScheduledOnDate(date) && (
+                    <span className="sr-only"> (has scheduled classes)</span>
+                  )}
+                  {hasCompletedOnDate(date) && (
+                    <span className="sr-only"> (has completed classes)</span>
                   )}
                 </div>
               ),
@@ -124,16 +137,19 @@ const CalendarWithEvents: React.FC<CalendarWithEventsProps> = ({
               {eventsForSelectedDate.map((event) => (
                 <div 
                   key={event.id}
-                  className="p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                   className={`p-4 border rounded-lg transition-colors ${event.status === 'completed' ? 'bg-green-50 border-green-200' : 'hover:bg-muted/50'}`}
                 >
                   <div className="flex justify-between items-start">
                     <div 
                       className="flex-1 cursor-pointer"
                       onClick={() => onSelectEvent(event)}
                     >
-                      <h3 className="font-medium">{event.title}</h3>
-                      <p className="text-sm text-gray-600">{event.subject}</p>
-                      <p className="text-sm text-gray-600">
+                      <h3 className="font-medium flex items-center gap-1.5">
+                        {event.status === 'completed' && <CheckCircle className="h-4 w-4 text-green-600 shrink-0" />}
+                        {event.title}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">{event.subject}</p>
+                      <p className="text-sm text-muted-foreground">
                         {event.startTime} - {event.endTime} • {event.studentName}
                       </p>
                     </div>
