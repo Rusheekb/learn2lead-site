@@ -14,9 +14,9 @@
 // Price IDs for subscription plans
 // Replace these with live mode price IDs when going to production
 export const STRIPE_PRICE_IDS = {
-  basic: 'price_1SpbGd1fzLklBERMn8JbKczH',    // $140/month - Basic Plan (4 classes)
-  standard: 'price_1SpbGq1fzLklBERM8W5mMeOx', // $240/month - Standard Plan (8 classes)
-  premium: 'price_1SpbIv1fzLklBERMHinrOG9F',  // $300/month - Premium Plan (12 classes)
+  basic: 'price_1T01Zi14Kl9WjCflqrAzXqYu',    // $140/month - Basic Plan (4 classes)
+  standard: 'price_1T01Zs14Kl9WjCflVUwAOvX7', // $240/month - Standard Plan (8 classes)
+  premium: 'price_1T01Zu14Kl9WjCfllEyxHM37',  // $300/month - Premium Plan (12 classes)
 } as const;
 
 // Plan pricing details
