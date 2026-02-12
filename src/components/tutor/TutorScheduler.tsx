@@ -39,7 +39,6 @@ const TutorScheduler: React.FC = memo(() => {
     handleCreateEvent,
     handleEditEvent,
     handleDeleteEvent,
-    handleDuplicateEvent,
     resetNewEventForm,
     handleMarkMessageRead,
     handleDownloadFile,
@@ -123,7 +122,6 @@ const TutorScheduler: React.FC = memo(() => {
         studentUploads={studentUploads}
         onCreateEvent={handleCreateEvent}
         onEditEvent={handleEditEvent}
-        onDuplicateEvent={handleDuplicateEvent}
         onDeleteEvent={handleDeleteEvent}
         onResetForm={resetNewEventForm}
         onMarkAsRead={handleMarkMessageRead}

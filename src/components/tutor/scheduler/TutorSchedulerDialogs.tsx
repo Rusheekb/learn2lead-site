@@ -20,7 +20,6 @@ interface TutorSchedulerDialogsProps {
   studentUploads: StudentUpload[];
   onCreateEvent: (event: ClassEvent) => Promise<boolean>;
   onEditEvent: (event: ClassEvent) => Promise<boolean>;
-  onDuplicateEvent: (event: ClassEvent) => void;
   onDeleteEvent: (eventId: string, isRecurring?: boolean) => Promise<boolean>;
   onResetForm: () => void;
   onMarkAsRead: (messageId: string) => Promise<void>;
@@ -46,7 +45,6 @@ const TutorSchedulerDialogs: React.FC<TutorSchedulerDialogsProps> = ({
   studentUploads,
   onCreateEvent,
   onEditEvent,
-  onDuplicateEvent,
   onDeleteEvent,
   onResetForm,
   onMarkAsRead,
