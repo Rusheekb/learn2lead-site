@@ -1,0 +1,3 @@
+UPDATE subscription_plans SET stripe_price_id = 'price_1T01Zi14Kl9WjCflqrAzXqYu', stripe_product_id = 'prod_TxxUSeBB0DJMLi' WHERE id = '8509ee20-24eb-45e3-b702-3336e7c48a59';
+UPDATE subscription_plans SET stripe_price_id = 'price_1T01Zs14Kl9WjCflVUwAOvX7', stripe_product_id = 'prod_TxxUJZVuu6ZtEx' WHERE id = 'a4bf0413-f6bd-48cc-bdbe-d0ff8cc8b5c0';
+UPDATE subscription_plans SET stripe_price_id = 'price_1T01Zu14Kl9WjCfllEyxHM37', stripe_product_id = 'prod_TxxUZQg4wLStP8' WHERE id = '0a165a68-69b2-4318-aa74-ca843a9398e6';
