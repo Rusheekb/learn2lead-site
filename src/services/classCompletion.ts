@@ -181,20 +181,20 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
       return false;
     }
 
-    // Delete the scheduled class
-    const { error: deleteError } = await supabase
+    // Mark the scheduled class as completed (keep on calendar)
+    const { error: updateError } = await supabase
       .from('scheduled_classes')
-      .delete()
+      .update({ status: 'completed', attendance: 'present' })
       .eq('id', data.classId);
 
-    if (deleteError) {
-      console.error('Error deleting scheduled class:', deleteError);
-      // If delete fails, try to remove the class log we just created
+    if (updateError) {
+      console.error('Error updating scheduled class status:', updateError);
+      // If update fails, try to remove the class log we just created
       await supabase
         .from('class_logs')
         .delete()
         .eq('Class ID', data.classId);
-      throw new Error('Failed to remove completed class from schedule');
+      throw new Error('Failed to mark class as completed');
     }
 
     // Show appropriate success message
