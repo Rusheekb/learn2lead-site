@@ -95,9 +95,9 @@ const CalendarWithEvents: React.FC<CalendarWithEventsProps> = ({
             }}
             modifiersClassNames={{
               hasScheduled:
-                'relative after:absolute after:bottom-1 after:left-[calc(50%-4px)] after:h-1 after:w-1 after:bg-tutoring-teal after:rounded-full',
+                'relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:bg-green-500 after:rounded-full',
               hasCompleted:
-                'relative before:absolute before:bottom-1 before:left-[calc(50%+2px)] before:h-1 before:w-1 before:bg-green-500 before:rounded-full',
+                'relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:bg-gray-400 after:rounded-full',
             }}
             components={{
               DayContent: ({ date, ...props }) => (
