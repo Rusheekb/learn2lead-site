@@ -106,12 +106,26 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
       return false;
     }
 
+    // Fetch student class rate
+    const { data: studentData } = await supabase
+      .from('students')
+      .select('class_rate')
+      .eq('name', data.studentName)
+      .maybeSingle();
+
+    // Fetch tutor hourly rate
+    const { data: tutorData } = await supabase
+      .from('tutors')
+      .select('hourly_rate')
+      .eq('name', data.tutorName)
+      .maybeSingle();
+
     // Create class log entry (payment dates default to NULL = unpaid)
     const { error: insertError } = await supabase
       .from('class_logs')
       .insert({
         'Class Number': data.classNumber,
-        'Title': data.title || data.subject, // Preserve descriptive title
+        'Title': data.title || data.subject,
         'Tutor Name': data.tutorName,
         'Student Name': data.studentName,
         'Date': data.date,
@@ -122,7 +136,9 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
         'Content': data.content,
         'HW': data.hw,
         'Class ID': data.classId,
-        'Additional Info': data.additionalInfo
+        'Additional Info': data.additionalInfo,
+        'Class Cost': studentData?.class_rate ?? null,
+        'Tutor Cost': tutorData?.hourly_rate ?? null
       });
 
     if (insertError) {
