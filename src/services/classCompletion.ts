@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { captureEvent } from '@/lib/posthog';
 
 export interface CompleteClassData {
   classId: string;
@@ -60,6 +61,12 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
 
     if (creditError || !creditResult?.success) {
       const errorCode = creditResult?.code || 'UNKNOWN';
+
+      captureEvent('credit_deduction_failed', {
+        error_code: errorCode,
+        student_id: data.studentId,
+        class_id: data.classId,
+      });
       
       if (errorCode === 'NO_SUBSCRIPTION') {
         toast.error('Student has no active subscription', {
@@ -196,6 +203,14 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
         .eq('Class ID', data.classId);
       throw new Error('Failed to mark class as completed');
     }
+
+    captureEvent('class_completed', {
+      subject: data.subject,
+      tutor_name: data.tutorName,
+      student_name: data.studentName,
+      credits_remaining: creditsRemaining,
+      admin_override: isAdminOverride,
+    });
 
     // Show appropriate success message
     if (isAdminOverride) {

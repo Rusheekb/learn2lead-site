@@ -20,6 +20,7 @@ import { SubscriptionProvider } from './contexts/SubscriptionContext';
 import PrivateRoute from './components/PrivateRoute';
 import { useRoleSync } from './hooks/useRoleSync';
 import { RoutePersistence } from './components/shared/RoutePersistence';
+import PostHogPageView from './components/shared/PostHogPageView';
 import { SidebarProvider } from '@/hooks/useSidebar';
 import DashboardShell from './components/shared/DashboardShell';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -175,6 +176,7 @@ function App() {
             <AuthProvider>
               <SubscriptionProvider>
                 <RoutePersistence />
+                <PostHogPageView />
                 <SidebarProvider>
                   <AnimatedRoutes />
                 </SidebarProvider>

@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { AuthContextType } from '@/types/auth';
 import { getSavedRoute, clearSavedRoute } from '@/hooks/useRoutePersistence';
 import { setUser as setSentryUser, addBreadcrumb } from '@/lib/sentry';
+import { identifyUser, resetUser } from '@/lib/posthog';
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -44,6 +45,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           message: 'User signed in',
           level: 'info',
         });
+
+        // Identify user in PostHog (role added after profile fetch below)
+        identifyUser(u.id, { email: u.email });
         
         setTimeout(async () => {
           try {
@@ -120,6 +124,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           message: 'User signed out',
           level: 'info',
         });
+
+        // Reset PostHog identity
+        resetUser();
         
         clearSavedRoute(); // Clear saved route on sign out
         setUserRole(null);
