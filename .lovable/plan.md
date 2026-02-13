@@ -1,73 +1,52 @@
 
+## PostHog Analytics Integration
 
-## Keep Completed Classes on Calendar with Visual Indicator
+### Overview
+Add PostHog analytics to Learn2Lead with automatic page view tracking, user identification on login/logout, and event tracking for class completions. Since the PostHog API key is a publishable client-side key, it will be stored directly in the codebase.
 
-### What Changes
+### What You'll Get
+- **Automatic page view tracking** on every route change
+- **User identification** so PostHog ties sessions to real users (by ID, email, and role)
+- **Class completion event tracking** for monitoring key business metrics
+- **Dev mode disabled** so local testing doesn't pollute your analytics
 
-Instead of deleting a scheduled class when it's marked complete, the system will update its status to "completed" and keep it visible on the calendar with a distinct visual indicator.
+---
 
-### Changes Required
+### Changes
 
-**1. Stop deleting completed classes (`src/services/classCompletion.ts`)**
-- Remove the delete operation (lines 184-198) that removes the scheduled class after completion
-- Replace it with an update that sets `status = 'completed'` on the scheduled class record
-- Keep the existing rollback logic but adapt it for the update instead of delete
+**1. Install `posthog-js` package**
 
-**2. Update calendar date indicators (`src/components/CalendarWithEvents.tsx`)**
-- Modify the `hasEventsOnDate` logic to distinguish between scheduled and completed classes
-- Add a second dot indicator (e.g., green checkmark dot) for dates with completed classes, alongside the existing teal dot for scheduled classes
-- This gives an at-a-glance view of which days had classes completed vs. upcoming
+**2. Create `src/lib/posthog.ts`** (new file)
+- Initialize PostHog with your API key (`phc_EmulYhmshfgWxynh5hICupiq4gHtaYIAEDSqpc4d69G`) and host (`https://us.i.posthog.com`)
+- Disable automatic pageview capture (handled manually via React Router)
+- Set `person_profiles: 'identified_only'` (matching your snippet config)
+- Opt out of capturing in dev mode to keep data clean
+- Export helper functions: `identifyUser`, `resetUser`, `captureEvent`
 
-**3. Update event cards in the day panel (`src/components/CalendarWithEvents.tsx`)**
-- Completed classes already show a green "completed" badge -- no change needed there
-- Hide the "Add Class" button logic is already role-gated, no change needed
-- Optionally add a small checkmark icon next to completed class titles for extra clarity
+**3. Update `src/main.tsx`**
+- Add `initPostHog()` call alongside the existing `initSentry()` call
 
-**4. Filter handling for tutor scheduler**
-- The tutor's `fetchScheduledClasses` already fetches all statuses, so completed classes will appear automatically
-- No query changes needed
+**4. Create `src/components/shared/PostHogPageView.tsx`** (new file)
+- Small component that listens to `useLocation()` changes and fires `posthog.capture('$pageview')` on each route change
 
-### Technical Detail
+**5. Update `src/App.tsx`**
+- Add `PostHogPageView` component inside `BrowserRouter`, next to the existing `RoutePersistence` component
 
-```text
-In classCompletion.ts, replace lines 184-198:
+**6. Update `src/contexts/AuthContext/AuthProvider.tsx`**
+- On `SIGNED_IN` (line ~41 area, after `setSentryUser`): call `posthog.identify(user.id, { email, role })`
+- On `SIGNED_OUT` (line ~117 area, after Sentry clear): call `posthog.reset()`
 
-BEFORE:
-  // Delete the scheduled class
-  const { error: deleteError } = await supabase
-    .from('scheduled_classes')
-    .delete()
-    .eq('id', data.classId);
+**7. Update `src/services/classCompletion.ts`**
+- After successful class completion (~line 200): capture `class_completed` event with subject, tutor, student, and credits remaining
+- After credit deduction failures (~lines 64-84): capture `credit_deduction_failed` event with error code
 
-AFTER:
-  // Mark the scheduled class as completed (keep on calendar)
-  const { error: updateError } = await supabase
-    .from('scheduled_classes')
-    .update({ status: 'completed', attendance: 'present' })
-    .eq('id', data.classId);
+### Files Summary
 
-Error handling and rollback logic will be updated accordingly.
-```
-
-```text
-In CalendarWithEvents.tsx, update the calendar modifiers:
-
-- Scheduled classes: teal dot (existing behavior)
-- Completed classes: green dot or checkmark indicator
-- Days with both: show both indicators
-
-The DayContent component will render different colored dots
-based on whether events on that date are scheduled vs completed.
-```
-
-### What Won't Change
-- The class log creation flow remains the same
-- Credit deduction logic is untouched
-- Admin class logs table is unaffected
-- Student calendar view will also benefit (they'll see their completed classes)
-
-### Risk Considerations
-- The duplicate completion guard (Class ID check) already prevents re-completing a class
-- Tutors cannot re-complete because the status will be "completed" and the CompletedClassActions component handles that state
-- No database schema changes needed -- the `status` column already supports "completed"
-
+| File | Action |
+|------|--------|
+| `src/lib/posthog.ts` | Create |
+| `src/components/shared/PostHogPageView.tsx` | Create |
+| `src/main.tsx` | Add `initPostHog()` call |
+| `src/App.tsx` | Add `PostHogPageView` component |
+| `src/contexts/AuthContext/AuthProvider.tsx` | Add identify/reset calls |
+| `src/services/classCompletion.ts` | Add event capture calls |
