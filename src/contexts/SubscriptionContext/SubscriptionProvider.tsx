@@ -4,15 +4,11 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface SubscriptionState {
   subscribed: boolean;
-  productId: string | null;
-  subscriptionEnd: string | null;
   creditsRemaining: number | null;
   planName: string | null;
   pricePerClass: number | null;
   isLoading: boolean;
   error: string | null;
-  isPaused: boolean;
-  pauseResumesAt: string | null;
 }
 
 export interface SubscriptionContextType extends SubscriptionState {
@@ -25,17 +21,13 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const { user, session } = useAuth();
   const [state, setState] = useState<SubscriptionState>({
     subscribed: false,
-    productId: null,
-    subscriptionEnd: null,
     creditsRemaining: null,
     planName: null,
     pricePerClass: null,
     isLoading: true,
     error: null,
-    isPaused: false,
-    pauseResumesAt: null,
   });
-  const pollIntervalRef = useRef<number>(60000); // Start with 60 seconds
+  const pollIntervalRef = useRef<number>(120000); // 2 minutes (credits only change on purchase/completion)
   const isRefreshingRef = useRef<boolean>(false);
 
   const handleSessionRefresh = useCallback(async () => {
@@ -49,7 +41,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       if (refreshError) throw refreshError;
       
       console.log('[SubscriptionProvider] Session refreshed successfully');
-      pollIntervalRef.current = 60000; // Reset to normal interval
+      pollIntervalRef.current = 120000;
       return true;
     } catch (error) {
       console.error('[SubscriptionProvider] Session refresh failed:', error);
@@ -63,15 +55,11 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (!user || !session?.access_token) {
       setState({
         subscribed: false,
-        productId: null,
-        subscriptionEnd: null,
         creditsRemaining: null,
         planName: null,
         pricePerClass: null,
         isLoading: false,
         error: null,
-        isPaused: false,
-        pauseResumesAt: null,
       });
       return;
     }
@@ -85,27 +73,20 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         },
       });
 
-      // Handle authentication errors (401)
       if (error && (error.message?.includes('Auth') || error.message?.includes('401'))) {
         console.warn('[SubscriptionProvider] Auth error detected, attempting refresh...');
         
         const refreshed = await handleSessionRefresh();
         if (refreshed) {
-          // Retry fetch after refresh
           return fetchSubscription();
         } else {
-          // Refresh failed, set auth error state
           setState({
             subscribed: false,
-            productId: null,
-            subscriptionEnd: null,
             creditsRemaining: null,
             planName: null,
             pricePerClass: null,
             isLoading: false,
             error: 'Session expired. Please refresh the page.',
-            isPaused: false,
-            pauseResumesAt: null,
           });
           return;
         }
@@ -113,7 +94,6 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       if (error) throw error;
 
-      // Check if response indicates auth error
       if (data?.auth_error) {
         console.warn('[SubscriptionProvider] Auth error in response, attempting refresh...');
         
@@ -123,40 +103,30 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         } else {
           setState({
             subscribed: false,
-            productId: null,
-            subscriptionEnd: null,
             creditsRemaining: null,
             planName: null,
             pricePerClass: null,
             isLoading: false,
             error: 'Session expired. Please refresh the page.',
-            isPaused: false,
-            pauseResumesAt: null,
           });
           return;
         }
       }
 
-      // Success - reset poll interval
-      pollIntervalRef.current = 60000;
+      pollIntervalRef.current = 120000;
 
       setState({
         subscribed: data.subscribed || false,
-        productId: data.product_id || null,
-        subscriptionEnd: data.subscription_end || null,
         creditsRemaining: data.credits_remaining ?? null,
         planName: data.plan_name || null,
         pricePerClass: data.price_per_class ?? null,
         isLoading: false,
         error: null,
-        isPaused: data.is_paused || false,
-        pauseResumesAt: data.pause_resumes_at || null,
       });
     } catch (err) {
       console.error('[SubscriptionProvider] Error fetching subscription:', err);
       
-      // Implement exponential backoff for errors
-      pollIntervalRef.current = Math.min(pollIntervalRef.current * 2, 240000); // Max 4 minutes
+      pollIntervalRef.current = Math.min(pollIntervalRef.current * 2, 240000);
       
       setState(prev => ({
         ...prev,
@@ -166,12 +136,10 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   }, [user, session, handleSessionRefresh]);
 
-  // Initial fetch and on auth changes
   useEffect(() => {
     fetchSubscription();
   }, [fetchSubscription]);
 
-  // Smart polling with dynamic interval
   useEffect(() => {
     if (!user || !session?.access_token) return;
 

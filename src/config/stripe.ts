@@ -1,22 +1,15 @@
 /**
  * Stripe Configuration
  * 
- * This file centralizes all Stripe-related configuration including price IDs
- * and product IDs for easy management when switching between test and live modes.
- * 
- * IMPORTANT: When switching to live mode:
- * 1. Update the price IDs below with your live mode Stripe price IDs
- * 2. Update STRIPE_SECRET_KEY in Supabase Secrets
- * 3. Update STRIPE_WEBHOOK_SECRET in Supabase Secrets
- * 4. Update subscription_plans table with live stripe_price_id and stripe_product_id
+ * Credit Pack system - one-time purchases (not subscriptions).
+ * Students buy packs of 4, 8, or 12 credits and use them at their own pace.
  */
 
-// Price IDs for subscription plans
-// Replace these with live mode price IDs when going to production
+// Price IDs for credit packs (one-time payments)
 export const STRIPE_PRICE_IDS = {
-  basic: 'price_1T01Zi14Kl9WjCflqrAzXqYu',    // $140/month - Basic Plan (4 classes)
-  standard: 'price_1T01Zs14Kl9WjCflVUwAOvX7', // $240/month - Standard Plan (8 classes)
-  premium: 'price_1T01Zu14Kl9WjCfllEyxHM37',  // $300/month - Premium Plan (12 classes)
+  basic: 'price_1T20M714Kl9WjCflVbq3glKt',    // $140 - 4 Credit Pack
+  standard: 'price_1T20M714Kl9WjCflDIKczcAX', // $240 - 8 Credit Pack
+  premium: 'price_1T20M914Kl9WjCfl608OYEiB',  // $300 - 12 Credit Pack
 } as const;
 
 // Plan pricing details
@@ -29,49 +22,49 @@ export const STRIPE_PLAN_PRICES = {
 // Plan display configuration
 export const STRIPE_PLAN_CONFIG = {
   basic: {
-    name: 'Basic',
+    name: '4 Credit Pack',
     pricePerClass: '$35/class',
-    monthlyTotal: '$140/month',
-    description: 'Perfect for beginners looking to improve in one subject',
+    monthlyTotal: '$140',
+    description: 'Perfect for getting started or topping up a few classes',
     features: [
-      'Access to one subject area',
-      '4 classes per month',
-      'Basic study materials',
-      'Email support',
+      '4 tutoring credits',
+      'Use at your own pace',
+      'No expiration date',
+      'Access to all subjects',
     ],
-    buttonText: 'Get Started',
+    buttonText: 'Buy 4 Credits',
     highlighted: false,
   },
   standard: {
-    name: 'Standard',
+    name: '8 Credit Pack',
     pricePerClass: '$30/class',
-    monthlyTotal: '$240/month',
-    description: 'Our most popular plan for dedicated students',
+    monthlyTotal: '$240',
+    description: 'Our most popular pack — great value for regular learners',
     features: [
-      'Access to all subject areas',
-      '8 classes per month',
-      'Advanced study materials',
-      'Practice tests and assessments',
-      'Priority email support',
+      '8 tutoring credits',
+      'Use at your own pace',
+      'No expiration date',
+      'Access to all subjects',
+      'Priority scheduling',
     ],
-    buttonText: 'Choose Standard',
+    buttonText: 'Buy 8 Credits',
     highlighted: true,
   },
   premium: {
-    name: 'Premium',
+    name: '12 Credit Pack',
     pricePerClass: '$25/class',
-    monthlyTotal: '$300/month',
-    description: 'Comprehensive support for academic excellence',
+    monthlyTotal: '$300',
+    description: 'Best value — ideal for dedicated students',
     features: [
-      'Access to all subject areas',
-      '12 classes per month',
-      'Premium study materials',
+      '12 tutoring credits',
+      'Use at your own pace',
+      'No expiration date',
+      'Access to all subjects',
+      'Priority scheduling',
       'Personalized study plan',
-      'Practice tests and assessments',
-      '1-on-1 counseling sessions',
       '24/7 priority support',
     ],
-    buttonText: 'Choose Premium',
+    buttonText: 'Buy 12 Credits',
     highlighted: false,
   },
 } as const;

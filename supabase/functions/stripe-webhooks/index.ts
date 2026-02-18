@@ -26,23 +26,21 @@ serve(async (req) => {
     const signature = req.headers.get("stripe-signature");
 
     if (!signature) {
-      logStep("ERROR: Missing signature", { headers: req.headers });
+      logStep("ERROR: Missing signature");
       throw new Error("No Stripe signature found in request headers");
     }
 
-    // Verify webhook signature for security - supports both live and test secrets
+    // Verify webhook signature - supports both live and test secrets
     const liveSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
     const testSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET_TEST");
     
     if (!liveSecret && !testSecret) {
-      logStep("ERROR: No webhook secret configured");
       throw new Error("Neither STRIPE_WEBHOOK_SECRET nor STRIPE_WEBHOOK_SECRET_TEST is set");
     }
 
     let event;
     let verificationSucceeded = false;
     
-    // Try live secret first (production)
     if (liveSecret) {
       try {
         event = await stripe.webhooks.constructEventAsync(body, signature, liveSecret);
@@ -53,15 +51,13 @@ serve(async (req) => {
       }
     }
     
-    // Fallback to test secret (for CLI testing)
     if (!verificationSucceeded && testSecret) {
       try {
         event = await stripe.webhooks.constructEventAsync(body, signature, testSecret);
         logStep("Webhook signature verified with test secret");
         verificationSucceeded = true;
       } catch (testErr) {
-        const errorMessage = testErr instanceof Error ? testErr.message : String(testErr);
-        logStep("ERROR: Test secret verification also failed", { error: errorMessage });
+        logStep("ERROR: Test secret verification also failed");
       }
     }
     
@@ -73,13 +69,13 @@ serve(async (req) => {
 
     switch (event.type) {
       case "checkout.session.completed": {
-        // Handle referral rewards when checkout is completed
         const session = event.data.object as Stripe.Checkout.Session;
         const metadata = session.metadata || {};
         
         logStep("Checkout session completed", { 
           sessionId: session.id,
           customerId: session.customer,
+          mode: session.mode,
           metadata 
         });
 
@@ -93,514 +89,14 @@ serve(async (req) => {
             session.customer as string,
             session.customer_email || '',
             metadata.discount_amount ? parseFloat(metadata.discount_amount) : 25,
-            session.subscription as string
-          );
-        }
-        break;
-      }
-
-      case "invoice.payment_succeeded": {
-        const invoice = event.data.object as Stripe.Invoice;
-        const invoiceId = invoice.id;
-        const customerId = typeof invoice.customer === 'string'
-          ? invoice.customer
-          : (invoice.customer as any)?.id;
-
-        // The subscription field can be missing on some invoices; resolve robustly
-        let subscriptionId: string | null = typeof invoice.subscription === 'string'
-          ? invoice.subscription
-          : (invoice.subscription as any)?.id ?? null;
-        let subscription: Stripe.Subscription | null = null;
-
-        logStep("Payment succeeded", { subscriptionId, customerId, invoiceId });
-
-        try {
-          if (subscriptionId) {
-            subscription = await stripe.subscriptions.retrieve(subscriptionId);
-          } else {
-            logStep("Subscription ID missing on invoice, hydrating invoice", { invoiceId });
-            const hydrated = await stripe.invoices.retrieve(invoiceId, {
-              expand: ['subscription', 'lines.data.price']
-            });
-            subscriptionId = typeof hydrated.subscription === 'string'
-              ? hydrated.subscription
-              : (hydrated.subscription as any)?.id ?? null;
-            if (!subscription && typeof hydrated.subscription !== 'string') {
-              subscription = (hydrated.subscription as Stripe.Subscription) || null;
-            }
-            if (!subscription && subscriptionId) {
-              subscription = await stripe.subscriptions.retrieve(subscriptionId);
-            }
-            // Final fallback: list active subs for the customer
-            if (!subscription && customerId) {
-              const subs = await stripe.subscriptions.list({
-                customer: customerId,
-                status: 'active',
-                limit: 1,
-              });
-              if (subs.data.length) {
-                subscription = subs.data[0];
-                subscriptionId = subscription.id;
-              }
-            }
-          }
-        } catch (e) {
-          logStep('ERROR resolving subscription', { invoiceId, customerId, error: (e as Error).message });
-        }
-
-        // Determine price id from subscription first, then invoice lines
-        let priceId: string | null = null;
-        if (subscription) {
-          priceId = subscription.items?.data?.[0]?.price?.id ?? null;
-          logStep('Resolved subscription', { subscriptionId: subscription.id, priceId });
-        }
-        if (!priceId) {
-          priceId = invoice.lines?.data?.[0]?.price?.id ?? null;
-          logStep('Price resolved from invoice lines', { priceId });
-        }
-        if (!priceId) {
-          logStep('ERROR: Unable to determine price for invoice', { invoiceId, customerId });
-          // Return 200 to acknowledge; Stripe will not retry and we avoid double credits later
-          break;
-        }
-
-        // Fetch customer email
-        const customer = await stripe.customers.retrieve(customerId);
-        const customerEmail = typeof customer !== 'string' && 'email' in customer ? (customer as any).email as string | null : null;
-        if (!customerEmail) {
-          logStep('ERROR: Customer email not found', { customerId, invoiceId });
-          break;
-        }
-
-        // IMPROVED: Idempotency guard using exact invoice_id column matching
-        // First try exact match on invoice_id column (preferred)
-        const { data: exactDupRows, error: exactDupError } = await supabaseClient
-          .from('class_credits_ledger')
-          .select('id')
-          .eq('invoice_id', invoiceId);
-        
-        if (!exactDupError && exactDupRows && exactDupRows.length > 0) {
-          logStep('Duplicate invoice detected via invoice_id column, skipping', { invoiceId });
-          break;
-        }
-
-        // Fallback: Check for legacy entries that used reason field (for backwards compatibility)
-        const { data: legacyDupRows, error: legacyDupError } = await supabaseClient
-          .from('class_credits_ledger')
-          .select('id')
-          .ilike('reason', `%${invoiceId}%`);
-        
-        if (legacyDupError) {
-          logStep('WARNING: Legacy dup check failed', { error: legacyDupError.message });
-        }
-        if (legacyDupRows && legacyDupRows.length > 0) {
-          logStep('Duplicate invoice detected via legacy reason field, skipping', { invoiceId });
-          break;
-        }
-
-        // Get user from email
-        const { data: profiles, error: profileError } = await supabaseClient
-          .from('profiles')
-          .select('id')
-          .ilike('email', customerEmail)
-          .single();
-
-        if (profileError || !profiles) {
-          logStep('ERROR: User not found for email', { customerEmail, invoiceId });
-          throw new Error(`User not found for email: ${customerEmail}`);
-        }
-
-        const userId = profiles.id;
-
-        // Get plan details by price id
-        const { data: plan, error: planError } = await supabaseClient
-          .from('subscription_plans')
-          .select('*')
-          .eq('stripe_price_id', priceId)
-          .single();
-
-        if (planError || !plan) {
-          logStep('ERROR: No subscription plan found', {
-            priceId,
-            customerId,
-            customerEmail,
-            invoiceId,
-            planError: planError?.message
-          });
-          throw new Error(`Plan not found for price: ${priceId}`);
-        }
-
-        // Check if subscription record exists
-        const { data: existingSub } = await supabaseClient
-          .from('student_subscriptions')
-          .select('id, credits_remaining')
-          .eq('stripe_subscription_id', subscriptionId)
-          .single();
-
-        if (existingSub) {
-          // Update existing subscription period (credits will be added via ledger + trigger)
-          const newCredits = existingSub.credits_remaining + plan.classes_per_month;
-          const currentPeriodStart = subscription?.current_period_start
-            ? new Date(subscription.current_period_start * 1000).toISOString()
-            : invoice.lines?.data?.[0]?.period?.start
-            ? new Date(invoice.lines.data[0].period.start * 1000).toISOString()
-            : null;
-          const currentPeriodEnd = subscription?.current_period_end
-            ? new Date(subscription.current_period_end * 1000).toISOString()
-            : invoice.lines?.data?.[0]?.period?.end
-            ? new Date(invoice.lines.data[0].period.end * 1000).toISOString()
-            : null;
-
-          const { error: updateError } = await supabaseClient
-            .from('student_subscriptions')
-            .update({
-              status: subscription?.status ?? 'active',
-              current_period_start: currentPeriodStart,
-              current_period_end: currentPeriodEnd,
-              credits_allocated: plan.classes_per_month,
-            })
-            .eq('id', existingSub.id);
-
-          if (updateError) {
-            logStep('ERROR updating subscription', {
-              message: updateError.message,
-              code: updateError.code,
-              details: updateError.details,
-            });
-            throw updateError;
-          }
-
-          // IMPROVED: Store invoice_id in dedicated column for exact matching
-          const { error: ledgerError } = await supabaseClient
-            .from('class_credits_ledger')
-            .insert({
-              student_id: userId,
-              subscription_id: existingSub.id,
-              transaction_type: 'credit',
-              amount: plan.classes_per_month,
-              balance_after: newCredits,
-              reason: `Monthly subscription renewal - ${plan.name}`,
-              invoice_id: invoiceId,
-            });
-
-          if (ledgerError) {
-            logStep('ERROR creating ledger entry for existing subscription', {
-              message: ledgerError.message,
-              code: ledgerError.code,
-              details: ledgerError.details,
-            });
-            throw ledgerError;
-          }
-
-          logStep("Subscription updated and credits added", { newCredits, invoiceId });
-
-          // Send renewal success email notification
-          await sendPaymentSuccessEmail(
-            customerEmail,
-            supabaseClient,
-            plan.name,
-            plan.classes_per_month,
-            newCredits,
-            (invoice.amount_paid || 0) / 100,
-            true // isRenewal
-          );
-        } else {
-          // Create new subscription record (credits will be set via ledger + trigger)
-          const currentPeriodStart = subscription?.current_period_start
-            ? new Date(subscription.current_period_start * 1000).toISOString()
-            : invoice.lines?.data?.[0]?.period?.start
-            ? new Date(invoice.lines.data[0].period.start * 1000).toISOString()
-            : null;
-          const currentPeriodEnd = subscription?.current_period_end
-            ? new Date(subscription.current_period_end * 1000).toISOString()
-            : invoice.lines?.data?.[0]?.period?.end
-            ? new Date(invoice.lines.data[0].period.end * 1000).toISOString()
-            : null;
-
-          const { data: newSub, error: insertError } = await supabaseClient
-            .from('student_subscriptions')
-            .insert({
-              student_id: userId,
-              plan_id: plan.id,
-              stripe_subscription_id: subscriptionId,
-              stripe_customer_id: customerId,
-              status: subscription?.status ?? 'active',
-              current_period_start: currentPeriodStart,
-              current_period_end: currentPeriodEnd,
-              credits_remaining: 0, // Will be set by ledger trigger
-              credits_allocated: plan.classes_per_month,
-            })
-            .select()
-            .single();
-
-          if (insertError) {
-            logStep('ERROR creating new subscription', {
-              message: insertError.message,
-              code: insertError.code,
-              details: insertError.details,
-            });
-            throw insertError;
-          }
-
-          // IMPROVED: Store invoice_id in dedicated column for exact matching
-          const { error: ledgerError } = await supabaseClient
-            .from('class_credits_ledger')
-            .insert({
-              student_id: userId,
-              subscription_id: newSub.id,
-              transaction_type: 'credit',
-              amount: plan.classes_per_month,
-              balance_after: plan.classes_per_month,
-              reason: `Initial subscription - ${plan.name}`,
-              invoice_id: invoiceId,
-            });
-
-          if (ledgerError) {
-            logStep('ERROR creating initial ledger entry', {
-              message: ledgerError.message,
-              code: ledgerError.code,
-              details: ledgerError.details,
-            });
-            throw ledgerError;
-          }
-
-          logStep("New subscription created with credits", { subscriptionId: newSub.id, invoiceId });
-
-          // Send new subscription success email notification
-          await sendPaymentSuccessEmail(
-            customerEmail,
-            supabaseClient,
-            plan.name,
-            plan.classes_per_month,
-            plan.classes_per_month,
-            (invoice.amount_paid || 0) / 100,
-            false // isRenewal
+            session.id
           );
         }
 
-        break;
-      }
-
-      case "invoice.payment_failed": {
-        const invoice = event.data.object as Stripe.Invoice;
-        const subscriptionId = invoice.subscription;
-        const customerId = typeof invoice.customer === 'string'
-          ? invoice.customer
-          : (invoice.customer as any)?.id;
-
-        logStep("Payment failed", { subscriptionId, customerId });
-
-        // Mark subscription as past_due
-        const { error } = await supabaseClient
-          .from('student_subscriptions')
-          .update({ status: 'past_due' })
-          .eq('stripe_subscription_id', subscriptionId);
-
-        if (error) throw error;
-
-        // Send payment failure email notification
-        try {
-          // Get customer email from Stripe
-          const customer = await stripe.customers.retrieve(customerId);
-          const customerEmail = typeof customer !== 'string' && 'email' in customer 
-            ? (customer as any).email as string | null 
-            : null;
-
-          if (customerEmail) {
-            // Get user profile for name
-            const { data: profile } = await supabaseClient
-              .from('profiles')
-              .select('first_name, last_name')
-              .ilike('email', customerEmail)
-              .maybeSingle();
-
-            const studentName = profile?.first_name 
-              ? `${profile.first_name} ${profile.last_name || ''}`.trim()
-              : 'Valued Student';
-
-            // Get invoice amount
-            const amountDue = (invoice.amount_due || 0) / 100;
-
-            // Send email if Resend is configured
-            const resendApiKey = Deno.env.get("RESEND_API_KEY");
-            if (resendApiKey) {
-              const resend = new Resend(resendApiKey);
-              await resend.emails.send({
-                from: "Learn2Lead <noreply@learn2lead.com>",
-                to: [customerEmail],
-                subject: "Action Required: Payment Failed",
-                html: `
-                  <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                    <h1 style="color: #dc2626;">Payment Failed</h1>
-                    <p>Dear ${studentName},</p>
-                    <p>We were unable to process your payment of <strong>$${amountDue.toFixed(2)}</strong> for your Learn2Lead subscription.</p>
-                    
-                    <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 20px; margin: 20px 0;">
-                      <p style="margin: 0; font-size: 16px;">
-                        <strong>What to do next:</strong>
-                      </p>
-                      <ul style="margin: 10px 0 0 0;">
-                        <li>Check that your payment method is up to date</li>
-                        <li>Ensure sufficient funds are available</li>
-                        <li>Update your payment information in your account</li>
-                      </ul>
-                    </div>
-                    
-                    <p>Your subscription is currently on hold. Once payment is resolved, your classes will continue as normal.</p>
-                    
-                    <p>If you need assistance or have already updated your payment method, please contact us.</p>
-                    
-                    <p>Thank you for your understanding!</p>
-                    <p><strong>The Learn2Lead Team</strong></p>
-                    
-                    <p style="color: #666; font-size: 12px; margin-top: 30px;">
-                      This is an automated notification regarding your payment status.
-                    </p>
-                  </div>
-                `,
-              });
-              logStep("Payment failure email sent", { email: customerEmail });
-            } else {
-              logStep("RESEND_API_KEY not configured, skipping email");
-            }
-
-            // Create in-app notification
-            const { data: userProfile } = await supabaseClient
-              .from('profiles')
-              .select('id')
-              .ilike('email', customerEmail)
-              .maybeSingle();
-
-            if (userProfile) {
-              await supabaseClient.from("notifications").insert({
-                user_id: userProfile.id,
-                message: `Payment failed for $${amountDue.toFixed(2)}. Please update your payment method to continue classes.`,
-                type: "payment_failed",
-              });
-              logStep("In-app notification created", { userId: userProfile.id });
-            }
-          } else {
-            logStep("Customer email not found, skipping notification");
-          }
-        } catch (notifyError) {
-          // Don't fail the webhook if notification fails
-          logStep("ERROR sending payment failure notification", { 
-            error: notifyError instanceof Error ? notifyError.message : String(notifyError) 
-          });
+        // For one-time payments, allocate credits now
+        if (session.mode === "payment" && session.payment_status === "paid") {
+          await allocateCreditsFromCheckout(stripe, supabaseClient, session);
         }
-
-        break;
-      }
-
-      case "customer.subscription.deleted": {
-        const subscription = event.data.object;
-        const subscriptionId = subscription.id;
-        const customerId = typeof subscription.customer === 'string'
-          ? subscription.customer
-          : (subscription.customer as any)?.id;
-
-        logStep("Subscription cancelled", { subscriptionId, customerId });
-
-        // Mark subscription as cancelled (keep history)
-        const { error } = await supabaseClient
-          .from('student_subscriptions')
-          .update({ status: 'cancelled' })
-          .eq('stripe_subscription_id', subscriptionId);
-
-        if (error) throw error;
-
-        // Send cancellation email
-        await sendSubscriptionStatusEmail(
-          stripe,
-          supabaseClient,
-          customerId,
-          'cancelled'
-        );
-
-        break;
-      }
-
-      case "customer.subscription.updated": {
-        const subscription = event.data.object;
-        const subscriptionId = subscription.id;
-
-        logStep("Subscription updated", { subscriptionId, status: subscription.status });
-
-        // Safety: handle potentially missing/invalid period dates
-        const currentPeriodStart = subscription.current_period_start 
-          ? new Date(subscription.current_period_start * 1000).toISOString()
-          : null;
-        const currentPeriodEnd = subscription.current_period_end
-          ? new Date(subscription.current_period_end * 1000).toISOString()
-          : null;
-
-        // Sync status changes
-        const { error } = await supabaseClient
-          .from('student_subscriptions')
-          .update({
-            status: subscription.status,
-            current_period_start: currentPeriodStart,
-            current_period_end: currentPeriodEnd,
-          })
-          .eq('stripe_subscription_id', subscriptionId);
-
-        if (error) throw error;
-
-        break;
-      }
-
-      case "customer.subscription.paused": {
-        // Handle subscription pause events
-        const subscription = event.data.object;
-        const subscriptionId = subscription.id;
-        const customerId = typeof subscription.customer === 'string'
-          ? subscription.customer
-          : (subscription.customer as any)?.id;
-
-        logStep("Subscription paused", { subscriptionId, customerId });
-
-        const { error } = await supabaseClient
-          .from('student_subscriptions')
-          .update({ status: 'paused' })
-          .eq('stripe_subscription_id', subscriptionId);
-
-        if (error) throw error;
-
-        // Send pause confirmation email
-        await sendSubscriptionStatusEmail(
-          stripe,
-          supabaseClient,
-          customerId,
-          'paused'
-        );
-
-        break;
-      }
-
-      case "customer.subscription.resumed": {
-        // Handle subscription resume events
-        const subscription = event.data.object;
-        const subscriptionId = subscription.id;
-        const customerId = typeof subscription.customer === 'string'
-          ? subscription.customer
-          : (subscription.customer as any)?.id;
-
-        logStep("Subscription resumed", { subscriptionId, customerId });
-
-        const { error } = await supabaseClient
-          .from('student_subscriptions')
-          .update({ status: 'active' })
-          .eq('stripe_subscription_id', subscriptionId);
-
-        if (error) throw error;
-
-        // Send resume confirmation email
-        await sendSubscriptionStatusEmail(
-          stripe,
-          supabaseClient,
-          customerId,
-          'resumed'
-        );
 
         break;
       }
@@ -615,14 +111,165 @@ serve(async (req) => {
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    const errorDetails = error instanceof Error ? error : { raw: error };
-    logStep("ERROR in webhook", { message: errorMessage, details: errorDetails });
+    logStep("ERROR in webhook", { message: errorMessage });
     return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { "Content-Type": "application/json" },
       status: 400,
     });
   }
 });
+
+// Allocate credits from a one-time payment checkout session
+async function allocateCreditsFromCheckout(
+  stripe: Stripe,
+  supabaseClient: any,
+  session: Stripe.Checkout.Session
+) {
+  const sessionId = session.id;
+  const customerId = session.customer as string;
+  const customerEmail = session.customer_email || session.customer_details?.email || '';
+  const metadata = session.metadata || {};
+  const userId = metadata.user_id;
+
+  logStep("Allocating credits from checkout", { sessionId, customerId, customerEmail });
+
+  // Idempotency check - use session ID as invoice_id
+  const { data: existingEntry } = await supabaseClient
+    .from('class_credits_ledger')
+    .select('id')
+    .eq('invoice_id', sessionId);
+
+  if (existingEntry && existingEntry.length > 0) {
+    logStep("Credits already allocated for this session, skipping", { sessionId });
+    return;
+  }
+
+  // Get the price ID from the checkout session line items
+  const lineItems = await stripe.checkout.sessions.listLineItems(sessionId, { limit: 1 });
+  const priceId = lineItems.data[0]?.price?.id;
+
+  if (!priceId) {
+    logStep("ERROR: No price ID found in checkout session", { sessionId });
+    return;
+  }
+
+  // Get plan details by price id
+  const { data: plan, error: planError } = await supabaseClient
+    .from('subscription_plans')
+    .select('*')
+    .eq('stripe_price_id', priceId)
+    .single();
+
+  if (planError || !plan) {
+    logStep("ERROR: No plan found for price", { priceId, error: planError?.message });
+    return;
+  }
+
+  // Get user profile - try metadata user_id first, then email lookup
+  let profileId = userId;
+  if (!profileId && customerEmail) {
+    const { data: profile } = await supabaseClient
+      .from('profiles')
+      .select('id')
+      .ilike('email', customerEmail)
+      .single();
+    profileId = profile?.id;
+  }
+
+  if (!profileId) {
+    logStep("ERROR: Cannot find user for credit allocation", { customerEmail, userId });
+    return;
+  }
+
+  // Check for existing subscription record
+  const { data: existingSub } = await supabaseClient
+    .from('student_subscriptions')
+    .select('id, credits_remaining')
+    .eq('student_id', profileId)
+    .in('status', ['active', 'trialing'])
+    .maybeSingle();
+
+  if (existingSub) {
+    // Add credits to existing subscription
+    const newCredits = existingSub.credits_remaining + plan.classes_per_month;
+
+    const { error: ledgerError } = await supabaseClient
+      .from('class_credits_ledger')
+      .insert({
+        student_id: profileId,
+        subscription_id: existingSub.id,
+        transaction_type: 'credit',
+        amount: plan.classes_per_month,
+        balance_after: newCredits,
+        reason: `Credit pack purchase - ${plan.name}`,
+        invoice_id: sessionId,
+      });
+
+    if (ledgerError) {
+      logStep("ERROR creating ledger entry", { error: ledgerError });
+      throw ledgerError;
+    }
+
+    logStep("Credits added to existing record", { newCredits, sessionId });
+
+    await sendPurchaseConfirmationEmail(
+      customerEmail || '',
+      supabaseClient,
+      plan.name,
+      plan.classes_per_month,
+      newCredits,
+      (session.amount_total || 0) / 100
+    );
+  } else {
+    // Create new subscription record
+    const { data: newSub, error: insertError } = await supabaseClient
+      .from('student_subscriptions')
+      .insert({
+        student_id: profileId,
+        plan_id: plan.id,
+        stripe_subscription_id: `purchase_${sessionId}`,
+        stripe_customer_id: customerId || `checkout_${profileId}`,
+        status: 'active',
+        credits_remaining: 0, // Will be set by ledger trigger
+        credits_allocated: plan.classes_per_month,
+      })
+      .select()
+      .single();
+
+    if (insertError) {
+      logStep("ERROR creating subscription record", { error: insertError });
+      throw insertError;
+    }
+
+    const { error: ledgerError } = await supabaseClient
+      .from('class_credits_ledger')
+      .insert({
+        student_id: profileId,
+        subscription_id: newSub.id,
+        transaction_type: 'credit',
+        amount: plan.classes_per_month,
+        balance_after: plan.classes_per_month,
+        reason: `Initial credit pack purchase - ${plan.name}`,
+        invoice_id: sessionId,
+      });
+
+    if (ledgerError) {
+      logStep("ERROR creating initial ledger entry", { error: ledgerError });
+      throw ledgerError;
+    }
+
+    logStep("New subscription created with credits", { subscriptionId: newSub.id, sessionId });
+
+    await sendPurchaseConfirmationEmail(
+      customerEmail || '',
+      supabaseClient,
+      plan.name,
+      plan.classes_per_month,
+      plan.classes_per_month,
+      (session.amount_total || 0) / 100
+    );
+  }
+}
 
 // Process referral reward - credits the referrer
 async function processReferralReward(
@@ -633,18 +280,11 @@ async function processReferralReward(
   newCustomerStripeId: string,
   newCustomerEmail: string,
   discountAmount: number,
-  subscriptionId: string
+  sessionId: string
 ) {
   try {
-    logStep("Processing referral reward", { 
-      referralCodeId, 
-      referrerId, 
-      newCustomerStripeId,
-      newCustomerEmail,
-      discountAmount 
-    });
+    logStep("Processing referral reward", { referralCodeId, referrerId, discountAmount });
 
-    // Get referrer's profile to find their email
     const { data: referrerProfile, error: referrerError } = await supabaseClient
       .from('profiles')
       .select('id, email')
@@ -656,116 +296,89 @@ async function processReferralReward(
       return;
     }
 
-    // Find the referrer's Stripe customer ID
     const referrerCustomers = await stripe.customers.list({ 
       email: referrerProfile.email, 
       limit: 1 
     });
 
     if (referrerCustomers.data.length === 0) {
-      logStep("ERROR: Referrer has no Stripe customer record", { 
-        referrerId, 
-        email: referrerProfile.email 
-      });
+      logStep("ERROR: Referrer has no Stripe customer record", { email: referrerProfile.email });
       return;
     }
 
     const referrerCustomerId = referrerCustomers.data[0].id;
-
-    // Apply a credit balance to the referrer's Stripe account
-    // This will be applied to their next invoice
-    const creditAmount = Math.round(discountAmount * 100); // Convert to cents
+    const creditAmount = Math.round(discountAmount * 100);
     
     await stripe.customers.createBalanceTransaction(referrerCustomerId, {
-      amount: -creditAmount, // Negative amount = credit
+      amount: -creditAmount,
       currency: 'usd',
       description: `Referral reward - new customer signup`,
     });
 
-    logStep("Referrer credited", { 
-      referrerCustomerId, 
-      creditAmount: discountAmount,
-      referrerId 
-    });
+    logStep("Referrer credited", { referrerCustomerId, creditAmount: discountAmount });
 
-    // Get the new user's profile ID from their email
     const { data: newUserProfile } = await supabaseClient
       .from('profiles')
       .select('id')
       .ilike('email', newCustomerEmail)
       .single();
 
-    // Record the referral usage
     const { error: usageError } = await supabaseClient
       .from('referral_usage')
       .insert({
         referral_code_id: referralCodeId,
-        used_by_user_id: newUserProfile?.id || referrerId, // Use referrer as fallback
+        used_by_user_id: newUserProfile?.id || referrerId,
         used_by_email: newCustomerEmail,
-        subscription_id: subscriptionId,
+        subscription_id: sessionId,
       });
 
     if (usageError) {
       logStep("WARNING: Failed to record referral usage", { error: usageError.message });
     }
 
-    // Increment the times_used counter
-    const { error: updateError } = await supabaseClient
+    // Increment times_used
+    const { data: codeData } = await supabaseClient
       .from('referral_codes')
-      .update({ times_used: supabaseClient.rpc('increment', { x: 1 }) })
-      .eq('id', referralCodeId);
-
-    // Alternative: Use raw SQL increment
-    if (updateError) {
-      // Fallback: fetch and update
-      const { data: codeData } = await supabaseClient
+      .select('times_used')
+      .eq('id', referralCodeId)
+      .single();
+    
+    if (codeData) {
+      await supabaseClient
         .from('referral_codes')
-        .select('times_used')
-        .eq('id', referralCodeId)
-        .single();
-      
-      if (codeData) {
-        await supabaseClient
-          .from('referral_codes')
-          .update({ times_used: (codeData.times_used || 0) + 1 })
-          .eq('id', referralCodeId);
-      }
+        .update({ times_used: (codeData.times_used || 0) + 1 })
+        .eq('id', referralCodeId);
     }
 
-    // Send notifications to the referrer
-    await sendReferralNotifications(
-      supabaseClient,
-      referrerProfile,
-      newCustomerEmail,
-      discountAmount
-    );
+    // Send notification
+    await supabaseClient.from("notifications").insert({
+      user_id: referrerId,
+      message: `Your referral code was used by ${newCustomerEmail}! You earned a $${discountAmount} credit.`,
+      type: "referral_reward",
+    });
 
-    logStep("Referral reward processed successfully", { referralCodeId, referrerId });
+    logStep("Referral reward processed successfully");
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR processing referral reward", { error: errorMessage });
-    // Don't throw - we don't want to fail the webhook for referral issues
+    logStep("ERROR processing referral reward", { error: error instanceof Error ? error.message : String(error) });
   }
 }
 
-// Send payment success email notification
-async function sendPaymentSuccessEmail(
+// Send purchase confirmation email
+async function sendPurchaseConfirmationEmail(
   customerEmail: string,
   supabaseClient: any,
   planName: string,
   creditsAdded: number,
   totalCredits: number,
   amountPaid: number,
-  isRenewal: boolean
 ) {
   try {
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
     if (!resendApiKey) {
-      logStep("Skipping payment success email - RESEND_API_KEY not configured");
+      logStep("Skipping email - RESEND_API_KEY not configured");
       return;
     }
 
-    // Get user profile for name
     const { data: profile } = await supabaseClient
       .from('profiles')
       .select('first_name, last_name')
@@ -776,36 +389,24 @@ async function sendPaymentSuccessEmail(
       ? `${profile.first_name} ${profile.last_name || ''}`.trim()
       : 'Valued Student';
 
-    const subject = isRenewal 
-      ? "Your Subscription Has Been Renewed!" 
-      : "Welcome to Learn2Lead!";
-
-    const headerText = isRenewal
-      ? "Subscription Renewed Successfully"
-      : "Your Subscription is Active!";
-
-    const introText = isRenewal
-      ? `Your ${planName} subscription has been successfully renewed.`
-      : `Thank you for subscribing to the ${planName} plan!`;
-
     const resend = new Resend(resendApiKey);
     await resend.emails.send({
       from: "Learn2Lead <noreply@learn2lead.com>",
       to: [customerEmail],
-      subject: subject,
+      subject: "Your Credit Pack Purchase Confirmation",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #16a34a;">${headerText}</h1>
+          <h1 style="color: #16a34a;">Credits Added!</h1>
           <p>Dear ${studentName},</p>
-          <p>${introText}</p>
+          <p>Thank you for purchasing the ${planName}!</p>
           
           <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 20px; margin: 20px 0;">
             <p style="margin: 0 0 10px 0; font-size: 18px; font-weight: bold;">
-              Payment Summary
+              Purchase Summary
             </p>
             <table style="width: 100%; border-collapse: collapse;">
               <tr>
-                <td style="padding: 8px 0; border-bottom: 1px solid #dcfce7;">Plan</td>
+                <td style="padding: 8px 0; border-bottom: 1px solid #dcfce7;">Pack</td>
                 <td style="padding: 8px 0; border-bottom: 1px solid #dcfce7; text-align: right; font-weight: bold;">${planName}</td>
               </tr>
               <tr>
@@ -823,7 +424,7 @@ async function sendPaymentSuccessEmail(
             </table>
           </div>
           
-          <p>Your classes are ready to be scheduled. Log in to your dashboard to view your upcoming sessions or schedule new ones.</p>
+          <p>Your credits never expire — use them at your own pace. Log in to your dashboard to schedule classes.</p>
           
           <div style="text-align: center; margin: 30px 0;">
             <a href="https://learn2lead-site.lovable.app/dashboard" style="background: #16a34a; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
@@ -833,247 +434,12 @@ async function sendPaymentSuccessEmail(
           
           <p>Thank you for being part of Learn2Lead!</p>
           <p><strong>The Learn2Lead Team</strong></p>
-          
-          <p style="color: #666; font-size: 12px; margin-top: 30px;">
-            This is an automated payment confirmation. If you have questions, please contact us.
-          </p>
         </div>
       `,
     });
 
-    logStep("Payment success email sent", { customerEmail, isRenewal, planName });
+    logStep("Purchase confirmation email sent", { customerEmail, planName });
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("WARNING: Failed to send payment success email", { error: errorMessage });
-    // Don't throw - we don't want to fail the webhook for email issues
-  }
-}
-
-// Send subscription status change email notification
-async function sendSubscriptionStatusEmail(
-  stripe: Stripe,
-  supabaseClient: any,
-  customerId: string,
-  status: 'cancelled' | 'paused' | 'resumed'
-) {
-  try {
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
-    if (!resendApiKey) {
-      logStep("Skipping subscription status email - RESEND_API_KEY not configured");
-      return;
-    }
-
-    // Get customer email from Stripe
-    const customer = await stripe.customers.retrieve(customerId);
-    const customerEmail = typeof customer !== 'string' && 'email' in customer 
-      ? (customer as any).email as string | null 
-      : null;
-
-    if (!customerEmail) {
-      logStep("Cannot send subscription status email - no customer email", { customerId });
-      return;
-    }
-
-    // Get user profile for name
-    const { data: profile } = await supabaseClient
-      .from('profiles')
-      .select('first_name, last_name')
-      .ilike('email', customerEmail)
-      .maybeSingle();
-
-    const studentName = profile?.first_name 
-      ? `${profile.first_name} ${profile.last_name || ''}`.trim()
-      : 'Valued Student';
-
-    // Email content based on status
-    const emailContent = {
-      cancelled: {
-        subject: "Your Subscription Has Been Cancelled",
-        headerColor: "#dc2626",
-        headerText: "Subscription Cancelled",
-        message: `Your Learn2Lead subscription has been cancelled. We're sorry to see you go!`,
-        details: `
-          <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 20px; margin: 20px 0;">
-            <p style="margin: 0 0 10px 0;"><strong>What this means:</strong></p>
-            <ul style="margin: 0;">
-              <li>Your remaining class credits will stay in your account</li>
-              <li>You can use any remaining credits to schedule classes</li>
-              <li>You will not be charged again unless you resubscribe</li>
-            </ul>
-          </div>
-          <p>If you cancelled by mistake or would like to resubscribe, visit our pricing page anytime.</p>
-        `,
-        buttonText: "View Pricing",
-        buttonUrl: "https://learn2lead-site.lovable.app/pricing",
-        buttonColor: "#6b7280"
-      },
-      paused: {
-        subject: "Your Subscription Has Been Paused",
-        headerColor: "#f59e0b",
-        headerText: "Subscription Paused",
-        message: `Your Learn2Lead subscription has been paused as requested.`,
-        details: `
-          <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 20px; margin: 20px 0;">
-            <p style="margin: 0 0 10px 0;"><strong>While paused:</strong></p>
-            <ul style="margin: 0;">
-              <li>You will not be charged during the pause period</li>
-              <li>Your existing credits remain available</li>
-              <li>Your subscription will automatically resume on your selected date</li>
-            </ul>
-          </div>
-          <p>Enjoy your break! We'll be here when you're ready to continue learning.</p>
-        `,
-        buttonText: "Go to Dashboard",
-        buttonUrl: "https://learn2lead-site.lovable.app/dashboard",
-        buttonColor: "#f59e0b"
-      },
-      resumed: {
-        subject: "Welcome Back! Your Subscription is Active",
-        headerColor: "#16a34a",
-        headerText: "Subscription Resumed",
-        message: `Great news! Your Learn2Lead subscription is now active again.`,
-        details: `
-          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 20px; margin: 20px 0;">
-            <p style="margin: 0 0 10px 0;"><strong>You're all set:</strong></p>
-            <ul style="margin: 0;">
-              <li>Your subscription is now active</li>
-              <li>Regular billing has resumed</li>
-              <li>You can schedule classes as usual</li>
-            </ul>
-          </div>
-          <p>Welcome back! We're excited to continue your learning journey.</p>
-        `,
-        buttonText: "Schedule a Class",
-        buttonUrl: "https://learn2lead-site.lovable.app/dashboard",
-        buttonColor: "#16a34a"
-      }
-    };
-
-    const content = emailContent[status];
-
-    const resend = new Resend(resendApiKey);
-    await resend.emails.send({
-      from: "Learn2Lead <noreply@learn2lead.com>",
-      to: [customerEmail],
-      subject: content.subject,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: ${content.headerColor};">${content.headerText}</h1>
-          <p>Dear ${studentName},</p>
-          <p>${content.message}</p>
-          
-          ${content.details}
-          
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${content.buttonUrl}" style="background: ${content.buttonColor}; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
-              ${content.buttonText}
-            </a>
-          </div>
-          
-          <p>If you have any questions, please don't hesitate to contact us.</p>
-          <p><strong>The Learn2Lead Team</strong></p>
-          
-          <p style="color: #666; font-size: 12px; margin-top: 30px;">
-            This is an automated notification regarding your subscription status.
-          </p>
-        </div>
-      `,
-    });
-
-    logStep("Subscription status email sent", { customerEmail, status });
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("WARNING: Failed to send subscription status email", { error: errorMessage });
-    // Don't throw - we don't want to fail the webhook for email issues
-  }
-}
-
-// Send notifications to referrer when their code is used
-async function sendReferralNotifications(
-  supabaseClient: any,
-  referrerProfile: { id: string; email: string },
-  newCustomerEmail: string,
-  rewardAmount: number
-) {
-  try {
-    // Mask the new customer email for privacy
-    const maskedEmail = newCustomerEmail.replace(/(.{2})(.*)(@.*)/, '$1***$3');
-
-    // Get referrer's first name for personalization
-    const { data: profile } = await supabaseClient
-      .from('profiles')
-      .select('first_name, last_name')
-      .eq('id', referrerProfile.id)
-      .maybeSingle();
-
-    const referrerName = profile?.first_name 
-      ? `${profile.first_name} ${profile.last_name || ''}`.trim()
-      : 'Friend';
-
-    // Create in-app notification
-    const { error: notifError } = await supabaseClient.from("notifications").insert({
-      user_id: referrerProfile.id,
-      message: `🎉 Someone used your referral code! You earned $${rewardAmount} credit toward your next bill.`,
-      type: "referral_reward",
-    });
-
-    if (notifError) {
-      logStep("WARNING: Failed to create referral notification", { error: notifError.message });
-    } else {
-      logStep("Referral in-app notification created", { userId: referrerProfile.id });
-    }
-
-    // Send email notification
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
-    if (resendApiKey) {
-      const resend = new Resend(resendApiKey);
-      await resend.emails.send({
-        from: "Learn2Lead <noreply@learn2lead.com>",
-        to: [referrerProfile.email],
-        subject: "🎉 You just earned $" + rewardAmount + " from a referral!",
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h1 style="color: #16a34a;">Referral Reward Earned! 🎉</h1>
-            <p>Dear ${referrerName},</p>
-            <p>Great news! Someone just subscribed using your referral code.</p>
-            
-            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center;">
-              <p style="margin: 0; font-size: 24px; font-weight: bold; color: #16a34a;">
-                +$${rewardAmount} Credit
-              </p>
-              <p style="margin: 10px 0 0 0; font-size: 14px; color: #666;">
-                Applied to your next bill
-              </p>
-            </div>
-            
-            <p style="color: #666; font-size: 14px;">
-              <strong>New member:</strong> ${maskedEmail}
-            </p>
-            
-            <p>Keep sharing your code to earn more rewards! Every friend who subscribes earns you $${rewardAmount} credit.</p>
-            
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="https://learn2lead-site.lovable.app/profile" style="background: #16a34a; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
-                View Your Referrals
-              </a>
-            </div>
-            
-            <p>Thank you for spreading the word!</p>
-            <p><strong>The Learn2Lead Team</strong></p>
-            
-            <p style="color: #666; font-size: 12px; margin-top: 30px;">
-              This is an automated referral notification. Keep sharing your code to earn more rewards!
-            </p>
-          </div>
-        `,
-      });
-      logStep("Referral reward email sent", { email: referrerProfile.email, amount: rewardAmount });
-    } else {
-      logStep("Skipping referral email - RESEND_API_KEY not configured");
-    }
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("WARNING: Failed to send referral notifications", { error: errorMessage });
-    // Don't throw - notifications shouldn't fail the main process
+    logStep("WARNING: Failed to send purchase confirmation email", { error: error instanceof Error ? error.message : String(error) });
   }
 }

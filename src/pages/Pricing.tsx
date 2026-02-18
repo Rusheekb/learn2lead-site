@@ -6,10 +6,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { STRIPE_PRICE_IDS, STRIPE_PLAN_CONFIG, type StripePlanKey } from '@/config/stripe';
+
 type PricingTierProps = {
   name: string;
   price: string;
-  monthlyTotal: string;
+  total: string;
   description: string;
   features: string[];
   buttonText: string;
@@ -22,7 +23,7 @@ type PricingTierProps = {
 const PricingTier: React.FC<PricingTierProps> = ({
   name,
   price,
-  monthlyTotal,
+  total,
   description,
   features,
   buttonText,
@@ -39,10 +40,10 @@ const PricingTier: React.FC<PricingTierProps> = ({
     >
       <h3 className="text-xl font-bold mb-2">{name}</h3>
       <div className="mb-2">
-        <span className="text-4xl font-bold">{price}</span>
+        <span className="text-4xl font-bold">{total}</span>
       </div>
       <div className="mb-1">
-        <p className="text-sm text-muted-foreground">{monthlyTotal}</p>
+        <p className="text-sm text-muted-foreground">{price}</p>
       </div>
       <p className="text-sm text-muted-foreground mb-6">{description}</p>
       <ul className="space-y-3 mb-6">
@@ -74,9 +75,6 @@ const PricingTier: React.FC<PricingTierProps> = ({
     </div>
   );
 };
-
-// Price IDs and plan prices are now imported from centralized config
-// See src/config/stripe.ts to update when switching to live mode
 
 const Pricing = () => {
   const navigate = useNavigate();
@@ -152,21 +150,18 @@ const Pricing = () => {
       <main id="main-content" tabIndex={-1} className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 focus:outline-none">
         <div className="max-w-3xl mx-auto text-center mb-12">
           <h2 className="text-3xl font-bold mb-4">
-            Simple, Transparent Pricing
+            Credit Packs
           </h2>
           <p className="text-xl text-gray-600">
-            Choose the plan that's right for your learning journey
+            Buy credits and use them at your own pace — no subscriptions, no commitments
           </p>
         </div>
-
-
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
           <PricingTier
             name={STRIPE_PLAN_CONFIG.basic.name}
             price={STRIPE_PLAN_CONFIG.basic.pricePerClass}
-            monthlyTotal={STRIPE_PLAN_CONFIG.basic.monthlyTotal}
-            
+            total={STRIPE_PLAN_CONFIG.basic.monthlyTotal}
             description={STRIPE_PLAN_CONFIG.basic.description}
             features={[...STRIPE_PLAN_CONFIG.basic.features]}
             buttonText={STRIPE_PLAN_CONFIG.basic.buttonText}
@@ -179,8 +174,7 @@ const Pricing = () => {
           <PricingTier
             name={STRIPE_PLAN_CONFIG.standard.name}
             price={STRIPE_PLAN_CONFIG.standard.pricePerClass}
-            monthlyTotal={STRIPE_PLAN_CONFIG.standard.monthlyTotal}
-            
+            total={STRIPE_PLAN_CONFIG.standard.monthlyTotal}
             description={STRIPE_PLAN_CONFIG.standard.description}
             features={[...STRIPE_PLAN_CONFIG.standard.features]}
             buttonText={STRIPE_PLAN_CONFIG.standard.buttonText}
@@ -193,8 +187,7 @@ const Pricing = () => {
           <PricingTier
             name={STRIPE_PLAN_CONFIG.premium.name}
             price={STRIPE_PLAN_CONFIG.premium.pricePerClass}
-            monthlyTotal={STRIPE_PLAN_CONFIG.premium.monthlyTotal}
-            
+            total={STRIPE_PLAN_CONFIG.premium.monthlyTotal}
             description={STRIPE_PLAN_CONFIG.premium.description}
             features={[...STRIPE_PLAN_CONFIG.premium.features]}
             buttonText={STRIPE_PLAN_CONFIG.premium.buttonText}

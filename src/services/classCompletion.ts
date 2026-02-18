@@ -70,20 +70,20 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
       
       if (errorCode === 'NO_SUBSCRIPTION') {
         toast.error('Student has no active subscription', {
-          description: 'Please subscribe to continue taking classes',
+          description: 'Please purchase credits to continue taking classes',
           action: {
-            label: 'View Plans',
+            label: 'Buy Credits',
             onClick: () => window.location.href = '/pricing'
           }
         });
         return false;
       }
       
-      if (errorCode === 'INSUFFICIENT_CREDITS') {
-        toast.error('Student has no remaining credits', {
+      if (errorCode === 'INSUFFICIENT_CREDITS' || errorCode === 'NO_CREDITS') {
+        toast.error('Student has no credits remaining', {
           description: 'Please purchase more credits to continue',
           action: {
-            label: 'View Plans',
+            label: 'Buy Credits',
             onClick: () => window.location.href = '/pricing'
           }
         });
