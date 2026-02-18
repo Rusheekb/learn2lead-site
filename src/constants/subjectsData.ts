@@ -1,4 +1,4 @@
-import { Calculator, Beaker, BookOpen, Book, Globe } from 'lucide-react';
+import { Calculator, Beaker, BookOpen, Book, Globe, Code } from 'lucide-react';
 import React from 'react';
 
 // Resource type definition
@@ -267,6 +267,55 @@ export const subjects: Subject[] = [
           { title: 'Latin Course', url: 'https://www.youtube.com/playlist?list=PLI7B0WoJp3kV6fmYBKaZW0WF5zGDVUGcV', source: 'Latinum', type: 'video' },
           { title: 'Latin Dictionary', url: 'https://www.latin-dictionary.net/', source: 'Latin Dictionary', type: 'article' },
           { title: 'Latin Practice', url: 'https://www.latinitium.com/', source: 'Latinitium', type: 'practice' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 6,
+    name: 'Coding',
+    icon: 'code',
+    iconComponent: Code,
+    description: 'Web Development, Python, Java, and more',
+    topics: [
+      {
+        name: 'Web Development',
+        resources: [
+          { title: 'HTML & CSS', url: 'https://www.freecodecamp.org/learn/responsive-web-design/', source: 'freeCodeCamp', type: 'practice' },
+          { title: 'Web Dev - Crash Course', url: 'https://www.youtube.com/watch?v=916GWv2Qs08', source: 'Traversy Media', type: 'video' },
+          { title: 'MDN Web Docs', url: 'https://developer.mozilla.org/en-US/docs/Learn', source: 'MDN', type: 'article' },
+        ],
+      },
+      {
+        name: 'Python',
+        resources: [
+          { title: 'Python for Everybody', url: 'https://www.py4e.com/', source: 'Py4E', type: 'video' },
+          { title: 'Python Practice', url: 'https://www.codecademy.com/learn/learn-python-3', source: 'Codecademy', type: 'practice' },
+          { title: 'Automate the Boring Stuff', url: 'https://automatetheboringstuff.com/', source: 'Al Sweigart', type: 'article' },
+        ],
+      },
+      {
+        name: 'Java',
+        resources: [
+          { title: 'Java Programming', url: 'https://www.youtube.com/watch?v=eIrMbAQSU34', source: 'Programming with Mosh', type: 'video' },
+          { title: 'Java Practice', url: 'https://www.codingbat.com/java', source: 'CodingBat', type: 'practice' },
+          { title: 'Java Tutorial', url: 'https://www.w3schools.com/java/', source: 'W3Schools', type: 'article' },
+        ],
+      },
+      {
+        name: 'JavaScript',
+        resources: [
+          { title: 'JavaScript Algorithms', url: 'https://www.freecodecamp.org/learn/javascript-algorithms-and-data-structures/', source: 'freeCodeCamp', type: 'practice' },
+          { title: 'JavaScript - Crash Course', url: 'https://www.youtube.com/watch?v=hdI2bqOjy3c', source: 'Traversy Media', type: 'video' },
+          { title: 'JavaScript.info', url: 'https://javascript.info/', source: 'javascript.info', type: 'article' },
+        ],
+      },
+      {
+        name: 'Data Structures & Algorithms',
+        resources: [
+          { title: 'DSA Course', url: 'https://www.khanacademy.org/computing/computer-science/algorithms', source: 'Khan Academy', type: 'video' },
+          { title: 'LeetCode', url: 'https://leetcode.com/', source: 'LeetCode', type: 'practice' },
+          { title: 'Visualgo', url: 'https://visualgo.net/', source: 'Visualgo', type: 'practice' },
         ],
       },
     ],
