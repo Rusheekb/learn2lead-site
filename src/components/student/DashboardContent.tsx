@@ -18,12 +18,16 @@ const DashboardContent: React.FC<DashboardContentProps> = memo(
       <>
         <h2 className="text-2xl font-bold mb-6">My Learning Portal</h2>
         <SimpleCreditsCounter />
-        <SubjectCards
-          subjects={subjects}
-          selectedSubject={selectedSubject}
-          onSubjectClick={onSubjectClick}
-        />
-        <ClassCalendarContainer studentId={studentId} />
+        <div className="mt-8">
+          <SubjectCards
+            subjects={subjects}
+            selectedSubject={selectedSubject}
+            onSubjectClick={onSubjectClick}
+          />
+        </div>
+        <div className="mt-8">
+          <ClassCalendarContainer studentId={studentId} />
+        </div>
         
         <div className="mt-8">
           <ClassHistory userRole="student" />
