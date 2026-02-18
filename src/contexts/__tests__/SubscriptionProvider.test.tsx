@@ -124,14 +124,12 @@ describe('SubscriptionProvider', () => {
       expect(capturedContext?.isLoading).toBe(false);
     });
 
-    it('handles paused subscription state', async () => {
+    it('handles zero credits state', async () => {
       mockFunctionsInvoke.mockResolvedValue({
         data: {
           subscribed: true,
-          credits_remaining: 5,
-          plan_name: 'Standard',
-          is_paused: true,
-          pause_resumes_at: '2025-02-01',
+          credits_remaining: 0,
+          plan_name: '4 Credit Pack',
         },
         error: null,
       });
@@ -145,10 +143,10 @@ describe('SubscriptionProvider', () => {
       });
 
       await waitFor(() => {
-        expect(capturedContext?.isPaused).toBe(true);
+        expect(capturedContext?.creditsRemaining).toBe(0);
       });
 
-      expect(capturedContext?.pauseResumesAt).toBe('2025-02-01');
+      expect(capturedContext?.subscribed).toBe(true);
     });
 
     it('handles inactive subscription', async () => {

@@ -1,4 +1,3 @@
-// Deno.serve is built-in, no import needed
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
@@ -25,7 +24,6 @@ Deno.serve(async (req) => {
   try {
     logStep("Function started");
 
-    // Authenticate user
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       throw new Error("No authorization header provided");
@@ -40,7 +38,6 @@ Deno.serve(async (req) => {
 
     logStep("User authenticated", { userId: userData.user.id });
 
-    // Get user role
     const { data: profile } = await supabaseClient
       .from("profiles")
       .select("role")
@@ -51,7 +48,6 @@ Deno.serve(async (req) => {
       throw new Error("Only tutors and admins can complete classes");
     }
 
-    // Parse request body
     const { student_id, class_id, class_title } = await req.json();
 
     if (!student_id || !class_id || !class_title) {
@@ -114,7 +110,21 @@ Deno.serve(async (req) => {
       credits_before: subscription.credits_remaining 
     });
 
-    // Calculate new balance (ledger is now the single source of truth)
+    // BLOCK deduction if credits are at 0 or below
+    if (subscription.credits_remaining <= 0) {
+      logStep("No credits remaining, blocking deduction", { 
+        credits: subscription.credits_remaining 
+      });
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: "Student has no credits remaining. Please purchase more credits.",
+          code: "NO_CREDITS"
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 402 }
+      );
+    }
+
     const newBalance = subscription.credits_remaining - 1;
     logStep("Calculated new balance", { credits_before: subscription.credits_remaining, credits_after: newBalance });
 
@@ -140,12 +150,9 @@ Deno.serve(async (req) => {
 
     logStep("Transaction logged", { transaction_id: ledgerEntry.id });
 
-    // Determine appropriate message based on balance
     let message = '';
-    if (newBalance < 0) {
-      message = `Credit deducted. Account is ${Math.abs(newBalance)} class${Math.abs(newBalance) === 1 ? '' : 'es'} overdrawn. Credits will renew at next billing cycle.`;
-    } else if (newBalance === 0) {
-      message = `Credit deducted. No classes remaining. Credits will renew at next billing cycle.`;
+    if (newBalance === 0) {
+      message = `Credit deducted. No classes remaining. Purchase more credits to continue.`;
     } else {
       message = `Credit deducted. ${newBalance} class${newBalance === 1 ? '' : 'es'} remaining.`;
     }
@@ -155,7 +162,6 @@ Deno.serve(async (req) => {
         success: true,
         credits_remaining: newBalance,
         transaction_id: ledgerEntry.id,
-        is_negative: newBalance < 0,
         message
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }

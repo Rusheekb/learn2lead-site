@@ -61,7 +61,6 @@ serve(async (req) => {
     if (referralCode) {
       logStep("Validating referral code", { code: referralCode });
 
-      // Get referral code details
       const { data: codeData, error: codeError } = await supabaseClient
         .from('referral_codes')
         .select('id, code, stripe_coupon_id, active, expires_at, max_uses, times_used, created_by, discount_amount')
@@ -73,25 +72,21 @@ serve(async (req) => {
         throw new Error("Invalid referral code");
       }
 
-      // Check if code is active
       if (!codeData.active) {
         logStep("Referral code is inactive", { code: referralCode });
         throw new Error("This referral code is no longer active");
       }
 
-      // Check expiration
       if (codeData.expires_at && new Date(codeData.expires_at) < new Date()) {
         logStep("Referral code expired", { code: referralCode, expires_at: codeData.expires_at });
         throw new Error("This referral code has expired");
       }
 
-      // Check max uses
       if (codeData.max_uses && codeData.times_used >= codeData.max_uses) {
-        logStep("Referral code max uses reached", { code: referralCode, times_used: codeData.times_used, max_uses: codeData.max_uses });
+        logStep("Referral code max uses reached", { code: referralCode });
         throw new Error("This referral code has reached its usage limit");
       }
 
-      // Check if user has already used any referral code
       const { data: existingUsage } = await supabaseClient
         .from('referral_usage')
         .select('id')
@@ -103,7 +98,6 @@ serve(async (req) => {
         throw new Error("You have already used a referral code");
       }
 
-      // Prevent self-referral
       if (codeData.created_by === user.id) {
         logStep("Self-referral attempted", { userId: user.id });
         throw new Error("You cannot use your own referral code");
@@ -122,7 +116,7 @@ serve(async (req) => {
       });
     }
 
-    // Build checkout session config
+    // Build checkout session config - ONE-TIME PAYMENT (not subscription)
     const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
@@ -132,9 +126,9 @@ serve(async (req) => {
           quantity: 1,
         },
       ],
-      mode: "subscription",
-      success_url: `${origin}/dashboard?subscription=success`,
-      cancel_url: `${origin}/pricing?subscription=cancelled`,
+      mode: "payment",
+      success_url: `${origin}/dashboard?purchase=success`,
+      cancel_url: `${origin}/pricing?purchase=cancelled`,
       metadata: {
         user_id: user.id,
         referral_code_id: referralCodeId || '',
