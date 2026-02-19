@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { Separator } from '@/components/ui/separator';
 import { SubscriptionStatusCard } from '@/components/student/SubscriptionStatusCard';
 import { CreditHistory } from '@/components/student/CreditHistory';
+import { AutoRenewalSettings } from '@/components/student/AutoRenewalSettings';
 import ReferralCodeSection from './ReferralCodeSection';
 
 interface SettingsTabProps {
@@ -61,6 +62,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ profile, updateProfile }) => 
       {profile.role === 'student' && (
         <>
           <SubscriptionStatusCard />
+          <AutoRenewalSettings />
           <CreditHistory />
         </>
       )}

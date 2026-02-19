@@ -5,7 +5,6 @@ import { ClassCalendarContainer } from './ClassCalendarContainer';
 import ClassHistory from '@/components/shared/ClassHistory';
 import { subjects } from '@/constants/subjectsData';
 import { SimpleCreditsCounter } from './SimpleCreditsCounter';
-import { AutoRenewalSettings } from './AutoRenewalSettings';
 
 interface DashboardContentProps {
   studentId: string | null;
@@ -19,9 +18,6 @@ const DashboardContent: React.FC<DashboardContentProps> = memo(
       <>
         <h2 className="text-2xl font-bold mb-6">My Learning Portal</h2>
         <SimpleCreditsCounter />
-        <div className="mt-4">
-          <AutoRenewalSettings />
-        </div>
         <div className="mt-8">
           <SubjectCards
             subjects={subjects}
