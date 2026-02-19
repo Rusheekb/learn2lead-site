@@ -10,6 +10,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ClassValidator } from '@/services/classValidation';
 import { ErrorHandler } from '@/services/errorHandling';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertTriangle } from 'lucide-react';
 
 interface AddClassDialogProps {
   isOpen: boolean;
@@ -40,6 +42,8 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [studentOptions, setStudentOptions] = useState<StudentOption[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [studentCredits, setStudentCredits] = useState<number | null>(null);
+  const [isCheckingCredits, setIsCheckingCredits] = useState(false);
   const initializedRef = useRef(false);
   
   // Set default values when dialog opens (only once)
@@ -137,7 +141,7 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
   }, [isOpen]);
   
   // Handle student selection to update both studentId and relationshipId
-  const handleStudentChange = (studentId: string) => {
+  const handleStudentChange = async (studentId: string) => {
     const selectedStudent = studentOptions.find(s => s.id === studentId);
     
     if (selectedStudent) {
@@ -145,9 +149,28 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
         ...newEvent,
         studentId: selectedStudent.id,
         studentName: selectedStudent.name,
-        relationshipId: selectedStudent.relationshipId // Important: Set the relationship ID
+        relationshipId: selectedStudent.relationshipId
       });
       console.log(`Selected student ${selectedStudent.name} with relationship ID ${selectedStudent.relationshipId}`);
+      
+      // Fetch credit balance
+      setIsCheckingCredits(true);
+      setStudentCredits(null);
+      try {
+        const { data, error } = await supabase.rpc('get_student_credit_balance', {
+          p_student_id: studentId
+        });
+        if (error) {
+          console.error('Error checking credit balance:', error);
+          toast.error('Could not check student credit balance');
+        } else {
+          setStudentCredits(data ?? 0);
+        }
+      } catch (err) {
+        console.error('Error checking credits:', err);
+      } finally {
+        setIsCheckingCredits(false);
+      }
     } else {
       setNewEvent({
         ...newEvent,
@@ -155,6 +178,7 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
         studentName: '',
         relationshipId: ''
       });
+      setStudentCredits(null);
     }
   };
 
@@ -194,6 +218,24 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
             <div className="py-8 sm:py-12 text-center text-lg">Loading student data...</div>
           ) : (
             <>
+              {/* Credit Warning Banners */}
+              {studentCredits !== null && studentCredits === 0 && (
+                <Alert variant="destructive" className="mb-4">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    This student has <strong>no credits remaining</strong>. They need to purchase credits before a class can be scheduled.
+                  </AlertDescription>
+                </Alert>
+              )}
+              {studentCredits !== null && studentCredits > 0 && studentCredits <= 2 && (
+                <Alert className="mb-4 border-amber-500/50 text-amber-700 [&>svg]:text-amber-600">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    This student only has <strong>{studentCredits} credit{studentCredits === 1 ? '' : 's'}</strong> remaining.
+                  </AlertDescription>
+                </Alert>
+              )}
+
               {/* Scrollable Form Area */}
               <div className="flex-1 overflow-y-auto py-4 px-1">
                 <NewClassEventForm
@@ -207,8 +249,11 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
               {/* Fixed Footer - Outside scroll container */}
               <div className="flex-shrink-0 flex justify-end space-x-2 pt-4 border-t bg-white">
                 <Button variant="outline" onClick={handleCancel}>Cancel</Button>
-                <Button onClick={handleSubmit} disabled={isSubmitting}>
-                  {isSubmitting ? 'Creating...' : 'Schedule Class'}
+                <Button 
+                  onClick={handleSubmit} 
+                  disabled={isSubmitting || isCheckingCredits || studentCredits === 0}
+                >
+                  {isCheckingCredits ? 'Checking credits...' : isSubmitting ? 'Creating...' : 'Schedule Class'}
                 </Button>
               </div>
             </>
