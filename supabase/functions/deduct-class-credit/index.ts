@@ -157,6 +157,44 @@ Deno.serve(async (req) => {
       message = `Credit deducted. ${newBalance} class${newBalance === 1 ? '' : 'es'} remaining.`;
     }
 
+    // Check auto-renewal threshold (fire-and-forget, never blocks class completion)
+    try {
+      const { data: renewalSettings } = await supabaseClient
+        .from("auto_renewal_settings")
+        .select("enabled, renewal_pack, threshold")
+        .eq("student_id", student_id)
+        .eq("enabled", true)
+        .maybeSingle();
+
+      if (renewalSettings && newBalance <= renewalSettings.threshold) {
+        logStep("Auto-renewal threshold met, triggering renewal", {
+          balance: newBalance,
+          threshold: renewalSettings.threshold,
+          pack: renewalSettings.renewal_pack,
+        });
+
+        // Invoke process-auto-renewal asynchronously
+        const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+        const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+
+        fetch(`${supabaseUrl}/functions/v1/process-auto-renewal`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${serviceKey}`,
+          },
+          body: JSON.stringify({
+            student_id,
+            renewal_pack: renewalSettings.renewal_pack,
+          }),
+        }).catch(err => {
+          logStep("WARNING: Failed to invoke auto-renewal", { error: String(err) });
+        });
+      }
+    } catch (renewalErr) {
+      logStep("WARNING: Auto-renewal check failed (non-blocking)", { error: String(renewalErr) });
+    }
+
     return new Response(
       JSON.stringify({
         success: true,

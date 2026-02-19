@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      auto_renewal_settings: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          last_renewal_at: string | null
+          last_renewal_error: string | null
+          renewal_pack: string
+          stripe_customer_id: string | null
+          student_id: string
+          threshold: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          last_renewal_at?: string | null
+          last_renewal_error?: string | null
+          renewal_pack?: string
+          stripe_customer_id?: string | null
+          student_id: string
+          threshold?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          last_renewal_at?: string | null
+          last_renewal_error?: string | null
+          renewal_pack?: string
+          stripe_customer_id?: string | null
+          student_id?: string
+          threshold?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "auto_renewal_settings_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       class_credits_ledger: {
         Row: {
           amount: number

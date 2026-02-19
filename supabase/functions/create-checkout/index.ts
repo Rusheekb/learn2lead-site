@@ -127,6 +127,9 @@ serve(async (req) => {
         },
       ],
       mode: "payment",
+      payment_intent_data: {
+        setup_future_usage: 'off_session', // Save payment method for auto-renewal
+      },
       success_url: `${origin}/dashboard?purchase=success`,
       cancel_url: `${origin}/pricing?purchase=cancelled`,
       metadata: {
