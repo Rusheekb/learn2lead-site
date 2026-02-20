@@ -1,54 +1,41 @@
 
+## Fix Zoom Link Auto-Fill in Schedule New Class Dialog
 
-## Block Class Scheduling When Student Has 0 Credits
+### Root Cause
+In `src/hooks/useSimplifiedTutorScheduler.ts`, the `currentUser` object passed into the scheduling dialog is a hardcoded mock:
 
-### Problem
-Currently, tutors can schedule classes for students with 0 credits. The credit check only happens at class completion time, which creates a confusing experience -- a class gets scheduled, both parties prepare, and then it fails when the tutor tries to mark it complete.
+```typescript
+const currentUser = useMemo(() => ({ 
+  first_name: 'Current', 
+  last_name: 'Tutor'   // No zoom_link!
+}), []);
+```
 
-### Solution
-Add a credit balance check in the class scheduling flow so tutors see a clear warning and are prevented from scheduling if the student has no credits.
+Because `currentUser.zoom_link` is always `undefined`, the `AddClassDialog`'s initialization code (`zoomLink: currentUser?.zoom_link || ''`) never has a value to fill in.
 
-### Changes
+The tutor's `zoom_link` **is** saved in the database (the profile page shows it and has a helper text "This link will auto-fill when you schedule new classes"), but it's never actually fetched in the scheduler hook.
 
-**1. AddClassDialog.tsx -- Add credit check on student selection**
+### Fix: Fetch the Real Profile in the Scheduler Hook
 
-When the tutor selects a student from the dropdown, fetch that student's credit balance using the existing `get_student_credit_balance` database function. If the balance is 0:
-- Show a warning banner in the dialog: "This student has no credits remaining. They need to purchase credits before a class can be scheduled."
-- Disable the "Schedule Class" button
-- Include a visual indicator next to the student's name in the dropdown (e.g., a red dot or "(0 credits)" label)
+**Modified file: `src/hooks/useSimplifiedTutorScheduler.ts`**
 
-If credits are low (1-2), show a softer warning: "This student only has X credit(s) remaining."
+Replace the hardcoded mock `currentUser` with a real Supabase query for the tutor's profile:
 
-**2. Database RPC call for credit check**
+1. Add a `useQuery` call that fetches `profiles` for the current `user.id`, selecting `first_name`, `last_name`, and `zoom_link`
+2. Use the fetched profile data as `currentUser` instead of the hardcoded object
+3. Keep the type safe by including `zoom_link: string | null` in the return type
 
-Use the existing `get_student_credit_balance(p_student_id)` function which is already a `SECURITY DEFINER` function. Call it via `supabase.rpc('get_student_credit_balance', { p_student_id: studentId })` when a student is selected.
+This is a single-file change. No database migrations, no new components, no edge function changes needed.
 
-**3. Optional: Show credits in student dropdown**
+### What Changes
 
-Enhance the student options list to include each student's credit count, fetched in bulk when the dialog opens. This gives the tutor immediate visibility without needing to select each student individually.
-
----
-
-### Technical Details
-
-**Modified files:**
 | File | Change |
 |------|--------|
-| `src/components/tutor/dialogs/AddClassDialog.tsx` | Add credit balance fetch on student select, show warning banner, disable submit button when 0 credits |
+| `src/hooks/useSimplifiedTutorScheduler.ts` | Replace mock `currentUser` with a real Supabase profile query |
 
-**No new files, no database changes, no edge function changes needed** -- the `get_student_credit_balance` RPC already exists.
+### How It Works After the Fix
 
-**Key code flow:**
-1. Tutor opens "Schedule New Class" dialog
-2. Tutor selects a student from the dropdown
-3. `handleStudentChange` fires -- in addition to current logic, calls `supabase.rpc('get_student_credit_balance', { p_student_id: studentId })`
-4. Result stored in component state (e.g., `studentCredits`)
-5. If `studentCredits === 0`: show red Alert banner, disable "Schedule Class" button
-6. If `studentCredits <= 2`: show amber warning
-7. If `studentCredits > 2`: normal flow, no warning
-
-**What this does NOT change:**
-- The completion-time credit check remains as a safety net
-- Admin override behavior is unchanged
-- Students paying via Zelle/manual credits are handled the same way (the ledger function works for all payment methods)
-
+1. Tutor opens the "Schedule New Class" dialog
+2. `AddClassDialog` initializes with `zoomLink: currentUser?.zoom_link || ''`
+3. Since `currentUser.zoom_link` now contains the tutor's saved Zoom link, the field pre-fills automatically
+4. Tutor can override it per-class if needed
