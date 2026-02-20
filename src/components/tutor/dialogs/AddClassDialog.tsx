@@ -71,19 +71,20 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
       
       const baseDate = prev.date || nextHour;
       return {
+        ...prev, // Preserve any existing values
         tutorId: tutorId,
         tutorName: tutorDisplayName,
         date: baseDate,
         startTime: format(nextHour, 'HH:mm'),
         endTime: format(addHours(nextHour, 1), 'HH:mm'),
-        title: 'New Class Session',
-        subject: '',
-        zoomLink: currentUser?.zoom_link || '',
-        notes: '',
-        studentId: '',
-        studentName: '',
-        relationshipId: '',
-        ...prev, // Preserve any existing values
+        title: prev.title || 'New Class Session',
+        subject: prev.subject || '',
+        // Only set zoomLink from profile if not already provided
+        zoomLink: prev.zoomLink || currentUser?.zoom_link || '',
+        notes: prev.notes || '',
+        studentId: prev.studentId || '',
+        studentName: prev.studentName || '',
+        relationshipId: prev.relationshipId || '',
       };
     });
     

@@ -1,6 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { ClassEvent } from '@/types/tutorTypes';
-import { Profile } from '@/types/profile';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useRealtimeManager } from './useRealtimeManager';
@@ -198,11 +197,21 @@ export const useSimplifiedTutorScheduler = () => {
   const mockAsyncFunction = async () => true;
   const mockFunction = () => {};
 
-  // Memoize currentUser to prevent unnecessary re-renders
-  const currentUser = useMemo<Pick<Profile, 'first_name' | 'last_name'>>(() => ({ 
-    first_name: 'Current', 
-    last_name: 'Tutor' 
-  }), []);
+  // Fetch real tutor profile (including zoom_link for auto-fill)
+  const { data: currentUser } = useQuery({
+    queryKey: ['tutor-profile', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('first_name, last_name, zoom_link')
+        .eq('id', user.id)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
 
   return {
     scheduledClasses,
