@@ -205,7 +205,7 @@ const Pricing = () => {
           <p className="text-lg text-gray-600 mb-6">
             We also offer customized plans for schools and organizations
           </p>
-          <Button size="lg">Contact Us</Button>
+          <Button size="lg" onClick={() => navigate('/?section=contact')}>Contact Us</Button>
         </div>
       </main>
     </div>
