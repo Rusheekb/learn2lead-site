@@ -9,7 +9,7 @@ const DesktopBookButton = () => {
       onClick={() => navigate('/pricing')}
       className="bg-tutoring-blue hover:bg-blue-700 text-white"
     >
-      Book a Session
+      Pricing
     </Button>
   );
 };
