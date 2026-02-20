@@ -1,41 +1,47 @@
 
-## Fix Zoom Link Auto-Fill in Schedule New Class Dialog
+## Fix: Calendar Showing Stale "Completed" Classes
 
 ### Root Cause
-In `src/hooks/useSimplifiedTutorScheduler.ts`, the `currentUser` object passed into the scheduling dialog is a hardcoded mock:
 
-```typescript
-const currentUser = useMemo(() => ({ 
-  first_name: 'Current', 
-  last_name: 'Tutor'   // No zoom_link!
-}), []);
-```
+The Calendar and Class History pull from **two separate tables**:
 
-Because `currentUser.zoom_link` is always `undefined`, the `AddClassDialog`'s initialization code (`zoomLink: currentUser?.zoom_link || ''`) never has a value to fill in.
+| View | Table | Purpose |
+|---|---|---|
+| Class History tab | `class_logs` | Permanent record of completed sessions |
+| Calendar (Scheduler) | `scheduled_classes` | Active/upcoming scheduled sessions |
 
-The tutor's `zoom_link` **is** saved in the database (the profile page shows it and has a helper text "This link will auto-fill when you schedule new classes"), but it's never actually fetched in the scheduler hook.
+When you deleted the log from Supabase directly (from `class_logs`), the Class History correctly went empty. But the Calendar is still showing the entry because the corresponding row in `scheduled_classes` still exists with `status = 'completed'`.
 
-### Fix: Fetch the Real Profile in the Scheduler Hook
+In normal operation, the `complete_class_atomic` database function atomically:
+1. Inserts into `class_logs`
+2. Deletes from `scheduled_classes`
 
-**Modified file: `src/hooks/useSimplifiedTutorScheduler.ts`**
+But the session you deleted was left behind in `scheduled_classes` with a `completed` status instead of being removed. The calendar currently shows **all** entries from `scheduled_classes`, including completed ones.
 
-Replace the hardcoded mock `currentUser` with a real Supabase query for the tutor's profile:
+### The Fix
 
-1. Add a `useQuery` call that fetches `profiles` for the current `user.id`, selecting `first_name`, `last_name`, and `zoom_link`
-2. Use the fetched profile data as `currentUser` instead of the hardcoded object
-3. Keep the type safe by including `zoom_link: string | null` in the return type
+**Filter out completed classes from the calendar view** in `useSimplifiedTutorScheduler.ts`.
 
-This is a single-file change. No database migrations, no new components, no edge function changes needed.
+Currently the query fetches all rows without filtering by status. We need to add `.neq('status', 'completed')` to the Supabase query so that the calendar only shows genuinely upcoming/active sessions.
 
-### What Changes
+This is the correct long-term fix because:
+- Completed classes belong in `class_logs` / Class History, not the calendar
+- The calendar should only show what needs to happen, not what already happened
+- It prevents any future "completed" strays from showing on the calendar
 
+**File to change:**
 | File | Change |
-|------|--------|
-| `src/hooks/useSimplifiedTutorScheduler.ts` | Replace mock `currentUser` with a real Supabase profile query |
+|---|---|
+| `src/hooks/useSimplifiedTutorScheduler.ts` | Add `.neq('status', 'completed')` to the `scheduled_classes` query |
 
-### How It Works After the Fix
+This is a one-line change. No database migrations or new components needed.
 
-1. Tutor opens the "Schedule New Class" dialog
-2. `AddClassDialog` initializes with `zoomLink: currentUser?.zoom_link || ''`
-3. Since `currentUser.zoom_link` now contains the tutor's saved Zoom link, the field pre-fills automatically
-4. Tutor can override it per-class if needed
+### After the Fix
+
+- The calendar will only show scheduled/active upcoming classes
+- Completed classes will only appear in the Class History tab (from `class_logs`)
+- The stale "completed" entry currently visible on the calendar will disappear
+
+### Cleanup of the Orphaned Row
+
+The specific row currently visible ("New Class Session - completed" on Feb 11) is an orphaned `scheduled_classes` row that should have been deleted when the class was marked complete. After the code fix, it will no longer show on the calendar. You can also optionally delete it directly from the `scheduled_classes` table in Supabase if you want to clean up the database.
