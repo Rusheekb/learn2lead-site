@@ -38,6 +38,7 @@ export const useSimplifiedTutorScheduler = () => {
           tutor:profiles!scheduled_classes_tutor_id_fkey(first_name, last_name, email)
         `)
         .eq('tutor_id', user.id)
+        .neq('status', 'completed')
         .order('start_time', { ascending: true });
       
       if (error) throw error;
