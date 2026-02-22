@@ -46,6 +46,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
             required
+            minLength={2}
           />
         </div>
         <div className="space-y-2">
@@ -57,6 +58,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
             required
+            minLength={2}
           />
         </div>
       </div>
