@@ -84,8 +84,13 @@ const Login = () => {
       return;
     }
 
-    if (!firstName || !lastName) {
+    if (!firstName.trim() || !lastName.trim()) {
       toast.error('Please enter your first and last name.');
+      return;
+    }
+
+    if (firstName.trim().length < 2 || lastName.trim().length < 2) {
+      toast.error('First and last name must be at least 2 characters.');
       return;
     }
     
@@ -97,7 +102,7 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      await signUp(email, password, { first_name: firstName, last_name: lastName });
+      await signUp(email, password, { first_name: firstName.trim(), last_name: lastName.trim() });
       toast.success(
         'Account created! Please check your email for verification.'
       );
