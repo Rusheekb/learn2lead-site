@@ -9,7 +9,7 @@ import { RefreshCw, AlertTriangle, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { STRIPE_PLAN_CONFIG, STRIPE_PLAN_PRICES } from '@/config/stripe';
+import { CREDIT_TIERS, STRIPE_PLAN_PRICES } from '@/config/stripe';
 import type { StripePlanKey } from '@/config/stripe';
 
 interface AutoRenewalRow {
@@ -22,10 +22,10 @@ interface AutoRenewalRow {
   last_renewal_error: string | null;
 }
 
-const PACK_OPTIONS: { value: StripePlanKey; label: string; credits: number }[] = [
-  { value: 'basic', label: '4 Credit Pack', credits: 4 },
-  { value: 'standard', label: '8 Credit Pack', credits: 8 },
-  { value: 'premium', label: '12 Credit Pack', credits: 12 },
+const PACK_OPTIONS: { value: StripePlanKey; label: string; credits: number; price: number }[] = [
+  { value: 'basic', label: '4 Credit Pack', credits: 4, price: 140 },
+  { value: 'standard', label: '8 Credit Pack', credits: 8, price: 240 },
+  { value: 'premium', label: '10 Credit Pack', credits: 10, price: 280 },
 ];
 
 export const AutoRenewalSettings: React.FC = () => {
@@ -119,7 +119,7 @@ export const AutoRenewalSettings: React.FC = () => {
   };
 
   const selectedPack = PACK_OPTIONS.find(p => p.value === renewalPack);
-  const price = STRIPE_PLAN_PRICES[renewalPack];
+  const price = selectedPack?.price ?? STRIPE_PLAN_PRICES[renewalPack];
 
   if (loading) {
     return (
@@ -165,7 +165,7 @@ export const AutoRenewalSettings: React.FC = () => {
               <SelectContent>
                 {PACK_OPTIONS.map(opt => (
                   <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label} — ${STRIPE_PLAN_PRICES[opt.value]}
+                    {opt.label} — ${opt.price}
                   </SelectItem>
                 ))}
               </SelectContent>
