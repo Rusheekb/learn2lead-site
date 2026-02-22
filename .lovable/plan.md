@@ -1,47 +1,58 @@
 
-## Fix: Calendar Showing Stale "Completed" Classes
 
-### Root Cause
+# Dropdown Credit Selector with Tiered Pricing
 
-The Calendar and Class History pull from **two separate tables**:
+## Overview
+Replace the current 3-column pricing card layout with a single, clean credit selector using a dropdown menu. Users pick how many credits they want (1, 2, 4, 8, or 10), see the price update dynamically, and click one button to checkout.
 
-| View | Table | Purpose |
-|---|---|---|
-| Class History tab | `class_logs` | Permanent record of completed sessions |
-| Calendar (Scheduler) | `scheduled_classes` | Active/upcoming scheduled sessions |
+## Pricing Tiers
 
-When you deleted the log from Supabase directly (from `class_logs`), the Class History correctly went empty. But the Calendar is still showing the entry because the corresponding row in `scheduled_classes` still exists with `status = 'completed'`.
+| Credits | Total | Per Class |
+|---------|-------|-----------|
+| 1       | $40   | $40.00    |
+| 2       | $76   | $38.00    |
+| 4       | $140  | $35.00    |
+| 8       | $240  | $30.00    |
+| 10      | $280  | $28.00    |
 
-In normal operation, the `complete_class_atomic` database function atomically:
-1. Inserts into `class_logs`
-2. Deletes from `scheduled_classes`
+## Implementation Steps
 
-But the session you deleted was left behind in `scheduled_classes` with a `completed` status instead of being removed. The calendar currently shows **all** entries from `scheduled_classes`, including completed ones.
+### Step 1: Create Stripe Products and Prices
+Create two new Stripe products + prices for the 1-credit ($40) and 2-credit ($76) tiers using the Stripe tools. The existing 4, 8 products/prices stay as-is. The old 12-credit product will be deactivated.
 
-### The Fix
+### Step 2: Add new plans to `subscription_plans` table
+Insert two new rows for 1-credit and 2-credit packs, and deactivate the 12-credit plan (since 10-credit replaces it). Create a new 10-credit product+price in Stripe and add it to the table as well.
 
-**Filter out completed classes from the calendar view** in `useSimplifiedTutorScheduler.ts`.
+### Step 3: Update `src/config/stripe.ts`
+Replace the current `basic/standard/premium` structure with a `CREDIT_TIERS` array containing all 5 options with their price IDs, totals, per-class rates, and credit counts.
 
-Currently the query fetches all rows without filtering by status. We need to add `.neq('status', 'completed')` to the Supabase query so that the calendar only shows genuinely upcoming/active sessions.
+### Step 4: Redesign `src/pages/Pricing.tsx`
+- Remove the 3-column `PricingTier` card layout
+- Add a centered card with:
+  - A `<Select>` dropdown (using the existing Radix select component) listing: 1, 2, 4, 8, 10 credits
+  - Dynamic price display showing total and per-class rate
+  - Feature list (shared across all tiers)
+  - A "Buy Credits" button that triggers checkout with the selected tier's price ID
+  - A savings badge for higher tiers (e.g., "Save 30%" for 10 credits)
+- Keep the existing header, "Contact Us" section, and checkout logic
 
-This is the correct long-term fix because:
-- Completed classes belong in `class_logs` / Class History, not the calendar
-- The calendar should only show what needs to happen, not what already happened
-- It prevents any future "completed" strays from showing on the calendar
+### Step 5: No changes needed to edge functions
+The `create-checkout` edge function already accepts any `priceId` dynamically. The `stripe-webhooks` function looks up the plan by `stripe_price_id` in the `subscription_plans` table, so it will work automatically with the new entries.
 
-**File to change:**
-| File | Change |
-|---|---|
-| `src/hooks/useSimplifiedTutorScheduler.ts` | Add `.neq('status', 'completed')` to the `scheduled_classes` query |
+---
 
-This is a one-line change. No database migrations or new components needed.
+## Technical Details
 
-### After the Fix
+**New Stripe resources to create:**
+- Product: "1 Credit Pack" with price $40.00 (one-time)
+- Product: "2 Credit Pack" with price $76.00 (one-time)  
+- Product: "10 Credit Pack" with price $280.00 (one-time)
 
-- The calendar will only show scheduled/active upcoming classes
-- Completed classes will only appear in the Class History tab (from `class_logs`)
-- The stale "completed" entry currently visible on the calendar will disappear
+**Database changes (data only, no schema changes):**
+- INSERT 3 new rows into `subscription_plans` for 1, 2, and 10 credit tiers
+- UPDATE 12-credit plan to `active = false`
 
-### Cleanup of the Orphaned Row
+**Files modified:**
+- `src/config/stripe.ts` -- new tier structure
+- `src/pages/Pricing.tsx` -- dropdown UI replacing card grid
 
-The specific row currently visible ("New Class Session - completed" on Feb 11) is an orphaned `scheduled_classes` row that should have been deleted when the class was marked complete. After the code fix, it will no longer show on the calendar. You can also optionally delete it directly from the `scheduled_classes` table in Supabase if you want to clean up the database.
