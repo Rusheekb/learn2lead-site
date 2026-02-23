@@ -20,7 +20,7 @@ export const CREDIT_TIERS: CreditTier[] = [
     priceId: 'price_1T3VMD14Kl9WjCfljetZW63c',
     total: 40,
     perClass: 40,
-    label: '1 Credit',
+    label: '1 Class',
     savingsPercent: 0,
   },
   {
@@ -28,7 +28,7 @@ export const CREDIT_TIERS: CreditTier[] = [
     priceId: 'price_1T3VME14Kl9WjCflQY8WEY97',
     total: 76,
     perClass: 38,
-    label: '2 Credits',
+    label: '2 Classes',
     savingsPercent: 5,
   },
   {
@@ -36,7 +36,7 @@ export const CREDIT_TIERS: CreditTier[] = [
     priceId: 'price_1T20M714Kl9WjCflVbq3glKt',
     total: 140,
     perClass: 35,
-    label: '4 Credits',
+    label: '4 Classes',
     savingsPercent: 13,
   },
   {
@@ -44,7 +44,7 @@ export const CREDIT_TIERS: CreditTier[] = [
     priceId: 'price_1T20M714Kl9WjCflDIKczcAX',
     total: 240,
     perClass: 30,
-    label: '8 Credits',
+    label: '8 Classes',
     savingsPercent: 25,
   },
   {
@@ -52,7 +52,7 @@ export const CREDIT_TIERS: CreditTier[] = [
     priceId: 'price_1T3VMF14Kl9WjCfl0q3uc13H',
     total: 280,
     perClass: 28,
-    label: '10 Credits',
+    label: '10 Classes',
     savingsPercent: 30,
   },
 ];
