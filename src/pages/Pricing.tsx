@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Check, Loader2, Tag } from 'lucide-react';
+import { Check, Loader2, Tag, Clock, CalendarCheck, ShieldCheck, Info } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,12 +13,54 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 
 const SHARED_FEATURES = [
   'Use at your own pace',
-  'No expiration date',
+  'Classes never expire',
   'Access to all subjects',
   'Flexible scheduling',
+];
+
+const HOW_IT_WORKS = [
+  {
+    icon: ShieldCheck,
+    title: 'Choose your pack',
+    description: 'Pick the number of classes that works for your family.',
+  },
+  {
+    icon: CalendarCheck,
+    title: 'Schedule anytime',
+    description: 'Book sessions at times that fit your calendar.',
+  },
+  {
+    icon: Clock,
+    title: 'Classes never expire',
+    description: 'Unused sessions carry over, so nothing goes to waste.',
+  },
+];
+
+const FAQ_ITEMS = [
+  {
+    question: 'What is a class session?',
+    answer:
+      'A one-hour, one-on-one tutoring session in any subject we offer. Your child gets personalized attention from a dedicated tutor.',
+  },
+  {
+    question: 'Do unused classes expire?',
+    answer:
+      'No. Your classes carry over indefinitely. Buy now and use them whenever your schedule allows — there\'s no rush.',
+  },
+  {
+    question: 'Can I buy more classes later?',
+    answer:
+      'Yes! You can top up anytime. Just come back to this page and purchase another pack whenever you need more sessions.',
+  },
 ];
 
 const Pricing = () => {
@@ -66,6 +108,8 @@ const Pricing = () => {
     }
   };
 
+  const classWord = selectedTier.credits === 1 ? 'Class' : 'Classes';
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-white shadow-sm">
@@ -94,18 +138,19 @@ const Pricing = () => {
         tabIndex={-1}
         className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 focus:outline-none"
       >
+        {/* Hero */}
         <div className="max-w-3xl mx-auto text-center mb-12">
-          <h2 className="text-3xl font-bold mb-4">Buy Credits</h2>
+          <h2 className="text-3xl font-bold mb-4">Buy Class Sessions</h2>
           <p className="text-xl text-gray-600">
-            Pick how many credits you need — no subscriptions, no commitments
+            Choose how many classes you'd like — no subscriptions, no commitments
           </p>
         </div>
 
+        {/* Pricing card */}
         <div className="max-w-md mx-auto">
           <div className="rounded-lg border border-border bg-card p-8 shadow-lg">
-            {/* Credit selector */}
             <label className="block text-sm font-medium text-muted-foreground mb-2">
-              How many credits?
+              How many classes?
             </label>
             <Select
               value={String(selectedIndex)}
@@ -136,7 +181,7 @@ const Pricing = () => {
                 ${selectedTier.total}
               </div>
               <p className="text-muted-foreground mt-1">
-                ${selectedTier.perClass.toFixed(2)} per class
+                ${selectedTier.perClass.toFixed(2)} per session
               </p>
               {selectedTier.savingsPercent > 0 && (
                 <div className="inline-flex items-center gap-1 mt-2 px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm font-medium">
@@ -180,12 +225,51 @@ const Pricing = () => {
                   Processing...
                 </>
               ) : (
-                `Buy ${selectedTier.credits} Credit${selectedTier.credits > 1 ? 's' : ''} — $${selectedTier.total}`
+                `Buy ${selectedTier.credits} ${classWord} — $${selectedTier.total}`
               )}
             </Button>
           </div>
+
+          {/* Carryover callout */}
+          <div className="mt-4 flex items-start gap-2 rounded-md bg-blue-50 border border-blue-100 px-4 py-3">
+            <Info className="h-4 w-4 text-blue-500 mt-0.5 shrink-0" />
+            <p className="text-sm text-blue-700">
+              Unused classes carry over — buy now, use whenever your schedule allows.
+            </p>
+          </div>
         </div>
 
+        {/* How It Works */}
+        <div className="max-w-3xl mx-auto mt-20">
+          <h3 className="text-2xl font-semibold text-center mb-10">How It Works</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {HOW_IT_WORKS.map((step, i) => (
+              <div key={step.title} className="text-center">
+                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-tutoring-teal/10">
+                  <step.icon className="h-6 w-6 text-tutoring-teal" />
+                </div>
+                <p className="text-sm text-muted-foreground mb-1">Step {i + 1}</p>
+                <h4 className="font-semibold mb-1">{step.title}</h4>
+                <p className="text-sm text-muted-foreground">{step.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* FAQ */}
+        <div className="max-w-2xl mx-auto mt-20">
+          <h3 className="text-2xl font-semibold text-center mb-6">Frequently Asked Questions</h3>
+          <Accordion type="single" collapsible className="w-full">
+            {FAQ_ITEMS.map((item, i) => (
+              <AccordionItem key={i} value={`faq-${i}`}>
+                <AccordionTrigger>{item.question}</AccordionTrigger>
+                <AccordionContent>{item.answer}</AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
+
+        {/* Contact CTA */}
         <div className="max-w-3xl mx-auto text-center mt-16">
           <h3 className="text-2xl font-semibold mb-4">Need something different?</h3>
           <p className="text-lg text-gray-600 mb-6">
