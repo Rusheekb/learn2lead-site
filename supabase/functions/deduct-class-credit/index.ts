@@ -10,6 +10,10 @@ const logStep = (step: string, details?: any) => {
   console.log(`[DEDUCT-CREDIT] ${step}${detailsStr}`);
 };
 
+/** Round to nearest 0.5, minimum 0.5 */
+const roundToHalfHour = (hours: number): number =>
+  Math.max(0.5, Math.round(hours * 2) / 2);
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -48,13 +52,15 @@ Deno.serve(async (req) => {
       throw new Error("Only tutors and admins can complete classes");
     }
 
-    const { student_id, class_id, class_title } = await req.json();
+    const { student_id, class_id, class_title, duration_hours } = await req.json();
 
     if (!student_id || !class_id || !class_title) {
       throw new Error("Missing required fields: student_id, class_id, class_title");
     }
 
-    logStep("Input validated", { student_id, class_id, class_title });
+    const creditsToDeduct = roundToHalfHour(duration_hours || 1);
+
+    logStep("Input validated", { student_id, class_id, class_title, duration_hours, creditsToDeduct });
 
     // Check for duplicate completion (idempotency)
     const { data: existingDebit, error: debitCheckError } = await supabaseClient
@@ -79,7 +85,7 @@ Deno.serve(async (req) => {
           credits_remaining: existingDebit.balance_after,
           transaction_id: existingDebit.id,
           idempotent: true,
-          message: `Class already completed. ${existingDebit.balance_after} class${existingDebit.balance_after === 1 ? '' : 'es'} remaining.`
+          message: `Class already completed. ${existingDebit.balance_after} hour${existingDebit.balance_after === 1 ? '' : 's'} remaining.`
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
       );
@@ -110,23 +116,24 @@ Deno.serve(async (req) => {
       credits_before: subscription.credits_remaining 
     });
 
-    // BLOCK deduction if credits are at 0 or below
-    if (subscription.credits_remaining <= 0) {
-      logStep("No credits remaining, blocking deduction", { 
-        credits: subscription.credits_remaining 
+    // BLOCK deduction if credits are insufficient
+    if (subscription.credits_remaining < creditsToDeduct) {
+      logStep("Insufficient credits, blocking deduction", { 
+        credits: subscription.credits_remaining,
+        required: creditsToDeduct
       });
       return new Response(
         JSON.stringify({
           success: false,
-          error: "Student has no credits remaining. Please purchase more credits.",
+          error: `Insufficient hours. Need ${creditsToDeduct} but only ${subscription.credits_remaining} remaining. Please purchase more hours.`,
           code: "NO_CREDITS"
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 402 }
       );
     }
 
-    const newBalance = subscription.credits_remaining - 1;
-    logStep("Calculated new balance", { credits_before: subscription.credits_remaining, credits_after: newBalance });
+    const newBalance = subscription.credits_remaining - creditsToDeduct;
+    logStep("Calculated new balance", { credits_before: subscription.credits_remaining, credits_after: newBalance, deducted: creditsToDeduct });
 
     // Log transaction in ledger (trigger will auto-sync subscription table)
     const { data: ledgerEntry, error: ledgerError } = await supabaseClient
@@ -135,9 +142,9 @@ Deno.serve(async (req) => {
         student_id,
         subscription_id: subscription.id,
         transaction_type: "debit",
-        amount: -1,
+        amount: -creditsToDeduct,
         balance_after: newBalance,
-        reason: `Class completed: ${class_title}`,
+        reason: `Class completed: ${class_title} (${creditsToDeduct}hr${creditsToDeduct === 1 ? '' : 's'})`,
         related_class_id: class_id
       })
       .select("id")
@@ -152,9 +159,9 @@ Deno.serve(async (req) => {
 
     let message = '';
     if (newBalance === 0) {
-      message = `Credit deducted. No classes remaining. Purchase more credits to continue.`;
+      message = `${creditsToDeduct} hour${creditsToDeduct === 1 ? '' : 's'} deducted. No hours remaining. Purchase more to continue.`;
     } else {
-      message = `Credit deducted. ${newBalance} class${newBalance === 1 ? '' : 'es'} remaining.`;
+      message = `${creditsToDeduct} hour${creditsToDeduct === 1 ? '' : 's'} deducted. ${newBalance} hour${newBalance === 1 ? '' : 's'} remaining.`;
     }
 
     // Check auto-renewal threshold (fire-and-forget, never blocks class completion)
@@ -173,7 +180,6 @@ Deno.serve(async (req) => {
           pack: renewalSettings.renewal_pack,
         });
 
-        // Invoke process-auto-renewal asynchronously
         const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
         const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
@@ -199,6 +205,7 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: true,
         credits_remaining: newBalance,
+        credits_deducted: creditsToDeduct,
         transaction_id: ledgerEntry.id,
         message
       }),

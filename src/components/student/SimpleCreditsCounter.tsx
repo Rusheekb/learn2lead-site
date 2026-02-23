@@ -19,7 +19,7 @@ export const SimpleCreditsCounter: React.FC = memo(() => {
     <Card className="p-4 mb-6 bg-gradient-to-r from-primary/5 to-primary/10">
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium text-muted-foreground">
-          Credits Available
+          Hours Available
         </span>
         <CreditBadge credits={creditsRemaining} pricePerClass={pricePerClass} hideAmount />
       </div>

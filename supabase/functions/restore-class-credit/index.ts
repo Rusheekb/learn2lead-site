@@ -7,7 +7,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -15,11 +14,8 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    
-    // Create admin client for database operations
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
     
-    // Get the JWT from the request to verify user
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(
@@ -28,13 +24,11 @@ serve(async (req) => {
       );
     }
 
-    // Create user client to verify the requesting user
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabaseUser = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } },
     });
 
-    // Verify the user is authenticated
     const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
     if (userError || !user) {
       console.error("Auth error:", userError);
@@ -44,7 +38,6 @@ serve(async (req) => {
       );
     }
 
-    // Get the user's role
     const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
       .select("role")
@@ -59,7 +52,6 @@ serve(async (req) => {
       );
     }
 
-    // Allow tutors and admins to restore credits (for error recovery)
     if (profile.role !== "tutor" && profile.role !== "admin") {
       return new Response(
         JSON.stringify({ success: false, error: "Only tutors and admins can restore credits" }),
@@ -67,7 +59,7 @@ serve(async (req) => {
       );
     }
 
-    const { student_id, class_id, reason } = await req.json();
+    const { student_id, class_id, reason, credits_to_restore } = await req.json();
 
     if (!student_id) {
       return new Response(
@@ -76,10 +68,11 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Restoring credit for student ${student_id}, class ${class_id}, by ${user.id} (${profile.role})`);
+    const restoreAmount = Math.max(0.5, credits_to_restore || 1);
+
+    console.log(`Restoring ${restoreAmount} credit(s) for student ${student_id}, class ${class_id}, by ${user.id} (${profile.role})`);
 
     // Verify there was a recent deduction for this class (within last 5 minutes)
-    // This prevents abuse - can only restore credits that were just deducted
     if (class_id) {
       const { data: recentDeduction, error: deductionError } = await supabaseAdmin
         .from("class_credits_ledger")
@@ -119,7 +112,7 @@ serve(async (req) => {
     }
 
     const currentBalance = lastEntry?.balance_after ?? 0;
-    const newBalance = currentBalance + 1;
+    const newBalance = currentBalance + restoreAmount;
 
     // Get the student's subscription ID
     const { data: subscription } = await supabaseAdmin
@@ -135,7 +128,7 @@ serve(async (req) => {
       .from("class_credits_ledger")
       .insert({
         student_id,
-        amount: 1,
+        amount: restoreAmount,
         balance_after: newBalance,
         transaction_type: "credit",
         reason: reason || "Credit restored - class completion error recovery",
@@ -151,12 +144,12 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Successfully restored 1 credit for student ${student_id}. New balance: ${newBalance}`);
+    console.log(`Successfully restored ${restoreAmount} credit(s) for student ${student_id}. New balance: ${newBalance}`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        credits_restored: 1,
+        credits_restored: restoreAmount,
         new_balance: newBalance,
         restored_by: user.id,
         restored_by_role: profile.role,
