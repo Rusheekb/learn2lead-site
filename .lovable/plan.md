@@ -1,43 +1,75 @@
 
 
-# Make the Pricing Page Parent-Friendly
+# Duration-Based Credits with Half-Hour Support
 
-## Problem
-The word "credits" is internal jargon. Parents think in terms of classes, not credits. There is also no mention that unused classes carry over, which is a key selling point.
+## Overview
+Change the credit system from "1 credit per class" to "1 credit per hour," supporting half-hour increments (0.5, 1.0, 1.5, 2.0, etc.). A 1.5-hour session deducts 1.5 credits.
 
-## Changes (all in `src/pages/Pricing.tsx`)
+## Database Migration (schema change required)
+The `amount` column in `class_credits_ledger` and `credits_remaining`/`credits_allocated` in `student_subscriptions` are currently `integer`. They must be changed to `numeric` to store values like 0.5 and 1.5.
 
-### 1. Reword the headline and dropdown label
-- **Page title**: "Buy Credits" --> "Buy Class Sessions"
-- **Subtitle**: "Pick how many credits you need..." --> "Choose how many classes you'd like -- no subscriptions, no commitments."
-- **Dropdown label**: "How many credits?" --> "How many classes?"
-- **Dropdown items**: "1 Credit" --> "1 Class", "2 Credits" --> "2 Classes", etc. (update labels in `src/config/stripe.ts`)
-- **Button text**: "Buy 4 Credits" --> "Buy 4 Classes"
+```sql
+ALTER TABLE class_credits_ledger ALTER COLUMN amount TYPE numeric;
+ALTER TABLE class_credits_ledger ALTER COLUMN balance_after TYPE numeric;
+ALTER TABLE student_subscriptions ALTER COLUMN credits_remaining TYPE numeric;
+ALTER TABLE student_subscriptions ALTER COLUMN credits_allocated TYPE numeric;
+```
 
-### 2. Add a "Classes never expire" callout
-Below the dropdown card, add a small reassurance banner:
-> "Unused classes carry over -- buy now, use whenever your schedule allows."
+No data loss -- existing integer values are valid numerics.
 
-This will be styled as a subtle info box (light blue/gray background, small text) sitting just beneath the main card.
+## Edge Function: `deduct-class-credit`
+- Accept `duration_hours` in the request body (number, e.g. 1.5)
+- Default to 1 if not provided (backward compatibility)
+- Round to nearest 0.5: `Math.round(duration * 2) / 2` (so 1.3 becomes 1.5, 0.8 becomes 1.0)
+- Minimum deduction: 0.5
+- Deduct that amount instead of hardcoded 1
+- Block if `credits_remaining < creditsToDeduct`
+- Update ledger `amount` to `-creditsToDeduct` and `balance_after` accordingly
+- Update all response messages to show the deducted amount
 
-### 3. Add a "How It Works" section
-Below the card (above the "Need something different?" block), add three simple steps to demystify the process for parents:
+## Edge Function: `restore-class-credit`
+- Accept `credits_to_restore` in the request body (number, default 1)
+- Restore that amount instead of hardcoded 1
+- Update ledger and response accordingly
 
-1. **Choose your pack** -- Pick the number of classes that works for your family.
-2. **Schedule anytime** -- Book sessions at times that fit your calendar.
-3. **Classes never expire** -- Unused sessions carry over, so nothing goes to waste.
+## Frontend: `src/services/classCompletion.ts`
+- Pass `duration_hours: parseFloat(data.timeHrs) || 1` in the request body to `deduct-class-credit`
+- Pass `credits_to_restore: parseFloat(data.timeHrs) || 1` when calling `restore-class-credit` on failure
+- Update success toast messages from "X classes remaining" to "X hours remaining"
 
-### 4. Additional recommendations (included)
-- **Add a short FAQ accordion** at the bottom with 3 common parent questions:
-  - "What is a class session?" -- A one-hour, one-on-one tutoring session in any subject.
-  - "Do unused classes expire?" -- No. Your classes carry over indefinitely.
-  - "Can I buy more classes later?" -- Yes, you can top up anytime.
-- **Replace "per class" with "per session"** in the price display for consistency with the new language.
+## Config: `src/config/stripe.ts`
+- Update labels: "1 Class" becomes "1 Hour", "2 Classes" becomes "2 Hours", etc.
+- Rename `perClass` to `perHour` (keep `perClass` as alias for backward compat)
 
-## Files modified
-- `src/config/stripe.ts` -- Change `label` values from "X Credits" to "X Classes"
-- `src/pages/Pricing.tsx` -- All UI copy changes, "How It Works" section, carryover callout, and FAQ accordion
+## Pricing Page: `src/pages/Pricing.tsx`
+- Update headline to "Buy Tutoring Hours"
+- Update dropdown label to "How many hours?"
+- Update button text to "Buy X Hours"
+- Update price display to "per hour" instead of "per session"
+- Update savings line to compare against single-hour price
+- Update FAQ:
+  - "What is a credit?" -- "Each credit equals one hour of tutoring. A 1.5-hour session uses 1.5 credits."
+  - Add a question: "What if my session is shorter or longer than an hour?" -- "Credits are deducted in half-hour increments. A 30-minute session uses 0.5 credits; a 90-minute session uses 1.5."
+- Update "How It Works" step 1 to mention hours
 
-## No backend or Stripe changes needed
-This is purely a front-end copy and layout update.
+## Student Components
+- `SimpleCreditsCounter.tsx`: Change "Credits Available" to "Hours Available"
+- `CreditBadge.tsx`: Change "X classes remaining" to "X hours remaining"; handle decimal display (e.g. "4.5 hours remaining")
+- `AutoRenewalSettings.tsx`: Update labels from "credits" to "hours" throughout
+- `SubscriptionProvider.tsx`: No changes needed (already passes numeric values through)
+
+## Files Modified
+| File | Change |
+|------|--------|
+| `supabase/functions/deduct-class-credit/index.ts` | Duration-based deduction with 0.5 rounding |
+| `supabase/functions/restore-class-credit/index.ts` | Variable credit restoration amount |
+| `src/services/classCompletion.ts` | Pass `duration_hours` and `credits_to_restore` |
+| `src/config/stripe.ts` | Labels: Classes to Hours |
+| `src/pages/Pricing.tsx` | Copy: hours-based language, updated FAQ |
+| `src/components/student/SimpleCreditsCounter.tsx` | "Hours Available" |
+| `src/components/shared/CreditBadge.tsx` | "X hours remaining", decimal support |
+| `src/components/student/AutoRenewalSettings.tsx` | "hours" labels |
+
+## Database migration (1 migration file)
+- ALTER 4 columns from `integer` to `numeric`
 
