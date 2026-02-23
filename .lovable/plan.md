@@ -1,58 +1,43 @@
 
 
-# Dropdown Credit Selector with Tiered Pricing
+# Make the Pricing Page Parent-Friendly
 
-## Overview
-Replace the current 3-column pricing card layout with a single, clean credit selector using a dropdown menu. Users pick how many credits they want (1, 2, 4, 8, or 10), see the price update dynamically, and click one button to checkout.
+## Problem
+The word "credits" is internal jargon. Parents think in terms of classes, not credits. There is also no mention that unused classes carry over, which is a key selling point.
 
-## Pricing Tiers
+## Changes (all in `src/pages/Pricing.tsx`)
 
-| Credits | Total | Per Class |
-|---------|-------|-----------|
-| 1       | $40   | $40.00    |
-| 2       | $76   | $38.00    |
-| 4       | $140  | $35.00    |
-| 8       | $240  | $30.00    |
-| 10      | $280  | $28.00    |
+### 1. Reword the headline and dropdown label
+- **Page title**: "Buy Credits" --> "Buy Class Sessions"
+- **Subtitle**: "Pick how many credits you need..." --> "Choose how many classes you'd like -- no subscriptions, no commitments."
+- **Dropdown label**: "How many credits?" --> "How many classes?"
+- **Dropdown items**: "1 Credit" --> "1 Class", "2 Credits" --> "2 Classes", etc. (update labels in `src/config/stripe.ts`)
+- **Button text**: "Buy 4 Credits" --> "Buy 4 Classes"
 
-## Implementation Steps
+### 2. Add a "Classes never expire" callout
+Below the dropdown card, add a small reassurance banner:
+> "Unused classes carry over -- buy now, use whenever your schedule allows."
 
-### Step 1: Create Stripe Products and Prices
-Create two new Stripe products + prices for the 1-credit ($40) and 2-credit ($76) tiers using the Stripe tools. The existing 4, 8 products/prices stay as-is. The old 12-credit product will be deactivated.
+This will be styled as a subtle info box (light blue/gray background, small text) sitting just beneath the main card.
 
-### Step 2: Add new plans to `subscription_plans` table
-Insert two new rows for 1-credit and 2-credit packs, and deactivate the 12-credit plan (since 10-credit replaces it). Create a new 10-credit product+price in Stripe and add it to the table as well.
+### 3. Add a "How It Works" section
+Below the card (above the "Need something different?" block), add three simple steps to demystify the process for parents:
 
-### Step 3: Update `src/config/stripe.ts`
-Replace the current `basic/standard/premium` structure with a `CREDIT_TIERS` array containing all 5 options with their price IDs, totals, per-class rates, and credit counts.
+1. **Choose your pack** -- Pick the number of classes that works for your family.
+2. **Schedule anytime** -- Book sessions at times that fit your calendar.
+3. **Classes never expire** -- Unused sessions carry over, so nothing goes to waste.
 
-### Step 4: Redesign `src/pages/Pricing.tsx`
-- Remove the 3-column `PricingTier` card layout
-- Add a centered card with:
-  - A `<Select>` dropdown (using the existing Radix select component) listing: 1, 2, 4, 8, 10 credits
-  - Dynamic price display showing total and per-class rate
-  - Feature list (shared across all tiers)
-  - A "Buy Credits" button that triggers checkout with the selected tier's price ID
-  - A savings badge for higher tiers (e.g., "Save 30%" for 10 credits)
-- Keep the existing header, "Contact Us" section, and checkout logic
+### 4. Additional recommendations (included)
+- **Add a short FAQ accordion** at the bottom with 3 common parent questions:
+  - "What is a class session?" -- A one-hour, one-on-one tutoring session in any subject.
+  - "Do unused classes expire?" -- No. Your classes carry over indefinitely.
+  - "Can I buy more classes later?" -- Yes, you can top up anytime.
+- **Replace "per class" with "per session"** in the price display for consistency with the new language.
 
-### Step 5: No changes needed to edge functions
-The `create-checkout` edge function already accepts any `priceId` dynamically. The `stripe-webhooks` function looks up the plan by `stripe_price_id` in the `subscription_plans` table, so it will work automatically with the new entries.
+## Files modified
+- `src/config/stripe.ts` -- Change `label` values from "X Credits" to "X Classes"
+- `src/pages/Pricing.tsx` -- All UI copy changes, "How It Works" section, carryover callout, and FAQ accordion
 
----
-
-## Technical Details
-
-**New Stripe resources to create:**
-- Product: "1 Credit Pack" with price $40.00 (one-time)
-- Product: "2 Credit Pack" with price $76.00 (one-time)  
-- Product: "10 Credit Pack" with price $280.00 (one-time)
-
-**Database changes (data only, no schema changes):**
-- INSERT 3 new rows into `subscription_plans` for 1, 2, and 10 credit tiers
-- UPDATE 12-credit plan to `active = false`
-
-**Files modified:**
-- `src/config/stripe.ts` -- new tier structure
-- `src/pages/Pricing.tsx` -- dropdown UI replacing card grid
+## No backend or Stripe changes needed
+This is purely a front-end copy and layout update.
 
