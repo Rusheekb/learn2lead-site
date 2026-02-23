@@ -22,7 +22,7 @@ import {
 
 const SHARED_FEATURES = [
   'Use at your own pace',
-  'Classes never expire',
+  'Hours never expire',
   'Access to all subjects',
   'Flexible scheduling',
 ];
@@ -30,8 +30,8 @@ const SHARED_FEATURES = [
 const HOW_IT_WORKS = [
   {
     icon: ShieldCheck,
-    title: 'Choose your pack',
-    description: 'Pick the number of classes that works for your family.',
+    title: 'Choose your hours',
+    description: 'Pick the number of tutoring hours that works for your family.',
   },
   {
     icon: CalendarCheck,
@@ -40,26 +40,31 @@ const HOW_IT_WORKS = [
   },
   {
     icon: Clock,
-    title: 'Classes never expire',
-    description: 'Unused sessions carry over, so nothing goes to waste.',
+    title: 'Hours never expire',
+    description: 'Unused hours carry over, so nothing goes to waste.',
   },
 ];
 
 const FAQ_ITEMS = [
   {
-    question: 'What is a class session?',
+    question: 'What is a credit?',
     answer:
-      'A one-hour, one-on-one tutoring session in any subject we offer. Your child gets personalized attention from a dedicated tutor.',
+      'Each credit equals one hour of tutoring. A 1.5-hour session uses 1.5 credits, and a 30-minute session uses 0.5 credits.',
   },
   {
-    question: 'Do unused classes expire?',
+    question: 'What if my session is shorter or longer than an hour?',
     answer:
-      'No. Your classes carry over indefinitely. Buy now and use them whenever your schedule allows — there\'s no rush.',
+      'Credits are deducted in half-hour increments. A 30-minute session uses 0.5 credits, a 90-minute session uses 1.5 credits, and a 2-hour session uses 2 credits.',
   },
   {
-    question: 'Can I buy more classes later?',
+    question: 'Do unused hours expire?',
     answer:
-      'Yes! You can top up anytime. Just come back to this page and purchase another pack whenever you need more sessions.',
+      'No. Your hours carry over indefinitely. Buy now and use them whenever your schedule allows — there\'s no rush.',
+  },
+  {
+    question: 'Can I buy more hours later?',
+    answer:
+      'Yes! You can top up anytime. Just come back to this page and purchase another pack whenever you need more hours.',
   },
 ];
 
@@ -108,7 +113,7 @@ const Pricing = () => {
     }
   };
 
-  const classWord = selectedTier.credits === 1 ? 'Class' : 'Classes';
+  const hourWord = selectedTier.credits === 1 ? 'Hour' : 'Hours';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -140,9 +145,9 @@ const Pricing = () => {
       >
         {/* Hero */}
         <div className="max-w-3xl mx-auto text-center mb-12">
-          <h2 className="text-3xl font-bold mb-4">Buy Class Sessions</h2>
+          <h2 className="text-3xl font-bold mb-4">Buy Tutoring Hours</h2>
           <p className="text-xl text-gray-600">
-            Choose how many classes you'd like — no subscriptions, no commitments
+            Choose how many hours you'd like — no subscriptions, no commitments
           </p>
         </div>
 
@@ -150,7 +155,7 @@ const Pricing = () => {
         <div className="max-w-md mx-auto">
           <div className="rounded-lg border border-border bg-card p-8 shadow-lg">
             <label className="block text-sm font-medium text-muted-foreground mb-2">
-              How many classes?
+              How many hours?
             </label>
             <Select
               value={String(selectedIndex)}
@@ -181,7 +186,7 @@ const Pricing = () => {
                 ${selectedTier.total}
               </div>
               <p className="text-muted-foreground mt-1">
-                ${selectedTier.perClass.toFixed(2)} per session
+                ${selectedTier.perHour.toFixed(2)} per hour
               </p>
               {selectedTier.savingsPercent > 0 && (
                 <div className="inline-flex items-center gap-1 mt-2 px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm font-medium">
@@ -225,7 +230,7 @@ const Pricing = () => {
                   Processing...
                 </>
               ) : (
-                `Buy ${selectedTier.credits} ${classWord} — $${selectedTier.total}`
+                `Buy ${selectedTier.credits} ${hourWord} — $${selectedTier.total}`
               )}
             </Button>
           </div>
@@ -234,7 +239,7 @@ const Pricing = () => {
           <div className="mt-4 flex items-start gap-2 rounded-md bg-blue-50 border border-blue-100 px-4 py-3">
             <Info className="h-4 w-4 text-blue-500 mt-0.5 shrink-0" />
             <p className="text-sm text-blue-700">
-              Unused classes carry over — buy now, use whenever your schedule allows.
+              Unused hours carry over — buy now, use whenever your schedule allows.
             </p>
           </div>
         </div>

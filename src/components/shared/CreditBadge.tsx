@@ -19,10 +19,12 @@ export const CreditBadge: React.FC<CreditBadgeProps> = ({ credits, className }) 
     return 'default';
   };
 
+  const displayCredits = Number.isInteger(credits) ? credits : credits.toFixed(1);
+
   return (
     <Badge variant={getVariant()} className={cn('flex items-center gap-1.5', className)}>
       <CreditCard className="h-3.5 w-3.5" />
-      <span>{credits} {credits === 1 ? 'class' : 'classes'} remaining</span>
+      <span>{displayCredits} {credits === 1 ? 'hour' : 'hours'} remaining</span>
     </Badge>
   );
 };

@@ -23,9 +23,9 @@ interface AutoRenewalRow {
 }
 
 const PACK_OPTIONS: { value: StripePlanKey; label: string; credits: number; price: number }[] = [
-  { value: 'basic', label: '4 Credit Pack', credits: 4, price: 140 },
-  { value: 'standard', label: '8 Credit Pack', credits: 8, price: 240 },
-  { value: 'premium', label: '10 Credit Pack', credits: 10, price: 280 },
+  { value: 'basic', label: '4 Hour Pack', credits: 4, price: 140 },
+  { value: 'standard', label: '8 Hour Pack', credits: 8, price: 240 },
+  { value: 'premium', label: '10 Hour Pack', credits: 10, price: 280 },
 ];
 
 export const AutoRenewalSettings: React.FC = () => {
@@ -150,14 +150,14 @@ export const AutoRenewalSettings: React.FC = () => {
           />
         </div>
         <CardDescription>
-          Automatically purchase credits when your balance gets low
+          Automatically purchase hours when your balance gets low
         </CardDescription>
       </CardHeader>
 
       {enabled && (
         <CardContent className="space-y-5 pt-0">
           <div className="space-y-2">
-            <Label htmlFor="renewal-pack">Credit Pack</Label>
+            <Label htmlFor="renewal-pack">Hour Pack</Label>
             <Select value={renewalPack} onValueChange={handlePackChange} disabled={saving}>
               <SelectTrigger id="renewal-pack">
                 <SelectValue />
@@ -173,7 +173,7 @@ export const AutoRenewalSettings: React.FC = () => {
           </div>
 
           <div className="space-y-3">
-            <Label>Renew when credits reach: <span className="font-bold text-primary">{threshold}</span></Label>
+            <Label>Renew when hours reach: <span className="font-bold text-primary">{threshold}</span></Label>
             <Slider
               value={[threshold]}
               onValueChange={handleThresholdChange}
@@ -192,7 +192,7 @@ export const AutoRenewalSettings: React.FC = () => {
 
           <div className="rounded-lg bg-muted/50 border border-border p-3 text-sm">
             <p className="text-foreground">
-              When your balance reaches <strong>{threshold} credit{threshold !== 1 ? 's' : ''}</strong>, 
+              When your balance reaches <strong>{threshold} hour{threshold !== 1 ? 's' : ''}</strong>, 
               we'll automatically purchase the{' '}
               <strong>{selectedPack?.label}</strong> (${price}) using your saved payment method.
             </p>

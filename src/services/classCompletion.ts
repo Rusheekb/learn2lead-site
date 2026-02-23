@@ -19,6 +19,8 @@ export interface CompleteClassData {
   additionalInfo: string;
 }
 
+const formatHours = (n: number) => `${n} hour${n === 1 ? '' : 's'}`;
+
 export const completeClass = async (data: CompleteClassData): Promise<boolean> => {
   try {
     // First, check if the class still exists
@@ -45,13 +47,16 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
       return false;
     }
 
+    const durationHours = parseFloat(data.timeHrs) || 1;
+
     const { data: creditResult, error: creditError } = await supabase.functions.invoke(
       'deduct-class-credit',
       {
         body: {
           student_id: data.studentId,
           class_id: data.classId,
-          class_title: data.classNumber
+          class_title: data.classNumber,
+          duration_hours: durationHours
         },
         headers: {
           Authorization: `Bearer ${session.session.access_token}`
@@ -70,9 +75,9 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
       
       if (errorCode === 'NO_SUBSCRIPTION') {
         toast.error('Student has no active subscription', {
-          description: 'Please purchase credits to continue taking classes',
+          description: 'Please purchase hours to continue taking classes',
           action: {
-            label: 'Buy Credits',
+            label: 'Buy Hours',
             onClick: () => window.location.href = '/pricing'
           }
         });
@@ -80,10 +85,10 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
       }
       
       if (errorCode === 'INSUFFICIENT_CREDITS' || errorCode === 'NO_CREDITS') {
-        toast.error('Student has no credits remaining', {
-          description: 'Please purchase more credits to continue',
+        toast.error('Student has insufficient hours remaining', {
+          description: 'Please purchase more hours to continue',
           action: {
-            label: 'Buy Credits',
+            label: 'Buy Hours',
             onClick: () => window.location.href = '/pricing'
           }
         });
@@ -94,6 +99,7 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
     }
 
     const creditsRemaining = creditResult.credits_remaining;
+    const creditsDeducted = creditResult.credits_deducted || durationHours;
     const isAdminOverride = creditResult.admin_override;
 
     // Check if class log already exists
@@ -159,6 +165,7 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
             body: {
               student_id: data.studentId,
               class_id: data.classId,
+              credits_to_restore: durationHours,
               reason: `Credit restored - class log creation failed for ${data.classNumber}`
             },
             headers: {
@@ -209,28 +216,29 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
       tutor_name: data.tutorName,
       student_name: data.studentName,
       credits_remaining: creditsRemaining,
+      credits_deducted: creditsDeducted,
       admin_override: isAdminOverride,
     });
 
     // Show appropriate success message
     if (isAdminOverride) {
       toast.success('Class completed (Admin Override)', {
-        description: 'Completed with 0 credits using admin privileges'
+        description: 'Completed with 0 hours using admin privileges'
       });
     } else if (creditsRemaining === 0) {
-      toast.success('Class completed - No credits remaining', {
-        description: 'Student needs to purchase more credits',
+      toast.success('Class completed - No hours remaining', {
+        description: 'Student needs to purchase more hours',
         action: {
           label: 'View Plans',
           onClick: () => window.location.href = '/pricing'
         }
       });
     } else if (creditsRemaining < 3) {
-      toast.success(`Class completed - ${creditsRemaining} ${creditsRemaining === 1 ? 'class' : 'classes'} remaining`, {
-        description: 'Student is running low on credits'
+      toast.success(`Class completed - ${formatHours(creditsRemaining)} remaining`, {
+        description: 'Student is running low on hours'
       });
     } else {
-      toast.success(`Class completed - ${creditsRemaining} classes remaining`);
+      toast.success(`Class completed - ${formatHours(creditsRemaining)} remaining`);
     }
     
     return true;
