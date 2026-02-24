@@ -24,6 +24,7 @@ import PostHogPageView from './components/shared/PostHogPageView';
 import { SidebarProvider } from '@/hooks/useSidebar';
 import DashboardShell from './components/shared/DashboardShell';
 import ErrorBoundary from './components/ErrorBoundary';
+import InlineErrorFallback from './components/shared/InlineErrorFallback';
 
 const Profile = React.lazy(() => import('./pages/Profile'));
 const TutorDashboard = React.lazy(() => import('./pages/TutorDashboard'));
@@ -53,10 +54,24 @@ const AnimatedPage = ({ children }: { children: React.ReactNode }) => (
 );
 
 // Wrapper for dashboard routes that adds the DashboardShell
+const SectionErrorBoundary = ({ children }: { children: React.ReactNode }) => {
+  const [key, setKey] = React.useState(0);
+  return (
+    <ErrorBoundary
+      key={key}
+      fallback={<InlineErrorFallback onRetry={() => setKey((k) => k + 1)} />}
+    >
+      {children}
+    </ErrorBoundary>
+  );
+};
+
 const StudentDashboardWrapper = ({ children }: { children: React.ReactNode }) => (
   <DashboardShell title="Student Portal">
     <OptimizedSuspense>
-      <AnimatedPage>{children}</AnimatedPage>
+      <SectionErrorBoundary>
+        <AnimatedPage>{children}</AnimatedPage>
+      </SectionErrorBoundary>
     </OptimizedSuspense>
   </DashboardShell>
 );
@@ -64,7 +79,9 @@ const StudentDashboardWrapper = ({ children }: { children: React.ReactNode }) =>
 const TutorDashboardWrapper = ({ children }: { children: React.ReactNode }) => (
   <DashboardShell title="Tutor Portal">
     <OptimizedSuspense>
-      <AnimatedPage>{children}</AnimatedPage>
+      <SectionErrorBoundary>
+        <AnimatedPage>{children}</AnimatedPage>
+      </SectionErrorBoundary>
     </OptimizedSuspense>
   </DashboardShell>
 );
@@ -72,7 +89,9 @@ const TutorDashboardWrapper = ({ children }: { children: React.ReactNode }) => (
 const AdminDashboardWrapper = ({ children }: { children: React.ReactNode }) => (
   <DashboardShell title="Admin Portal">
     <OptimizedSuspense>
-      <AnimatedPage>{children}</AnimatedPage>
+      <SectionErrorBoundary>
+        <AnimatedPage>{children}</AnimatedPage>
+      </SectionErrorBoundary>
     </OptimizedSuspense>
   </DashboardShell>
 );
