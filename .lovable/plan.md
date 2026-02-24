@@ -1,75 +1,109 @@
 
 
-# Duration-Based Credits with Half-Hour Support
+# Reorganize the Settings Page
 
-## Overview
-Change the credit system from "1 credit per class" to "1 credit per hour," supporting half-hour increments (0.5, 1.0, 1.5, 2.0, etc.). A 1.5-hour session deducts 1.5 credits.
+## Current State
+The Settings tab is a flat vertical stack of cards with mixed concerns:
+1. SubscriptionStatusCard (students only)
+2. AutoRenewalSettings (students only)
+3. CreditHistory (students only)
+4. Account Security (password change + email display)
+5. ReferralCodeSection
 
-## Database Migration (schema change required)
-The `amount` column in `class_credits_ledger` and `credits_remaining`/`credits_allocated` in `student_subscriptions` are currently `integer`. They must be changed to `numeric` to store values like 0.5 and 1.5.
+Additionally, the AppearanceSettings card on the Profile tab is a placeholder ("coming soon"). There is no notification preferences section, no danger zone, and no visual grouping.
 
-```sql
-ALTER TABLE class_credits_ledger ALTER COLUMN amount TYPE numeric;
-ALTER TABLE class_credits_ledger ALTER COLUMN balance_after TYPE numeric;
-ALTER TABLE student_subscriptions ALTER COLUMN credits_remaining TYPE numeric;
-ALTER TABLE student_subscriptions ALTER COLUMN credits_allocated TYPE numeric;
-```
+## Proposed Changes
 
-No data loss -- existing integer values are valid numerics.
+### 1. Add section headers to group related settings
+Break the flat card list into labeled sections with headings and descriptions, so users can scan quickly:
 
-## Edge Function: `deduct-class-credit`
-- Accept `duration_hours` in the request body (number, e.g. 1.5)
-- Default to 1 if not provided (backward compatibility)
-- Round to nearest 0.5: `Math.round(duration * 2) / 2` (so 1.3 becomes 1.5, 0.8 becomes 1.0)
-- Minimum deduction: 0.5
-- Deduct that amount instead of hardcoded 1
-- Block if `credits_remaining < creditsToDeduct`
-- Update ledger `amount` to `-creditsToDeduct` and `balance_after` accordingly
-- Update all response messages to show the deducted amount
+- **Subscription & Hours** (students only) -- SubscriptionStatusCard, AutoRenewalSettings, CreditHistory
+- **Account Security** -- email display, password change
+- **Notifications** (new) -- toggle email notifications for class reminders, credit alerts
+- **Referral Program** -- existing ReferralCodeSection
+- **Danger Zone** (new) -- sign-out button, account deactivation note
 
-## Edge Function: `restore-class-credit`
-- Accept `credits_to_restore` in the request body (number, default 1)
-- Restore that amount instead of hardcoded 1
-- Update ledger and response accordingly
+### 2. Add a Notification Preferences section
+A new card with switches for:
+- Class reminder emails (on/off)
+- Low-credit alerts (on/off)
 
-## Frontend: `src/services/classCompletion.ts`
-- Pass `duration_hours: parseFloat(data.timeHrs) || 1` in the request body to `deduct-class-credit`
-- Pass `credits_to_restore: parseFloat(data.timeHrs) || 1` when calling `restore-class-credit` on failure
-- Update success toast messages from "X classes remaining" to "X hours remaining"
+These will save to the user's profile via `updateProfile()` using two new boolean fields (`notify_class_reminders`, `notify_low_credits`) that default to `true`. If the columns don't exist yet, we add them in a migration.
 
-## Config: `src/config/stripe.ts`
-- Update labels: "1 Class" becomes "1 Hour", "2 Classes" becomes "2 Hours", etc.
-- Rename `perClass` to `perHour` (keep `perClass` as alias for backward compat)
+### 3. Add a Danger Zone section
+A subtle card at the bottom with:
+- A "Sign Out" button (calls `supabase.auth.signOut()`)
+- A note: "To delete your account, please contact support."
 
-## Pricing Page: `src/pages/Pricing.tsx`
-- Update headline to "Buy Tutoring Hours"
-- Update dropdown label to "How many hours?"
-- Update button text to "Buy X Hours"
-- Update price display to "per hour" instead of "per session"
-- Update savings line to compare against single-hour price
-- Update FAQ:
-  - "What is a credit?" -- "Each credit equals one hour of tutoring. A 1.5-hour session uses 1.5 credits."
-  - Add a question: "What if my session is shorter or longer than an hour?" -- "Credits are deducted in half-hour increments. A 30-minute session uses 0.5 credits; a 90-minute session uses 1.5."
-- Update "How It Works" step 1 to mention hours
+This is standard in professional settings pages and gives users a clear way to sign out from the settings context.
 
-## Student Components
-- `SimpleCreditsCounter.tsx`: Change "Credits Available" to "Hours Available"
-- `CreditBadge.tsx`: Change "X classes remaining" to "X hours remaining"; handle decimal display (e.g. "4.5 hours remaining")
-- `AutoRenewalSettings.tsx`: Update labels from "credits" to "hours" throughout
-- `SubscriptionProvider.tsx`: No changes needed (already passes numeric values through)
+### 4. Move Appearance Settings into the Settings tab
+Remove the placeholder AppearanceSettings card from ProfileDisplay and add a real dark-mode toggle to Settings under an "Appearance" section heading. This uses the existing `document.documentElement.classList.toggle('dark')` pattern with localStorage persistence.
 
-## Files Modified
+### 5. Update CreditHistory terminology
+The CreditHistory component still says "class" / "classes" for ledger amounts (line 162). Update to "hour" / "hours" to match the new duration-based credit system.
+
+---
+
+## Technical Details
+
+### Files to create
+| File | Purpose |
+|------|---------|
+| `src/components/shared/profile/NotificationPreferences.tsx` | New card with notification toggle switches |
+| `src/components/shared/profile/DangerZone.tsx` | Sign-out button and account note |
+| `src/components/shared/profile/SettingsSection.tsx` | Reusable section wrapper (heading + description + children) |
+| `src/components/shared/profile/AppearanceToggle.tsx` | Dark mode toggle card |
+
+### Files to modify
 | File | Change |
 |------|--------|
-| `supabase/functions/deduct-class-credit/index.ts` | Duration-based deduction with 0.5 rounding |
-| `supabase/functions/restore-class-credit/index.ts` | Variable credit restoration amount |
-| `src/services/classCompletion.ts` | Pass `duration_hours` and `credits_to_restore` |
-| `src/config/stripe.ts` | Labels: Classes to Hours |
-| `src/pages/Pricing.tsx` | Copy: hours-based language, updated FAQ |
-| `src/components/student/SimpleCreditsCounter.tsx` | "Hours Available" |
-| `src/components/shared/CreditBadge.tsx` | "X hours remaining", decimal support |
-| `src/components/student/AutoRenewalSettings.tsx` | "hours" labels |
+| `src/components/shared/profile/SettingsTab.tsx` | Wrap cards in SettingsSection groups; add NotificationPreferences, DangerZone, and AppearanceToggle |
+| `src/components/shared/profile/ProfileDisplay.tsx` | Remove AppearanceSettings import and usage |
+| `src/components/shared/profile/AppearanceSettings.tsx` | Delete (replaced by AppearanceToggle) |
+| `src/components/student/CreditHistory.tsx` | Change "class"/"classes" to "hour"/"hours" on line 162 |
 
-## Database migration (1 migration file)
-- ALTER 4 columns from `integer` to `numeric`
+### Database migration (if adding notification columns)
+```sql
+ALTER TABLE profiles
+  ADD COLUMN IF NOT EXISTS notify_class_reminders boolean DEFAULT true,
+  ADD COLUMN IF NOT EXISTS notify_low_credits boolean DEFAULT true;
+```
+
+### SettingsSection component (reusable wrapper)
+```text
++--------------------------------------------------+
+| Section Title                                     |
+| Short description text                            |
++--------------------------------------------------+
+|  [Card 1]                                         |
+|  [Card 2]                                         |
++--------------------------------------------------+
+```
+
+### Final Settings tab layout
+```text
+Subscription & Hours (students only)
+  - SubscriptionStatusCard
+  - AutoRenewalSettings
+  - CreditHistory
+
+Account Security
+  - Email display (read-only)
+  - Change password form
+
+Appearance
+  - Dark mode toggle
+
+Notifications
+  - Class reminder toggle
+  - Low-credit alert toggle
+
+Referral Program
+  - ReferralCodeSection
+
+Danger Zone
+  - Sign Out button
+  - Account deletion note
+```
 
