@@ -13,7 +13,7 @@ import { AutoRenewalSettings } from '@/components/student/AutoRenewalSettings';
 import ReferralCodeSection from './ReferralCodeSection';
 import SettingsSection from './SettingsSection';
 import NotificationPreferences from './NotificationPreferences';
-import DangerZone from './DangerZone';
+
 import AppearanceToggle from './AppearanceToggle';
 
 interface SettingsTabProps {
@@ -152,12 +152,6 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ profile, updateProfile }) => 
         <ReferralCodeSection />
       </SettingsSection>
 
-      {/* Danger Zone */}
-      <SettingsSection
-        title=""
-      >
-        <DangerZone />
-      </SettingsSection>
     </div>
   );
 };
