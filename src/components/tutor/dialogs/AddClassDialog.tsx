@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { format, addHours, setMinutes, setHours } from 'date-fns';
+import { format, addHours, addWeeks, setMinutes, setHours, startOfDay, isAfter } from 'date-fns';
 import { ClassEvent } from '@/types/tutorTypes';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
@@ -183,6 +183,22 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
     }
   };
 
+  // Calculate number of recurring classes
+  const getRecurringClassCount = (): number => {
+    if (!newEvent.recurring || !newEvent.date || !newEvent.recurringUntil) return 1;
+    const startDate = startOfDay(newEvent.date as Date);
+    const endDate = newEvent.recurringUntil as Date;
+    let count = 0;
+    for (let i = 0; i < 12; i++) {
+      const d = addWeeks(startDate, i);
+      if (isAfter(d, endDate)) break;
+      count++;
+    }
+    return Math.max(count, 1);
+  };
+
+  const classCount = newEvent.recurring ? getRecurringClassCount() : 1;
+
   const handleSubmit = async () => {
     if (isSubmitting) return;
     
@@ -195,9 +211,10 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
     
     setIsSubmitting(true);
     try {
-      await onCreateEvent(newEvent as ClassEvent);
-      setIsOpen(false);
-      toast.success('Class scheduled successfully');
+      const result = await onCreateEvent(newEvent as ClassEvent);
+      if (result) {
+        setIsOpen(false);
+      }
     } catch (error: any) {
       ErrorHandler.handle(error, 'AddClassDialog.handleSubmit');
     } finally {
@@ -228,7 +245,15 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
                   </AlertDescription>
                 </Alert>
               )}
-              {studentCredits !== null && studentCredits > 0 && studentCredits <= 2 && (
+              {studentCredits !== null && studentCredits > 0 && studentCredits < classCount && (
+                <Alert className="mb-4 border-amber-500/50 text-amber-700 [&>svg]:text-amber-600">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    This student has <strong>{studentCredits} credit{studentCredits === 1 ? '' : 's'}</strong> but scheduling {classCount} classes requires {classCount} credits.
+                  </AlertDescription>
+                </Alert>
+              )}
+              {studentCredits !== null && studentCredits > 0 && studentCredits >= classCount && studentCredits <= 2 && (
                 <Alert className="mb-4 border-amber-500/50 text-amber-700 [&>svg]:text-amber-600">
                   <AlertTriangle className="h-4 w-4" />
                   <AlertDescription>

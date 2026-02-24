@@ -17,6 +17,8 @@ import { Button } from '@/components/ui/button';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { addWeeks, eachWeekOfInterval, isBefore, isAfter, startOfDay } from 'date-fns';
 
 interface StudentOption {
   id: string;
@@ -221,6 +223,87 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
           }
           placeholder="https://zoom.us/j/..."
         />
+      </div>
+
+      {/* Recurrence Section */}
+      <div className="md:col-span-2 space-y-4 rounded-lg border p-4">
+        <div className="flex items-center justify-between">
+          <Label htmlFor="recurring" className="cursor-pointer">Repeat weekly</Label>
+          <Switch
+            id="recurring"
+            checked={newEvent.recurring || false}
+            onCheckedChange={(checked) =>
+              setNewEvent({ ...newEvent, recurring: checked, recurringUntil: checked ? addWeeks(newEvent.date as Date || new Date(), 4) : null })
+            }
+            disabled={!newEvent.date}
+          />
+        </div>
+
+        {newEvent.recurring && newEvent.date && (
+          <>
+            <div className="space-y-2">
+              <Label htmlFor="recurringUntil">Repeat until</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      'w-full justify-start text-left font-normal',
+                      !(newEvent as any).recurringUntil && 'text-muted-foreground'
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {(newEvent as any).recurringUntil
+                      ? format((newEvent as any).recurringUntil as Date, 'PPP')
+                      : <span>Pick an end date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={(newEvent as any).recurringUntil as Date | undefined}
+                    onSelect={(date) => {
+                      if (date) {
+                        const localDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                        setNewEvent({ ...newEvent, recurringUntil: localDate } as any);
+                      }
+                    }}
+                    disabled={(date) => {
+                      const startDate = startOfDay(newEvent.date as Date);
+                      const maxDate = addWeeks(startDate, 12);
+                      return isBefore(date, addWeeks(startDate, 1)) || isAfter(date, maxDate);
+                    }}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+
+            {(() => {
+              const startDate = startOfDay(newEvent.date as Date);
+              const endDate = newEvent.recurringUntil as Date | undefined;
+              if (!endDate) return null;
+              const weeks = eachWeekOfInterval(
+                { start: startDate, end: endDate },
+                { weekStartsOn: (startDate.getDay() as 0 | 1 | 2 | 3 | 4 | 5 | 6) }
+              );
+              // eachWeekOfInterval may include the start week; count dates that match the weekday
+              const count = Math.min(
+                Array.from({ length: 12 }, (_, i) => addWeeks(startDate, i))
+                  .filter((d) => !isAfter(d, endDate)).length,
+                12
+              );
+              const dayName = format(startDate, 'EEEE');
+              return (
+                <p className="text-sm text-muted-foreground">
+                  This will create <strong>{count} class{count !== 1 ? 'es' : ''}</strong> on {dayName}s
+                  {newEvent.startTime && ` at ${newEvent.startTime}`}.
+                </p>
+              );
+            })()}
+          </>
+        )}
       </div>
 
       {/* Notes */}

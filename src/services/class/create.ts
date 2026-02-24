@@ -3,6 +3,39 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ensureDateFormat } from '@/utils/safeDateUtils';
 
+export const createScheduledClassBatch = async (
+  sharedData: Record<string, any>,
+  dates: string[]
+): Promise<number> => {
+  try {
+    const rows = dates.map((date) => ({
+      title: sharedData.title,
+      tutor_id: sharedData.tutor_id,
+      student_id: sharedData.student_id,
+      date: ensureDateFormat(date),
+      start_time: sharedData.start_time,
+      end_time: sharedData.end_time,
+      subject: sharedData.subject,
+      zoom_link: sharedData.zoom_link || null,
+      notes: sharedData.notes || null,
+      status: sharedData.status || 'scheduled',
+      attendance: sharedData.attendance || null,
+      relationship_id: sharedData.relationship_id || null,
+    }));
+
+    const { data, error } = await supabase
+      .from('scheduled_classes')
+      .insert(rows)
+      .select('id');
+
+    if (error) throw error;
+    return data?.length || 0;
+  } catch (error: any) {
+    toast.error(`Error scheduling classes: ${error.message}`);
+    return 0;
+  }
+};
+
 export const createScheduledClass = async (
   classData: Record<string, any>
 ): Promise<string | null> => {
