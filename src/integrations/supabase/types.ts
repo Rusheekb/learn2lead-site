@@ -372,6 +372,8 @@ export type Database = {
           first_name: string | null
           id: string
           last_name: string | null
+          notify_class_reminders: boolean | null
+          notify_low_credits: boolean | null
           role: Database["public"]["Enums"]["app_role"]
           updated_at: string
           zoom_link: string | null
@@ -385,6 +387,8 @@ export type Database = {
           first_name?: string | null
           id: string
           last_name?: string | null
+          notify_class_reminders?: boolean | null
+          notify_low_credits?: boolean | null
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
           zoom_link?: string | null
@@ -398,6 +402,8 @@ export type Database = {
           first_name?: string | null
           id?: string
           last_name?: string | null
+          notify_class_reminders?: boolean | null
+          notify_low_credits?: boolean | null
           role?: Database["public"]["Enums"]["app_role"]
           updated_at?: string
           zoom_link?: string | null
