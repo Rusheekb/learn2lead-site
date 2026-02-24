@@ -159,7 +159,7 @@ export const CreditHistory: React.FC = () => {
                       )}
                     >
                       {isDebit ? '' : '+'}
-                      {transaction.amount} {Math.abs(transaction.amount) === 1 ? 'class' : 'classes'}
+                      {transaction.amount} {Math.abs(transaction.amount) === 1 ? 'hour' : 'hours'}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       Balance: {transaction.balance_after}

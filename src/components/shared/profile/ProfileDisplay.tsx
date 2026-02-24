@@ -3,8 +3,6 @@ import React from 'react';
 import { Profile } from '@/hooks/useProfile';
 import ProfileEditor from '../ProfileEditor';
 import ProfileView from '../ProfileView';
-import AppearanceSettings from './AppearanceSettings';
-
 
 interface ProfileDisplayProps {
   profile: Profile;
@@ -33,8 +31,6 @@ const ProfileDisplay: React.FC<ProfileDisplayProps> = ({
   ) : (
     <div className="space-y-6">
       <ProfileView profile={profile} />
-      
-      <AppearanceSettings />
       
       <div className="flex justify-end">
         <button

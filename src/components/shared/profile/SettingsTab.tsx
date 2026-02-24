@@ -11,6 +11,10 @@ import { SubscriptionStatusCard } from '@/components/student/SubscriptionStatusC
 import { CreditHistory } from '@/components/student/CreditHistory';
 import { AutoRenewalSettings } from '@/components/student/AutoRenewalSettings';
 import ReferralCodeSection from './ReferralCodeSection';
+import SettingsSection from './SettingsSection';
+import NotificationPreferences from './NotificationPreferences';
+import DangerZone from './DangerZone';
+import AppearanceToggle from './AppearanceToggle';
 
 interface SettingsTabProps {
   profile: Profile;
@@ -57,67 +61,103 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ profile, updateProfile }) => 
   };
 
   return (
-    <div className="space-y-6">
-      {/* Subscription Management - Only shown for students */}
+    <div className="space-y-8">
+      {/* Subscription & Hours - Students only */}
       {profile.role === 'student' && (
-        <>
+        <SettingsSection
+          title="Subscription & Hours"
+          description="Manage your subscription plan, auto-renewal, and view credit history."
+        >
           <SubscriptionStatusCard />
           <AutoRenewalSettings />
           <CreditHistory />
-        </>
+        </SettingsSection>
       )}
 
       {/* Account Security */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Account Security</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label>Current Email</Label>
-            <Input value={profile.email} disabled className="bg-gray-100" />
-            <p className="text-sm text-gray-500 mt-1">
-              Contact admin to change email
-            </p>
-          </div>
-
-          <Separator />
-
-          <div className="space-y-3">
-            <h4 className="font-medium">Change Password</h4>
+      <SettingsSection
+        title="Account Security"
+        description="Manage your email and password."
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Security Settings</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="newPassword">New Password</Label>
-              <Input
-                id="newPassword"
-                type="password"
-                value={passwords.new}
-                onChange={(e) => setPasswords(prev => ({ ...prev, new: e.target.value }))}
-                placeholder="Enter new password"
-              />
+              <Label>Current Email</Label>
+              <Input value={profile.email} disabled className="bg-muted" />
+              <p className="text-sm text-muted-foreground mt-1">
+                Contact admin to change email
+              </p>
             </div>
-            <div>
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={passwords.confirm}
-                onChange={(e) => setPasswords(prev => ({ ...prev, confirm: e.target.value }))}
-                placeholder="Confirm new password"
-              />
-            </div>
-            <Button 
-              onClick={handlePasswordChange}
-              disabled={isChangingPassword || !passwords.new || !passwords.confirm}
-              className="w-full"
-            >
-              {isChangingPassword ? 'Updating...' : 'Update Password'}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Referral Program - Available for all users */}
-      <ReferralCodeSection />
+            <Separator />
+
+            <div className="space-y-3">
+              <h4 className="font-medium">Change Password</h4>
+              <div>
+                <Label htmlFor="newPassword">New Password</Label>
+                <Input
+                  id="newPassword"
+                  type="password"
+                  value={passwords.new}
+                  onChange={(e) => setPasswords(prev => ({ ...prev, new: e.target.value }))}
+                  placeholder="Enter new password"
+                />
+              </div>
+              <div>
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={passwords.confirm}
+                  onChange={(e) => setPasswords(prev => ({ ...prev, confirm: e.target.value }))}
+                  placeholder="Confirm new password"
+                />
+              </div>
+              <Button 
+                onClick={handlePasswordChange}
+                disabled={isChangingPassword || !passwords.new || !passwords.confirm}
+                className="w-full"
+              >
+                {isChangingPassword ? 'Updating...' : 'Update Password'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </SettingsSection>
+
+      {/* Appearance */}
+      <SettingsSection
+        title="Appearance"
+        description="Customize the look and feel."
+      >
+        <AppearanceToggle />
+      </SettingsSection>
+
+      {/* Notifications */}
+      <SettingsSection
+        title="Notifications"
+        description="Choose which notifications you receive."
+      >
+        <NotificationPreferences profile={profile} updateProfile={updateProfile} />
+      </SettingsSection>
+
+      {/* Referral Program */}
+      <SettingsSection
+        title="Referral Program"
+        description="Share your referral code and earn rewards."
+      >
+        <ReferralCodeSection />
+      </SettingsSection>
+
+      {/* Danger Zone */}
+      <SettingsSection
+        title=""
+      >
+        <DangerZone />
+      </SettingsSection>
     </div>
   );
 };
