@@ -5,8 +5,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useRealtimeManager } from './useRealtimeManager';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { createScheduledClass } from '@/services/class/create';
+import { createScheduledClass, createScheduledClassBatch } from '@/services/class/create';
 import { formatClassEventDate, parseDateToLocal } from '@/utils/safeDateUtils';
+import { addWeeks, startOfDay, isAfter, format } from 'date-fns';
 
 export const useSimplifiedTutorScheduler = () => {
   const [scheduledClasses, setScheduledClasses] = useState<ClassEvent[]>([]);
@@ -157,12 +158,10 @@ export const useSimplifiedTutorScheduler = () => {
     }
 
     try {
-      // Map ClassEvent to the format expected by createScheduledClass
-      const classData = {
+      const baseClassData = {
         title: event.title,
         tutor_id: user.id,
         student_id: event.studentId,
-        date: event.date ? formatClassEventDate(event.date) : '', // Safe date formatting to prevent timezone issues
         start_time: event.startTime,
         end_time: event.endTime,
         subject: event.subject,
@@ -171,18 +170,44 @@ export const useSimplifiedTutorScheduler = () => {
         relationship_id: event.relationshipId,
       };
 
-      console.log('Creating class with data:', classData);
-      
-      const classId = await createScheduledClass(classData);
-      
-      if (classId) {
-        // Refresh data after successful creation
+      let success = false;
+
+      if (event.recurring && event.recurringUntil && event.date) {
+        // Generate weekly dates
+        const startDate = startOfDay(event.date as Date);
+        const endDate = event.recurringUntil as Date;
+        const dates: string[] = [];
+        for (let i = 0; i < 12; i++) {
+          const d = addWeeks(startDate, i);
+          if (isAfter(d, endDate)) break;
+          dates.push(formatClassEventDate(d));
+        }
+
+        const count = await createScheduledClassBatch(baseClassData, dates);
+        if (count > 0) {
+          const dayName = format(startDate, 'EEEE');
+          toast.success(`${count} class${count !== 1 ? 'es' : ''} scheduled (${dayName}s, ${format(startDate, 'MMM d')} – ${format(endDate, 'MMM d')})`);
+          success = true;
+        }
+      } else {
+        // Single class
+        const classData = {
+          ...baseClassData,
+          date: event.date ? formatClassEventDate(event.date) : '',
+        };
+        const classId = await createScheduledClass(classData);
+        if (classId) {
+          toast.success('Class scheduled successfully');
+          success = true;
+        }
+      }
+
+      if (success) {
         await Promise.all([
           refetch(),
           queryClient.invalidateQueries({ queryKey: ['scheduled-classes', user.id] }),
           queryClient.refetchQueries({ queryKey: ['scheduled-classes', user.id] })
         ]);
-        
         return true;
       }
       

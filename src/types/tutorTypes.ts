@@ -35,6 +35,7 @@ export interface ClassEvent extends BaseEvent {
   materials?: string[] | null;
   materialsUrl?: string[] | null;
   recurring?: boolean;
+  recurringUntil?: Date | null;
   recurringDays?: string[];
   relationshipId?: string;
   duration?: number;
