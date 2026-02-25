@@ -14,4 +14,4 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://learn2lead.vercel.app/sitemap.xml
+Sitemap: https://learn2lead.page/sitemap.xml
