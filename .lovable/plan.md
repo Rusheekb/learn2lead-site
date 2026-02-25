@@ -1,71 +1,63 @@
 
 
-# Recurring Classes for Tutors
+# Setting Up Your New Custom Domain
 
-## Approach
-The most efficient way: **client-side batch insertion**. When a tutor enables recurrence, we generate multiple individual `scheduled_classes` rows (one per week) up to a chosen end date. No new database tables or schema changes are needed -- each recurring instance is a normal scheduled class.
+Here are all the steps to properly configure your new domain with your Learn2Lead project:
 
-This is simpler and more reliable than a recurring-rules engine because:
-- Each class remains independently editable, completable, and deletable
-- No new cron jobs or server-side expansion logic
-- Works with existing credit checks, completion flow, and calendar views
-- Tutors can cancel individual weeks without affecting the series
+## 1. Connect the domain in Lovable
 
-## What the Tutor Sees
+1. Go to your Lovable project **Settings → Domains**
+2. Click **Connect Domain** and enter your domain (e.g., `learn2lead.com`)
+3. Follow the setup flow — Lovable will provide the DNS records you need
+4. **Add both** `yourdomain.com` and `www.yourdomain.com` as separate entries
+5. Set one as **Primary** (the other will redirect to it)
 
-In the "Schedule New Class" dialog, after the existing date picker, a new section appears:
+## 2. Configure DNS at your registrar
 
-```text
-[x] Repeat weekly
+Add these records at your domain registrar (GoDaddy, Namecheap, Cloudflare, etc.):
 
-Repeat until: [Date picker - e.g., 4 weeks out]
+| Type | Name | Value |
+|------|------|-------|
+| A | @ | 185.158.133.1 |
+| A | www | 185.158.133.1 |
+| TXT | _lovable | (value provided by Lovable during setup) |
 
-This will create 4 classes on Tuesdays at 3:00 PM.
-```
+DNS propagation can take up to 72 hours. Use [DNSChecker.org](https://dnschecker.org) to verify.
 
-- Toggle defaults to off (single class, current behavior)
-- When enabled, a "Repeat until" date picker appears
-- A summary line shows how many classes will be created and on which day
-- Maximum limit of 12 weeks to prevent accidental mass creation
-- Credit balance warning updates to show total credits needed vs available
+## 3. Update CORS in edge functions
 
-## Technical Details
+Your `supabase/functions/_shared/cors.ts` has an `ALLOWED_ORIGINS` list. You'll need to add your new domain there so edge functions accept requests from it.
 
-### Files to modify
+## 4. Update Supabase auth redirect URLs
 
-| File | Change |
-|------|--------|
-| `src/components/tutor/NewClassEventForm.tsx` | Add "Repeat weekly" switch, "Repeat until" date picker, and summary text below the date/time section |
-| `src/components/tutor/dialogs/AddClassDialog.tsx` | Update `handleSubmit` to loop and create multiple classes when recurrence is enabled; update credit check to account for total classes |
-| `src/hooks/useSimplifiedTutorScheduler.ts` | Update `handleCreateEventActual` to accept and process an array of dates for batch creation |
-| `src/services/class/create.ts` | Add a new `createScheduledClassBatch` function that inserts multiple rows in a single Supabase call |
+In your Supabase dashboard (Authentication → URL Configuration):
+- Add your new domain to **Redirect URLs** (e.g., `https://yourdomain.com/login`)
+- Update **Site URL** if this becomes the primary domain
 
-### No database changes needed
-The `scheduled_classes` table already has all necessary columns. Each recurring instance is stored as its own row with its own date. The `ClassEvent` type already has `recurring` and `recurringDays` fields (unused until now).
+## 5. Update SEO assets
 
-### Recurrence logic (client-side)
-When the tutor toggles "Repeat weekly" and picks an end date:
-1. Calculate the day-of-week from the selected start date
-2. Generate all weekly dates from start date to end date (same weekday)
-3. On submit, batch-insert all classes with the same title, subject, student, time, and zoom link but different dates
-4. Show a single success toast: "4 classes scheduled (Tuesdays, Feb 25 - Mar 18)"
+Several files reference the current domain and need updating:
+- `index.html` — canonical URL, Open Graph URLs, meta tags
+- `public/sitemap.xml` — all `<loc>` URLs currently point to `learn2lead.vercel.app`
+- `public/robots.txt` — sitemap URL points to `learn2lead.vercel.app`
 
-### Batch insert function
-A new `createScheduledClassBatch` in `src/services/class/create.ts` that:
-- Accepts an array of date strings + shared class data
-- Builds an array of insert objects
-- Calls `supabase.from('scheduled_classes').insert(rows)` in one query
-- Returns the count of successfully created classes
+## 6. Update Stripe configuration
 
-### Credit validation
-- When recurrence is enabled, multiply the number of classes by the per-class credit cost
-- Update the warning banner in `AddClassDialog` to show: "This student has 3 credits. Scheduling 4 classes requires 4 credits."
-- Still allow scheduling even with insufficient credits (soft warning, not a blocker), since credits can be purchased before the class date
+If you use Stripe webhooks or checkout:
+- Update the webhook endpoint URL in the Stripe dashboard
+- Verify the `origin` used in checkout return URLs (e.g., `customer-portal/index.ts` uses `origin` from the request, so this should work automatically)
 
-### Form state
-Add two new fields to the `newEvent` partial state:
-- `recurring: boolean` (default false)
-- `recurringUntil: Date | null` (the end date for recurrence)
+## 7. Update Supabase config
 
-These use the existing `recurring` field on `ClassEvent` and add `recurringUntil` as a transient form-only field.
+In `supabase/config.toml`, update `site_url` and `additional_redirect_urls` to include the new domain.
+
+## 8. Publish
+
+Once DNS is verified and SSL is provisioned (Lovable handles SSL automatically), click **Publish → Update** to deploy.
+
+---
+
+## What I can help implement (steps 3–5)
+
+Steps 1, 2, 6, and 8 require action in external dashboards. But I can update the codebase for steps 3, 4, 5, and 7 once you share your domain name.
 
