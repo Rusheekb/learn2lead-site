@@ -35,5 +35,5 @@ project_id = "lnhtlbatcufmsyoujuqh"
 
 [auth]
   enabled = true
-  site_url = "http://localhost:5173"
-  additional_redirect_urls = ["https://localhost:5173/login"]
+  site_url = "https://learn2lead.page"
+  additional_redirect_urls = ["http://localhost:5173/login", "https://learn2lead.page/login", "https://www.learn2lead.page/login", "https://learn2lead.lovable.app/login", "https://learn2lead-site.lovable.app/login"]
