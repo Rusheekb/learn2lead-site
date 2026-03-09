@@ -427,7 +427,7 @@ async function sendPurchaseConfirmationEmail(
           <p>Your credits never expire — use them at your own pace. Log in to your dashboard to schedule classes.</p>
           
           <div style="text-align: center; margin: 30px 0;">
-            <a href="https://learn2lead-site.lovable.app/dashboard" style="background: #16a34a; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+            <a href="https://learn2lead.page/dashboard" style="background: #16a34a; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
               Go to Dashboard
             </a>
           </div>
