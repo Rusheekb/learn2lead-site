@@ -355,7 +355,7 @@ async function sendAutoRenewalEmail(
             <p>We were unable to process your auto-renewal. This may be due to an expired or declined payment method.</p>
             <p>Please update your payment method or purchase credits manually:</p>
             <div style="text-align: center; margin: 30px 0;">
-              <a href="https://learn2lead-site.lovable.app/pricing" style="background: #3b5bdb; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+              <a href="https://learn2lead.page/pricing" style="background: #3b5bdb; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
                 Buy Credits
               </a>
             </div>

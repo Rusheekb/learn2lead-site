@@ -7,8 +7,6 @@
 
 // Add your production domain(s) here
 const ALLOWED_ORIGINS = [
-  'https://learn2lead.lovable.app',  // Lovable preview domain
-  'https://learn2lead-site.lovable.app', // Published Lovable domain
   'https://learn2lead.page',          // Custom domain (primary)
   'https://www.learn2lead.page',      // Custom domain (www)
 ];
