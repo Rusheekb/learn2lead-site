@@ -35,7 +35,7 @@ const DashboardShell: React.FC<DashboardShellProps> = ({ title, children }) => {
             <AppSidebar className="h-full border-0" />
           </SheetContent>
         </Sheet>
-        <h1 className="text-xl font-bold mx-auto">{title}</h1>
+        <h1 className="text-lg font-bold mx-auto truncate">{title}</h1>
       </div>
       
       {/* Desktop Sidebar */}
