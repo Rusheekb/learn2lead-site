@@ -1,23 +1,45 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { addBreadcrumb, captureException } from '@/lib/sentry';
 
 /**
  * Signs in a user using Supabase email/password authentication.
  */
 export const signInWithEmail = async (email: string, password: string) => {
+  addBreadcrumb({
+    category: 'auth',
+    message: 'Sign-in attempt',
+    level: 'info',
+    data: { method: 'email' },
+  });
+
   try {
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
     if (error) {
+      addBreadcrumb({
+        category: 'auth',
+        message: `Sign-in failed: ${error.message}`,
+        level: 'warning',
+      });
       toast.error(error.message);
       throw error;
     }
+
+    addBreadcrumb({
+      category: 'auth',
+      message: 'Sign-in succeeded',
+      level: 'info',
+    });
     toast.success('Signed in successfully!');
   } catch (error) {
     console.error('Error signing in:', error);
+    if (error instanceof Error) {
+      captureException(error, { context: 'signInWithEmail' });
+    }
     throw error;
   }
 };
@@ -31,6 +53,13 @@ export const signUpWithEmail = async (
   password: string, 
   userData?: { first_name?: string; last_name?: string }
 ) => {
+  addBreadcrumb({
+    category: 'auth',
+    message: 'Sign-up attempt',
+    level: 'info',
+    data: { method: 'email' },
+  });
+
   try {
     const { data: signupData, error: signupError } = await supabase.auth.signUp(
       {
@@ -42,15 +71,26 @@ export const signUpWithEmail = async (
       }
     );
     if (signupError) {
+      addBreadcrumb({
+        category: 'auth',
+        message: `Sign-up failed: ${signupError.message}`,
+        level: 'warning',
+      });
       toast.error(signupError.message);
       throw signupError;
     }
+
+    addBreadcrumb({
+      category: 'auth',
+      message: 'Sign-up succeeded, creating profile',
+      level: 'info',
+    });
 
     // Guarantee a profile row exists immediately after signup
     const user = signupData.user;
     if (user && user.email) {
       // See if profile exists
-      const { data: existingProfile, error: fetchError } = await supabase
+      const { data: existingProfile } = await supabase
         .from('profiles')
         .select('id')
         .eq('id', user.id)
@@ -69,9 +109,21 @@ export const signUpWithEmail = async (
             last_name: userData?.last_name || ''
           }]);
         if (insertError) {
+          addBreadcrumb({
+            category: 'auth',
+            message: `Profile creation failed: ${insertError.message}`,
+            level: 'error',
+          });
           toast.error('Failed to create user profile.');
           throw insertError;
         }
+
+        addBreadcrumb({
+          category: 'auth',
+          message: 'Profile created successfully',
+          level: 'info',
+          data: { role },
+        });
       }
     }
 
@@ -80,6 +132,9 @@ export const signUpWithEmail = async (
     );
   } catch (error) {
     console.error('Error signing up:', error);
+    if (error instanceof Error) {
+      captureException(error, { context: 'signUpWithEmail' });
+    }
     throw error;
   }
 };
@@ -88,6 +143,13 @@ export const signUpWithEmail = async (
  * Signs in a user using OAuth provider (Google, etc.)
  */
 export const signInWithProvider = async (provider: 'google') => {
+  addBreadcrumb({
+    category: 'auth',
+    message: `OAuth sign-in attempt`,
+    level: 'info',
+    data: { provider },
+  });
+
   try {
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
@@ -96,12 +158,27 @@ export const signInWithProvider = async (provider: 'google') => {
       },
     });
     if (error) {
+      addBreadcrumb({
+        category: 'auth',
+        message: `OAuth sign-in failed: ${error.message}`,
+        level: 'warning',
+        data: { provider },
+      });
       toast.error(error.message);
       throw error;
     }
-    // No success toast here since we're redirecting away
+
+    addBreadcrumb({
+      category: 'auth',
+      message: `OAuth redirect initiated`,
+      level: 'info',
+      data: { provider },
+    });
   } catch (error) {
     console.error(`Error signing in with ${provider}:`, error);
+    if (error instanceof Error) {
+      captureException(error, { context: 'signInWithProvider', provider });
+    }
     throw error;
   }
 };
@@ -110,28 +187,49 @@ export const signInWithProvider = async (provider: 'google') => {
  * Signs out the current user.
  */
 export const signOut = async () => {
+  addBreadcrumb({
+    category: 'auth',
+    message: 'Sign-out attempt',
+    level: 'info',
+  });
+
   try {
-    // Try to get the current session first to confirm we have a valid session
     const { data: { session } } = await supabase.auth.getSession();
     
-    // Only attempt to sign out if we have a valid session
     if (session) {
       const { error } = await supabase.auth.signOut();
       if (error) {
+        addBreadcrumb({
+          category: 'auth',
+          message: `Sign-out failed: ${error.message}`,
+          level: 'warning',
+        });
         console.error('Failed to sign out:', error);
         toast.error('Failed to sign out');
         return false;
       }
+      addBreadcrumb({
+        category: 'auth',
+        message: 'Sign-out succeeded',
+        level: 'info',
+      });
       toast.success('Signed out successfully');
       return true;
     } else {
-      // No session found, but we can still "sign out" from the frontend
+      addBreadcrumb({
+        category: 'auth',
+        message: 'Sign-out: no active session, clearing local state',
+        level: 'info',
+      });
       console.info('No active session found, clearing local state');
       toast.success('Signed out successfully');
       return true;
     }
   } catch (error) {
     console.error('Error during sign out:', error);
+    if (error instanceof Error) {
+      captureException(error, { context: 'signOut' });
+    }
     toast.error('Failed to sign out');
     return false;
   }

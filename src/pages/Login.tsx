@@ -8,6 +8,7 @@ import NavBar from '@/components/NavBar';
 import AuthTabs from '@/components/auth/AuthTabs';
 import { getSavedRoute } from '@/hooks/useRoutePersistence';
 import { signInSchema, signUpSchema, validateForm } from '@/lib/validation';
+import { addBreadcrumb, captureException } from '@/lib/sentry';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -26,9 +27,15 @@ const Login = () => {
     const errorDescription = queryParams.get('error_description');
     
     if (error) {
-      setAuthError(errorDescription || 'An error occurred during authentication');
-      toast.error(errorDescription || 'Authentication error');
-      
+      const errorMsg = errorDescription || 'An error occurred during authentication';
+      setAuthError(errorMsg);
+      toast.error(errorMsg);
+      addBreadcrumb({
+        category: 'auth',
+        message: `OAuth callback error: ${error}`,
+        level: 'warning',
+        data: { error, errorDescription },
+      });
       const cleanUrl = window.location.pathname;
       window.history.replaceState({}, document.title, cleanUrl);
     }
@@ -68,6 +75,7 @@ const Login = () => {
       console.error('Login error:', error);
       if (error instanceof Error) {
         setAuthError(error.message);
+        captureException(error, { context: 'handleSignIn' });
       }
     } finally {
       setIsLoading(false);
@@ -96,6 +104,7 @@ const Login = () => {
       console.error('Registration error:', error);
       if (error instanceof Error) {
         setAuthError(error.message);
+        captureException(error, { context: 'handleSignUp' });
       }
     } finally {
       setIsLoading(false);
@@ -112,6 +121,7 @@ const Login = () => {
       console.error('Google sign in error:', error);
       if (error instanceof Error) {
         setAuthError(error.message);
+        captureException(error, { context: 'handleGoogleSignIn' });
       }
       setIsLoading(false);
     }
