@@ -78,11 +78,14 @@ export const createScheduledClass = async (
       attendance: classData.attendance || null,
     };
 
-    const { data, error } = await supabase
-      .from('scheduled_classes')
-      .insert(insertData)
-      .select('id')
-      .single();
+    const { data, error } = await retryWithBackoff(
+      async () => supabase
+        .from('scheduled_classes')
+        .insert(insertData)
+        .select('id')
+        .single(),
+      { maxRetries: 2 }
+    );
 
     if (error) throw error;
     toast.success('Class scheduled successfully');
