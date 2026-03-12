@@ -7,6 +7,7 @@ import { useRealtimeManager } from '@/hooks/useRealtimeManager';
 import { fetchScheduledClasses } from '@/services/class/fetch';
 import { ClassEvent } from '@/types/tutorTypes';
 import StudentClassDetailsDialog from './StudentClassDetailsDialog';
+import { CalendarSkeleton } from '@/components/shared/skeletons';
 
 interface ClassCalendarContainerProps {
   studentId?: string | null;
@@ -14,33 +15,22 @@ interface ClassCalendarContainerProps {
 }
 
 export const ClassCalendarContainer: React.FC<ClassCalendarContainerProps> = memo(({ studentId, onSelectClass }) => {
-  const [sessions, setSessions] = useState<ClassEvent[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [selectedClass, setSelectedClass] = useState<ClassSession | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { user } = useAuth();
 
-  // Use simplified realtime manager
   useRealtimeManager({
     userId: user?.id,
     userRole: user?.user_metadata?.role,
   });
 
-  // Fetch student classes with proper transformation
-  const { data: classData, isLoading } = useQuery({
+  const { data: sessions = [], isLoading } = useQuery({
     queryKey: ['student-classes', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return [];
-      return await fetchScheduledClasses(undefined, user.id);
-    },
+    queryFn: () => fetchScheduledClasses(undefined, user!.id),
     enabled: !!user?.id,
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
-
-  React.useEffect(() => {
-    if (classData) {
-      setSessions(classData);
-    }
-  }, [classData]);
 
   const mapEventToSession = (event: ClassEvent): ClassSession => ({
     id: event.id,
@@ -63,7 +53,7 @@ export const ClassCalendarContainer: React.FC<ClassCalendarContainerProps> = mem
   };
 
   if (isLoading) {
-    return <div>Loading calendar...</div>;
+    return <CalendarSkeleton />;
   }
 
   return (

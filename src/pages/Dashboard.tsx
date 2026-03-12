@@ -1,30 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Navigate, useSearchParams, Routes, Route } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import DashboardContent from '@/components/student/DashboardContent';
 import { ClassCalendarContainer } from '@/components/student/ClassCalendarContainer';
-import { useQueryClient } from '@tanstack/react-query';
 import { StudentDashboardSkeleton } from '@/components/shared/skeletons';
 import { ContentTransition } from '@/components/shared/PageTransition';
 import { SubjectResourcesList, SubjectResourcesPage } from '@/components/student/resources';
 
 const Dashboard = () => {
   const [selectedSubject, setSelectedSubject] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const { userRole, user } = useAuth();
+  const { userRole, user, isLoading } = useAuth();
   const [searchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'dashboard';
-  const queryClient = useQueryClient();
-
-  // Invalidate query cache to ensure fresh data when tab changes
-  useEffect(() => {
-    if (user?.id) {
-      if (activeTab === 'schedule') {
-        queryClient.invalidateQueries({ queryKey: ['studentClasses', user.id] });
-        queryClient.invalidateQueries({ queryKey: ['upcomingClasses', user.id] });
-      }
-    }
-  }, [activeTab, user?.id, queryClient]);
 
   // Redirect based on user role
   if (userRole && userRole !== 'student') {
@@ -38,20 +25,10 @@ const Dashboard = () => {
     }
   }
 
-  useEffect(() => {
-    // Set loading to false after a shorter delay
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [user]);
-
   const handleSubjectClick = (subjectId: number) => {
     setSelectedSubject(subjectId === selectedSubject ? null : subjectId);
   };
 
-  // Determine which content to show based on the active tab
   const renderContent = () => {
     if (isLoading) {
       return <StudentDashboardSkeleton />;

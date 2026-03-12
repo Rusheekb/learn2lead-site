@@ -1,26 +1,15 @@
-import React, { useEffect, Suspense } from 'react';
+import React from 'react';
 import { Navigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import TutorDashboardContent from '@/components/tutor/TutorDashboardContent';
 import TutorStudents from '@/components/tutor/TutorStudents';
-import { useQueryClient } from '@tanstack/react-query';
-import { TutorDashboardSkeleton, TableSkeleton } from '@/components/shared/skeletons';
+import { TutorDashboardSkeleton } from '@/components/shared/skeletons';
 import { ContentTransition } from '@/components/shared/PageTransition';
 
 const TutorDashboard: React.FC = () => {
   const [searchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'schedule';
-  const { userRole, user, isLoading } = useAuth();
-  const queryClient = useQueryClient();
-  
-  // Invalidate queries when switching to schedule tab
-  useEffect(() => {
-    if (activeTab === 'schedule' && user?.id) {
-      queryClient.invalidateQueries({ queryKey: ['scheduledClasses', user.id] });
-      queryClient.invalidateQueries({ queryKey: ['tutorStudents', user.id] });
-      queryClient.invalidateQueries({ queryKey: ['tutorRelationships', user.id] });
-    }
-  }, [activeTab, queryClient, user?.id]);
+  const { userRole, isLoading } = useAuth();
 
   // Show skeleton while auth is loading
   if (isLoading) {
@@ -43,7 +32,6 @@ const TutorDashboard: React.FC = () => {
     }
   }
 
-  // Determine which content to show based on the active tab
   const renderContent = () => {
     switch (activeTab) {
       case 'schedule':

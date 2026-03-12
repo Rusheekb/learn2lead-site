@@ -3,17 +3,13 @@ import { useTutorScheduler } from '@/hooks/useTutorScheduler';
 import TutorSchedulerHeader from './scheduler/TutorSchedulerHeader';
 import TutorSchedulerCalendar from './scheduler/TutorSchedulerCalendar';
 import TutorSchedulerDialogs from './scheduler/TutorSchedulerDialogs';
-import TableSkeleton from '../common/TableSkeleton';
+import { CalendarSkeleton } from '@/components/shared/skeletons';
 import { useAuth } from '@/contexts/AuthContext';
-import { useQueryClient } from '@tanstack/react-query';
 
 const TutorScheduler: React.FC = memo(() => {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
   
-  // Use our comprehensive hook with all the scheduler functionality
   const {
-    // State
     selectedDate,
     setSelectedDate,
     isAddEventOpen,
@@ -31,10 +27,7 @@ const TutorScheduler: React.FC = memo(() => {
     studentMessages,
     studentUploads,
     isLoading,
-    refetchClasses,
     currentUser,
-    
-    // Methods
     handleSelectEvent,
     handleCreateEvent,
     handleEditEvent,
@@ -46,18 +39,9 @@ const TutorScheduler: React.FC = memo(() => {
     refreshEvent,
   } = useTutorScheduler();
 
-  // Refetch classes whenever this component mounts or the user changes
-  useEffect(() => {
-    if (user?.id) {
-      refetchClasses();
-      queryClient.invalidateQueries({ queryKey: ['scheduledClasses', user.id] });
-    }
-  }, [user?.id, refetchClasses, queryClient]);
-
-  // If we're creating a new event, make sure the tutorId is set properly
+  // Set tutorId on new event when user is available
   useEffect(() => {
     if (user?.id && newEvent && !newEvent.tutorId) {
-      // Get name from the currentUser profile data
       const tutorName = currentUser?.first_name 
         ? `${currentUser.first_name} ${currentUser.last_name || ''}`.trim() 
         : 'Current Tutor';
@@ -75,18 +59,11 @@ const TutorScheduler: React.FC = memo(() => {
     setIsAddEventOpen(true);
   };
 
-  // Display loading state while data is being fetched
   if (isLoading) {
     return (
       <div className="space-y-4 sm:space-y-6">
         <TutorSchedulerHeader onAddClick={handleAddEventClick} />
-        <div className="overflow-x-auto">
-          <TableSkeleton
-            columns={['Date', 'Time', 'Student', 'Subject', 'Actions']}
-            rowCount={5}
-            cellWidths={['w-24', 'w-32', 'w-40', 'w-32', 'w-24']} 
-          />
-        </div>
+        <CalendarSkeleton />
       </div>
     );
   }
