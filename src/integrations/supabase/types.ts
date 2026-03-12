@@ -994,6 +994,8 @@ export type Database = {
         Returns: Json
       }
       generate_class_notifications: { Args: never; Returns: undefined }
+      get_auth_user_display_name: { Args: never; Returns: string }
+      get_auth_user_email: { Args: never; Returns: string }
       get_auth_user_role: { Args: never; Returns: string }
       get_ics_feed: { Args: { feed_id: string }; Returns: string }
       get_student_classes: {
