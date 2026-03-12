@@ -45,7 +45,7 @@ const formatDate = (date: Date | string) => {
   }
 };
 
-const ClassTable: React.FC<ClassTableProps> = ({
+const ClassTable: React.FC<ClassTableProps> = memo(({
   classes,
   filteredClasses,
   paginatedClasses,
