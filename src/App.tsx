@@ -117,6 +117,11 @@ const AnimatedRoutes = () => {
             <AnimatedPage><Login /></AnimatedPage>
           </OptimizedSuspense>
         } />
+        <Route path="/reset-password" element={
+          <OptimizedSuspense>
+            <AnimatedPage><ResetPassword /></AnimatedPage>
+          </OptimizedSuspense>
+        } />
         <Route path="/pricing" element={
           <OptimizedSuspense>
             <AnimatedPage><Pricing /></AnimatedPage>
