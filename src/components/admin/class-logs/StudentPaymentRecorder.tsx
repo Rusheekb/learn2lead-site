@@ -24,6 +24,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { batchUpdateStudentPaymentDate } from '@/services/class-operations/update/updatePaymentDate';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { addBreadcrumb, captureException } from '@/lib/sentry';
 
 interface StudentPaymentRecorderProps {
   open: boolean;
@@ -217,6 +218,9 @@ const StudentPaymentRecorder: React.FC<StudentPaymentRecorderProps> = ({
   const handleConfirm = async () => {
     if (!calculations || !selectedStudent || !summary) return;
     setIsSubmitting(true);
+
+    addBreadcrumb({ category: 'payment.recording', message: 'Starting payment recording', data: { student: selectedStudent.name, amount: parseFloat(amount), classesToMark: calculations.classesToMark.length, creditsToAdd: calculations.creditsToAdd } });
+
     try {
       const dateObj = new Date(paymentDate + 'T12:00:00');
 
@@ -225,6 +229,7 @@ const StudentPaymentRecorder: React.FC<StudentPaymentRecorderProps> = ({
         const ids = calculations.classesToMark.map((c) => c.id);
         const success = await batchUpdateStudentPaymentDate(ids, dateObj);
         if (!success) throw new Error('Failed to update payment dates');
+        addBreadcrumb({ category: 'payment.recording', message: 'Marked classes as paid', data: { count: ids.length } });
       }
 
       // 2. Add credits to ledger if any
@@ -255,6 +260,7 @@ const StudentPaymentRecorder: React.FC<StudentPaymentRecorderProps> = ({
           .from('class_credits_ledger')
           .insert(ledgerInsert);
         if (ledgerError) throw ledgerError;
+        addBreadcrumb({ category: 'payment.recording', message: 'Credits added to ledger', data: { credits: calculations.creditsToAdd } });
       }
 
       // 3. Update prepaid balance
@@ -272,11 +278,15 @@ const StudentPaymentRecorder: React.FC<StudentPaymentRecorderProps> = ({
       if (calculations.newSurplus > 0)
         parts.push(`$${calculations.newSurplus.toFixed(2)} surplus stored`);
 
+      addBreadcrumb({ category: 'payment.recording', message: 'Payment recorded successfully', data: { student: selectedStudent.name, amount: parseFloat(amount) } });
       toast.success(parts.join(', '));
       onPaymentRecorded();
       onOpenChange(false);
     } catch (err) {
       console.error('Payment recording error:', err);
+      if (err instanceof Error) {
+        captureException(err, { student: selectedStudent.name, amount: parseFloat(amount) });
+      }
       toast.error('Failed to record payment');
     } finally {
       setIsSubmitting(false);

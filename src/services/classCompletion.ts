@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { captureEvent } from '@/lib/posthog';
+import { addBreadcrumb, captureException } from '@/lib/sentry';
 
 export interface CompleteClassData {
   classId: string;
@@ -23,6 +24,8 @@ const formatHours = (n: number) => `${n} hour${n === 1 ? '' : 's'}`;
 
 export const completeClass = async (data: CompleteClassData): Promise<boolean> => {
   try {
+    addBreadcrumb({ category: 'class.completion', message: 'Starting class completion', data: { classId: data.classId, studentId: data.studentId, subject: data.subject } });
+
     // First, check if the class still exists
     const { data: existingClass, error: classError } = await supabase
       .from('scheduled_classes')
@@ -36,6 +39,7 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
     }
 
     if (!existingClass) {
+      addBreadcrumb({ category: 'class.completion', message: 'Class no longer exists', level: 'warning', data: { classId: data.classId } });
       toast.error('Class no longer exists or has already been completed');
       return false;
     }
@@ -67,6 +71,8 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
     if (creditError || !creditResult?.success) {
       const errorCode = creditResult?.code || 'UNKNOWN';
 
+      addBreadcrumb({ category: 'class.completion', message: 'Credit deduction failed', level: 'error', data: { errorCode, studentId: data.studentId } });
+
       captureEvent('credit_deduction_failed', {
         error_code: errorCode,
         student_id: data.studentId,
@@ -97,6 +103,8 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
 
       throw new Error(creditResult?.error || 'Failed to deduct class credit');
     }
+
+    addBreadcrumb({ category: 'class.completion', message: 'Credit deducted successfully', data: { creditsRemaining: creditResult.credits_remaining, deducted: creditResult.credits_deducted } });
 
     const creditsRemaining = creditResult.credits_remaining;
     const creditsDeducted = creditResult.credits_deducted || durationHours;
@@ -156,8 +164,7 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
 
     if (insertError) {
       console.error('Error creating class log:', insertError);
-      
-      // CRITICAL: Restore the credit that was deducted since log creation failed
+      addBreadcrumb({ category: 'class.completion', message: 'Class log insert failed, restoring credit', level: 'error', data: { classId: data.classId, error: insertError.message } });
       try {
         const { data: restoreResult, error: restoreError } = await supabase.functions.invoke(
           'restore-class-credit',
@@ -203,6 +210,7 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
 
     if (updateError) {
       console.error('Error updating scheduled class status:', updateError);
+      addBreadcrumb({ category: 'class.completion', message: 'Status update failed, rolling back log', level: 'error', data: { classId: data.classId } });
       // If update fails, try to remove the class log we just created
       await supabase
         .from('class_logs')
@@ -210,6 +218,8 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
         .eq('Class ID', data.classId);
       throw new Error('Failed to mark class as completed');
     }
+
+    addBreadcrumb({ category: 'class.completion', message: 'Class completed successfully', data: { classId: data.classId, creditsRemaining } });
 
     captureEvent('class_completed', {
       subject: data.subject,
@@ -245,6 +255,9 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
 
   } catch (error) {
     console.error('Error completing class:', error);
+    if (error instanceof Error) {
+      captureException(error, { classId: data.classId, studentId: data.studentId });
+    }
     const errorMessage = error instanceof Error ? error.message : 'Failed to complete class';
     toast.error(errorMessage);
     return false;
