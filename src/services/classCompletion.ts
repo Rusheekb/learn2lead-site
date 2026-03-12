@@ -29,11 +29,14 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
     addBreadcrumb({ category: 'class.completion', message: 'Starting class completion', data: { classId: data.classId, studentId: data.studentId, subject: data.subject } });
 
     // First, check if the class still exists
-    const { data: existingClass, error: classError } = await supabase
-      .from('scheduled_classes')
-      .select('id')
-      .eq('id', data.classId)
-      .maybeSingle();
+    const { data: existingClass, error: classError } = await retryWithBackoff(
+      () => supabase
+        .from('scheduled_classes')
+        .select('id')
+        .eq('id', data.classId)
+        .maybeSingle(),
+      { maxRetries: 2, onRetry: (n) => addBreadcrumb({ category: 'class.completion', message: `Retry ${n}: checking class existence` }) }
+    );
 
     if (classError) {
       console.error('Error checking class existence:', classError);
