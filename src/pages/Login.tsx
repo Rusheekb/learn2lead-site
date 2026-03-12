@@ -121,6 +121,7 @@ const Login = () => {
       console.error('Google sign in error:', error);
       if (error instanceof Error) {
         setAuthError(error.message);
+        captureException(error, { context: 'handleGoogleSignIn' });
       }
       setIsLoading(false);
     }

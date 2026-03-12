@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Profile } from '@/types/profile';
+import { addBreadcrumb, captureException } from '@/lib/sentry';
 
 export interface RolePromotionResult {
   success: boolean;
@@ -14,12 +15,26 @@ export async function promoteStudentToTutor(
   studentUserId: string, 
   reason: string = 'Admin promotion'
 ): Promise<RolePromotionResult> {
+  addBreadcrumb({
+    category: 'auth.role',
+    message: 'Promoting student to tutor',
+    level: 'info',
+    data: { targetUserId: studentUserId, reason },
+  });
+
   const { data, error } = await supabase.rpc('promote_student_to_tutor', {
     student_user_id: studentUserId,
     reason: reason
   });
 
   if (error) {
+    addBreadcrumb({
+      category: 'auth.role',
+      message: `Promotion failed: ${error.message}`,
+      level: 'error',
+      data: { targetUserId: studentUserId },
+    });
+    captureException(new Error(error.message), { context: 'promoteStudentToTutor', studentUserId });
     console.error('Error promoting student to tutor:', error);
     return {
       success: false,
@@ -27,6 +42,13 @@ export async function promoteStudentToTutor(
       code: 'RPC_ERROR'
     };
   }
+
+  addBreadcrumb({
+    category: 'auth.role',
+    message: 'Promotion succeeded',
+    level: 'info',
+    data: { targetUserId: studentUserId },
+  });
 
   return data as unknown as RolePromotionResult;
 }
@@ -70,9 +92,22 @@ export async function promoteStudentToTutorByIdOrEmail(
     reason,
   });
   if (error) {
+    addBreadcrumb({
+      category: 'auth.role',
+      message: `Promotion by email failed: ${error.message}`,
+      level: 'error',
+      data: { email },
+    });
     console.error('Error promoting student to tutor:', error);
     return { success: false, error: error.message, code: 'RPC_ERROR' };
   }
+
+  addBreadcrumb({
+    category: 'auth.role',
+    message: 'Promotion by email succeeded',
+    level: 'info',
+    data: { profileId },
+  });
   return data as unknown as RolePromotionResult;
 }
 
@@ -80,12 +115,26 @@ export async function demoteTutorToStudent(
   tutorUserId: string, 
   reason: string = 'Admin demotion'
 ): Promise<RolePromotionResult> {
+  addBreadcrumb({
+    category: 'auth.role',
+    message: 'Demoting tutor to student',
+    level: 'info',
+    data: { targetUserId: tutorUserId, reason },
+  });
+
   const { data, error } = await supabase.rpc('demote_tutor_to_student', {
     tutor_user_id: tutorUserId,
     reason: reason
   });
 
   if (error) {
+    addBreadcrumb({
+      category: 'auth.role',
+      message: `Demotion failed: ${error.message}`,
+      level: 'error',
+      data: { targetUserId: tutorUserId },
+    });
+    captureException(new Error(error.message), { context: 'demoteTutorToStudent', tutorUserId });
     console.error('Error demoting tutor to student:', error);
     return {
       success: false,
@@ -93,6 +142,13 @@ export async function demoteTutorToStudent(
       code: 'RPC_ERROR'
     };
   }
+
+  addBreadcrumb({
+    category: 'auth.role',
+    message: 'Demotion succeeded',
+    level: 'info',
+    data: { targetUserId: tutorUserId },
+  });
 
   return data as unknown as RolePromotionResult;
 }
@@ -111,9 +167,22 @@ export async function demoteTutorToStudentByIdOrEmail(
     reason,
   });
   if (error) {
+    addBreadcrumb({
+      category: 'auth.role',
+      message: `Demotion by email failed: ${error.message}`,
+      level: 'error',
+      data: { email },
+    });
     console.error('Error demoting tutor to student:', error);
     return { success: false, error: error.message, code: 'RPC_ERROR' };
   }
+
+  addBreadcrumb({
+    category: 'auth.role',
+    message: 'Demotion by email succeeded',
+    level: 'info',
+    data: { profileId },
+  });
   return data as unknown as RolePromotionResult;
 }
 
