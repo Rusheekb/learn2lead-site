@@ -8,6 +8,7 @@ import NavBar from '@/components/NavBar';
 import AuthTabs from '@/components/auth/AuthTabs';
 import { getSavedRoute } from '@/hooks/useRoutePersistence';
 import { signInSchema, signUpSchema, validateForm } from '@/lib/validation';
+import { addBreadcrumb, captureException } from '@/lib/sentry';
 
 const Login = () => {
   const [email, setEmail] = useState('');
