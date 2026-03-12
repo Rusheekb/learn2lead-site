@@ -211,7 +211,7 @@ const ClassHistory: React.FC<ClassHistoryProps> = memo(({ userRole }) => {
       )}
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Edit Class Description</DialogTitle>
           </DialogHeader>
