@@ -79,6 +79,7 @@
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
     "ts-node": "^10.9.2",
+    "vite-plugin-pwa": "^1.2.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {

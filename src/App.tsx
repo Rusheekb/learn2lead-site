@@ -25,6 +25,8 @@ import { SidebarProvider } from '@/hooks/useSidebar';
 import DashboardShell from './components/shared/DashboardShell';
 import ErrorBoundary from './components/ErrorBoundary';
 import InlineErrorFallback from './components/shared/InlineErrorFallback';
+import PWAInstallPrompt from './components/shared/PWAInstallPrompt';
+import PWAUpdatePrompt from './components/shared/PWAUpdatePrompt';
 
 const Profile = React.lazy(() => import('./pages/Profile'));
 const TutorDashboard = React.lazy(() => import('./pages/TutorDashboard'));
@@ -198,6 +200,8 @@ function App() {
                 <PostHogPageView />
                 <SidebarProvider>
                   <AnimatedRoutes />
+                  <PWAInstallPrompt />
+                  <PWAUpdatePrompt />
                 </SidebarProvider>
               </SubscriptionProvider>
             </AuthProvider>
