@@ -7,7 +7,7 @@ import { createAssignment, endAssignment, TutorStudentAssignment } from '@/servi
 import { useAuth } from '@/contexts/AuthContext';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import {
   Select,
@@ -19,6 +19,7 @@ import {
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import SuggestedMatches from './SuggestedMatches';
+import { assignmentSchema } from '@/lib/validation';
 
 interface AssignmentManagerProps {
   tutors: Array<{ id: string; profileId: string; name: string }>;
@@ -26,12 +27,6 @@ interface AssignmentManagerProps {
   assignments: TutorStudentAssignment[];
   onAssignmentChange: () => void;
 }
-
-// Define validation schema
-const assignmentSchema = z.object({
-  tutorId: z.string().min(1, "Please select a tutor"),
-  studentId: z.string().min(1, "Please select a student"),
-});
 
 type AssignmentFormValues = z.infer<typeof assignmentSchema>;
 
