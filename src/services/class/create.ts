@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ensureDateFormat } from '@/utils/safeDateUtils';
+import { retryWithBackoff } from '@/utils/retryWithBackoff';
 
 export const createScheduledClassBatch = async (
   sharedData: Record<string, any>,
