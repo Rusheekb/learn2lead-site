@@ -114,6 +114,7 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
         tutorName,
         studentName,
         studentId: classEvent.studentId || '', // Required for credit deduction
+        tutorId: classEvent.tutorId || '', // Required for RLS
         date: dateStr,
         day: localDate.toLocaleDateString('en-US', { weekday: 'long' }),
         timeCst: classEvent.startTime,
