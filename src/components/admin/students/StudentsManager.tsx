@@ -114,13 +114,14 @@ const StudentsManager: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold tracking-tight">Students</h2>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Students</h2>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="flex items-center gap-2">
+            <Button className="flex items-center gap-2 w-full sm:w-auto" size="sm">
               <Plus className="h-4 w-4" />
-              Add New Student
+              <span className="hidden sm:inline">Add New Student</span>
+              <span className="sm:hidden">Add Student</span>
             </Button>
           </DialogTrigger>
           <DialogContent>
