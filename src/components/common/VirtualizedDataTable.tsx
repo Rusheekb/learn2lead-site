@@ -387,6 +387,9 @@ function VirtualizedDataTable<T>({
                     }}
                     className={`border-b transition-colors data-[state=selected]:bg-muted ${onRowClick ? 'cursor-pointer' : ''}`}
                     onClick={onRowClick ? () => onRowClick(row) : undefined}
+                    onKeyDown={onRowClick ? (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onRowClick(row); } } : undefined}
+                    tabIndex={onRowClick ? 0 : undefined}
+                    role={onRowClick ? 'button' : undefined}
                   >
                     {columns.map((column, colIndex) => (
                       <TableCell key={colIndex} className={column.className}>
