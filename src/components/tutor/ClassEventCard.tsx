@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 import { Clock, MessageSquare, User, Video } from 'lucide-react';
 import { ClassEvent } from '@/types/tutorTypes';
 import { formatTimeRange } from '@/utils/dateTimeUtils';
@@ -11,14 +11,13 @@ export interface ClassEventCardProps {
   unreadMessageCount: number;
 }
 
-const ClassEventCard: React.FC<ClassEventCardProps> = ({
+const ClassEventCard: React.FC<ClassEventCardProps> = memo(({
   event,
   onClick,
   unreadMessageCount,
 }) => {
   return (
     <div
-      key={event.id}
       className="p-3 sm:p-4 border rounded-md bg-card hover:shadow-md transition-shadow cursor-pointer"
       onClick={() => onClick(event)}
     >
@@ -67,6 +66,18 @@ const ClassEventCard: React.FC<ClassEventCardProps> = ({
       </div>
     </div>
   );
-};
+}, (prevProps, nextProps) => {
+  return (
+    prevProps.event.id === nextProps.event.id &&
+    prevProps.event.status === nextProps.event.status &&
+    prevProps.event.title === nextProps.event.title &&
+    prevProps.event.startTime === nextProps.event.startTime &&
+    prevProps.event.endTime === nextProps.event.endTime &&
+    prevProps.unreadMessageCount === nextProps.unreadMessageCount &&
+    prevProps.onClick === nextProps.onClick
+  );
+});
+
+ClassEventCard.displayName = 'ClassEventCard';
 
 export default ClassEventCard;

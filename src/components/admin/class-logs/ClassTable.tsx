@@ -250,6 +250,8 @@ const ClassTable: React.FC<ClassTableProps> = memo(({
       cardClassName="overflow-hidden"
     />
   );
-};
+});
+
+ClassTable.displayName = 'ClassTable';
 
 export default ClassTable;

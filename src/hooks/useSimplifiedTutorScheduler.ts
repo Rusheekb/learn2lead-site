@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { ClassEvent } from '@/types/tutorTypes';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -44,7 +44,6 @@ export const useSimplifiedTutorScheduler = () => {
       
       if (error) throw error;
       
-      // Transform raw DB data to ClassEvent format
       return (data || []).map((record: any) => {
         const student = record.student || {};
         const tutor = record.tutor || {};
@@ -62,9 +61,9 @@ export const useSimplifiedTutorScheduler = () => {
         return {
           id: record.id,
           title: record.title,
-          date: record.date, // Keep as string 'YYYY-MM-DD'
-          startTime: record.start_time?.substring(0, 5) || '00:00', // Format as 'HH:mm'
-          endTime: record.end_time?.substring(0, 5) || '00:00', // Format as 'HH:mm'
+          date: record.date,
+          startTime: record.start_time?.substring(0, 5) || '00:00',
+          endTime: record.end_time?.substring(0, 5) || '00:00',
           subject: record.subject || '',
           studentId: record.student_id,
           studentName,
@@ -95,21 +94,21 @@ export const useSimplifiedTutorScheduler = () => {
     }
   }, [classData]);
 
-  const handleSelectEvent = (event: ClassEvent) => {
+  const handleSelectEvent = useCallback((event: ClassEvent) => {
     setSelectedEvent(event);
     setIsViewEventOpen(true);
-  };
+  }, []);
 
-  const handleCreateEvent = () => {
+  const handleCreateEvent = useCallback(() => {
     setIsAddEventOpen(true);
-  };
+  }, []);
 
-  const handleEditEvent = (event: ClassEvent) => {
+  const handleEditEvent = useCallback((event: ClassEvent) => {
     setSelectedEvent(event);
     setIsEditEventOpen(true);
-  };
+  }, []);
 
-  const handleDeleteEvent = async (eventId: string, isRecurring?: boolean): Promise<boolean> => {
+  const handleDeleteEvent = useCallback(async (eventId: string, isRecurring?: boolean): Promise<boolean> => {
     if (!user?.id) {
       throw new Error('User not authenticated');
     }
@@ -119,15 +118,13 @@ export const useSimplifiedTutorScheduler = () => {
         .from('scheduled_classes')
         .delete()
         .eq('id', eventId)
-        .eq('tutor_id', user.id); // Ensure only tutor can delete their classes
+        .eq('tutor_id', user.id);
       
       if (error) throw error;
       
-      // Refresh data
       await Promise.all([
         refetch(),
         queryClient.invalidateQueries({ queryKey: ['scheduled-classes', user.id] }),
-        queryClient.refetchQueries({ queryKey: ['scheduled-classes', user.id] })
       ]);
       
       toast.success(isRecurring ? 'All recurring classes deleted' : 'Class deleted successfully');
@@ -136,22 +133,21 @@ export const useSimplifiedTutorScheduler = () => {
       console.error('Error deleting event:', error);
       throw error;
     }
-  };
+  }, [user?.id, refetch, queryClient]);
 
-  const closeAllDialogs = () => {
+  const closeAllDialogs = useCallback(() => {
     setIsViewEventOpen(false);
     setIsAddEventOpen(false);
     setIsEditEventOpen(false);
     setSelectedEvent(null);
-  };
+  }, []);
 
-  const refreshData = () => {
+  const refreshData = useCallback(() => {
     refetch();
     queryClient.invalidateQueries({ queryKey: ['scheduled-classes'] });
-  };
+  }, [refetch, queryClient]);
 
-  // Actual create event handler
-  const handleCreateEventActual = async (event: ClassEvent): Promise<boolean> => {
+  const handleCreateEventActual = useCallback(async (event: ClassEvent): Promise<boolean> => {
     if (!user?.id) {
       toast.error('User not authenticated');
       return false;
@@ -173,7 +169,6 @@ export const useSimplifiedTutorScheduler = () => {
       let success = false;
 
       if (event.recurring && event.recurringUntil && event.date) {
-        // Generate weekly dates
         const startDate = startOfDay(event.date as Date);
         const endDate = event.recurringUntil as Date;
         const dates: string[] = [];
@@ -190,7 +185,6 @@ export const useSimplifiedTutorScheduler = () => {
           success = true;
         }
       } else {
-        // Single class
         const classData = {
           ...baseClassData,
           date: event.date ? formatClassEventDate(event.date) : '',
@@ -206,7 +200,6 @@ export const useSimplifiedTutorScheduler = () => {
         await Promise.all([
           refetch(),
           queryClient.invalidateQueries({ queryKey: ['scheduled-classes', user.id] }),
-          queryClient.refetchQueries({ queryKey: ['scheduled-classes', user.id] })
         ]);
         return true;
       }
@@ -217,13 +210,16 @@ export const useSimplifiedTutorScheduler = () => {
       toast.error('Failed to create class');
       return false;
     }
-  };
+  }, [user?.id, refetch, queryClient]);
 
-  // Mock additional functions needed by TutorScheduler
-  const mockAsyncFunction = async () => true;
-  const mockFunction = () => {};
+  const resetNewEventForm = useCallback(() => {}, []);
+  const handleMarkMessageRead = useCallback(async () => {}, []);
+  const handleDownloadFile = useCallback(async () => {}, []);
+  const getUnreadMessageCount = useCallback(() => 0, []);
+  const refreshEvent = useCallback(async () => {}, []);
+  const mockAsyncFunction = useCallback(async () => true, []);
 
-  // Fetch real tutor profile (including zoom_link for auto-fill)
+  // Fetch real tutor profile
   const { data: currentUser } = useQuery({
     queryKey: ['tutor-profile', user?.id],
     queryFn: async () => {
@@ -239,7 +235,7 @@ export const useSimplifiedTutorScheduler = () => {
     enabled: !!user?.id,
   });
 
-  return {
+  return useMemo(() => ({
     scheduledClasses,
     selectedEvent,
     isViewEventOpen,
@@ -262,27 +258,31 @@ export const useSimplifiedTutorScheduler = () => {
     newEvent,
     setNewEvent,
     
-    // Additional properties expected by TutorScheduler  
     filteredClasses: scheduledClasses,
-    allSubjects: [],
-    studentMessages: [],
-    studentUploads: [],
+    allSubjects: [] as string[],
+    studentMessages: [] as any[],
+    studentUploads: [] as any[],
     isLoading: false,
     refetchClasses: refreshData,
     currentUser,
     
-    // Handlers
     handleSelectEvent,
     handleCreateEvent: handleCreateEventActual,
     handleEditEvent: mockAsyncFunction,
     handleDeleteEvent,
-    handleDuplicateEvent: mockFunction,
-    resetNewEventForm: mockFunction,
-    handleMarkMessageRead: async () => {},
-    handleDownloadFile: async () => {},
-    getUnreadMessageCount: () => 0,
-    refreshEvent: async () => {},
+    handleDuplicateEvent: resetNewEventForm,
+    resetNewEventForm,
+    handleMarkMessageRead,
+    handleDownloadFile,
+    getUnreadMessageCount,
+    refreshEvent,
     closeAllDialogs,
     refreshData,
-  };
+  }), [
+    scheduledClasses, selectedEvent, isViewEventOpen, isAddEventOpen, isEditEventOpen,
+    selectedDate, activeEventTab, isEditMode, searchTerm, subjectFilter, studentFilter,
+    newEvent, currentUser, refreshData, handleSelectEvent, handleCreateEventActual,
+    mockAsyncFunction, handleDeleteEvent, resetNewEventForm, handleMarkMessageRead,
+    handleDownloadFile, getUnreadMessageCount, refreshEvent, closeAllDialogs,
+  ]);
 };
