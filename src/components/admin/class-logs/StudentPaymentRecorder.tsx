@@ -229,6 +229,7 @@ const StudentPaymentRecorder: React.FC<StudentPaymentRecorderProps> = ({
         const ids = calculations.classesToMark.map((c) => c.id);
         const success = await batchUpdateStudentPaymentDate(ids, dateObj);
         if (!success) throw new Error('Failed to update payment dates');
+        addBreadcrumb({ category: 'payment.recording', message: 'Marked classes as paid', data: { count: ids.length } });
       }
 
       // 2. Add credits to ledger if any
