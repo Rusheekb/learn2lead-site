@@ -3,10 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import NavBar from '@/components/NavBar';
 import { toast } from 'sonner';
+import NavBar from '@/components/NavBar';
 import AuthTabs from '@/components/auth/AuthTabs';
 import { getSavedRoute } from '@/hooks/useRoutePersistence';
+import { signInSchema, signUpSchema, validateForm } from '@/lib/validation';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -28,7 +29,6 @@ const Login = () => {
       setAuthError(errorDescription || 'An error occurred during authentication');
       toast.error(errorDescription || 'Authentication error');
       
-      // Clear error params from URL
       const cleanUrl = window.location.pathname;
       window.history.replaceState({}, document.title, cleanUrl);
     }
@@ -37,7 +37,6 @@ const Login = () => {
   // Redirect if already logged in
   useEffect(() => {
     if (user && userRole) {
-      // Try to get saved route first, then fall back to default dashboard
       const savedRoute = getSavedRoute(user.id);
       
       const redirectPaths = {
@@ -55,16 +54,16 @@ const Login = () => {
     e.preventDefault();
     setAuthError(null);
 
-    if (!email || !password) {
-      toast.error('Please enter your email and password.');
+    const result = validateForm(signInSchema, { email, password });
+    if (!result.success) {
+      toast.error(result.firstError);
       return;
     }
 
     setIsLoading(true);
 
     try {
-      await signIn(email, password);
-      // Navigation is handled by AuthContext
+      await signIn(result.data.email, result.data.password);
     } catch (error) {
       console.error('Login error:', error);
       if (error instanceof Error) {
@@ -79,33 +78,20 @@ const Login = () => {
     e.preventDefault();
     setAuthError(null);
 
-    if (!email || !password) {
-      toast.error('Please enter your email and password.');
-      return;
-    }
-
-    if (!firstName.trim() || !lastName.trim()) {
-      toast.error('Please enter your first and last name.');
-      return;
-    }
-
-    if (firstName.trim().length < 2 || lastName.trim().length < 2) {
-      toast.error('First and last name must be at least 2 characters.');
-      return;
-    }
-    
-    if (password.length < 6) {
-      toast.error('Password must be at least 6 characters long.');
+    const result = validateForm(signUpSchema, { firstName, lastName, email, password });
+    if (!result.success) {
+      toast.error(result.firstError);
       return;
     }
 
     setIsLoading(true);
 
     try {
-      await signUp(email, password, { first_name: firstName.trim(), last_name: lastName.trim() });
-      toast.success(
-        'Account created! Please check your email for verification.'
-      );
+      await signUp(result.data.email, result.data.password, {
+        first_name: result.data.firstName,
+        last_name: result.data.lastName,
+      });
+      toast.success('Account created! Please check your email for verification.');
     } catch (error) {
       console.error('Registration error:', error);
       if (error instanceof Error) {
@@ -122,7 +108,6 @@ const Login = () => {
     
     try {
       await signInWithOAuth('google');
-      // Redirect happens automatically
     } catch (error) {
       console.error('Google sign in error:', error);
       if (error instanceof Error) {
@@ -133,7 +118,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <NavBar />
 
       <main id="main-content" tabIndex={-1} className="container mx-auto px-4 pt-20 pb-10 focus:outline-none">

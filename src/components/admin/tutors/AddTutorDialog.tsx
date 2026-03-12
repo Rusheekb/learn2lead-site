@@ -7,29 +7,20 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { toast } from '@/hooks/use-toast';
+import { Input } from '@/components/ui/input';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { toast } from 'sonner';
 import { Tutor } from '@/types/tutorTypes';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
+import { z } from 'zod';
+import { tutorSchema } from '@/lib/validation';
 
 interface AddTutorDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAddTutor: (tutor: Tutor) => void;
 }
-
-// Define the schema for tutor validation
-const tutorSchema = z.object({
-  name: z.string().min(1, { message: 'Name is required' }),
-  email: z.string().email({ message: 'Invalid email address' }),
-  subjects: z.string().min(1, { message: 'At least one subject is required' }),
-  hourlyRate: z.string()
-    .refine(val => !isNaN(Number(val)), { message: 'Hourly rate must be a number' })
-    .refine(val => Number(val) >= 0, { message: 'Hourly rate must be 0 or greater' }),
-});
 
 type TutorFormValues = z.infer<typeof tutorSchema>;
 
@@ -60,7 +51,7 @@ const AddTutorDialog: React.FC<AddTutorDialogProps> = ({
     };
 
     onAddTutor(newTutor);
-    toast.success('New tutor has been successfully added to the system.');
+    toast.success('New tutor has been successfully added.');
     onOpenChange(false);
     form.reset();
   };

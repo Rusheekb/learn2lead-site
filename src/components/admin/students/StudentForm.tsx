@@ -12,23 +12,14 @@ import {
 import { Student } from './StudentTable';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { studentSchema } from '@/lib/validation';
 
 interface StudentFormProps {
   onAddStudent: (student: Omit<Student, 'id'>) => void;
 }
-
-// Define the schema for student validation
-const studentSchema = z.object({
-  name: z.string().min(1, { message: 'Name is required' }),
-  email: z.string().email({ message: 'Invalid email address' }),
-  grade: z.string().min(1, { message: 'Grade is required' }),
-  subjects: z.string().min(1, { message: 'At least one subject is required' }),
-  paymentMethod: z.enum(['stripe', 'zelle']),
-  classRate: z.string().optional(),
-});
 
 type StudentFormValues = z.infer<typeof studentSchema>;
 
