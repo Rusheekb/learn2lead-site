@@ -9,6 +9,7 @@ import AuthTabs from '@/components/auth/AuthTabs';
 import { getSavedRoute } from '@/hooks/useRoutePersistence';
 import { signInSchema, signUpSchema, validateForm } from '@/lib/validation';
 import { addBreadcrumb, captureException } from '@/lib/sentry';
+import { useRateLimiter } from '@/hooks/useRateLimiter';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -19,6 +20,10 @@ const Login = () => {
   const { signIn, signUp, signInWithOAuth, user, userRole } = useAuth();
   const navigate = useNavigate();
   const [authError, setAuthError] = useState<string | null>(null);
+
+  // Rate limit: 5 attempts per 2 minutes, 60s lockout
+  const signInLimiter = useRateLimiter({ maxAttempts: 5, windowMs: 120_000, lockoutMs: 60_000 });
+  const signUpLimiter = useRateLimiter({ maxAttempts: 3, windowMs: 120_000, lockoutMs: 90_000 });
 
   // Check for OAuth error in URL parameters
   useEffect(() => {
@@ -67,6 +72,14 @@ const Login = () => {
       return;
     }
 
+    if (!signInLimiter.recordAttempt()) {
+      const msg = `Too many sign-in attempts. Please wait ${signInLimiter.secondsUntilReset}s.`;
+      setAuthError(msg);
+      toast.error(msg);
+      addBreadcrumb({ category: 'auth', message: 'Sign-in rate limited', level: 'warning' });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -89,6 +102,14 @@ const Login = () => {
     const result = validateForm(signUpSchema, { firstName, lastName, email, password });
     if (!result.success) {
       toast.error(result.firstError);
+      return;
+    }
+
+    if (!signUpLimiter.recordAttempt()) {
+      const msg = `Too many sign-up attempts. Please wait ${signUpLimiter.secondsUntilReset}s.`;
+      setAuthError(msg);
+      toast.error(msg);
+      addBreadcrumb({ category: 'auth', message: 'Sign-up rate limited', level: 'warning' });
       return;
     }
 
