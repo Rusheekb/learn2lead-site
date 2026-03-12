@@ -118,11 +118,11 @@ const ClassHistory: React.FC<ClassHistoryProps> = memo(({ userRole }) => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-xl font-semibold">Class History</h3>
-        <Badge variant="secondary">
-          {classHistory.length} classes completed
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="text-lg sm:text-xl font-semibold">Class History</h3>
+        <Badge variant="secondary" className="text-xs shrink-0">
+          {classHistory.length} completed
         </Badge>
       </div>
 
