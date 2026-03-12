@@ -1,10 +1,9 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useMemo, useCallback, memo } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { format, isSameDay, parseISO } from 'date-fns';
+import { format, isSameDay } from 'date-fns';
 import { ClassEvent } from '@/types/tutorTypes';
-import { toast } from 'sonner';
 import { startOfDay, addDays } from 'date-fns';
 import { CheckCircle } from 'lucide-react';
 import CompletedClassActions from '@/components/tutor/CompletedClassActions';
@@ -32,7 +31,22 @@ export const getUpcomingEvents = (events: ClassEvent[]): ClassEvent[] => {
   });
 };
 
-const CalendarWithEvents: React.FC<CalendarWithEventsProps> = ({
+// Pre-compute a Set of date strings that have scheduled/completed classes
+const buildDateSets = (classes: ClassEvent[]) => {
+  const scheduled = new Set<string>();
+  const completed = new Set<string>();
+  for (const event of classes) {
+    const dateKey = String(event.date).substring(0, 10); // 'YYYY-MM-DD'
+    if (event.status === 'completed') {
+      completed.add(dateKey);
+    } else {
+      scheduled.add(dateKey);
+    }
+  }
+  return { scheduled, completed };
+};
+
+const CalendarWithEvents: React.FC<CalendarWithEventsProps> = memo(({
   selectedDate,
   setSelectedDate,
   scheduledClasses,
@@ -41,41 +55,71 @@ const CalendarWithEvents: React.FC<CalendarWithEventsProps> = ({
   getUnreadMessageCount,
 }) => {
   const { userRole } = useAuth();
-  const [eventsForSelectedDate, setEventsForSelectedDate] = useState<ClassEvent[]>([]);
 
-  const handleClassUpdate = () => {
-    // Minimal update handler - let parent components handle the heavy lifting
-    onSelectEvent(eventsForSelectedDate[0]); // Refresh the parent state
-  };
+  // Memoize date sets so modifier functions are O(1) lookups
+  const { scheduled: scheduledDates, completed: completedDates } = useMemo(
+    () => buildDateSets(scheduledClasses),
+    [scheduledClasses]
+  );
 
-  // Function to check if a date has any scheduled classes
-  const hasScheduledOnDate = (date: Date) => {
-    return scheduledClasses.some((event) => {
+  const hasScheduledOnDate = useCallback(
+    (date: Date) => scheduledDates.has(format(date, 'yyyy-MM-dd')),
+    [scheduledDates]
+  );
+
+  const hasCompletedOnDate = useCallback(
+    (date: Date) => completedDates.has(format(date, 'yyyy-MM-dd')),
+    [completedDates]
+  );
+
+  // Memoize filtered events for selected date
+  const eventsForSelectedDate = useMemo(() => {
+    return scheduledClasses.filter((event) => {
       const eventDate = parseDateToLocal(event.date);
-      return isSameDay(date, eventDate) && event.status !== 'completed';
+      return isSameDay(selectedDate, eventDate);
     });
-  };
-
-  const hasCompletedOnDate = (date: Date) => {
-    return scheduledClasses.some((event) => {
-      const eventDate = parseDateToLocal(event.date);
-      return isSameDay(date, eventDate) && event.status === 'completed';
-    });
-  };
-
-  useEffect(() => {
-    // Find events for the selected date
-    const events = scheduledClasses.filter((event) => {
-      // Handle both Date objects and string dates
-      const eventDate = parseDateToLocal(event.date);
-      const result = isSameDay(selectedDate, eventDate);
-      
-      return result;
-    });
-
-    setEventsForSelectedDate(events);
   }, [selectedDate, scheduledClasses]);
 
+  const handleClassUpdate = useCallback(() => {
+    if (eventsForSelectedDate.length > 0) {
+      onSelectEvent(eventsForSelectedDate[0]);
+    }
+  }, [eventsForSelectedDate, onSelectEvent]);
+
+  // Memoize calendar modifiers object
+  const modifiers = useMemo(() => ({
+    hasScheduled: hasScheduledOnDate,
+    hasCompleted: hasCompletedOnDate,
+  }), [hasScheduledOnDate, hasCompletedOnDate]);
+
+  const modifiersClassNames = useMemo(() => ({
+    hasScheduled:
+      'relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:bg-green-500 after:rounded-full',
+    hasCompleted:
+      'relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:bg-gray-400 after:rounded-full',
+  }), []);
+
+  // Stable DayContent component
+  const DayContent = useCallback(({ date, ...props }: { date: Date }) => (
+    <div {...props}>
+      {date.getDate()}
+      {hasScheduledOnDate(date) && (
+        <span className="sr-only"> (has scheduled classes)</span>
+      )}
+      {hasCompletedOnDate(date) && (
+        <span className="sr-only"> (has completed classes)</span>
+      )}
+    </div>
+  ), [hasScheduledOnDate, hasCompletedOnDate]);
+
+  const components = useMemo(() => ({
+    DayContent,
+  }), [DayContent]);
+
+  const handleDateSelect = useCallback(
+    (date: Date | undefined) => { if (date) setSelectedDate(date); },
+    [setSelectedDate]
+  );
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
@@ -87,31 +131,11 @@ const CalendarWithEvents: React.FC<CalendarWithEventsProps> = ({
           <Calendar
             mode="single"
             selected={selectedDate}
-            onSelect={(date) => date && setSelectedDate(date)}
+            onSelect={handleDateSelect}
             className="border rounded-md p-1 sm:p-2 bg-card mx-auto"
-            modifiers={{
-              hasScheduled: (date) => hasScheduledOnDate(date),
-              hasCompleted: (date) => hasCompletedOnDate(date),
-            }}
-            modifiersClassNames={{
-              hasScheduled:
-                'relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:bg-green-500 after:rounded-full',
-              hasCompleted:
-                'relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:bg-gray-400 after:rounded-full',
-            }}
-            components={{
-              DayContent: ({ date, ...props }) => (
-                <div {...props}>
-                  {date.getDate()}
-                  {hasScheduledOnDate(date) && (
-                    <span className="sr-only"> (has scheduled classes)</span>
-                  )}
-                  {hasCompletedOnDate(date) && (
-                    <span className="sr-only"> (has completed classes)</span>
-                  )}
-                </div>
-              ),
-            }}
+            modifiers={modifiers}
+            modifiersClassNames={modifiersClassNames}
+            components={components}
           />
         </CardContent>
       </Card>
@@ -135,46 +159,14 @@ const CalendarWithEvents: React.FC<CalendarWithEventsProps> = ({
           ) : (
             <div className="space-y-3 sm:space-y-4">
               {eventsForSelectedDate.map((event) => (
-                <div 
+                <EventRow
                   key={event.id}
-                  className={`p-3 sm:p-4 border rounded-lg transition-colors ${event.status === 'completed' ? 'bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-900' : 'hover:bg-muted/50'}`}
-                >
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
-                    <div 
-                      className="flex-1 min-w-0 cursor-pointer"
-                      onClick={() => onSelectEvent(event)}
-                    >
-                      <h3 className="font-medium flex items-center gap-1.5 text-sm sm:text-base">
-                        {event.status === 'completed' && <CheckCircle className="h-4 w-4 text-green-600 shrink-0" />}
-                        <span className="truncate">{event.title}</span>
-                      </h3>
-                      <p className="text-xs sm:text-sm text-muted-foreground">{event.subject}</p>
-                      <p className="text-xs sm:text-sm text-muted-foreground">
-                        {event.startTime} - {event.endTime} • {event.studentName}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {getUnreadMessageCount(event.id) > 0 && (
-                        <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
-                          {getUnreadMessageCount(event.id)}
-                        </span>
-                      )}
-                      <span className={`px-2 py-0.5 text-xs rounded-full ${
-                        event.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300' :
-                        event.status === 'cancelled' ? 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300' :
-                        'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300'
-                      }`}>
-                        {event.status}
-                      </span>
-                      {userRole === 'tutor' && (
-                        <CompletedClassActions 
-                          classEvent={event} 
-                          onUpdate={handleClassUpdate}
-                        />
-                      )}
-                    </div>
-                  </div>
-                </div>
+                  event={event}
+                  onSelectEvent={onSelectEvent}
+                  getUnreadMessageCount={getUnreadMessageCount}
+                  userRole={userRole}
+                  onUpdate={handleClassUpdate}
+                />
               ))}
             </div>
           )}
@@ -182,6 +174,83 @@ const CalendarWithEvents: React.FC<CalendarWithEventsProps> = ({
       </Card>
     </div>
   );
-};
+});
+
+CalendarWithEvents.displayName = 'CalendarWithEvents';
+
+// Extracted and memoized event row to prevent re-renders of all rows when one changes
+interface EventRowProps {
+  event: ClassEvent;
+  onSelectEvent: (event: ClassEvent) => void;
+  getUnreadMessageCount: (classId: string) => number;
+  userRole: string | null;
+  onUpdate: () => void;
+}
+
+const EventRow: React.FC<EventRowProps> = memo(({
+  event,
+  onSelectEvent,
+  getUnreadMessageCount,
+  userRole,
+  onUpdate,
+}) => {
+  const unreadCount = getUnreadMessageCount(event.id);
+
+  return (
+    <div
+      className={`p-3 sm:p-4 border rounded-lg transition-colors ${event.status === 'completed' ? 'bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-900' : 'hover:bg-muted/50'}`}
+    >
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+        <div 
+          className="flex-1 min-w-0 cursor-pointer"
+          onClick={() => onSelectEvent(event)}
+        >
+          <h3 className="font-medium flex items-center gap-1.5 text-sm sm:text-base">
+            {event.status === 'completed' && <CheckCircle className="h-4 w-4 text-green-600 shrink-0" />}
+            <span className="truncate">{event.title}</span>
+          </h3>
+          <p className="text-xs sm:text-sm text-muted-foreground">{event.subject}</p>
+          <p className="text-xs sm:text-sm text-muted-foreground">
+            {event.startTime} - {event.endTime} • {event.studentName}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          {unreadCount > 0 && (
+            <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
+              {unreadCount}
+            </span>
+          )}
+          <span className={`px-2 py-0.5 text-xs rounded-full ${
+            event.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300' :
+            event.status === 'cancelled' ? 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300' :
+            'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300'
+          }`}>
+            {event.status}
+          </span>
+          {userRole === 'tutor' && (
+            <CompletedClassActions 
+              classEvent={event} 
+              onUpdate={onUpdate}
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}, (prev, next) => {
+  return (
+    prev.event.id === next.event.id &&
+    prev.event.status === next.event.status &&
+    prev.event.title === next.event.title &&
+    prev.event.startTime === next.event.startTime &&
+    prev.event.endTime === next.event.endTime &&
+    prev.event.studentName === next.event.studentName &&
+    prev.userRole === next.userRole &&
+    prev.onSelectEvent === next.onSelectEvent &&
+    prev.getUnreadMessageCount === next.getUnreadMessageCount
+  );
+});
+
+EventRow.displayName = 'EventRow';
 
 export default CalendarWithEvents;

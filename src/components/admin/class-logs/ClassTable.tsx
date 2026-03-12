@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useMemo, memo } from 'react';
 import DataTable, { ColumnDefinition } from '@/components/common/DataTable';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -45,7 +45,7 @@ const formatDate = (date: Date | string) => {
   }
 };
 
-const ClassTable: React.FC<ClassTableProps> = ({
+const ClassTable: React.FC<ClassTableProps> = memo(({
   classes,
   filteredClasses,
   paginatedClasses,
@@ -250,6 +250,8 @@ const ClassTable: React.FC<ClassTableProps> = ({
       cardClassName="overflow-hidden"
     />
   );
-};
+});
+
+ClassTable.displayName = 'ClassTable';
 
 export default ClassTable;

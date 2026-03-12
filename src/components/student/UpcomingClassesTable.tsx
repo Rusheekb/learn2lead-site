@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useMemo, memo } from 'react';
 import DataTable, { ColumnDefinition } from '@/components/common/DataTable';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
@@ -25,11 +25,11 @@ interface UpcomingClassesTableProps {
   onViewClass: (cls: ClassItem) => void;
 }
 
-const UpcomingClassesTable: React.FC<UpcomingClassesTableProps> = ({
+const UpcomingClassesTable: React.FC<UpcomingClassesTableProps> = memo(({
   classes,
   onViewClass,
 }) => {
-  const columns: ColumnDefinition<ClassItem>[] = [
+  const columns: ColumnDefinition<ClassItem>[] = useMemo(() => [
     {
       header: 'Class',
       cell: (cls) => (
@@ -73,7 +73,7 @@ const UpcomingClassesTable: React.FC<UpcomingClassesTableProps> = ({
         </div>
       ),
     },
-  ];
+  ], [onViewClass]);
 
   return (
     <div className="overflow-x-auto">
@@ -84,6 +84,8 @@ const UpcomingClassesTable: React.FC<UpcomingClassesTableProps> = ({
       />
     </div>
   );
-};
+});
+
+UpcomingClassesTable.displayName = 'UpcomingClassesTable';
 
 export default UpcomingClassesTable;
