@@ -263,6 +263,10 @@ function DataTable<T>({
                     }}
                     className={`border-b transition-colors data-[state=selected]:bg-muted ${onRowClick ? "cursor-pointer" : ""}`}
                     onClick={onRowClick ? () => onRowClick(row) : undefined}
+                    onKeyDown={onRowClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onRowClick(row); } } : undefined}
+                    tabIndex={onRowClick ? 0 : undefined}
+                    role={onRowClick ? "button" : undefined}
+                    aria-label={onRowClick ? `Row ${rowIndex + 1}` : undefined}
                   >
                     {columns.map((column, colIndex) => (
                       <TableCell key={colIndex} className={column.className}>

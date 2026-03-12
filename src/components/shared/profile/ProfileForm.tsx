@@ -99,23 +99,25 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
       )}
 
       <div>
-        <Label>Email</Label>
-        <Input value={profile.email} disabled className="bg-muted" />
-        <p className="text-sm text-muted-foreground mt-1">
+        <Label htmlFor="profile-email">Email</Label>
+        <Input id="profile-email" value={profile.email} disabled className="bg-muted" aria-describedby="email-hint" />
+        <p id="email-hint" className="text-sm text-muted-foreground mt-1">
           Email cannot be changed
         </p>
       </div>
 
       <div>
-        <Label>Role</Label>
+        <Label htmlFor="profile-role">Role</Label>
         <Input
+          id="profile-role"
           value={
             profile.role.charAt(0).toUpperCase() + profile.role.slice(1)
           }
           disabled
           className="bg-muted"
+          aria-describedby="role-hint"
         />
-        <p className="text-sm text-muted-foreground mt-1">
+        <p id="role-hint" className="text-sm text-muted-foreground mt-1">
           Role is assigned by admin
         </p>
       </div>

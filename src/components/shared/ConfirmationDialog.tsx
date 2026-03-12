@@ -40,26 +40,27 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
 
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
-      <AlertDialogContent>
+      <AlertDialogContent role="alertdialog" aria-labelledby="confirm-dialog-title" aria-describedby="confirm-dialog-desc">
         <AlertDialogHeader>
-          <AlertDialogTitle className="flex items-center gap-2">
-            {variant === 'destructive' && <AlertTriangle className="h-5 w-5 text-red-500" />}
+          <AlertDialogTitle id="confirm-dialog-title" className="flex items-center gap-2">
+            {variant === 'destructive' && <AlertTriangle className="h-5 w-5 text-red-500" aria-hidden="true" />}
             {title}
           </AlertDialogTitle>
-          <AlertDialogDescription>
+          <AlertDialogDescription id="confirm-dialog-desc">
             {description}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={onClose} disabled={isLoading}>
+          <AlertDialogCancel onClick={onClose} disabled={isLoading} aria-label={cancelText}>
             {cancelText}
           </AlertDialogCancel>
           <AlertDialogAction
             onClick={handleConfirm}
             disabled={isLoading}
             className={variant === 'destructive' ? 'bg-red-600 hover:bg-red-700' : ''}
+            aria-label={isLoading ? 'Processing' : confirmText}
           >
-            {variant === 'destructive' && <Trash2 className="h-4 w-4 mr-2" />}
+            {variant === 'destructive' && <Trash2 className="h-4 w-4 mr-2" aria-hidden="true" />}
             {isLoading ? 'Processing...' : confirmText}
           </AlertDialogAction>
         </AlertDialogFooter>

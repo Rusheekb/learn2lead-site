@@ -328,10 +328,11 @@ function VirtualizedDataTable<T>({
         <>
           <div className="overflow-x-auto">
             {/* Header */}
-            <div className="flex border-b border-border bg-muted/50">
+            <div className="flex border-b border-border bg-muted/50" role="row" aria-label="Column headers">
               {columns.map((column, index) => (
                 <div
                   key={index}
+                  role="columnheader"
                   className={`px-4 py-3 text-sm font-medium text-muted-foreground flex-1 ${column.className || ''}`}
                   style={column.width ? { width: column.width, flex: 'none' } : undefined}
                 >
