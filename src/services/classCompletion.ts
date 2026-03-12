@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { captureEvent } from '@/lib/posthog';
+import { addBreadcrumb, captureException } from '@/lib/sentry';
 
 export interface CompleteClassData {
   classId: string;
