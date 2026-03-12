@@ -24,6 +24,8 @@ const formatHours = (n: number) => `${n} hour${n === 1 ? '' : 's'}`;
 
 export const completeClass = async (data: CompleteClassData): Promise<boolean> => {
   try {
+    addBreadcrumb({ category: 'class.completion', message: 'Starting class completion', data: { classId: data.classId, studentId: data.studentId, subject: data.subject } });
+
     // First, check if the class still exists
     const { data: existingClass, error: classError } = await supabase
       .from('scheduled_classes')
@@ -37,6 +39,7 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
     }
 
     if (!existingClass) {
+      addBreadcrumb({ category: 'class.completion', message: 'Class no longer exists', level: 'warning', data: { classId: data.classId } });
       toast.error('Class no longer exists or has already been completed');
       return false;
     }
