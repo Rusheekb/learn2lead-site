@@ -16,10 +16,26 @@ const StudentList: React.FC<StudentListProps> = memo(({
   const columns: ColumnDefinition<Student>[] = [
     {
       header: 'Name',
-      cell: (student) => <span className="font-medium">{student.name}</span>,
+      cell: (student) => (
+        <div>
+          <span className="font-medium">{student.name}</span>
+          {/* Show subjects inline on mobile */}
+          <div className="flex flex-wrap gap-1 mt-1 sm:hidden">
+            {student.subjects.slice(0, 2).map((subject, index) => (
+              <Badge key={index} variant="outline" className="text-[10px] px-1 py-0">
+                {subject}
+              </Badge>
+            ))}
+            {student.subjects.length > 2 && (
+              <span className="text-[10px] text-muted-foreground">+{student.subjects.length - 2}</span>
+            )}
+          </div>
+        </div>
+      ),
     },
     {
       header: 'Subjects',
+      className: 'hidden sm:table-cell',
       cell: (student) => (
         <div className="flex flex-wrap gap-1">
           {student.subjects.map((subject, index) => (
@@ -32,6 +48,7 @@ const StudentList: React.FC<StudentListProps> = memo(({
     },
     {
       header: 'Next Session',
+      className: 'hidden md:table-cell',
       cell: (student) => (
         student.nextSession
           ? new Date(student.nextSession).toLocaleDateString()
@@ -44,9 +61,11 @@ const StudentList: React.FC<StudentListProps> = memo(({
         <Button
           variant="outline"
           size="sm"
+          className="text-xs sm:text-sm"
           onClick={() => onSelectStudent(student)}
         >
-          View Details
+          <span className="hidden sm:inline">View Details</span>
+          <span className="sm:hidden">View</span>
         </Button>
       ),
     },

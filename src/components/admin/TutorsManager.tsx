@@ -40,7 +40,7 @@ const TutorsManager: React.FC<TutorsManagerProps> = memo(({ onSelect }) => {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold tracking-tight">Tutors Management</h2>
+      <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Tutors Management</h2>
 
       <Card>
         <CardHeader>

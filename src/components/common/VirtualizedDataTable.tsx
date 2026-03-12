@@ -100,19 +100,18 @@ const TablePagination = memo(function TablePagination({
   pageSizeOptions = [10, 20, 50, 100],
 }: TablePaginationProps) {
   return (
-    <nav aria-label="Table pagination" className="flex items-center justify-between py-4">
-      <div className="flex-1 text-sm text-muted-foreground" aria-live="polite">
+    <nav aria-label="Table pagination" className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 py-4">
+      <div className="text-sm text-muted-foreground" aria-live="polite">
         {totalItems > 0 && (
           <span>
-            Showing {(currentPage - 1) * pageSize + 1} to{' '}
-            {Math.min(currentPage * pageSize, totalItems)} of {totalItems} items
+            {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, totalItems)} of {totalItems}
           </span>
         )}
       </div>
-      <div className="flex items-center space-x-6 lg:space-x-8">
+      <div className="flex flex-wrap items-center gap-3">
         {onPageSizeChange && (
-          <div className="flex items-center space-x-2">
-            <label htmlFor="vdt-page-size" className="text-sm font-medium">Rows per page</label>
+          <div className="flex items-center gap-2">
+            <label htmlFor="vdt-page-size" className="text-sm font-medium whitespace-nowrap">Rows</label>
             <select
               id="vdt-page-size"
               className="h-8 w-[70px] rounded-md border border-input bg-background px-2 text-sm"
@@ -129,7 +128,7 @@ const TablePagination = memo(function TablePagination({
           </div>
         )}
         
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"
@@ -137,10 +136,10 @@ const TablePagination = memo(function TablePagination({
             disabled={currentPage <= 1}
             aria-label="Previous page"
           >
-            Previous
+            Prev
           </Button>
-          <div className="text-sm" aria-current="page">
-            Page {currentPage} of {totalPages}
+          <div className="text-sm whitespace-nowrap" aria-current="page">
+            {currentPage}/{totalPages}
           </div>
           <Button
             variant="outline"
