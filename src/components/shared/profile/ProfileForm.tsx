@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Profile } from '@/hooks/useProfile';
+import { profileSchema, validateForm } from '@/lib/validation';
 
 interface ProfileFormProps {
   formData: {
@@ -14,13 +15,25 @@ interface ProfileFormProps {
   };
   profile: Profile;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  errors?: Record<string, string>;
 }
 
 const ProfileForm: React.FC<ProfileFormProps> = ({
   formData,
   profile,
   handleInputChange,
+  errors = {},
 }) => {
+  const fieldError = (name: string) =>
+    errors[name] ? (
+      <p className="mt-1 text-sm text-destructive" role="alert">
+        {errors[name]}
+      </p>
+    ) : null;
+
+  const inputClass = (name: string) =>
+    errors[name] ? 'border-destructive focus-visible:ring-destructive' : '';
+
   return (
     <div className="space-y-4">
       <div>
@@ -31,7 +44,10 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
           value={formData.first_name}
           onChange={handleInputChange}
           placeholder="First Name"
+          className={inputClass('first_name')}
+          aria-invalid={!!errors.first_name}
         />
+        {fieldError('first_name')}
       </div>
 
       <div>
@@ -42,7 +58,10 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
           value={formData.last_name}
           onChange={handleInputChange}
           placeholder="Last Name"
+          className={inputClass('last_name')}
+          aria-invalid={!!errors.last_name}
         />
+        {fieldError('last_name')}
       </div>
 
       <div>
@@ -53,8 +72,10 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
           value={formData.bio}
           onChange={handleInputChange}
           placeholder="Tell us about yourself..."
-          className="resize-none h-32"
+          className={`resize-none h-32 ${inputClass('bio')}`}
+          aria-invalid={!!errors.bio}
         />
+        {fieldError('bio')}
       </div>
 
       {profile.role === 'tutor' && (
@@ -67,7 +88,10 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
             onChange={handleInputChange}
             placeholder="https://zoom.us/j/your-meeting-id"
             type="url"
+            className={inputClass('zoom_link')}
+            aria-invalid={!!errors.zoom_link}
           />
+          {fieldError('zoom_link')}
           <p className="text-sm text-muted-foreground mt-1">
             This link will auto-fill when you schedule new classes
           </p>
@@ -76,8 +100,8 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
 
       <div>
         <Label>Email</Label>
-        <Input value={profile.email} disabled className="bg-gray-100" />
-        <p className="text-sm text-gray-500 mt-1">
+        <Input value={profile.email} disabled className="bg-muted" />
+        <p className="text-sm text-muted-foreground mt-1">
           Email cannot be changed
         </p>
       </div>
@@ -89,9 +113,9 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
             profile.role.charAt(0).toUpperCase() + profile.role.slice(1)
           }
           disabled
-          className="bg-gray-100"
+          className="bg-muted"
         />
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-sm text-muted-foreground mt-1">
           Role is assigned by admin
         </p>
       </div>
