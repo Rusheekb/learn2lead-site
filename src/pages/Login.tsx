@@ -105,6 +105,14 @@ const Login = () => {
       return;
     }
 
+    if (!signUpLimiter.recordAttempt()) {
+      const msg = `Too many sign-up attempts. Please wait ${signUpLimiter.secondsUntilReset}s.`;
+      setAuthError(msg);
+      toast.error(msg);
+      addBreadcrumb({ category: 'auth', message: 'Sign-up rate limited', level: 'warning' });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
