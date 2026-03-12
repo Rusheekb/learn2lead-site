@@ -48,7 +48,7 @@ const ClassFilters: React.FC<ClassFiltersProps> = ({
       />
       
       {/* Payment status and method filters */}
-      <div className="flex items-center gap-4 flex-wrap">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 flex-wrap">
         {paymentFilter !== undefined && setPaymentFilter && (
           <div className="flex items-center gap-2">
             <label className="text-sm font-medium">Payment Status:</label>
