@@ -164,8 +164,7 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
 
     if (insertError) {
       console.error('Error creating class log:', insertError);
-      
-      // CRITICAL: Restore the credit that was deducted since log creation failed
+      addBreadcrumb({ category: 'class.completion', message: 'Class log insert failed, restoring credit', level: 'error', data: { classId: data.classId, error: insertError.message } });
       try {
         const { data: restoreResult, error: restoreError } = await supabase.functions.invoke(
           'restore-class-credit',
