@@ -71,6 +71,8 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
     if (creditError || !creditResult?.success) {
       const errorCode = creditResult?.code || 'UNKNOWN';
 
+      addBreadcrumb({ category: 'class.completion', message: 'Credit deduction failed', level: 'error', data: { errorCode, studentId: data.studentId } });
+
       captureEvent('credit_deduction_failed', {
         error_code: errorCode,
         student_id: data.studentId,
@@ -101,6 +103,8 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
 
       throw new Error(creditResult?.error || 'Failed to deduct class credit');
     }
+
+    addBreadcrumb({ category: 'class.completion', message: 'Credit deducted successfully', data: { creditsRemaining: creditResult.credits_remaining, deducted: creditResult.credits_deducted } });
 
     const creditsRemaining = creditResult.credits_remaining;
     const creditsDeducted = creditResult.credits_deducted || durationHours;
