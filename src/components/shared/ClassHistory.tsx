@@ -1,4 +1,4 @@
-import React, { useState, useEffect, memo } from 'react';
+import React, { useState, memo, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -10,7 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { parseDateToLocal } from '@/utils/safeDateUtils';
 import { ClassHistorySkeleton } from '@/components/shared/skeletons';
 
@@ -33,107 +33,60 @@ interface ClassHistoryProps {
   userRole: 'student' | 'tutor' | 'admin';
 }
 
+const fetchClassHistoryData = async (userId: string, userRole: string): Promise<ClassHistoryItem[]> => {
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('first_name, last_name, email')
+    .eq('id', userId)
+    .single();
+
+  if (!profile) return [];
+
+  const fullName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
+
+  let query = supabase.from('class_logs').select('*');
+
+  if (userRole === 'tutor') {
+    if (fullName) {
+      query = query.or(`"Tutor Name".eq."${fullName}","Tutor Name".eq."${profile.email}"`);
+    } else {
+      query = query.eq('"Tutor Name"', profile.email);
+    }
+  } else if (userRole === 'student') {
+    if (fullName) {
+      query = query.or(`"Student Name".eq."${fullName}","Student Name".eq."${profile.email}"`);
+    } else {
+      query = query.eq('"Student Name"', profile.email);
+    }
+  }
+
+  const { data, error } = await query.order('Date', { ascending: false });
+  if (error) throw error;
+  return data || [];
+};
+
 const ClassHistory: React.FC<ClassHistoryProps> = memo(({ userRole }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [classHistory, setClassHistory] = useState<ClassHistoryItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedClass, setSelectedClass] = useState<ClassHistoryItem | null>(null);
   const [expandedClassId, setExpandedClassId] = useState<string | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedClass, setSelectedClass] = useState<ClassHistoryItem | null>(null);
   const [editContent, setEditContent] = useState('');
   const [editHomework, setEditHomework] = useState('');
 
-  useEffect(() => {
-    fetchClassHistory();
-  }, [user, userRole]);
+  const { data: classHistory = [], isLoading } = useQuery({
+    queryKey: ['classHistory', user?.id, userRole],
+    queryFn: () => fetchClassHistoryData(user!.id, userRole),
+    enabled: !!user?.id,
+    staleTime: 2 * 60 * 1000,
+  });
 
-  // Setup realtime subscription for class_logs
-  useEffect(() => {
-    if (!user) return;
-
-    const channel = supabase
-      .channel('class-history-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'class_logs',
-        },
-        () => {
-          fetchClassHistory();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, userRole]);
-
-  const fetchClassHistory = async () => {
-    if (!user) return;
-
-    try {
-      setIsLoading(true);
-      
-      // Get user profile for name matching
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('first_name, last_name, email')
-        .eq('id', user.id)
-        .single();
-
-      if (!profile) {
-        setIsLoading(false);
-        return;
-      }
-      
-      const fullName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
-      
-      let query = supabase.from('class_logs').select('*');
-      
-      if (userRole === 'tutor') {
-        // Query by either full name or email, handling cases where name might be empty
-        if (fullName) {
-          query = query.or(`"Tutor Name".eq."${fullName}","Tutor Name".eq."${profile.email}"`);
-        } else {
-          query = query.eq('"Tutor Name"', profile.email);
-        }
-      } else if (userRole === 'student') {
-        // Query by either full name or email, handling cases where name might be empty
-        if (fullName) {
-          query = query.or(`"Student Name".eq."${fullName}","Student Name".eq."${profile.email}"`);
-        } else {
-          query = query.eq('"Student Name"', profile.email);
-        }
-      }
-      // Admin can see all - no filter needed
-
-      const { data, error } = await query.order('Date', { ascending: false });
-
-      if (error) {
-        throw error;
-      }
-      
-      setClassHistory(data || []);
-    } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Error fetching class history:', error);
-      }
-      toast.error('Failed to load class history');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleEditClass = (classItem: ClassHistoryItem) => {
+  const handleEditClass = useCallback((classItem: ClassHistoryItem) => {
     setSelectedClass(classItem);
     setEditContent(classItem.Content || '');
     setEditHomework(classItem.HW || '');
     setIsEditDialogOpen(true);
-  };
+  }, []);
 
   const handleSaveEdit = async () => {
     if (!selectedClass) return;
@@ -151,7 +104,7 @@ const ClassHistory: React.FC<ClassHistoryProps> = memo(({ userRole }) => {
 
       toast.success('Class description updated successfully');
       setIsEditDialogOpen(false);
-      fetchClassHistory();
+      queryClient.invalidateQueries({ queryKey: ['classHistory', user?.id, userRole] });
     } catch (error) {
       if (process.env.NODE_ENV === 'development') {
         console.error('Error updating class:', error);
@@ -159,7 +112,6 @@ const ClassHistory: React.FC<ClassHistoryProps> = memo(({ userRole }) => {
       toast.error('Failed to update class description');
     }
   };
-
 
   if (isLoading) {
     return <ClassHistorySkeleton count={5} />;

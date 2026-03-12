@@ -1,10 +1,11 @@
-import React, { useState, useEffect, memo } from 'react';
+import React, { useState, memo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import StudentList from './StudentList';
 import StudentListSkeleton from './StudentListSkeleton';
 import StudentDetailsDialog from './StudentDetailsDialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { fetchTutorStudentsByEmail, TutorStudentData } from '@/services/tutors/tutorStudentsService';
+import { useQuery } from '@tanstack/react-query';
 import type { Student } from '@/types/sharedTypes';
 
 const TutorStudents: React.FC = memo(() => {
@@ -12,45 +13,28 @@ const TutorStudents: React.FC = memo(() => {
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>('overview');
-  const [myStudents, setMyStudents] = useState<Student[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  useEffect(() => {
-    if (!user) return;
-    
-    const loadStudents = async () => {
-      setIsLoading(true);
-      try {
-        // Use the new email-based function to fetch tutor students
-        const tutorStudents = await fetchTutorStudentsByEmail();
-        
-        // Transform the data to match the Student interface
-        const transformedStudents: Student[] = tutorStudents.map((ts: TutorStudentData) => ({
-          id: ts.student_id,
-          name: ts.student_name,
-          email: ts.student_email,
-          subjects: ts.subjects || [],
-          nextSession: undefined // Will be populated if needed
-        }));
-        
-        setMyStudents(transformedStudents);
-      } catch (error) {
-        console.error('Error loading students:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadStudents();
-  }, [user]);
+  const { data: myStudents = [], isLoading } = useQuery({
+    queryKey: ['tutorStudentsList', user?.id],
+    queryFn: async () => {
+      const tutorStudents = await fetchTutorStudentsByEmail();
+      return tutorStudents.map((ts: TutorStudentData): Student => ({
+        id: ts.student_id,
+        name: ts.student_name,
+        email: ts.student_email,
+        subjects: ts.subjects || [],
+        nextSession: undefined,
+      }));
+    },
+    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
   const handleStudentSelect = (student: Student) => {
     setSelectedStudent(student);
     setIsDetailsOpen(true);
     setActiveTab('overview');
   };
-
-
 
   return (
     <div className="space-y-6">
@@ -69,7 +53,7 @@ const TutorStudents: React.FC = memo(() => {
               onSelectStudent={handleStudentSelect}
             />
           ) : (
-            <div className="text-center py-8 text-gray-500">
+            <div className="text-center py-8 text-muted-foreground">
               <p>No students are currently assigned to you.</p>
               <p className="mt-2 text-sm">
                 Students will be assigned by an administrator.
@@ -79,7 +63,6 @@ const TutorStudents: React.FC = memo(() => {
         </CardContent>
       </Card>
 
-      {/* Student Details Dialog */}
       <StudentDetailsDialog
         open={isDetailsOpen}
         onOpenChange={setIsDetailsOpen}
