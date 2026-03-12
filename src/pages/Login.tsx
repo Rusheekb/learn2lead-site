@@ -104,6 +104,7 @@ const Login = () => {
       console.error('Registration error:', error);
       if (error instanceof Error) {
         setAuthError(error.message);
+        captureException(error, { context: 'handleSignUp' });
       }
     } finally {
       setIsLoading(false);
