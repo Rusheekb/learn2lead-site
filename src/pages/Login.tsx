@@ -27,9 +27,15 @@ const Login = () => {
     const errorDescription = queryParams.get('error_description');
     
     if (error) {
-      setAuthError(errorDescription || 'An error occurred during authentication');
-      toast.error(errorDescription || 'Authentication error');
-      
+      const errorMsg = errorDescription || 'An error occurred during authentication';
+      setAuthError(errorMsg);
+      toast.error(errorMsg);
+      addBreadcrumb({
+        category: 'auth',
+        message: `OAuth callback error: ${error}`,
+        level: 'warning',
+        data: { error, errorDescription },
+      });
       const cleanUrl = window.location.pathname;
       window.history.replaceState({}, document.title, cleanUrl);
     }
