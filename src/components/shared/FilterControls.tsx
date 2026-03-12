@@ -103,7 +103,7 @@ const FilterControls: React.FC<CommonFilterProps> = ({
       )}
 
       {/* Code Logs Switch and Clear Filters */}
-      <div className="flex items-center justify-between col-span-4">
+      <div className="flex items-center justify-between col-span-1 sm:col-span-2 md:col-span-4">
         {showCodeLogsSwitch && setShowCodeLogs && (
           <ToggleSwitch
             id="code-logs"

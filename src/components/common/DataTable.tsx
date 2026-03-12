@@ -96,19 +96,18 @@ function TablePagination({
   pageSizeOptions = [10, 20, 50, 100],
 }: TablePaginationProps) {
   return (
-    <div className="flex items-center justify-between py-4">
-      <div className="flex-1 text-sm text-muted-foreground">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 py-4">
+      <div className="text-sm text-muted-foreground">
         {totalItems > 0 && (
           <span>
-            Showing {(currentPage - 1) * pageSize + 1} to{' '}
-            {Math.min(currentPage * pageSize, totalItems)} of {totalItems} items
+            {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, totalItems)} of {totalItems}
           </span>
         )}
       </div>
-      <div className="flex items-center space-x-6 lg:space-x-8">
+      <div className="flex flex-wrap items-center gap-3">
         {onPageSizeChange && (
-          <div className="flex items-center space-x-2">
-            <p className="text-sm font-medium">Rows per page</p>
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-medium whitespace-nowrap">Rows</p>
             <select
               className="h-8 w-[70px] rounded-md border border-input bg-background px-2 text-sm"
               value={pageSize}
@@ -123,17 +122,17 @@ function TablePagination({
           </div>
         )}
         
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={() => onPageChange(currentPage - 1)}
             disabled={currentPage <= 1}
           >
-            Previous
+            Prev
           </Button>
-          <div className="text-sm">
-            Page {currentPage} of {totalPages}
+          <div className="text-sm whitespace-nowrap">
+            {currentPage}/{totalPages}
           </div>
           <Button
             variant="outline"
