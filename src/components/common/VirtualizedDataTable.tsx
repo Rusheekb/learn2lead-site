@@ -210,7 +210,10 @@ function VirtualizedTableBody<T>({
                 height: `${rowHeight}px`,
                 transform: `translateY(${virtualRow.start}px)`,
               }}
+              role={onRowClick ? 'button' : 'row'}
+              tabIndex={onRowClick ? 0 : undefined}
               onClick={onRowClick ? () => onRowClick(row) : undefined}
+              onKeyDown={onRowClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onRowClick(row); } } : undefined}
             >
               {columns.map((column, colIndex) => (
                 <div
