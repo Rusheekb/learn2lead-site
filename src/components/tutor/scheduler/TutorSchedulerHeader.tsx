@@ -19,14 +19,16 @@ const TutorSchedulerHeader: React.FC<TutorSchedulerHeaderProps> = ({ onAddClick 
           Manage your upcoming classes and schedule new sessions.
         </p>
       </div>
-      <div className="flex space-x-2">
-        <Button variant="outline" onClick={() => setIsCalendarHelpOpen(true)}>
-          <Calendar className="mr-2 h-4 w-4" />
-          Calendar Sync
+      <div className="flex gap-2">
+        <Button variant="outline" size="sm" className="text-xs sm:text-sm" onClick={() => setIsCalendarHelpOpen(true)}>
+          <Calendar className="mr-1.5 h-4 w-4" />
+          <span className="hidden sm:inline">Calendar Sync</span>
+          <span className="sm:hidden">Sync</span>
         </Button>
-        <Button onClick={onAddClick}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Schedule Class
+        <Button size="sm" className="text-xs sm:text-sm" onClick={onAddClick}>
+          <PlusCircle className="mr-1.5 h-4 w-4" />
+          <span className="hidden sm:inline">Schedule Class</span>
+          <span className="sm:hidden">Add</span>
         </Button>
       </div>
       

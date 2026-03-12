@@ -22,9 +22,9 @@ const DashboardShell: React.FC<DashboardShellProps> = ({ title, children }) => {
   useClassNotifications();
 
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-gray-50" role="application" aria-label={`${title} dashboard`}>
+    <div className="flex flex-col md:flex-row h-screen bg-background" role="application" aria-label={`${title} dashboard`}>
       {/* Mobile Navigation Trigger */}
-      <div className="md:hidden flex items-center p-4 border-b bg-white">
+      <div className="md:hidden flex items-center p-3 border-b bg-card">
         <Sheet open={isMobileNavOpen} onOpenChange={setIsMobileNavOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" aria-label="Open menu">
@@ -35,7 +35,7 @@ const DashboardShell: React.FC<DashboardShellProps> = ({ title, children }) => {
             <AppSidebar className="h-full border-0" />
           </SheetContent>
         </Sheet>
-        <h1 className="text-xl font-bold mx-auto">{title}</h1>
+        <h1 className="text-lg font-bold mx-auto truncate">{title}</h1>
       </div>
       
       {/* Desktop Sidebar */}
@@ -44,7 +44,7 @@ const DashboardShell: React.FC<DashboardShellProps> = ({ title, children }) => {
       </div>
       
       {/* Main Content */}
-      <main id="main-content" tabIndex={-1} className="flex-1 overflow-auto p-4 md:p-6 focus:outline-none">
+      <main id="main-content" tabIndex={-1} className="flex-1 overflow-auto p-3 sm:p-4 md:p-6 focus:outline-none">
         <div className="max-w-7xl mx-auto">
           {/* Breadcrumbs */}
           <div className="hidden md:block">
