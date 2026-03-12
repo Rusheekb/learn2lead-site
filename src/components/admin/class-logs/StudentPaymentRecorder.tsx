@@ -260,6 +260,7 @@ const StudentPaymentRecorder: React.FC<StudentPaymentRecorderProps> = ({
           .from('class_credits_ledger')
           .insert(ledgerInsert);
         if (ledgerError) throw ledgerError;
+        addBreadcrumb({ category: 'payment.recording', message: 'Credits added to ledger', data: { credits: calculations.creditsToAdd } });
       }
 
       // 3. Update prepaid balance
