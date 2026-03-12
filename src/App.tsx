@@ -206,6 +206,7 @@ function App() {
                 <RoutePersistence />
                 <PostHogPageView />
                 <SidebarProvider>
+                  <OfflineBanner />
                   <AnimatedRoutes />
                   <PWAInstallPrompt />
                   <PWAUpdatePrompt />
