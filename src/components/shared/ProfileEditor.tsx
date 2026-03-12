@@ -54,7 +54,7 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
         <CardTitle>Edit Profile</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6" aria-label="Edit profile form">
           <AvatarUploader profile={profile} onSave={onSave} />
           <ProfileForm 
             formData={formData}

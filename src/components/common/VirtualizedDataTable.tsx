@@ -100,8 +100,8 @@ const TablePagination = memo(function TablePagination({
   pageSizeOptions = [10, 20, 50, 100],
 }: TablePaginationProps) {
   return (
-    <div className="flex items-center justify-between py-4">
-      <div className="flex-1 text-sm text-muted-foreground">
+    <nav aria-label="Table pagination" className="flex items-center justify-between py-4">
+      <div className="flex-1 text-sm text-muted-foreground" aria-live="polite">
         {totalItems > 0 && (
           <span>
             Showing {(currentPage - 1) * pageSize + 1} to{' '}
@@ -112,11 +112,13 @@ const TablePagination = memo(function TablePagination({
       <div className="flex items-center space-x-6 lg:space-x-8">
         {onPageSizeChange && (
           <div className="flex items-center space-x-2">
-            <p className="text-sm font-medium">Rows per page</p>
+            <label htmlFor="vdt-page-size" className="text-sm font-medium">Rows per page</label>
             <select
+              id="vdt-page-size"
               className="h-8 w-[70px] rounded-md border border-input bg-background px-2 text-sm"
               value={pageSize}
               onChange={(e) => onPageSizeChange(Number(e.target.value))}
+              aria-label="Rows per page"
             >
               {pageSizeOptions.map((size) => (
                 <option key={size} value={size}>
@@ -133,10 +135,11 @@ const TablePagination = memo(function TablePagination({
             size="sm"
             onClick={() => onPageChange(currentPage - 1)}
             disabled={currentPage <= 1}
+            aria-label="Previous page"
           >
             Previous
           </Button>
-          <div className="text-sm">
+          <div className="text-sm" aria-current="page">
             Page {currentPage} of {totalPages}
           </div>
           <Button
@@ -144,12 +147,13 @@ const TablePagination = memo(function TablePagination({
             size="sm"
             onClick={() => onPageChange(currentPage + 1)}
             disabled={currentPage >= totalPages}
+            aria-label="Next page"
           >
             Next
           </Button>
         </div>
       </div>
-    </div>
+    </nav>
   );
 });
 
@@ -206,7 +210,10 @@ function VirtualizedTableBody<T>({
                 height: `${rowHeight}px`,
                 transform: `translateY(${virtualRow.start}px)`,
               }}
+              role={onRowClick ? 'button' : 'row'}
+              tabIndex={onRowClick ? 0 : undefined}
               onClick={onRowClick ? () => onRowClick(row) : undefined}
+              onKeyDown={onRowClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onRowClick(row); } } : undefined}
             >
               {columns.map((column, colIndex) => (
                 <div
@@ -321,10 +328,11 @@ function VirtualizedDataTable<T>({
         <>
           <div className="overflow-x-auto">
             {/* Header */}
-            <div className="flex border-b border-border bg-muted/50">
+            <div className="flex border-b border-border bg-muted/50" role="row" aria-label="Column headers">
               {columns.map((column, index) => (
                 <div
                   key={index}
+                  role="columnheader"
                   className={`px-4 py-3 text-sm font-medium text-muted-foreground flex-1 ${column.className || ''}`}
                   style={column.width ? { width: column.width, flex: 'none' } : undefined}
                 >
@@ -380,6 +388,9 @@ function VirtualizedDataTable<T>({
                     }}
                     className={`border-b transition-colors data-[state=selected]:bg-muted ${onRowClick ? 'cursor-pointer' : ''}`}
                     onClick={onRowClick ? () => onRowClick(row) : undefined}
+                    onKeyDown={onRowClick ? (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onRowClick(row); } } : undefined}
+                    tabIndex={onRowClick ? 0 : undefined}
+                    role={onRowClick ? 'button' : undefined}
                   >
                     {columns.map((column, colIndex) => (
                       <TableCell key={colIndex} className={column.className}>

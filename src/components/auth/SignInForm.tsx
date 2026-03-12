@@ -27,7 +27,7 @@ const SignInForm: React.FC<SignInFormProps> = ({
   handleGoogleSignIn
 }) => {
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4" aria-label="Sign in form" noValidate>
       <div className="space-y-2">
         <Label htmlFor="email-signin">Email</Label>
         <Input
@@ -37,6 +37,8 @@ const SignInForm: React.FC<SignInFormProps> = ({
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
+          autoComplete="email"
+          aria-required="true"
         />
       </div>
       <div className="space-y-2">
@@ -48,6 +50,8 @@ const SignInForm: React.FC<SignInFormProps> = ({
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          autoComplete="current-password"
+          aria-required="true"
         />
       </div>
       <AuthButton

@@ -228,9 +228,10 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="max-w-3xl max-h-[90vh] px-4 sm:px-8 bg-white text-gray-900 border">
+      <DialogContent className="max-w-3xl max-h-[90vh] px-4 sm:px-8 bg-white text-gray-900 border" aria-labelledby="add-class-title" aria-describedby="add-class-desc">
         <div className="flex flex-col h-full max-h-[calc(90vh-4rem)]">
-          <h2 className="text-lg font-semibold py-2 flex-shrink-0">Schedule New Class</h2>
+          <h2 id="add-class-title" className="text-lg font-semibold py-2 flex-shrink-0">Schedule New Class</h2>
+          <p id="add-class-desc" className="sr-only">Fill in the details below to schedule a new tutoring class session.</p>
           
           {isLoading ? (
             <div className="py-8 sm:py-12 text-center text-lg">Loading student data...</div>

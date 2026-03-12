@@ -71,9 +71,7 @@ const Modal: React.FC<ModalProps> = ({
     <Dialog 
       open={isOpen} 
       onOpenChange={handleOpenChange}
-      aria-labelledby={title ? titleId : undefined}
-      aria-describedby={description ? descriptionId : undefined}
-      modal={true} // Ensure modal behavior
+      modal={true}
     >
       <DialogContent 
         className={`${maxWidth} ${maxHeight} overflow-y-auto mx-4 w-[calc(100vw-2rem)] sm:w-auto bg-white px-4 sm:px-8 py-6 sm:py-10 ${className}`} // Improved responsive padding

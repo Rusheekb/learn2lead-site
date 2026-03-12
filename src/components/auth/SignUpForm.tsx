@@ -35,7 +35,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
   handleGoogleSignIn
 }) => {
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4" aria-label="Create account form" noValidate>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="first-name-signup">First Name</Label>
@@ -47,6 +47,8 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
             onChange={(e) => setFirstName(e.target.value)}
             required
             minLength={2}
+            autoComplete="given-name"
+            aria-required="true"
           />
         </div>
         <div className="space-y-2">
@@ -59,6 +61,8 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
             onChange={(e) => setLastName(e.target.value)}
             required
             minLength={2}
+            autoComplete="family-name"
+            aria-required="true"
           />
         </div>
       </div>
@@ -71,6 +75,8 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
+          autoComplete="email"
+          aria-required="true"
         />
       </div>
       <div className="space-y-2">
@@ -82,8 +88,11 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
+          autoComplete="new-password"
+          aria-required="true"
+          aria-describedby="password-hint"
         />
-        <p className="text-xs text-gray-500">
+        <p id="password-hint" className="text-xs text-muted-foreground">
           Password must be at least 6 characters long
         </p>
       </div>
