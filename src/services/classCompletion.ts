@@ -160,8 +160,10 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
         'Class ID': data.classId,
         'Additional Info': data.additionalInfo,
         'Class Cost': studentData?.class_rate ?? null,
-        'Tutor Cost': tutorData?.hourly_rate ?? null
-      });
+        'Tutor Cost': tutorData?.hourly_rate ?? null,
+        tutor_user_id: data.tutorId,
+        student_user_id: data.studentId,
+      } as any);
 
     if (insertError) {
       console.error('Error creating class log:', insertError);
