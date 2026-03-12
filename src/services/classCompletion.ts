@@ -30,7 +30,7 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
 
     // First, check if the class still exists
     const { data: existingClass, error: classError } = await retryWithBackoff(
-      () => supabase
+      async () => supabase
         .from('scheduled_classes')
         .select('id')
         .eq('id', data.classId)
