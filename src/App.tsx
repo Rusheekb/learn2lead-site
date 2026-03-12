@@ -200,6 +200,8 @@ function App() {
                 <PostHogPageView />
                 <SidebarProvider>
                   <AnimatedRoutes />
+                  <PWAInstallPrompt />
+                  <PWAUpdatePrompt />
                 </SidebarProvider>
               </SubscriptionProvider>
             </AuthProvider>
