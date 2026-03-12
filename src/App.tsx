@@ -13,6 +13,7 @@ import SkipLink from './components/shared/SkipLink';
 const Index = React.lazy(() => import('./pages/Index'));
 const NotFound = React.lazy(() => import('./pages/NotFound'));
 const Login = React.lazy(() => import('./pages/Login'));
+const ResetPassword = React.lazy(() => import('./pages/ResetPassword'));
 const Pricing = React.lazy(() => import('./pages/Pricing'));
 const ReferralLanding = React.lazy(() => import('./pages/ReferralLanding'));
 import { AuthProvider } from './contexts/AuthContext';
