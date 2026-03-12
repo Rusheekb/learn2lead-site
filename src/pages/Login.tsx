@@ -72,6 +72,14 @@ const Login = () => {
       return;
     }
 
+    if (!signInLimiter.recordAttempt()) {
+      const msg = `Too many sign-in attempts. Please wait ${signInLimiter.secondsUntilReset}s.`;
+      setAuthError(msg);
+      toast.error(msg);
+      addBreadcrumb({ category: 'auth', message: 'Sign-in rate limited', level: 'warning' });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
