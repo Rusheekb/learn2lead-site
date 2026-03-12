@@ -67,6 +67,7 @@ describe('completeClass', () => {
     tutorName: 'John Doe',
     studentName: 'Sarah Miller',
     studentId: 'student-456',
+    tutorId: 'tutor-789',
     date: '2024-12-15',
     day: 'Sunday',
     timeCst: '14:00-15:00',

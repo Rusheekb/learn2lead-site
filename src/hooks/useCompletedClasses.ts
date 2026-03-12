@@ -28,10 +28,11 @@ export const useCompletedClasses = (userRole: 'student' | 'tutor' | 'admin') => 
       
       let query = supabase.from('class_logs').select('*');
       
+      // Use UUID-based filtering (primary) with name fallback for legacy records
       if (userRole === 'tutor') {
-        query = query.or(`Tutor Name.eq.${fullName},Tutor Name.eq.${profile.email}`);
+        query = query.or(`tutor_user_id.eq.${user.id},Tutor Name.eq.${fullName},Tutor Name.eq.${profile.email}`);
       } else if (userRole === 'student') {
-        query = query.or(`Student Name.eq.${fullName},Student Name.eq.${profile.email}`);
+        query = query.or(`student_user_id.eq.${user.id},Student Name.eq.${fullName},Student Name.eq.${profile.email}`);
       }
 
       const { data, error } = await query.order('Date', { ascending: false });
