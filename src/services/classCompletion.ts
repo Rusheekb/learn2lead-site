@@ -210,6 +210,7 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
 
     if (updateError) {
       console.error('Error updating scheduled class status:', updateError);
+      addBreadcrumb({ category: 'class.completion', message: 'Status update failed, rolling back log', level: 'error', data: { classId: data.classId } });
       // If update fails, try to remove the class log we just created
       await supabase
         .from('class_logs')
@@ -217,6 +218,8 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
         .eq('Class ID', data.classId);
       throw new Error('Failed to mark class as completed');
     }
+
+    addBreadcrumb({ category: 'class.completion', message: 'Class completed successfully', data: { classId: data.classId, creditsRemaining } });
 
     captureEvent('class_completed', {
       subject: data.subject,
