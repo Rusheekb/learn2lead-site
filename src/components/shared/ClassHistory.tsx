@@ -215,7 +215,7 @@ const ClassHistory: React.FC<ClassHistoryProps> = memo(({ userRole }) => {
           <DialogHeader>
             <DialogTitle>Edit Class Description</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 flex-1 overflow-y-auto">
             <div>
               <Label htmlFor="content">What was covered in this class?</Label>
               <Textarea
