@@ -152,7 +152,7 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold">Admin Dashboard</h2>
+      <h2 className="text-xl sm:text-2xl font-bold">Admin Dashboard</h2>
       
       <ContentTransition transitionKey={activeTab}>
         {renderContent()}
