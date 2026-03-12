@@ -44,7 +44,7 @@ export const createClassLog = async (
   classEvent: ClassEvent
 ): Promise<ClassEvent | null> => {
   const eventDate = parseDateToLocal(classEvent.date);
-  const record = {
+  const record: Record<string, any> = {
     'Class Number': classEvent.title,
     'Tutor Name': classEvent.tutorName,
     'Student Name': classEvent.studentName,
@@ -61,9 +61,11 @@ export const createClassLog = async (
     'Student Payment': 'Pending',
     'Tutor Payment': 'Pending',
     'Additional Info': classEvent.notes || null,
-    // Only add Status and Attendance if they're needed but avoid adding them
-    // directly to prevent the PGRST204 error
   };
+
+  // Add UUID columns if available
+  if (classEvent.tutorId) record.tutor_user_id = classEvent.tutorId;
+  if (classEvent.studentId) record.student_user_id = classEvent.studentId;
 
   const { data, error } = await supabase
     .from('class_logs')
