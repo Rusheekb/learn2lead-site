@@ -46,14 +46,14 @@ const Dashboard: React.FC = () => {
           </CardContent>
         </Card>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2 p-3 sm:p-6">
+            <CardTitle className="text-xs sm:text-sm font-medium">
               Avg. Class Duration
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">54 min</div>
-            <p className="text-xs text-muted-foreground">
+          <CardContent className="p-3 sm:p-6 pt-0">
+            <div className="text-xl sm:text-2xl font-bold">54 min</div>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">
               +2 min from last month
             </p>
           </CardContent>
