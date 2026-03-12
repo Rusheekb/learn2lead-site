@@ -10,6 +10,7 @@ export interface CompleteClassData {
   tutorName: string;
   studentName: string;
   studentId: string; // Added for credit deduction
+  tutorId: string; // Tutor UUID for RLS
   date: string;
   day: string;
   timeCst: string;
