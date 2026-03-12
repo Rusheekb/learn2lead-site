@@ -46,12 +46,22 @@ const StudentTable: React.FC<StudentTableProps> = memo(({
       cell: (student) => (
         <div className="flex flex-col">
           <div className="font-medium">{student.name}</div>
-          <div className="text-sm text-muted-foreground">{student.email}</div>
+          <div className="text-xs sm:text-sm text-muted-foreground truncate max-w-[120px] sm:max-w-none">{student.email}</div>
+          {/* Show extra info on mobile inline */}
+          <div className="flex flex-wrap gap-1.5 mt-1 sm:hidden">
+            <Badge variant={student.paymentMethod === 'stripe' ? 'default' : 'secondary'} className="text-[10px]">
+              {student.paymentMethod === 'stripe' ? 'Stripe' : 'Zelle'}
+            </Badge>
+            {student.classRate != null && (
+              <span className="text-xs text-muted-foreground">${Number(student.classRate).toFixed(2)}</span>
+            )}
+          </div>
         </div>
       ),
     },
     {
       header: 'Payment Method',
+      className: 'hidden sm:table-cell',
       cell: (student) => (
         <Badge variant={student.paymentMethod === 'stripe' ? 'default' : 'secondary'}>
           {student.paymentMethod === 'stripe' ? 'Stripe' : 'Zelle'}
@@ -60,6 +70,7 @@ const StudentTable: React.FC<StudentTableProps> = memo(({
     },
     {
       header: 'Class Rate',
+      className: 'hidden sm:table-cell',
       cell: (student) => (
         <span className="font-medium">
           {student.classRate != null ? `$${Number(student.classRate).toFixed(2)}` : '—'}
@@ -68,12 +79,13 @@ const StudentTable: React.FC<StudentTableProps> = memo(({
     },
     {
       header: 'Last Session',
+      className: 'hidden md:table-cell',
       cell: (student) => formatDate(student.lastSession),
     },
     {
       header: 'Actions',
       cell: (student) => (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <ActionButton variant="ghost" size="icon" tooltip="Edit student">
             <Edit2 className="h-4 w-4" />
           </ActionButton>

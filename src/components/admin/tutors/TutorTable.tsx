@@ -24,12 +24,19 @@ const TutorTable: React.FC<TutorTableProps> = memo(({
       cell: (tutor) => (
         <div className="flex flex-col">
           <div className="font-medium">{tutor.name}</div>
-          <div className="text-sm text-muted-foreground">{tutor.email}</div>
+          <div className="text-xs sm:text-sm text-muted-foreground truncate max-w-[120px] sm:max-w-none">{tutor.email}</div>
+          {/* Show rate on mobile inline */}
+          <div className="sm:hidden mt-0.5">
+            <span className="text-xs text-muted-foreground">
+              {tutor.hourlyRate != null ? `$${Number(tutor.hourlyRate).toFixed(2)}/hr` : '—'}
+            </span>
+          </div>
         </div>
       ),
     },
     {
       header: 'Hourly Rate',
+      className: 'hidden sm:table-cell',
       cell: (tutor) => (
         <span className="text-sm">
           {tutor.hourlyRate != null ? `$${Number(tutor.hourlyRate).toFixed(2)}` : '—'}
@@ -39,7 +46,7 @@ const TutorTable: React.FC<TutorTableProps> = memo(({
     {
       header: 'Actions',
       cell: (tutor) => (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <ActionButton variant="ghost" size="icon" tooltip="Edit tutor">
             <Edit2 className="h-4 w-4" />
           </ActionButton>
