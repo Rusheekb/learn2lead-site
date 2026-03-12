@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SignInForm from './SignInForm';
 import SignUpForm from './SignUpForm';
 import AuthError from './AuthError';
+import ForgotPasswordForm from './ForgotPasswordForm';
 
 interface AuthTabsProps {
   email: string;
@@ -36,6 +37,12 @@ const AuthTabs: React.FC<AuthTabsProps> = ({
   handleSignUp,
   handleGoogleSignIn
 }) => {
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+
+  if (showForgotPassword) {
+    return <ForgotPasswordForm onBack={() => setShowForgotPassword(false)} />;
+  }
+
   return (
     <Tabs defaultValue="signin" className="w-full">
       <TabsList className="grid w-full grid-cols-2 mb-6">
@@ -54,6 +61,7 @@ const AuthTabs: React.FC<AuthTabsProps> = ({
           isLoading={isLoading}
           handleSubmit={handleSignIn}
           handleGoogleSignIn={handleGoogleSignIn}
+          onForgotPassword={() => setShowForgotPassword(true)}
         />
       </TabsContent>
 

@@ -13,6 +13,7 @@ import SkipLink from './components/shared/SkipLink';
 const Index = React.lazy(() => import('./pages/Index'));
 const NotFound = React.lazy(() => import('./pages/NotFound'));
 const Login = React.lazy(() => import('./pages/Login'));
+const ResetPassword = React.lazy(() => import('./pages/ResetPassword'));
 const Pricing = React.lazy(() => import('./pages/Pricing'));
 const ReferralLanding = React.lazy(() => import('./pages/ReferralLanding'));
 import { AuthProvider } from './contexts/AuthContext';
@@ -114,6 +115,11 @@ const AnimatedRoutes = () => {
         <Route path="/login" element={
           <OptimizedSuspense>
             <AnimatedPage><Login /></AnimatedPage>
+          </OptimizedSuspense>
+        } />
+        <Route path="/reset-password" element={
+          <OptimizedSuspense>
+            <AnimatedPage><ResetPassword /></AnimatedPage>
           </OptimizedSuspense>
         } />
         <Route path="/pricing" element={

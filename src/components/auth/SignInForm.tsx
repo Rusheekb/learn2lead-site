@@ -15,6 +15,7 @@ interface SignInFormProps {
   isLoading: boolean;
   handleSubmit: (e: React.FormEvent) => Promise<void>;
   handleGoogleSignIn: () => Promise<void>;
+  onForgotPassword?: () => void;
 }
 
 const SignInForm: React.FC<SignInFormProps> = ({
@@ -24,7 +25,8 @@ const SignInForm: React.FC<SignInFormProps> = ({
   setPassword,
   isLoading,
   handleSubmit,
-  handleGoogleSignIn
+  handleGoogleSignIn,
+  onForgotPassword
 }) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4" aria-label="Sign in form" noValidate>
@@ -42,7 +44,18 @@ const SignInForm: React.FC<SignInFormProps> = ({
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="password-signin">Password</Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="password-signin">Password</Label>
+          {onForgotPassword && (
+            <button
+              type="button"
+              onClick={onForgotPassword}
+              className="text-xs text-primary hover:text-primary/80 hover:underline transition-colors"
+            >
+              Forgot password?
+            </button>
+          )}
+        </div>
         <Input
           id="password-signin"
           type="password"
@@ -65,7 +78,7 @@ const SignInForm: React.FC<SignInFormProps> = ({
           <Separator className="w-full" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-white px-2 text-muted-foreground">
+          <span className="bg-card px-2 text-muted-foreground">
             Or continue with
           </span>
         </div>
