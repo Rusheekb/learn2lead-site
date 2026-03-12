@@ -96,8 +96,8 @@ function TablePagination({
   pageSizeOptions = [10, 20, 50, 100],
 }: TablePaginationProps) {
   return (
-    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 py-4">
-      <div className="text-sm text-muted-foreground">
+    <nav aria-label="Table pagination" className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 py-4">
+      <div className="text-sm text-muted-foreground" aria-live="polite">
         {totalItems > 0 && (
           <span>
             {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, totalItems)} of {totalItems}
@@ -107,11 +107,13 @@ function TablePagination({
       <div className="flex flex-wrap items-center gap-3">
         {onPageSizeChange && (
           <div className="flex items-center gap-2">
-            <p className="text-sm font-medium whitespace-nowrap">Rows</p>
+            <label htmlFor="dt-page-size" className="text-sm font-medium whitespace-nowrap">Rows</label>
             <select
+              id="dt-page-size"
               className="h-8 w-[70px] rounded-md border border-input bg-background px-2 text-sm"
               value={pageSize}
               onChange={(e) => onPageSizeChange(Number(e.target.value))}
+              aria-label="Rows per page"
             >
               {pageSizeOptions.map((size) => (
                 <option key={size} value={size}>
@@ -128,10 +130,11 @@ function TablePagination({
             size="sm"
             onClick={() => onPageChange(currentPage - 1)}
             disabled={currentPage <= 1}
+            aria-label="Previous page"
           >
             Prev
           </Button>
-          <div className="text-sm whitespace-nowrap">
+          <div className="text-sm whitespace-nowrap" aria-current="page">
             {currentPage}/{totalPages}
           </div>
           <Button
@@ -139,12 +142,13 @@ function TablePagination({
             size="sm"
             onClick={() => onPageChange(currentPage + 1)}
             disabled={currentPage >= totalPages}
+            aria-label="Next page"
           >
             Next
           </Button>
         </div>
       </div>
-    </div>
+    </nav>
   );
 }
 
