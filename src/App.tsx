@@ -28,6 +28,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import InlineErrorFallback from './components/shared/InlineErrorFallback';
 import PWAInstallPrompt from './components/shared/PWAInstallPrompt';
 import PWAUpdatePrompt from './components/shared/PWAUpdatePrompt';
+import OfflineBanner from './components/shared/OfflineBanner';
 
 const Profile = React.lazy(() => import('./pages/Profile'));
 const TutorDashboard = React.lazy(() => import('./pages/TutorDashboard'));
