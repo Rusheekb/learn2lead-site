@@ -130,6 +130,7 @@ export type Database = {
           id: string
           "Student Name": string | null
           student_payment_date: string | null
+          student_user_id: string | null
           Subject: string | null
           "Time (CST)": string | null
           "Time (hrs)": string | null
@@ -137,6 +138,7 @@ export type Database = {
           "Tutor Cost": number | null
           "Tutor Name": string | null
           tutor_payment_date: string | null
+          tutor_user_id: string | null
           verification_deadline: string | null
           verified_by_student: boolean | null
         }
@@ -154,6 +156,7 @@ export type Database = {
           id?: string
           "Student Name"?: string | null
           student_payment_date?: string | null
+          student_user_id?: string | null
           Subject?: string | null
           "Time (CST)"?: string | null
           "Time (hrs)"?: string | null
@@ -161,6 +164,7 @@ export type Database = {
           "Tutor Cost"?: number | null
           "Tutor Name"?: string | null
           tutor_payment_date?: string | null
+          tutor_user_id?: string | null
           verification_deadline?: string | null
           verified_by_student?: boolean | null
         }
@@ -178,6 +182,7 @@ export type Database = {
           id?: string
           "Student Name"?: string | null
           student_payment_date?: string | null
+          student_user_id?: string | null
           Subject?: string | null
           "Time (CST)"?: string | null
           "Time (hrs)"?: string | null
@@ -185,10 +190,26 @@ export type Database = {
           "Tutor Cost"?: number | null
           "Tutor Name"?: string | null
           tutor_payment_date?: string | null
+          tutor_user_id?: string | null
           verification_deadline?: string | null
           verified_by_student?: boolean | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "class_logs_student_user_id_fkey"
+            columns: ["student_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_logs_tutor_user_id_fkey"
+            columns: ["tutor_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       class_uploads: {
         Row: {
