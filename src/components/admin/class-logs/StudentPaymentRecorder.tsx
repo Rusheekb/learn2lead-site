@@ -278,11 +278,15 @@ const StudentPaymentRecorder: React.FC<StudentPaymentRecorderProps> = ({
       if (calculations.newSurplus > 0)
         parts.push(`$${calculations.newSurplus.toFixed(2)} surplus stored`);
 
+      addBreadcrumb({ category: 'payment.recording', message: 'Payment recorded successfully', data: { student: selectedStudent.name, amount: parseFloat(amount) } });
       toast.success(parts.join(', '));
       onPaymentRecorded();
       onOpenChange(false);
     } catch (err) {
       console.error('Payment recording error:', err);
+      if (err instanceof Error) {
+        captureException(err, { student: selectedStudent.name, amount: parseFloat(amount) });
+      }
       toast.error('Failed to record payment');
     } finally {
       setIsSubmitting(false);
