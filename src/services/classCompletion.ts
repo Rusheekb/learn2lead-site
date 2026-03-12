@@ -255,6 +255,9 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
 
   } catch (error) {
     console.error('Error completing class:', error);
+    if (error instanceof Error) {
+      captureException(error, { classId: data.classId, studentId: data.studentId });
+    }
     const errorMessage = error instanceof Error ? error.message : 'Failed to complete class';
     toast.error(errorMessage);
     return false;
