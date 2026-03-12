@@ -58,7 +58,7 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
 
     const durationHours = parseFloat(data.timeHrs) || 1;
 
-    const { data: creditResult, error: creditError } = await retryEdgeFunction(
+    const { data: creditResult, error: creditError } = await retryEdgeFunction<any>(
       () => supabase.functions.invoke(
         'deduct-class-credit',
         {
