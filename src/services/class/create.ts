@@ -24,10 +24,13 @@ export const createScheduledClassBatch = async (
       relationship_id: sharedData.relationship_id || null,
     }));
 
-    const { data, error } = await supabase
-      .from('scheduled_classes')
-      .insert(rows)
-      .select('id');
+    const { data, error } = await retryWithBackoff(
+      async () => supabase
+        .from('scheduled_classes')
+        .insert(rows)
+        .select('id'),
+      { maxRetries: 2 }
+    );
 
     if (error) throw error;
     return data?.length || 0;
