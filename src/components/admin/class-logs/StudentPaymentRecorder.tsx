@@ -218,6 +218,9 @@ const StudentPaymentRecorder: React.FC<StudentPaymentRecorderProps> = ({
   const handleConfirm = async () => {
     if (!calculations || !selectedStudent || !summary) return;
     setIsSubmitting(true);
+
+    addBreadcrumb({ category: 'payment.recording', message: 'Starting payment recording', data: { student: selectedStudent.name, amount: parseFloat(amount), classesToMark: calculations.classesToMark.length, creditsToAdd: calculations.creditsToAdd } });
+
     try {
       const dateObj = new Date(paymentDate + 'T12:00:00');
 
