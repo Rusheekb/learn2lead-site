@@ -75,6 +75,7 @@ const Login = () => {
       console.error('Login error:', error);
       if (error instanceof Error) {
         setAuthError(error.message);
+        captureException(error, { context: 'handleSignIn' });
       }
     } finally {
       setIsLoading(false);
