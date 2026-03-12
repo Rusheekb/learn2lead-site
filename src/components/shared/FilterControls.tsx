@@ -61,7 +61,7 @@ const FilterControls: React.FC<CommonFilterProps> = ({
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         placeholder={searchPlaceholder}
-        className={`${showDateFilter || showStatusFilter || showSubjectFilter ? 'col-span-4 md:col-span-2' : 'col-span-4'}`}
+        className={`${showDateFilter || showStatusFilter || showSubjectFilter ? 'col-span-1 sm:col-span-2 md:col-span-2' : 'col-span-1 sm:col-span-2 md:col-span-4'}`}
       />
 
       {/* Status Filter */}
