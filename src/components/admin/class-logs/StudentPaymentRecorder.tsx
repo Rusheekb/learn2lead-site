@@ -24,6 +24,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { batchUpdateStudentPaymentDate } from '@/services/class-operations/update/updatePaymentDate';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { addBreadcrumb, captureException } from '@/lib/sentry';
 
 interface StudentPaymentRecorderProps {
   open: boolean;
