@@ -9,6 +9,7 @@ import AuthTabs from '@/components/auth/AuthTabs';
 import { getSavedRoute } from '@/hooks/useRoutePersistence';
 import { signInSchema, signUpSchema, validateForm } from '@/lib/validation';
 import { addBreadcrumb, captureException } from '@/lib/sentry';
+import { useRateLimiter } from '@/hooks/useRateLimiter';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -19,6 +20,10 @@ const Login = () => {
   const { signIn, signUp, signInWithOAuth, user, userRole } = useAuth();
   const navigate = useNavigate();
   const [authError, setAuthError] = useState<string | null>(null);
+
+  // Rate limit: 5 attempts per 2 minutes, 60s lockout
+  const signInLimiter = useRateLimiter({ maxAttempts: 5, windowMs: 120_000, lockoutMs: 60_000 });
+  const signUpLimiter = useRateLimiter({ maxAttempts: 3, windowMs: 120_000, lockoutMs: 90_000 });
 
   // Check for OAuth error in URL parameters
   useEffect(() => {
