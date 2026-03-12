@@ -24,7 +24,7 @@ const DashboardShell: React.FC<DashboardShellProps> = ({ title, children }) => {
   return (
     <div className="flex flex-col md:flex-row h-screen bg-background" role="application" aria-label={`${title} dashboard`}>
       {/* Mobile Navigation Trigger */}
-      <div className="md:hidden flex items-center p-4 border-b bg-white">
+      <div className="md:hidden flex items-center p-3 border-b bg-card">
         <Sheet open={isMobileNavOpen} onOpenChange={setIsMobileNavOpen}>
           <SheetTrigger asChild>
             <Button variant="ghost" size="icon" aria-label="Open menu">
