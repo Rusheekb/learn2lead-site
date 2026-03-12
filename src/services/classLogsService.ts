@@ -69,7 +69,7 @@ export const createClassLog = async (
 
   const { data, error } = await supabase
     .from('class_logs')
-    .insert(record)
+    .insert(record as any)
     .select<string, ClassLogs>()
     .single();
 
