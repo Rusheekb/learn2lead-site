@@ -58,17 +58,25 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
 
     const durationHours = parseFloat(data.timeHrs) || 1;
 
-    const { data: creditResult, error: creditError } = await supabase.functions.invoke(
-      'deduct-class-credit',
+    const { data: creditResult, error: creditError } = await retryEdgeFunction(
+      () => supabase.functions.invoke(
+        'deduct-class-credit',
+        {
+          body: {
+            student_id: data.studentId,
+            class_id: data.classId,
+            class_title: data.classNumber,
+            duration_hours: durationHours
+          },
+          headers: {
+            Authorization: `Bearer ${session.session.access_token}`
+          }
+        }
+      ),
       {
-        body: {
-          student_id: data.studentId,
-          class_id: data.classId,
-          class_title: data.classNumber,
-          duration_hours: durationHours
-        },
-        headers: {
-          Authorization: `Bearer ${session.session.access_token}`
+        maxRetries: 3,
+        onRetry: (n, err) => {
+          addBreadcrumb({ category: 'class.completion', message: `Retry ${n}: credit deduction`, level: 'warning', data: { error: String(err) } });
         }
       }
     );
