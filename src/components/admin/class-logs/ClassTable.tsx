@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useMemo, memo } from 'react';
 import DataTable, { ColumnDefinition } from '@/components/common/DataTable';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
