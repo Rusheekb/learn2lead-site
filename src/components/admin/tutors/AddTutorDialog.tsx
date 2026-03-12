@@ -51,7 +51,7 @@ const AddTutorDialog: React.FC<AddTutorDialogProps> = ({
     };
 
     onAddTutor(newTutor);
-    toast.success('New tutor has been successfully added to the system.');
+    toast.success('New tutor has been successfully added.');
     onOpenChange(false);
     form.reset();
   };
