@@ -70,27 +70,24 @@ const ClassTable: React.FC<ClassTableProps> = ({
 
   const columns: ColumnDefinition<ClassEvent>[] = [
     {
-      header: 'Class ID',
-      cell: (cls) => (
-        <div className="font-mono text-sm">
-          {cls.classNumber || '-'}
-        </div>
-      ),
-    },
-    {
       header: 'Class Details',
       cell: (cls) => (
         <div className="space-y-1">
-          <div className="font-medium">{cls.title || cls.subject}</div>
-          <div className="text-sm text-muted-foreground">
+          <div className="font-medium text-sm">{cls.title || cls.subject}</div>
+          <div className="text-xs text-muted-foreground">
             <div>Tutor: {cls.tutorName}</div>
             <div>Student: {cls.studentName}</div>
+          </div>
+          {/* Show date on mobile since date column is hidden */}
+          <div className="text-xs text-muted-foreground sm:hidden">
+            {formatDate(cls.date)}
           </div>
         </div>
       ),
     },
     {
       header: 'Date & Time',
+      className: 'hidden sm:table-cell',
       cell: (cls) => (
         <div className="space-y-1">
           <div>{formatDate(cls.date)}</div>
@@ -102,6 +99,7 @@ const ClassTable: React.FC<ClassTableProps> = ({
     },
     {
       header: 'Payments',
+      className: 'hidden md:table-cell',
       cell: (cls) => (
         <div className="space-y-1 text-sm">
           <div className="flex justify-between gap-2">
@@ -116,7 +114,7 @@ const ClassTable: React.FC<ClassTableProps> = ({
       ),
     },
     {
-      header: 'Payment Status',
+      header: 'Status',
       cell: (cls) => {
         const isStripe = getPaymentMethod(cls.studentName || '') === 'stripe';
         const studentPaid = !!cls.studentPaymentDate;
@@ -125,7 +123,7 @@ const ClassTable: React.FC<ClassTableProps> = ({
         return (
           <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
             {/* Student payment */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               {isStripe ? (
                 <>
                   <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
@@ -136,7 +134,7 @@ const ClassTable: React.FC<ClassTableProps> = ({
                   <PopoverTrigger asChild>
                     <button
                       className={`w-2.5 h-2.5 rounded-full cursor-pointer ring-2 ring-transparent hover:ring-primary/50 transition-all ${studentPaid ? 'bg-emerald-500' : 'bg-destructive'}`}
-                      title={studentPaid ? 'Student: Paid — click to mark unpaid' : 'Student: Unpaid — click to mark paid'}
+                      title={studentPaid ? 'Student: Paid' : 'Student: Unpaid'}
                     />
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-3" side="left">
@@ -156,18 +154,18 @@ const ClassTable: React.FC<ClassTableProps> = ({
                   </PopoverContent>
                 </Popover>
               )}
-              <span className="text-xs text-muted-foreground">Student</span>
+              <span className="text-xs text-muted-foreground">S</span>
               {!isStripe && studentPaid && cls.studentPaymentDate && (
-                <span className="text-xs font-medium">{format(cls.studentPaymentDate, 'M/d/yy')}</span>
+                <span className="text-xs font-medium hidden lg:inline">{format(cls.studentPaymentDate, 'M/d/yy')}</span>
               )}
             </div>
             {/* Tutor payment */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <Popover>
                 <PopoverTrigger asChild>
                   <button
                     className={`w-2.5 h-2.5 rounded-full cursor-pointer ring-2 ring-transparent hover:ring-primary/50 transition-all ${tutorPaid ? 'bg-emerald-500' : 'bg-destructive'}`}
-                    title={tutorPaid ? 'Tutor: Paid — click to mark unpaid' : 'Tutor: Unpaid — click to mark paid'}
+                    title={tutorPaid ? 'Tutor: Paid' : 'Tutor: Unpaid'}
                   />
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-3" side="left">
@@ -186,9 +184,9 @@ const ClassTable: React.FC<ClassTableProps> = ({
                   </div>
                 </PopoverContent>
               </Popover>
-              <span className="text-xs text-muted-foreground">Tutor</span>
+              <span className="text-xs text-muted-foreground">T</span>
               {tutorPaid && cls.tutorPaymentDate && (
-                <span className="text-xs font-medium">{format(cls.tutorPaymentDate, 'M/d/yy')}</span>
+                <span className="text-xs font-medium hidden lg:inline">{format(cls.tutorPaymentDate, 'M/d/yy')}</span>
               )}
             </div>
           </div>
@@ -197,9 +195,10 @@ const ClassTable: React.FC<ClassTableProps> = ({
     },
     {
       header: 'Actions',
+      className: 'hidden sm:table-cell',
       cell: (cls) => (
         <ActionButton variant="ghost" size="sm" tooltip="View class details">
-          View Details
+          View
         </ActionButton>
       ),
     },

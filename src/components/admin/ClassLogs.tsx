@@ -105,10 +105,10 @@ const ClassLogs: React.FC = () => {
 
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Class Logs & Payments</h2>
-        <div className="flex items-center gap-2">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <h2 className="text-xl sm:text-2xl font-bold">Class Logs & Payments</h2>
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             variant="default"
             size="sm"
@@ -116,7 +116,7 @@ const ClassLogs: React.FC = () => {
             className="flex items-center gap-2"
           >
             <DollarSign className="h-4 w-4" />
-            Record Payment
+            <span className="hidden xs:inline">Record</span> Payment
           </Button>
           <Button
             variant="outline"
@@ -126,7 +126,7 @@ const ClassLogs: React.FC = () => {
             disabled={filteredClasses.length === 0}
           >
             <FileDown className="h-4 w-4" />
-            Export CSV
+            Export
           </Button>
           <Button
             variant="outline"
@@ -135,13 +135,13 @@ const ClassLogs: React.FC = () => {
             className="flex items-center gap-2"
           >
             <Upload className="h-4 w-4" />
-            Import CSV
+            Import
           </Button>
         </div>
       </div>
 
       {/* Payment Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-5">
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Revenue</CardTitle>

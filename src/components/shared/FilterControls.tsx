@@ -55,13 +55,13 @@ const FilterControls: React.FC<CommonFilterProps> = ({
   clearFilters,
 }) => {
   return (
-    <div className="grid gap-4 md:grid-cols-4">
+    <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-4">
       {/* Search Box */}
       <SearchInput
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         placeholder={searchPlaceholder}
-        className={`${showDateFilter || showStatusFilter || showSubjectFilter ? 'col-span-4 md:col-span-2' : 'col-span-4'}`}
+        className={`${showDateFilter || showStatusFilter || showSubjectFilter ? 'col-span-1 sm:col-span-2 md:col-span-2' : 'col-span-1 sm:col-span-2 md:col-span-4'}`}
       />
 
       {/* Status Filter */}
@@ -103,7 +103,7 @@ const FilterControls: React.FC<CommonFilterProps> = ({
       )}
 
       {/* Code Logs Switch and Clear Filters */}
-      <div className="flex items-center justify-between col-span-4">
+      <div className="flex items-center justify-between col-span-1 sm:col-span-2 md:col-span-4">
         {showCodeLogsSwitch && setShowCodeLogs && (
           <ToggleSwitch
             id="code-logs"

@@ -88,49 +88,54 @@ const StudentsManager: React.FC<StudentsManagerProps> = memo(({ onSelect }) => {
           ) : students.length === 0 ? (
             <div className="text-center py-4">No students found</div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {students.map((student) => (
-                  <TableRow
-                    key={student.id}
-                    className="cursor-pointer hover:bg-muted/60"
-                    onClick={() => onSelect(student)}
-                  >
-                    <TableCell className="font-medium">{student.name}</TableCell>
-                    <TableCell>{student.email}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        {isAdmin && (
-                          <Button
-                            variant="default"
-                            size="sm"
-                            onClick={(e) => handlePromoteClick(e, student)}
-                            className="flex items-center gap-1"
-                          >
-                            <UserCheck className="h-3 w-3" />
-                            Promote
-                          </Button>
-                        )}
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={(e) => handleDeleteClick(e, student.id)}
-                        >
-                          Delete
-                        </Button>
-                      </div>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead className="hidden sm:table-cell">Email</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {students.map((student) => (
+                    <TableRow
+                      key={student.id}
+                      className="cursor-pointer hover:bg-muted/60"
+                      onClick={() => onSelect(student)}
+                    >
+                      <TableCell>
+                        <div className="font-medium">{student.name}</div>
+                        <div className="text-xs text-muted-foreground sm:hidden">{student.email}</div>
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">{student.email}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-col sm:flex-row gap-1 sm:gap-2">
+                          {isAdmin && (
+                            <Button
+                              variant="default"
+                              size="sm"
+                              onClick={(e) => handlePromoteClick(e, student)}
+                              className="flex items-center gap-1"
+                            >
+                              <UserCheck className="h-3 w-3" />
+                              <span className="hidden sm:inline">Promote</span>
+                            </Button>
+                          )}
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={(e) => handleDeleteClick(e, student.id)}
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
           
           <PaginationControls
