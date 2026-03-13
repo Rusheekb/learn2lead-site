@@ -29,6 +29,7 @@ export interface DbCodeLog {
   additional_info: string | null;
 }
 
+/** @deprecated Use ClassEvent from '@/types/tutorTypes' instead */
 export interface TransformedClassLog {
   id: string;
   classNumber: string;
@@ -46,11 +47,8 @@ export interface TransformedClassLog {
   tutorCost: number;
   studentPaymentDate: Date | null;
   tutorPaymentDate: Date | null;
-  studentPayment: string;
-  tutorPayment: string;
   additionalInfo: string | null;
   isCodeLog: boolean;
-  // Add these to match ClassEvent interface
   title?: string;
   endTime: string;
   zoomLink?: string | null;
