@@ -123,9 +123,9 @@ export const fetchPaymentsData = async () => {
       "Student Name", 
       "Date", 
       "Class Cost", 
-      "Tutor Cost", 
-      "Student Payment", 
-      "Tutor Payment"
+      "Tutor Cost",
+      student_payment_date,
+      tutor_payment_date
     `
     )
     .order('Date', { ascending: false });
@@ -142,8 +142,8 @@ export const fetchPaymentsData = async () => {
     studentName: record['Student Name'] || '',
     classCost: (record['Class Cost'] as number) || 0,
     tutorCost: (record['Tutor Cost'] as number) || 0,
-    studentPaymentStatus: 'pending',
-    tutorPaymentStatus: 'pending',
+    studentPaymentStatus: record.student_payment_date ? 'paid' : 'pending',
+    tutorPaymentStatus: record.tutor_payment_date ? 'paid' : 'pending',
   }));
 };
 
