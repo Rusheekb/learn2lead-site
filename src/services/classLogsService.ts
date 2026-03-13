@@ -56,8 +56,6 @@ export const createClassLog = async (
     'Class ID': classEvent.id,
     'Class Cost': classEvent.classCost ?? null,
     'Tutor Cost': classEvent.tutorCost ?? null,
-    'Student Payment': 'Pending',
-    'Tutor Payment': 'Pending',
     'Additional Info': classEvent.notes || null,
   };
 
