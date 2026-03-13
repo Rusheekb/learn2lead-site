@@ -24,10 +24,10 @@ interface PaymentRecord {
   'Tutor Name'?: string | null;
   'Student Name'?: string | null;
   Date?: string | null;
-  'Class Cost'?: string | null;
-  'Tutor Cost'?: string | null;
-  'Student Payment'?: string | null;
-  'Tutor Payment'?: string | null;
+  'Class Cost'?: number | null;
+  'Tutor Cost'?: number | null;
+  student_payment_date?: string | null;
+  tutor_payment_date?: string | null;
   [key: string]: any;
 }
 
