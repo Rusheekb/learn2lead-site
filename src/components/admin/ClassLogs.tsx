@@ -207,7 +207,7 @@ const ClassLogs: React.FC = () => {
         filteredClasses={filteredClasses}
         paginatedClasses={paginatedClasses}
         isLoading={isLoading}
-        error={error}
+        error={error ? (error instanceof Error ? error.message : String(error)) : null}
         handleClassClick={handleClassClick}
         clearFilters={handleRefreshData}
         formatTime={formatTime}
