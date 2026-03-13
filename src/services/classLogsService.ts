@@ -99,8 +99,6 @@ export const updateClassLog = async (
   if (updates['HW'] !== undefined) safeUpdates['HW'] = updates['HW'];
   if (updates['Class Cost'] !== undefined) safeUpdates['Class Cost'] = updates['Class Cost'];
   if (updates['Tutor Cost'] !== undefined) safeUpdates['Tutor Cost'] = updates['Tutor Cost'];
-  if (updates['Student Payment'] !== undefined) safeUpdates['Student Payment'] = updates['Student Payment'];
-  if (updates['Tutor Payment'] !== undefined) safeUpdates['Tutor Payment'] = updates['Tutor Payment'];
   if (updates['Additional Info'] !== undefined) safeUpdates['Additional Info'] = updates['Additional Info'];
   
   const { data, error } = await supabase
