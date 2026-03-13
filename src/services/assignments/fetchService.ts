@@ -1,27 +1,28 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Tutor, Student } from '@/types/tutorTypes';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('assignmentFetch');
 
 export interface TutorWithProfileId extends Tutor {
-  profileId: string; // The profiles.id for assignments
+  profileId: string;
 }
 
 export interface StudentWithProfileId extends Student {
-  profileId: string; // The profiles.id for assignments
+  profileId: string;
 }
 
 export async function fetchTutorsWithProfileIds(): Promise<TutorWithProfileId[]> {
-  // First get all active tutors
   const { data: tutorsData, error: tutorsError } = await supabase
     .from('tutors')
     .select('*')
     .eq('active', true);
 
   if (tutorsError) {
-    console.error('Error fetching tutors:', tutorsError);
+    log.error('Error fetching tutors', tutorsError);
     throw tutorsError;
   }
 
-  // Then get corresponding profile IDs for each tutor
   const tutorsWithProfileIds: TutorWithProfileId[] = [];
   
   for (const tutor of tutorsData || []) {
@@ -32,14 +33,14 @@ export async function fetchTutorsWithProfileIds(): Promise<TutorWithProfileId[]>
       .maybeSingle();
 
     if (profileError) {
-      console.error(`Error fetching profile for tutor ${tutor.email}:`, profileError);
+      log.error(`Error fetching profile for tutor ${tutor.email}`, profileError);
       continue;
     }
 
     if (profile) {
       tutorsWithProfileIds.push({
         id: tutor.id,
-        profileId: profile.id, // This is the profiles.id we need for assignments
+        profileId: profile.id,
         name: tutor.name,
         email: tutor.email,
         subjects: tutor.subjects || [],
@@ -51,23 +52,21 @@ export async function fetchTutorsWithProfileIds(): Promise<TutorWithProfileId[]>
     }
   }
 
-  console.log('[fetchTutorsWithProfileIds] Found tutors with profile IDs:', tutorsWithProfileIds);
+  log.debug('Found tutors with profile IDs', { count: tutorsWithProfileIds.length });
   return tutorsWithProfileIds;
 }
 
 export async function fetchStudentsWithProfileIds(): Promise<StudentWithProfileId[]> {
-  // First get all active students
   const { data: studentsData, error: studentsError } = await supabase
     .from('students')
     .select('*')
     .eq('active', true);
 
   if (studentsError) {
-    console.error('Error fetching students:', studentsError);
+    log.error('Error fetching students', studentsError);
     throw studentsError;
   }
 
-  // Then get corresponding profile IDs for each student
   const studentsWithProfileIds: StudentWithProfileId[] = [];
   
   for (const student of studentsData || []) {
@@ -78,14 +77,14 @@ export async function fetchStudentsWithProfileIds(): Promise<StudentWithProfileI
       .maybeSingle();
 
     if (profileError) {
-      console.error(`Error fetching profile for student ${student.email}:`, profileError);
+      log.error(`Error fetching profile for student ${student.email}`, profileError);
       continue;
     }
 
     if (profile) {
       studentsWithProfileIds.push({
         id: student.id,
-        profileId: profile.id, // This is the profiles.id we need for assignments
+        profileId: profile.id,
         name: student.name,
         email: student.email,
         subjects: student.subjects || [],
@@ -97,6 +96,6 @@ export async function fetchStudentsWithProfileIds(): Promise<StudentWithProfileI
     }
   }
 
-  console.log('[fetchStudentsWithProfileIds] Found students with profile IDs:', studentsWithProfileIds);
+  log.debug('Found students with profile IDs', { count: studentsWithProfileIds.length });
   return studentsWithProfileIds;
 }

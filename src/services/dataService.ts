@@ -3,8 +3,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { ClassEvent } from '@/types/tutorTypes';
 import { Student } from '@/types/sharedTypes';
 import { transformDbRecordToClassEvent } from './utils/classEventMapper';
+import { logger } from '@/lib/logger';
 
-// Define types for database records to improve type safety
+const log = logger.create('dataService');
+
 interface TutorRecord {
   'Tutor Name'?: string | null;
   [key: string]: any;
@@ -29,7 +31,6 @@ interface PaymentRecord {
   [key: string]: any;
 }
 
-// Fetch unique tutors from class logs
 export const fetchTutors = async () => {
   const { data, error } = await supabase
     .from('class_logs')
@@ -38,30 +39,27 @@ export const fetchTutors = async () => {
     .not('Tutor Name', 'is', null);
 
   if (error) {
-    console.error('Error fetching tutors:', error);
+    log.error('Error fetching tutors', error);
     return [];
   }
 
-  // Extract unique tutor names with proper typing
   const uniqueTutors = Array.from(
     new Set(data.map((record: TutorRecord) => record['Tutor Name'] || ''))
   )
     .filter(Boolean)
     .sort();
 
-  // Transform to tutor objects
   return uniqueTutors.map((name) => ({
     id: name.toLowerCase().replace(/\s+/g, '-'),
     name,
-    email: `${name.toLowerCase().replace(/\s+/g, '.')}@example.com`, // Generate placeholder email
-    subjects: [], // Will be populated from class logs
+    email: `${name.toLowerCase().replace(/\s+/g, '.')}@example.com`,
+    subjects: [],
     rating: 0,
     classes: 0,
     hourlyRate: 0,
   }));
 };
 
-// Fetch unique students from class logs
 export const fetchStudents = async (): Promise<Student[]> => {
   const { data, error } = await supabase
     .from('class_logs')
@@ -70,18 +68,16 @@ export const fetchStudents = async (): Promise<Student[]> => {
     .not('Student Name', 'is', null);
 
   if (error) {
-    console.error('Error fetching students:', error);
+    log.error('Error fetching students', error);
     return [];
   }
 
-  // Group by student name to collect all subjects and find last session
   const studentMap = new Map();
 
   data.forEach((record: StudentRecord) => {
     const name = record['Student Name'];
     if (!name) return;
 
-    // Safely access properties
     const subject = record['Subject'] || '';
     const date = record['Date'] || '';
 
@@ -98,12 +94,10 @@ export const fetchStudents = async (): Promise<Student[]> => {
     } else {
       const student = studentMap.get(name);
 
-      // Add subject if not already in the set and it exists
       if (subject) {
         student.subjects.add(subject);
       }
 
-      // Update last session if this one is more recent
       if (
         date &&
         (!student.lastSession || new Date(date) > new Date(student.lastSession))
@@ -113,14 +107,12 @@ export const fetchStudents = async (): Promise<Student[]> => {
     }
   });
 
-  // Convert the map to an array and prepare for return
   return Array.from(studentMap.values()).map((student) => ({
     ...student,
     subjects: Array.from(student.subjects),
   }));
 };
 
-// Fetch payments data from class logs
 export const fetchPaymentsData = async () => {
   const { data, error } = await supabase
     .from('class_logs')
@@ -139,7 +131,7 @@ export const fetchPaymentsData = async () => {
     .order('Date', { ascending: false });
 
   if (error) {
-    console.error('Error fetching payments data:', error);
+    log.error('Error fetching payments data', error);
     return [];
   }
 
@@ -155,13 +147,11 @@ export const fetchPaymentsData = async () => {
   }));
 };
 
-// Calculate various metrics for dashboard widgets
 export const calculateMetrics = (classes: ClassEvent[]) => {
   const totalClasses = classes.length;
   const uniqueStudents = new Set(classes.map((cls) => cls.studentName)).size;
   const uniqueTutors = new Set(classes.map((cls) => cls.tutorName)).size;
 
-  // Calculate total revenue and costs
   const totalRevenue = classes.reduce(
     (sum, cls) => sum + (cls.classCost || 0),
     0
@@ -171,7 +161,6 @@ export const calculateMetrics = (classes: ClassEvent[]) => {
     0
   );
 
-  // Calculate subject popularity
   const subjectCounts = classes.reduce(
     (acc, cls) => {
       if (cls.subject) {

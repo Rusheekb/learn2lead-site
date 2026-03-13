@@ -1,9 +1,9 @@
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
+import { logger } from '@/lib/logger';
 
-/**
- * Update payment date for a class log (student or tutor)
- */
+const log = logger.create('paymentDate');
+
 export const updatePaymentDate = async (
   classId: string,
   field: 'student_payment_date' | 'tutor_payment_date',
@@ -19,15 +19,12 @@ export const updatePaymentDate = async (
     .eq('id', classId);
 
   if (error) {
-    console.error(`Error updating ${field}:`, error);
+    log.error(`Error updating ${field}`, error);
     return false;
   }
   return true;
 };
 
-/**
- * Batch update tutor payment dates for multiple class logs
- */
 export const batchUpdateTutorPaymentDate = async (
   classIds: string[],
   date: Date | null
@@ -40,15 +37,12 @@ export const batchUpdateTutorPaymentDate = async (
     .in('id', classIds);
 
   if (error) {
-    console.error('Error batch updating tutor payment dates:', error);
+    log.error('Error batch updating tutor payment dates', error);
     return false;
   }
   return true;
 };
 
-/**
- * Batch update student payment dates for multiple class logs
- */
 export const batchUpdateStudentPaymentDate = async (
   classIds: string[],
   date: Date | null
@@ -62,7 +56,7 @@ export const batchUpdateStudentPaymentDate = async (
     .in('id', classIds);
 
   if (error) {
-    console.error('Error batch updating student payment dates:', error);
+    log.error('Error batch updating student payment dates', error);
     return false;
   }
   return true;

@@ -9,6 +9,9 @@ import {
 import { parseTime24to12 } from '@/utils/dateTimeUtils';
 import { parse } from 'date-fns';
 import { Profile } from './types';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('classFetch');
 
 export const fetchScheduledClasses = async (
   tutorId?: string,
@@ -35,12 +38,9 @@ export const fetchScheduledClasses = async (
       return [];
     }
 
-    // **OPTIMIZATION: Batch fetch all unique tutor and student profiles**
-    // Collect unique tutor and student IDs
     const tutorIds = [...new Set(data.map(cls => cls.tutor_id).filter(Boolean))];
     const studentIds = [...new Set(data.map(cls => cls.student_id).filter(Boolean))];
 
-    // Fetch all profiles in two batch queries instead of N individual queries
     const [tutorProfilesResponse, studentProfilesResponse] = await Promise.all([
       supabase
         .from('profiles')
@@ -52,7 +52,6 @@ export const fetchScheduledClasses = async (
         .in('id', studentIds)
     ]);
 
-    // Create lookup maps for O(1) access
     const tutorProfileMap = new Map(
       (tutorProfilesResponse.data || []).map(profile => [
         profile.id,
@@ -67,16 +66,13 @@ export const fetchScheduledClasses = async (
       ])
     );
 
-    // Transform data using the lookup maps (no more async operations)
     const classEvents: ClassEvent[] = data.map((cls) => {
       const tutorName = tutorProfileMap.get(cls.tutor_id) || 'Unknown Tutor';
       const studentName = studentProfileMap.get(cls.student_id) || 'Unknown Student';
       
-      // Safely handle potentially null values
       const status = cls.status || 'scheduled';
       const attendance = cls.attendance || 'pending';
       
-      // Convert date string to Date object in local time to avoid timezone shift
       const dateObj = cls.date
         ? parse(cls.date, 'yyyy-MM-dd', new Date())
         : new Date();
@@ -99,13 +95,13 @@ export const fetchScheduledClasses = async (
         relationshipId: cls.relationship_id || '',
         recurring: false,
         materials: [],
-        materialsUrl: cls.materials_url || [], // Include materials_url from database
+        materialsUrl: cls.materials_url || [],
       };
     });
 
     return classEvents;
   } catch (error: any) {
-    console.error('Error fetching scheduled classes:', error);
+    log.error('Error fetching scheduled classes', error);
     toast.error(`Error loading scheduled classes: ${error.message}`);
     return [];
   }

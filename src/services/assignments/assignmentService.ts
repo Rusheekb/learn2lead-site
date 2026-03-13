@@ -3,6 +3,10 @@ export * from './fetch';
 export * from './mutations';
 export * from './types';
 
+import { logger } from '@/lib/logger';
+
+const log = logger.create('assignments');
+
 // This file re-exports all assignment service functionality
 // for easier imports throughout the application
 export const getAssignmentId = async (tutorId: string, studentId: string): Promise<string | null> => {
@@ -18,13 +22,13 @@ export const getAssignmentId = async (tutorId: string, studentId: string): Promi
       .single();
     
     if (error) {
-      console.error('Error fetching assignment ID:', error);
+      log.error('Error fetching assignment ID', error);
       return null;
     }
     
     return data?.id || null;
   } catch (error) {
-    console.error('Exception fetching assignment ID:', error);
+    log.error('Exception fetching assignment ID', error);
     return null;
   }
 };
