@@ -1,63 +1,46 @@
 
 
-# Setting Up Your New Custom Domain
+## Logging System Improvements
 
-Here are all the steps to properly configure your new domain with your Learn2Lead project:
+After reviewing the codebase, here are the key issues and recommended improvements:
 
-## 1. Connect the domain in Lovable
+### Current State
 
-1. Go to your Lovable project **Settings → Domains**
-2. Click **Connect Domain** and enter your domain (e.g., `learn2lead.com`)
-3. Follow the setup flow — Lovable will provide the DNS records you need
-4. **Add both** `yourdomain.com` and `www.yourdomain.com` as separate entries
-5. Set one as **Primary** (the other will redirect to it)
+1. **560+ raw `console.log/error/warn` calls** scattered across 28 service files with no structured format
+2. **ErrorHandler in `errorHandling.ts`** logs to console in production (line 101) instead of routing through Sentry
+3. **AnalyticsService** logs to console only — PostHog is integrated separately but the analytics service doesn't use it
+4. **No log levels or filtering** — everything goes to console with inconsistent prefixes (`[Analytics]`, `[PROD_ERROR]`, etc.)
+5. **Sentry integration exists** but `ErrorHandler.logError()` doesn't call `captureException` — it still uses `console.error` in production
 
-## 2. Configure DNS at your registrar
+### Proposed Improvements
 
-Add these records at your domain registrar (GoDaddy, Namecheap, Cloudflare, etc.):
+#### 1. Create a centralized logger utility
+A single `src/lib/logger.ts` module with `debug`, `info`, `warn`, `error` methods that:
+- In **development**: logs to console with colored prefixes and context
+- In **production**: suppresses debug/info, routes errors through Sentry's `captureException` and warnings through `captureMessage`
+- Accepts a `context` string (e.g., `'classService'`, `'auth'`) for filtering
 
-| Type | Name | Value |
-|------|------|-------|
-| A | @ | 185.158.133.1 |
-| A | www | 185.158.133.1 |
-| TXT | _lovable | (value provided by Lovable during setup) |
+#### 2. Connect ErrorHandler to Sentry
+Update `errorHandling.ts` line 99-102 to call `captureException` instead of `console.error` in production. This is the most impactful single change — right now production errors from `ErrorHandler.handle()` are lost to the browser console.
 
-DNS propagation can take up to 72 hours. Use [DNSChecker.org](https://dnschecker.org) to verify.
+#### 3. Route AnalyticsService through PostHog
+Replace the `console.log` calls in `AnalyticsService.track()` and `.page()` with `captureEvent` from `src/lib/posthog.ts` so analytics events actually reach PostHog instead of just logging to console.
 
-## 3. Update CORS in edge functions
+#### 4. Replace scattered console calls in services
+Systematically replace raw `console.error/log` in the ~28 service files with the new logger. This gives consistent formatting and ensures production errors reach Sentry.
 
-Your `supabase/functions/_shared/cors.ts` has an `ALLOWED_ORIGINS` list. You'll need to add your new domain there so edge functions accept requests from it.
+### Implementation Plan
 
-## 4. Update Supabase auth redirect URLs
+| Step | Files | Effort |
+|------|-------|--------|
+| Create `src/lib/logger.ts` | 1 new file | Small |
+| Connect ErrorHandler to Sentry | `errorHandling.ts` | Small |
+| Route analytics to PostHog | `analyticsService.ts` | Small |
+| Migrate service files to logger | ~15-20 files | Medium |
 
-In your Supabase dashboard (Authentication → URL Configuration):
-- Add your new domain to **Redirect URLs** (e.g., `https://yourdomain.com/login`)
-- Update **Site URL** if this becomes the primary domain
-
-## 5. Update SEO assets
-
-Several files reference the current domain and need updating:
-- `index.html` — canonical URL, Open Graph URLs, meta tags
-- `public/sitemap.xml` — all `<loc>` URLs currently point to `learn2lead.vercel.app`
-- `public/robots.txt` — sitemap URL points to `learn2lead.vercel.app`
-
-## 6. Update Stripe configuration
-
-If you use Stripe webhooks or checkout:
-- Update the webhook endpoint URL in the Stripe dashboard
-- Verify the `origin` used in checkout return URLs (e.g., `customer-portal/index.ts` uses `origin` from the request, so this should work automatically)
-
-## 7. Update Supabase config
-
-In `supabase/config.toml`, update `site_url` and `additional_redirect_urls` to include the new domain.
-
-## 8. Publish
-
-Once DNS is verified and SSL is provisioned (Lovable handles SSL automatically), click **Publish → Update** to deploy.
-
----
-
-## What I can help implement (steps 3–5)
-
-Steps 1, 2, 6, and 8 require action in external dashboards. But I can update the codebase for steps 3, 4, 5, and 7 once you share your domain name.
+### What This Achieves
+- Production errors reliably reach Sentry instead of being lost in browser console
+- Analytics events reach PostHog instead of only logging locally
+- Consistent log format across the entire app
+- Easy to add log filtering or remote log levels later
 
