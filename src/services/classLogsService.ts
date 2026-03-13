@@ -3,10 +3,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { ClassEvent } from '@/types/tutorTypes';
 import { format } from 'date-fns';
 import { Database } from '@/integrations/supabase/types';
-import { parseNumericString } from '@/utils/numberUtils';
-import { transformClassLog } from './logs/transformers';
-import { DbClassLog, DbCodeLog, TransformedClassLog } from './logs/types';
-import { parseDateToLocal, formatDateForDatabase } from '@/utils/safeDateUtils';
+import { transformDbRecordToClassEvent } from './utils/classEventMapper';
+import { formatDateForDatabase } from '@/utils/safeDateUtils';
+import { parseDateToLocal } from '@/utils/safeDateUtils';
 import { logger } from '@/lib/logger';
 
 const log = logger.create('classLogsService');
@@ -14,7 +13,7 @@ const log = logger.create('classLogsService');
 type ClassLogs = Database['public']['Tables']['class_logs']['Row'];
 
 // Fetch all class logs
-export const fetchClassLogs = async (): Promise<TransformedClassLog[]> => {
+export const fetchClassLogs = async (): Promise<ClassEvent[]> => {
   log.debug('Fetching class logs from Supabase...');
   try {
     const classLogsResult = await supabase
@@ -27,10 +26,10 @@ export const fetchClassLogs = async (): Promise<TransformedClassLog[]> => {
     }
 
     const classLogs = classLogsResult.data || [];
-    const transformedClassLogs = classLogs.map(transformClassLog);
+    const transformedClassLogs = classLogs.map(record => transformDbRecordToClassEvent(record));
 
     return [...transformedClassLogs].sort(
-      (a, b) => b.date.getTime() - a.date.getTime()
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
     );
   } catch (error) {
     log.error('Unexpected error in fetchClassLogs', error);
@@ -80,8 +79,7 @@ export const createClassLog = async (
     return null;
   }
 
-  const transformedData = transformClassLog(data);
-  return transformedData as ClassEvent;
+  return transformDbRecordToClassEvent(data);
 };
 
 // Update a class log
@@ -123,8 +121,7 @@ export const updateClassLog = async (
     return null;
   }
 
-  const transformedData = transformClassLog(data);
-  return transformedData as ClassEvent;
+  return transformDbRecordToClassEvent(data);
 };
 
 // Delete a class log

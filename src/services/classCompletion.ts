@@ -2,8 +2,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { captureEvent } from '@/lib/posthog';
 import { addBreadcrumb, captureException } from '@/lib/sentry';
-import { retryEdgeFunction, retryWithBackoff } from '@/utils/retryWithBackoff';
+import { retryEdgeFunction } from '@/utils/retryWithBackoff';
 import { logger } from '@/lib/logger';
+import { format } from 'date-fns';
 
 const log = logger.create('classCompletion');
 
@@ -31,26 +32,7 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
   try {
     addBreadcrumb({ category: 'class.completion', message: 'Starting class completion', data: { classId: data.classId, studentId: data.studentId, subject: data.subject } });
 
-    const { data: existingClass, error: classError } = await retryWithBackoff(
-      async () => supabase
-        .from('scheduled_classes')
-        .select('id')
-        .eq('id', data.classId)
-        .maybeSingle(),
-      { maxRetries: 2, onRetry: (n) => addBreadcrumb({ category: 'class.completion', message: `Retry ${n}: checking class existence` }) }
-    );
-
-    if (classError) {
-      log.error('Error checking class existence', classError);
-      throw new Error('Failed to verify class existence');
-    }
-
-    if (!existingClass) {
-      addBreadcrumb({ category: 'class.completion', message: 'Class no longer exists', level: 'warning', data: { classId: data.classId } });
-      toast.error('Class no longer exists or has already been completed');
-      return false;
-    }
-
+    // 1. Auth check
     const { data: session } = await supabase.auth.getSession();
     if (!session.session) {
       toast.error('You must be logged in to complete classes');
@@ -59,6 +41,7 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
 
     const durationHours = parseFloat(data.timeHrs) || 1;
 
+    // 2. Deduct credit via edge function (handles ledger + subscription updates)
     const { data: creditResult, error: creditError } = await retryEdgeFunction<any>(
       () => supabase.functions.invoke(
         'deduct-class-credit',
@@ -124,111 +107,50 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
     const creditsDeducted = creditResult.credits_deducted || durationHours;
     const isAdminOverride = creditResult.admin_override;
 
-    const { data: existingLog, error: logCheckError } = await supabase
-      .from('class_logs')
-      .select('id')
-      .eq('Class ID', data.classId)
-      .maybeSingle();
+    // 3. Atomically create class log + delete scheduled class via RPC
+    // The RPC handles: advisory lock, existence check, duplicate prevention,
+    // name resolution via UUID joins, log insertion, and scheduled class deletion
+    const { data: rpcResult, error: rpcError } = await supabase.rpc('complete_class_atomic', {
+      p_class_id: data.classId,
+      p_class_number: data.classNumber,
+      p_tutor_name: data.tutorName,
+      p_student_name: data.studentName,
+      p_date: data.date,
+      p_day: data.day,
+      p_time_cst: data.timeCst,
+      p_time_hrs: data.timeHrs,
+      p_subject: data.subject,
+      p_content: data.content,
+      p_hw: data.hw,
+      p_additional_info: data.additionalInfo,
+    });
 
-    if (logCheckError) {
-      log.error('Error checking class log existence', logCheckError);
-      throw new Error('Failed to check class log status');
-    }
-
-    if (existingLog) {
-      toast.error('This class has already been completed');
+    if (rpcError) {
+      log.error('RPC complete_class_atomic failed', rpcError);
+      // Restore credit since atomic RPC failed (log was never inserted)
+      await restoreCredit(session.session.access_token, data, durationHours);
       return false;
     }
 
-    const { data: studentData } = await supabase
-      .from('students')
-      .select('class_rate')
-      .eq('name', data.studentName)
-      .maybeSingle();
+    const result = rpcResult as { success: boolean; error?: string; code?: string };
 
-    const { data: tutorData } = await supabase
-      .from('tutors')
-      .select('hourly_rate')
-      .eq('name', data.tutorName)
-      .maybeSingle();
+    if (!result.success) {
+      log.error('complete_class_atomic returned failure', undefined, { code: result.code, error: result.error });
 
-    const { error: insertError } = await supabase
-      .from('class_logs')
-      .insert({
-        'Class Number': data.classNumber,
-        'Title': data.title || data.subject,
-        'Tutor Name': data.tutorName,
-        'Student Name': data.studentName,
-        'Date': data.date,
-        'Day': data.day,
-        'Time (CST)': data.timeCst,
-        'Time (hrs)': data.timeHrs,
-        'Subject': data.subject,
-        'Content': data.content,
-        'HW': data.hw,
-        'Class ID': data.classId,
-        'Additional Info': data.additionalInfo,
-        'Class Cost': studentData?.class_rate ?? null,
-        'Tutor Cost': tutorData?.hourly_rate ?? null,
-        tutor_user_id: data.tutorId,
-        student_user_id: data.studentId,
-      } as any);
-
-    if (insertError) {
-      log.error('Error creating class log', insertError);
-      addBreadcrumb({ category: 'class.completion', message: 'Class log insert failed, restoring credit', level: 'error', data: { classId: data.classId, error: insertError.message } });
-      try {
-        const { data: restoreResult, error: restoreError } = await supabase.functions.invoke(
-          'restore-class-credit',
-          {
-            body: {
-              student_id: data.studentId,
-              class_id: data.classId,
-              credits_to_restore: durationHours,
-              reason: `Credit restored - class log creation failed for ${data.classNumber}`
-            },
-            headers: {
-              Authorization: `Bearer ${session.session.access_token}`
-            }
-          }
-        );
-        
-        if (restoreError || !restoreResult?.success) {
-          log.error('Failed to restore credit after log creation failure', restoreError || restoreResult?.error);
-          toast.error('Class log failed and credit could not be restored automatically', {
-            description: 'Please contact admin to restore the credit manually'
-          });
-        } else {
-          log.info('Credit successfully restored after log creation failure');
-          toast.error('Failed to create class log - credit has been restored', {
-            description: 'Please try again or contact support if the issue persists'
-          });
-        }
-      } catch (restoreErr) {
-        log.error('Exception restoring credit', restoreErr);
-        toast.error('Class log failed and credit restoration encountered an error', {
-          description: 'Please contact admin to restore the credit manually'
-        });
+      if (result.code === 'ALREADY_COMPLETED' || result.code === 'DUPLICATE_SESSION') {
+        toast.error('This class has already been completed');
+      } else if (result.code === 'CLASS_NOT_FOUND') {
+        toast.error('Class no longer exists or has already been completed');
+      } else {
+        toast.error(result.error || 'Failed to complete class');
       }
-      
+
+      // Restore credit since the RPC didn't insert a log
+      await restoreCredit(session.session.access_token, data, durationHours);
       return false;
     }
 
-    const { error: updateError } = await supabase
-      .from('scheduled_classes')
-      .update({ status: 'completed', attendance: 'present' })
-      .eq('id', data.classId);
-
-    if (updateError) {
-      log.error('Error updating scheduled class status', updateError);
-      addBreadcrumb({ category: 'class.completion', message: 'Status update failed, rolling back log', level: 'error', data: { classId: data.classId } });
-      await supabase
-        .from('class_logs')
-        .delete()
-        .eq('Class ID', data.classId);
-      throw new Error('Failed to mark class as completed');
-    }
-
+    // 4. Success instrumentation
     addBreadcrumb({ category: 'class.completion', message: 'Class completed successfully', data: { classId: data.classId, creditsRemaining } });
 
     captureEvent('class_completed', {
@@ -272,3 +194,40 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
     return false;
   }
 };
+
+/** Attempt to restore credits after a failed atomic completion */
+async function restoreCredit(accessToken: string, data: CompleteClassData, durationHours: number) {
+  try {
+    const { data: restoreResult, error: restoreError } = await supabase.functions.invoke(
+      'restore-class-credit',
+      {
+        body: {
+          student_id: data.studentId,
+          class_id: data.classId,
+          credits_to_restore: durationHours,
+          reason: `Credit restored - atomic class completion failed for ${data.classNumber}`
+        },
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      }
+    );
+
+    if (restoreError || !restoreResult?.success) {
+      log.error('Failed to restore credit after completion failure', restoreError || restoreResult?.error);
+      toast.error('Class completion failed and credit could not be restored automatically', {
+        description: 'Please contact admin to restore the credit manually'
+      });
+    } else {
+      log.info('Credit successfully restored after completion failure');
+      toast.error('Failed to complete class - credit has been restored', {
+        description: 'Please try again or contact support if the issue persists'
+      });
+    }
+  } catch (restoreErr) {
+    log.error('Exception restoring credit', restoreErr);
+    toast.error('Class completion failed and credit restoration encountered an error', {
+      description: 'Please contact admin to restore the credit manually'
+    });
+  }
+}

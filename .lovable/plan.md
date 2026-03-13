@@ -1,57 +1,63 @@
 
 
-## Plan: Use `complete_class_atomic` RPC, consolidate transformers, unify query hooks
+# Setting Up Your New Custom Domain
 
-### 1. Replace manual class completion with `complete_class_atomic` RPC
+Here are all the steps to properly configure your new domain with your Learn2Lead project:
 
-**File: `src/services/classCompletion.ts`**
+## 1. Connect the domain in Lovable
 
-The current `completeClass` function performs 5+ separate queries (check existence, deduct credit, check duplicate log, lookup rates, insert log, update status) with fragile rollback logic. The `complete_class_atomic` database function already handles all of this atomically with advisory locking.
+1. Go to your Lovable project **Settings → Domains**
+2. Click **Connect Domain** and enter your domain (e.g., `learn2lead.com`)
+3. Follow the setup flow — Lovable will provide the DNS records you need
+4. **Add both** `yourdomain.com` and `www.yourdomain.com` as separate entries
+5. Set one as **Primary** (the other will redirect to it)
 
-Changes:
-- Keep the credit deduction edge function call (it handles the ledger/subscription updates that the RPC doesn't)
-- Replace the post-credit steps (lines 127-230) — duplicate check, rate lookup, log insert, status update, rollback — with a single `supabase.rpc('complete_class_atomic', {...})` call
-- The RPC handles: advisory lock, existence check, duplicate prevention, name resolution via UUID joins, log insertion with `tutor_user_id`/`student_user_id`, and scheduled class deletion
-- Keep the existing toast/analytics/Sentry instrumentation around the RPC call
-- Remove the credit restore fallback code since the RPC is atomic (if it fails, nothing was inserted)
+## 2. Configure DNS at your registrar
 
-### 2. Consolidate duplicate transformers into one
+Add these records at your domain registrar (GoDaddy, Namecheap, Cloudflare, etc.):
 
-**Current state:** Two transformers doing the same thing:
-- `src/services/logs/transformers.ts` → `transformClassLog()` returns `TransformedClassLog`
-- `src/services/utils/classEventMapper.ts` → `transformDbRecordToClassEvent()` returns `ClassEvent`
+| Type | Name | Value |
+|------|------|-------|
+| A | @ | 185.158.133.1 |
+| A | www | 185.158.133.1 |
+| TXT | _lovable | (value provided by Lovable during setup) |
 
-**Action:**
-- Keep `transformDbRecordToClassEvent` in `classEventMapper.ts` as the single canonical transformer (it returns `ClassEvent` which is the type used everywhere in the UI)
-- Update `classLogsService.ts` to import and use `transformDbRecordToClassEvent` instead of `transformClassLog`
-- Update `src/services/logs/transformers.ts`: keep `transformCodeLog` if it has consumers, re-export `transformDbRecordToClassEvent` as `transformClassLog` for any remaining references
-- Remove the `TransformedClassLog` type from `src/services/logs/types.ts` — use `ClassEvent` instead
+DNS propagation can take up to 72 hours. Use [DNSChecker.org](https://dnschecker.org) to verify.
 
-### 3. Unify class log query hooks
+## 3. Update CORS in edge functions
 
-**Current state:** Two hooks with different query keys and duplicate realtime subscriptions:
-- `useSimplifiedClassLogs` (query key `['class-logs']`) — used via `useClassLogs` wrapper by `ClassLogs.tsx` and `StudentsManager.tsx`
-- `useClassLogsQuery` (query key `['classLogs', 'list']`) — exported from `hooks/queries/index.ts` but not actively consumed
+Your `supabase/functions/_shared/cors.ts` has an `ALLOWED_ORIGINS` list. You'll need to add your new domain there so edge functions accept requests from it.
 
-**Action:**
-- Merge into a single `useClassLogs` hook in `src/hooks/useClassLogs.ts` that:
-  - Uses one query key: `['class-logs']`
-  - Contains the query, realtime subscription, filtering, pagination, and payment toggle logic from `useSimplifiedClassLogs`
-  - Exposes CRUD mutations (create/update/delete) from `useClassLogsQuery`
-  - Uses `transformDbRecordToClassEvent` as the transformer
-- Delete `src/hooks/useSimplifiedClassLogs.ts`
-- Update `src/hooks/queries/useClassLogsQuery.ts` to re-export from `useClassLogs` for backward compatibility
-- No changes needed in `ClassLogs.tsx` or `StudentsManager.tsx` — they already import `useClassLogs`
+## 4. Update Supabase auth redirect URLs
 
-### Summary of files changed
+In your Supabase dashboard (Authentication → URL Configuration):
+- Add your new domain to **Redirect URLs** (e.g., `https://yourdomain.com/login`)
+- Update **Site URL** if this becomes the primary domain
 
-| File | Change |
-|------|--------|
-| `src/services/classCompletion.ts` | Replace manual steps with `rpc('complete_class_atomic')` |
-| `src/hooks/useClassLogs.ts` | Merged hook with query, mutations, realtime, filters |
-| `src/hooks/useSimplifiedClassLogs.ts` | Delete |
-| `src/hooks/queries/useClassLogsQuery.ts` | Thin re-export wrapper |
-| `src/services/classLogsService.ts` | Use `transformDbRecordToClassEvent` |
-| `src/services/logs/transformers.ts` | Remove `transformClassLog`, keep `transformCodeLog` |
-| `src/services/utils/classEventMapper.ts` | No changes (already canonical) |
+## 5. Update SEO assets
+
+Several files reference the current domain and need updating:
+- `index.html` — canonical URL, Open Graph URLs, meta tags
+- `public/sitemap.xml` — all `<loc>` URLs currently point to `learn2lead.vercel.app`
+- `public/robots.txt` — sitemap URL points to `learn2lead.vercel.app`
+
+## 6. Update Stripe configuration
+
+If you use Stripe webhooks or checkout:
+- Update the webhook endpoint URL in the Stripe dashboard
+- Verify the `origin` used in checkout return URLs (e.g., `customer-portal/index.ts` uses `origin` from the request, so this should work automatically)
+
+## 7. Update Supabase config
+
+In `supabase/config.toml`, update `site_url` and `additional_redirect_urls` to include the new domain.
+
+## 8. Publish
+
+Once DNS is verified and SSL is provisioned (Lovable handles SSL automatically), click **Publish → Update** to deploy.
+
+---
+
+## What I can help implement (steps 3–5)
+
+Steps 1, 2, 6, and 8 require action in external dashboards. But I can update the codebase for steps 3, 4, 5, and 7 once you share your domain name.
 
