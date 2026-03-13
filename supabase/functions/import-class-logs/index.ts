@@ -199,12 +199,14 @@ Deno.serve(async (req) => {
           console.log(`Generated new Class Number: ${classNumber}`);
         }
 
-        // Parse payment dates from Student Payment and Tutor Payment columns
+        // Parse payment dates from CSV Student Payment and Tutor Payment columns
+        // These CSV columns contain date strings (e.g. "11/16/24") that map to the
+        // database date columns student_payment_date and tutor_payment_date
         const studentPaymentDate = parsePaymentDate(row['Student Payment']);
         const tutorPaymentDate = parsePaymentDate(row['Tutor Payment']);
 
-        // Prepare the record for upsert
-        const record = {
+        // Prepare the record for upsert (no text payment columns — dates only)
+        const record: Record<string, any> = {
           'Class Number': classNumber,
           'Tutor Name': row['Tutor Name'],
           'Student Name': row['Student Name'],

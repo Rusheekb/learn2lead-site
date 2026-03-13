@@ -24,10 +24,10 @@ interface PaymentRecord {
   'Tutor Name'?: string | null;
   'Student Name'?: string | null;
   Date?: string | null;
-  'Class Cost'?: string | null;
-  'Tutor Cost'?: string | null;
-  'Student Payment'?: string | null;
-  'Tutor Payment'?: string | null;
+  'Class Cost'?: number | null;
+  'Tutor Cost'?: number | null;
+  student_payment_date?: string | null;
+  tutor_payment_date?: string | null;
   [key: string]: any;
 }
 
@@ -123,9 +123,9 @@ export const fetchPaymentsData = async () => {
       "Student Name", 
       "Date", 
       "Class Cost", 
-      "Tutor Cost", 
-      "Student Payment", 
-      "Tutor Payment"
+      "Tutor Cost",
+      student_payment_date,
+      tutor_payment_date
     `
     )
     .order('Date', { ascending: false });
@@ -142,8 +142,8 @@ export const fetchPaymentsData = async () => {
     studentName: record['Student Name'] || '',
     classCost: (record['Class Cost'] as number) || 0,
     tutorCost: (record['Tutor Cost'] as number) || 0,
-    studentPaymentStatus: 'pending',
-    tutorPaymentStatus: 'pending',
+    studentPaymentStatus: record.student_payment_date ? 'paid' : 'pending',
+    tutorPaymentStatus: record.tutor_payment_date ? 'paid' : 'pending',
   }));
 };
 
