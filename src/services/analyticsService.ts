@@ -1,6 +1,10 @@
 
 import { ClassEvent } from '@/types/tutorTypes';
 import { parseNumericString } from '@/utils/numberUtils';
+import { captureEvent } from '@/lib/posthog';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('analytics');
 
 // Extend the EventName enum to include language change event
 export enum EventName {
@@ -46,16 +50,13 @@ export interface UserAnalytics {
 
 class AnalyticsService {
   track(event: AnalyticsEvent): void {
-    console.log(`[Analytics] ${event.category} - ${event.name}`, event.properties);
-    
-    // Implement actual analytics tracking here (e.g., Segment, Google Analytics)
-    // Example: window.analytics.track(event.name, { category: event.category, ...event.properties });
+    log.debug(`${event.category} - ${event.name}`, event.properties);
+    captureEvent(event.name, { category: event.category, ...event.properties });
   }
 
   page(pageName: string, properties?: Record<string, any>): void {
-    console.log(`[Analytics] Page View: ${pageName}`, properties);
-    
-    // Example: window.analytics.page(pageName, properties);
+    log.debug(`Page View: ${pageName}`, properties);
+    captureEvent('$pageview', { pageName, ...properties });
   }
 
   calculateBusinessAnalytics(classes: ClassEvent[]): BusinessAnalytics {
@@ -68,30 +69,23 @@ class AnalyticsService {
       };
     }
 
-    // Calculate total revenue (sum of all class costs) with proper number handling
     const totalRevenue = classes.reduce((sum, classEvent) => {
       const cost = typeof classEvent.classCost === 'number' ? classEvent.classCost : 
                    typeof classEvent.classCost === 'string' ? parseNumericString(classEvent.classCost) : 0;
       return sum + cost;
     }, 0);
 
-    // Calculate total tutor costs with proper number handling
     const totalTutorCosts = classes.reduce((sum, classEvent) => {
       const cost = typeof classEvent.tutorCost === 'number' ? classEvent.tutorCost : 
                    typeof classEvent.tutorCost === 'string' ? parseNumericString(classEvent.tutorCost) : 0;
       return sum + cost;
     }, 0);
 
-    // Net income is revenue minus tutor costs
     const netIncome = totalRevenue - totalTutorCosts;
-
-    // Calculate average class cost
     const averageClassCost = classes.length > 0 ? totalRevenue / classes.length : 0;
 
-    // Calculate student retention rate (percentage of students who attended more than one class)
     const studentCounts = new Map<string, number>();
     classes.forEach(classEvent => {
-      // Only count valid student names (non-empty and not 'Unknown Student')
       if (classEvent.studentName && 
           classEvent.studentName.trim() && 
           classEvent.studentName !== 'Unknown Student') {
@@ -112,12 +106,10 @@ class AnalyticsService {
     };
   }
 
-  // Add the missing functions that are imported in UserDetailModal.tsx
   async fetchStudentAnalytics(studentId: string): Promise<UserAnalytics> {
     try {
       const { supabase } = await import('@/integrations/supabase/client');
       
-      // Get profile to match student name
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('first_name, last_name, email')
@@ -125,16 +117,14 @@ class AnalyticsService {
         .single();
 
       if (profileError || !profile) {
-        console.error('Error fetching student profile:', profileError);
+        log.error('Error fetching student profile', profileError);
         return { classesCompleted: 0, totalCredits: 0, classesPaid: 0 };
       }
 
-      // Construct full name or fallback to email
       const fullName = profile.first_name && profile.last_name 
         ? `${profile.first_name} ${profile.last_name}`.trim()
         : profile.email;
 
-      // Count completed classes from class_logs with proper escaping
       const escapedFullName = fullName.replace(/"/g, '""');
       const escapedEmail = profile.email.replace(/"/g, '""');
       
@@ -145,7 +135,6 @@ class AnalyticsService {
 
       const classesCompleted = logsError || !classLogs ? 0 : classLogs.length;
 
-      // Get total credits (remaining) from class_credits_ledger
       const { data: ledger } = await supabase
         .from('class_credits_ledger')
         .select('balance_after')
@@ -156,7 +145,6 @@ class AnalyticsService {
 
       const totalCredits = ledger?.balance_after ?? 0;
 
-      // Get total credits ever allocated (sum of positive credit amounts)
       const { data: creditEntries } = await supabase
         .from('class_credits_ledger')
         .select('amount')
@@ -167,13 +155,9 @@ class AnalyticsService {
         ? creditEntries.reduce((sum, entry) => sum + Math.abs(entry.amount), 0)
         : 0;
 
-      return {
-        classesCompleted,
-        totalCredits,
-        classesPaid
-      };
+      return { classesCompleted, totalCredits, classesPaid };
     } catch (error) {
-      console.error('Error fetching student analytics:', error);
+      log.error('Error fetching student analytics', error);
       return { classesCompleted: 0, totalCredits: 0, classesPaid: 0 };
     }
   }
@@ -182,7 +166,6 @@ class AnalyticsService {
     try {
       const { supabase } = await import('@/integrations/supabase/client');
       
-      // Get profile to match tutor name
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('first_name, last_name, email')
@@ -190,17 +173,14 @@ class AnalyticsService {
         .single();
 
       if (profileError || !profile) {
-        console.error('Error fetching tutor profile:', profileError);
+        log.error('Error fetching tutor profile', profileError);
         return { classesCompleted: 0, totalCredits: 0, classesPaid: 0 };
       }
 
-      // Construct full name or fallback to email
       const fullName = profile.first_name && profile.last_name 
         ? `${profile.first_name} ${profile.last_name}`.trim()
         : profile.email;
 
-      // Count completed classes from class_logs with proper escaping
-      // Escape double quotes in values to prevent SQL injection
       const escapedFullName = fullName.replace(/"/g, '""');
       const escapedEmail = profile.email.replace(/"/g, '""');
       
@@ -211,14 +191,9 @@ class AnalyticsService {
 
       const classesCompleted = logsError || !classLogs ? 0 : classLogs.length;
 
-      // Tutors don't have credits, so return 0
-      return {
-        classesCompleted,
-        totalCredits: 0,
-        classesPaid: 0
-      };
+      return { classesCompleted, totalCredits: 0, classesPaid: 0 };
     } catch (error) {
-      console.error('Error fetching tutor analytics:', error);
+      log.error('Error fetching tutor analytics', error);
       return { classesCompleted: 0, totalCredits: 0, classesPaid: 0 };
     }
   }

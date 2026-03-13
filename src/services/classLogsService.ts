@@ -7,34 +7,33 @@ import { parseNumericString } from '@/utils/numberUtils';
 import { transformClassLog } from './logs/transformers';
 import { DbClassLog, DbCodeLog, TransformedClassLog } from './logs/types';
 import { parseDateToLocal, formatDateForDatabase } from '@/utils/safeDateUtils';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('classLogsService');
 
 type ClassLogs = Database['public']['Tables']['class_logs']['Row'];
 
 // Fetch all class logs
 export const fetchClassLogs = async (): Promise<TransformedClassLog[]> => {
-  console.log('Fetching class logs from Supabase...');
+  log.debug('Fetching class logs from Supabase...');
   try {
-    // Only fetch class_logs since code_logs doesn't exist in the types
     const classLogsResult = await supabase
       .from('class_logs')
       .select<string, ClassLogs>();
 
     if (classLogsResult.error) {
-      console.error('Error fetching class logs:', classLogsResult.error);
+      log.error('Error fetching class logs', classLogsResult.error);
       return [];
     }
 
     const classLogs = classLogsResult.data || [];
-
-    // Transform logs
     const transformedClassLogs = classLogs.map(transformClassLog);
 
-    // Sort by date
     return [...transformedClassLogs].sort(
       (a, b) => b.date.getTime() - a.date.getTime()
     );
   } catch (error) {
-    console.error('Unexpected error in fetchClassLogs:', error);
+    log.error('Unexpected error in fetchClassLogs', error);
     return [];
   }
 };
@@ -63,7 +62,6 @@ export const createClassLog = async (
     'Additional Info': classEvent.notes || null,
   };
 
-  // Add UUID columns if available
   if (classEvent.tutorId) record.tutor_user_id = classEvent.tutorId;
   if (classEvent.studentId) record.student_user_id = classEvent.studentId;
 
@@ -74,7 +72,7 @@ export const createClassLog = async (
     .single();
 
   if (error) {
-    console.error('Error creating class log:', error);
+    log.error('Error creating class log', error);
     return null;
   }
 
@@ -86,15 +84,13 @@ export const createClassLog = async (
   return transformedData as ClassEvent;
 };
 
-// Update a class log - Convert ClassEvent to DbClassLog format
+// Update a class log
 export const updateClassLog = async (
   id: string,
   updates: Record<string, any>
 ): Promise<ClassEvent | null> => {
-  // Remove any fields that don't exist in the class_logs table
   const safeUpdates: Record<string, any> = {};
   
-  // Only include fields that actually exist in the table
   if (updates['Class Number'] !== undefined) safeUpdates['Class Number'] = updates['Class Number'];
   if (updates['Tutor Name'] !== undefined) safeUpdates['Tutor Name'] = updates['Tutor Name'];
   if (updates['Student Name'] !== undefined) safeUpdates['Student Name'] = updates['Student Name'];
@@ -119,7 +115,7 @@ export const updateClassLog = async (
     .single();
     
   if (error) {
-    console.error('Error updating class log:', error);
+    log.error('Error updating class log', error);
     return null;
   }
 
@@ -139,7 +135,7 @@ export const deleteClassLog = async (id: string): Promise<boolean> => {
     .eq('id', id);
 
   if (error) {
-    console.error('Error deleting class log:', error);
+    log.error('Error deleting class log', error);
     return false;
   }
 

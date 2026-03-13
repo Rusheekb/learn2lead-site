@@ -1,4 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('studentNotes');
 
 export interface StudentNote {
   id: string;
@@ -18,7 +21,7 @@ export async function fetchStudentNotes(studentId: string): Promise<StudentNote[
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching student notes:', error);
+    log.error('Error fetching student notes', error);
     throw error;
   }
 
@@ -47,7 +50,7 @@ export async function createStudentNote(
     .single();
 
   if (error) {
-    console.error('Error creating student note:', error);
+    log.error('Error creating student note', error);
     throw error;
   }
 
@@ -67,7 +70,7 @@ export async function updateStudentNote(
     .single();
 
   if (error) {
-    console.error('Error updating student note:', error);
+    log.error('Error updating student note', error);
     throw error;
   }
 
@@ -81,7 +84,7 @@ export async function deleteStudentNote(noteId: string): Promise<void> {
     .eq('id', noteId);
 
   if (error) {
-    console.error('Error deleting student note:', error);
+    log.error('Error deleting student note', error);
     throw error;
   }
 }

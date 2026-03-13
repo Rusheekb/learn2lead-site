@@ -1,6 +1,9 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Student } from '@/types/tutorTypes';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('studentService');
 
 interface FetchStudentsOptions {
   page?: number;
@@ -20,31 +23,27 @@ export async function fetchStudents(options: FetchStudentsOptions = {}): Promise
   const { page = 1, pageSize = 10, searchTerm = '' } = options;
   const offset = (page - 1) * pageSize;
   
-  // Start with the base query
   let query = supabase.from('students').select('*', { count: 'exact' });
 
-  // Add search condition if provided
   if (searchTerm) {
     query = query.or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
   }
 
-  // Add pagination
   query = query.range(offset, offset + pageSize - 1).order('name');
 
   const result = await query;
 
   if (result.error) {
-    console.error('Error fetching students:', result.error);
+    log.error('Error fetching students', result.error);
     throw result.error;
   }
   
-  // Transform the data to match our Student type
   const students = (result.data || []).map(student => ({
     id: student.id,
     name: student.name,
     email: student.email,
     subjects: student.subjects,
-    grade: student.grade, // Allow null values
+    grade: student.grade,
     active: student.active,
     enrollmentDate: student.enrollment_date,
     paymentStatus: student.payment_status as any
@@ -60,17 +59,15 @@ export async function fetchStudents(options: FetchStudentsOptions = {}): Promise
 }
 
 export async function createStudent(student: Omit<Student, 'id'>): Promise<Student> {
-  // Validate required fields
   if (!student.name || !student.email) {
     throw new Error('Student name and email are required');
   }
 
-  // Transform our Student type to match the database schema
   const dbStudent = {
     name: student.name,
     email: student.email, 
     subjects: student.subjects || [],
-    grade: student.grade, // Allow null values
+    grade: student.grade,
     active: student.active !== undefined ? student.active : true,
     payment_status: student.paymentStatus || 'pending'
   };
@@ -82,17 +79,16 @@ export async function createStudent(student: Omit<Student, 'id'>): Promise<Stude
     .single();
   
   if (result.error) {
-    console.error('Error creating student:', result.error);
+    log.error('Error creating student', result.error);
     throw result.error;
   }
   
-  // Transform back to our Student type
   return {
     id: result.data.id,
     name: result.data.name,
     email: result.data.email,
     subjects: result.data.subjects,
-    grade: result.data.grade, // Allow null values
+    grade: result.data.grade,
     active: result.data.active,
     enrollmentDate: result.data.enrollment_date,
     paymentStatus: result.data.payment_status as any
@@ -103,7 +99,6 @@ export async function updateStudent(
   id: string,
   updates: Partial<Student>
 ): Promise<Student> {
-  // Transform our Student type to match the database schema
   const dbUpdates: any = {};
   if (updates.name !== undefined) dbUpdates.name = updates.name;
   if (updates.email !== undefined) dbUpdates.email = updates.email;
@@ -120,17 +115,16 @@ export async function updateStudent(
     .single();
   
   if (result.error) {
-    console.error('Error updating student:', result.error);
+    log.error('Error updating student', result.error);
     throw result.error;
   }
   
-  // Transform back to our Student type
   return {
     id: result.data.id,
     name: result.data.name,
     email: result.data.email,
     subjects: result.data.subjects,
-    grade: result.data.grade, // Allow null values
+    grade: result.data.grade,
     active: result.data.active,
     enrollmentDate: result.data.enrollment_date,
     paymentStatus: result.data.payment_status as any
@@ -146,17 +140,16 @@ export async function deleteStudent(id: string): Promise<Student> {
     .single();
   
   if (result.error) {
-    console.error('Error deleting student:', result.error);
+    log.error('Error deleting student', result.error);
     throw result.error;
   }
   
-  // Transform back to our Student type
   return {
     id: result.data.id,
     name: result.data.name,
     email: result.data.email,
     subjects: result.data.subjects,
-    grade: result.data.grade, // Allow null values
+    grade: result.data.grade,
     active: result.data.active,
     enrollmentDate: result.data.enrollment_date,
     paymentStatus: result.data.payment_status as any

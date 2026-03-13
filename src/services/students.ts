@@ -1,13 +1,15 @@
 
 import { supabase, handleResult } from './supabaseClient';
 import { Student as TutorStudent } from '@/types/tutorTypes';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('students');
 
 export async function fetchStudents(): Promise<TutorStudent[]> {
   const result = await supabase.from('students').select('*');
 
-  // Handle array response correctly
   if (result.error) {
-    console.error(result.error);
+    log.error('Error fetching students', result.error);
     throw result.error;
   }
   return result.data || [];
