@@ -6,6 +6,9 @@ import {
   mapToStudentUpload,
   mapToStudentUploads,
 } from './utils/classMappers';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('classUploads');
 
 export async function fetchClassUploads(
   classId: string
@@ -18,7 +21,6 @@ export async function fetchClassUploads(
 
     if (error) throw error;
     
-    // Filter out files that don't exist in storage
     const uploads = (data as ClassUploadRecord[]) || [];
     const validUploads: ClassUploadRecord[] = [];
     
@@ -34,13 +36,13 @@ export async function fetchClassUploads(
           validUploads.push(upload);
         }
       } catch (fileCheckError) {
-        console.warn(`File ${upload.file_path} not found in storage, skipping`);
+        log.warn(`File ${upload.file_path} not found in storage, skipping`);
       }
     }
     
     return mapToStudentUploads(validUploads);
   } catch (error) {
-    console.error('Error fetching class uploads:', error);
+    log.error('Error fetching class uploads', error);
     return [];
   }
 }
@@ -52,7 +54,6 @@ export async function uploadClassFile(
   note?: string
 ): Promise<StudentUpload | null> {
   try {
-    // Use secure upload edge function
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session) {
@@ -75,11 +76,10 @@ export async function uploadClassFile(
     );
 
     if (uploadError || !uploadResult?.success) {
-      console.error('Secure upload error:', uploadError || uploadResult?.error);
+      log.error('Secure upload error', uploadError || uploadResult?.error);
       throw new Error(uploadResult?.error || 'Failed to upload file securely');
     }
 
-    // Create database record with secure path
     const uploadRecord = {
       class_id: classId,
       student_name: studentName,
@@ -97,7 +97,6 @@ export async function uploadClassFile(
       .single();
 
     if (dbError) {
-      // If database insert fails, try to clean up the uploaded file
       await supabase.storage.from('materials').remove([uploadResult.path]);
       throw dbError;
     }
@@ -105,7 +104,7 @@ export async function uploadClassFile(
     toast.success('File uploaded successfully');
     return data ? mapToStudentUpload(data as ClassUploadRecord) : null;
   } catch (error) {
-    console.error('Error uploading file:', error);
+    log.error('Error uploading file', error);
     toast.error('Failed to upload file');
     return null;
   }
@@ -113,7 +112,6 @@ export async function uploadClassFile(
 
 export async function downloadClassFile(uploadId: string): Promise<boolean> {
   try {
-    // First get the file path from the uploads table
     const { data, error } = await supabase
       .from('class_uploads')
       .select('file_path, file_name')
@@ -123,14 +121,12 @@ export async function downloadClassFile(uploadId: string): Promise<boolean> {
     if (error) throw error;
     if (!data) throw new Error('File not found');
 
-    // Download the file from storage
     const { data: fileData, error: downloadError } = await supabase.storage
       .from('materials')
       .download(data.file_path);
 
     if (downloadError) throw downloadError;
 
-    // Create a download link and trigger download
     const url = URL.createObjectURL(fileData);
     const a = document.createElement('a');
     a.href = url;
@@ -142,7 +138,7 @@ export async function downloadClassFile(uploadId: string): Promise<boolean> {
 
     return true;
   } catch (error) {
-    console.error('Error downloading file:', error);
+    log.error('Error downloading file', error);
     toast.error('Failed to download file');
     return false;
   }
@@ -150,7 +146,6 @@ export async function downloadClassFile(uploadId: string): Promise<boolean> {
 
 export async function viewClassFile(uploadId: string): Promise<boolean> {
   try {
-    // First get the file path from the uploads table
     const { data, error } = await supabase
       .from('class_uploads')
       .select('file_path, file_name')
@@ -160,18 +155,16 @@ export async function viewClassFile(uploadId: string): Promise<boolean> {
     if (error) throw error;
     if (!data) throw new Error('File not found');
 
-    // Get a signed URL for viewing
     const { data: signedUrlData, error: urlError } = await supabase.storage
       .from('materials')
-      .createSignedUrl(data.file_path, 3600); // 1 hour expiry
+      .createSignedUrl(data.file_path, 3600);
 
     if (urlError) throw urlError;
 
-    // Open the file in a new tab
     window.open(signedUrlData.signedUrl, '_blank');
     return true;
   } catch (error) {
-    console.error('Error viewing file:', error);
+    log.error('Error viewing file', error);
     toast.error('Failed to open file');
     return false;
   }
@@ -179,7 +172,6 @@ export async function viewClassFile(uploadId: string): Promise<boolean> {
 
 export async function deleteClassFile(uploadId: string): Promise<boolean> {
   try {
-    // First get the file path from the uploads table
     const { data: uploadData, error } = await supabase
       .from('class_uploads')
       .select('file_path, file_name')
@@ -189,14 +181,12 @@ export async function deleteClassFile(uploadId: string): Promise<boolean> {
     if (error) throw error;
     if (!uploadData) throw new Error('File not found');
 
-    // Delete from storage
     const { error: storageError } = await supabase.storage
       .from('materials')
       .remove([uploadData.file_path]);
 
     if (storageError) throw storageError;
 
-    // Delete from database
     const { error: dbError } = await supabase
       .from('class_uploads')
       .delete()
@@ -207,7 +197,7 @@ export async function deleteClassFile(uploadId: string): Promise<boolean> {
     toast.success(`Deleted ${uploadData.file_name}`);
     return true;
   } catch (error) {
-    console.error('Error deleting file:', error);
+    log.error('Error deleting file', error);
     toast.error('Failed to delete file');
     return false;
   }

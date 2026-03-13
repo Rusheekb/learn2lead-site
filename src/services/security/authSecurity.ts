@@ -1,4 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('authSecurity');
 
 interface SecurityEvent {
   eventType: string;
@@ -42,10 +45,9 @@ export class AuthSecurityService {
 
   async logSecurityEvent(event: SecurityEvent): Promise<void> {
     try {
-      // Security logging removed since table was deleted
-      console.warn('Security event:', event);
+      log.warn('Security event', event as Record<string, any>);
     } catch (error) {
-      console.error('Failed to log security event:', error);
+      log.error('Failed to log security event', error);
     }
   }
 
@@ -54,7 +56,6 @@ export class AuthSecurityService {
     success: boolean, 
     error?: string
   ): Promise<void> {
-    // Check for rate limiting on failed attempts
     if (!success) {
       const identifier = email.toLowerCase();
       if (this.isRateLimited(identifier)) {
@@ -166,7 +167,7 @@ export class AuthSecurityService {
 
       return hasRole;
     } catch (error) {
-      console.error('Role validation error:', error);
+      log.error('Role validation error', error);
       await this.logSuspiciousActivity(userId, 'role_validation_error', {
         error: error instanceof Error ? error.message : 'Unknown error'
       });
@@ -183,13 +184,12 @@ export class AuthSecurityService {
     try {
       const windowStart = new Date(Date.now() - windowMinutes * 60 * 1000);
       
-      // Rate limiting removed since security_logs table was deleted
-      const data = [];
+      const data: any[] = [];
       const error = null;
 
       if (error) {
-        console.error('Rate limit check error:', error);
-        return false; // Fail closed
+        log.error('Rate limit check error', error);
+        return false;
       }
 
       const attemptCount = data?.length || 0;
@@ -210,8 +210,8 @@ export class AuthSecurityService {
 
       return isAllowed;
     } catch (error) {
-      console.error('Rate limit check failed:', error);
-      return false; // Fail closed
+      log.error('Rate limit check failed', error);
+      return false;
     }
   }
 }

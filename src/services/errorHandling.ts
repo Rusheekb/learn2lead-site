@@ -1,4 +1,8 @@
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
+import * as Sentry from '@sentry/react';
+
+const log = logger.create('ErrorHandler');
 
 export interface AppError {
   type: 'auth' | 'validation' | 'network' | 'permission' | 'server' | 'unknown';
@@ -11,7 +15,7 @@ export interface AppError {
 export class ErrorHandler {
   static handle(error: any, context?: string): void {
     const appError = this.parseError(error, context);
-    this.logError(appError, context);
+    this.logError(appError, context, error);
     this.showUserMessage(appError);
   }
 
@@ -78,27 +82,31 @@ export class ErrorHandler {
     };
   }
 
-  static logError(error: AppError, context?: string): void {
+  static logError(appError: AppError, context?: string, originalError?: unknown): void {
     const errorData = {
-      type: error.type,
-      message: error.message,
-      code: error.code,
-      details: error.details,
+      type: appError.type,
+      message: appError.message,
+      code: appError.code,
+      details: appError.details,
       context: context || 'Unknown',
       timestamp: new Date().toISOString(),
       url: typeof window !== 'undefined' ? window.location.href : undefined
     };
 
-    // Always log in development
     if (import.meta.env.DEV) {
-      console.error(`[${error.type.toUpperCase()}] ${context || 'Unknown context'}:`, errorData);
+      console.error(`[${appError.type.toUpperCase()}] ${context || 'Unknown context'}:`, errorData);
     }
     
-    // In production, only log critical errors to avoid noise
-    // Future: integrate with Sentry or similar service
-    if (import.meta.env.PROD && (error.type === 'server' || error.type === 'unknown')) {
-      // Structured logging for production debugging if needed
-      console.error('[PROD_ERROR]', JSON.stringify(errorData));
+    // In production, route through Sentry
+    if (import.meta.env.PROD && (appError.type === 'server' || appError.type === 'unknown')) {
+      if (originalError instanceof Error) {
+        Sentry.captureException(originalError, { extra: errorData });
+      } else {
+        Sentry.captureMessage(`[${appError.type}] ${appError.message}`, {
+          level: 'error',
+          extra: errorData,
+        });
+      }
     }
   }
 

@@ -15,6 +15,9 @@ import {
 import { parseNumericString } from '@/utils/numberUtils';
 import { parseStartTime } from './timeFormatUtils';
 import { parseDateToLocal } from '@/utils/safeDateUtils';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('classEventMapper');
 
 interface DbRecord {
   id: string;
@@ -36,9 +39,8 @@ interface DbRecord {
 }
 
 export const transformDbRecordToClassEvent = (record: unknown): ClassEvent => {
-  // Type guard to ensure we have a valid record
   if (!record || typeof record !== 'object' || !('id' in record)) {
-    console.error('Invalid record format:', record);
+    log.error('Invalid record format', undefined, { record });
     return createErrorClassEvent('unknown');
   }
   
@@ -50,7 +52,7 @@ export const transformDbRecordToClassEvent = (record: unknown): ClassEvent => {
       try {
         dateObj = parseDateWithFormats(dbRecord.Date);
       } catch (e) {
-        console.error('Error parsing date:', dbRecord.Date, e);
+        log.error('Error parsing date', e, { date: dbRecord.Date });
         dateObj = new Date();
       }
     } else {
@@ -62,7 +64,6 @@ export const transformDbRecordToClassEvent = (record: unknown): ClassEvent => {
     const startTime = parseStartTime(rawStartTime);
     const endTime = calculateEndTime(startTime, duration);
 
-    // Parse payment dates using local time parser
     const studentPaymentDate = dbRecord.student_payment_date 
       ? (typeof dbRecord.student_payment_date === 'string' 
           ? parseDateToLocal(dbRecord.student_payment_date) 
@@ -75,11 +76,9 @@ export const transformDbRecordToClassEvent = (record: unknown): ClassEvent => {
           : dbRecord.tutor_payment_date)
       : null;
 
-    // Derive payment status from dates
     const studentPayment = studentPaymentDate ? 'paid' : 'unpaid';
     const tutorPayment = tutorPaymentDate ? 'paid' : 'unpaid';
 
-    // Costs are already numeric from the database
     const classCost = dbRecord['Class Cost'] ?? 0;
     const tutorCost = dbRecord['Tutor Cost'] ?? 0;
 
@@ -110,12 +109,11 @@ export const transformDbRecordToClassEvent = (record: unknown): ClassEvent => {
       materials: [],
     };
   } catch (error) {
-    console.error('Error transforming record:', error, dbRecord);
+    log.error('Error transforming record', error, { recordId: dbRecord.id });
     return createErrorClassEvent(dbRecord.id);
   }
 };
 
-// Helper function to create error class event
 function createErrorClassEvent(id: string): ClassEvent {
   return {
     id: id || 'unknown',

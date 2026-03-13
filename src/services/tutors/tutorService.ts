@@ -2,6 +2,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Tutor } from '@/types/tutorTypes';
 import { toast } from 'sonner';
 import { PaginatedResponse } from '@/services/students/studentService';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('tutorService');
 
 interface FetchTutorsOptions {
   page?: number;
@@ -13,32 +16,28 @@ export async function fetchTutors(options: FetchTutorsOptions = {}): Promise<Pag
   const { page = 1, pageSize = 10, searchTerm = '' } = options;
   const offset = (page - 1) * pageSize;
   
-  // Start with the base query
   let query = supabase.from('tutors').select('*', { count: 'exact' });
 
-  // Add search condition if provided
   if (searchTerm) {
     query = query.or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`);
   }
 
-  // Add pagination
   query = query.range(offset, offset + pageSize - 1).order('name');
 
   const result = await query;
   
   if (result.error) {
-    console.error('Error fetching tutors:', result.error);
+    log.error('Error fetching tutors', result.error);
     throw result.error;
   }
   
-  // Transform the data to match our Tutor interface
   const tutors = (result.data || []).map(tutor => ({
     id: tutor.id,
     name: tutor.name,
     email: tutor.email,
     subjects: tutor.subjects || [],
-    rating: 5, // Default value
-    classes: 0, // Default value
+    rating: 5,
+    classes: 0,
     hourlyRate: tutor.hourly_rate || 0,
     active: tutor.active,
   }));
@@ -53,7 +52,6 @@ export async function fetchTutors(options: FetchTutorsOptions = {}): Promise<Pag
 }
 
 export async function createTutor(tutor: Omit<Tutor, 'id'>): Promise<Tutor> {
-  // Transform our Tutor type to match the database schema
   const dbTutor = {
     name: tutor.name,
     email: tutor.email,
@@ -69,18 +67,17 @@ export async function createTutor(tutor: Omit<Tutor, 'id'>): Promise<Tutor> {
     .single();
   
   if (result.error) {
-    console.error('Error creating tutor:', result.error);
+    log.error('Error creating tutor', result.error);
     throw result.error;
   }
   
-  // Transform back to our Tutor interface
   return {
     id: result.data.id,
     name: result.data.name,
     email: result.data.email,
     subjects: result.data.subjects || [],
-    rating: 5, // Default value
-    classes: 0, // Default value
+    rating: 5,
+    classes: 0,
     hourlyRate: result.data.hourly_rate || 0,
     active: result.data.active
   };
@@ -90,7 +87,6 @@ export async function updateTutor(
   id: string,
   updates: Partial<Tutor>
 ): Promise<Tutor> {
-  // Transform our Tutor updates to match the database schema
   const dbUpdates: any = {};
   if (updates.name !== undefined) dbUpdates.name = updates.name;
   if (updates.email !== undefined) dbUpdates.email = updates.email;
@@ -106,18 +102,17 @@ export async function updateTutor(
     .single();
   
   if (result.error) {
-    console.error('Error updating tutor:', result.error);
+    log.error('Error updating tutor', result.error);
     throw result.error;
   }
   
-  // Transform back to our Tutor interface
   return {
     id: result.data.id,
     name: result.data.name,
     email: result.data.email,
     subjects: result.data.subjects || [],
-    rating: 5, // Default value
-    classes: 0, // Default value
+    rating: 5,
+    classes: 0,
     hourlyRate: result.data.hourly_rate || 0,
     active: result.data.active
   };
@@ -132,18 +127,17 @@ export async function deleteTutor(id: string): Promise<Tutor> {
     .single();
   
   if (result.error) {
-    console.error('Error deleting tutor:', result.error);
+    log.error('Error deleting tutor', result.error);
     throw result.error;
   }
   
-  // Transform back to our Tutor interface
   return {
     id: result.data.id,
     name: result.data.name,
     email: result.data.email,
     subjects: result.data.subjects || [],
-    rating: 5, // Default value
-    classes: 0, // Default value
+    rating: 5,
+    classes: 0,
     hourlyRate: result.data.hourly_rate || 0,
     active: result.data.active
   };

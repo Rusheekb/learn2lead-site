@@ -1,6 +1,10 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
+
 export { supabase };
+
+const log = logger.create('supabaseClient');
 
 import type {
   PostgrestError,
@@ -17,7 +21,7 @@ function handleResult<T>(
   response: PostgrestResponse<T> | PostgrestSingleResponse<T>
 ): T | T[] {
   if (response.error) {
-    console.error(response.error);
+    log.error('Supabase query error', response.error);
     throw response.error;
   }
   if (!response.data) {

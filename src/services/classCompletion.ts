@@ -3,15 +3,18 @@ import { toast } from 'sonner';
 import { captureEvent } from '@/lib/posthog';
 import { addBreadcrumb, captureException } from '@/lib/sentry';
 import { retryEdgeFunction, retryWithBackoff } from '@/utils/retryWithBackoff';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('classCompletion');
 
 export interface CompleteClassData {
   classId: string;
-  classNumber: string; // Unique ID (e.g., AR-MV-20251111-1)
-  title?: string; // Descriptive title from scheduled class
+  classNumber: string;
+  title?: string;
   tutorName: string;
   studentName: string;
-  studentId: string; // Added for credit deduction
-  tutorId: string; // Tutor UUID for RLS
+  studentId: string;
+  tutorId: string;
   date: string;
   day: string;
   timeCst: string;
@@ -28,7 +31,6 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
   try {
     addBreadcrumb({ category: 'class.completion', message: 'Starting class completion', data: { classId: data.classId, studentId: data.studentId, subject: data.subject } });
 
-    // First, check if the class still exists
     const { data: existingClass, error: classError } = await retryWithBackoff(
       async () => supabase
         .from('scheduled_classes')
@@ -39,7 +41,7 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
     );
 
     if (classError) {
-      console.error('Error checking class existence:', classError);
+      log.error('Error checking class existence', classError);
       throw new Error('Failed to verify class existence');
     }
 
@@ -49,7 +51,6 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
       return false;
     }
 
-    // Deduct class credit before completing
     const { data: session } = await supabase.auth.getSession();
     if (!session.session) {
       toast.error('You must be logged in to complete classes');
@@ -123,7 +124,6 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
     const creditsDeducted = creditResult.credits_deducted || durationHours;
     const isAdminOverride = creditResult.admin_override;
 
-    // Check if class log already exists
     const { data: existingLog, error: logCheckError } = await supabase
       .from('class_logs')
       .select('id')
@@ -131,7 +131,7 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
       .maybeSingle();
 
     if (logCheckError) {
-      console.error('Error checking class log existence:', logCheckError);
+      log.error('Error checking class log existence', logCheckError);
       throw new Error('Failed to check class log status');
     }
 
@@ -140,21 +140,18 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
       return false;
     }
 
-    // Fetch student class rate
     const { data: studentData } = await supabase
       .from('students')
       .select('class_rate')
       .eq('name', data.studentName)
       .maybeSingle();
 
-    // Fetch tutor hourly rate
     const { data: tutorData } = await supabase
       .from('tutors')
       .select('hourly_rate')
       .eq('name', data.tutorName)
       .maybeSingle();
 
-    // Create class log entry (payment dates default to NULL = unpaid)
     const { error: insertError } = await supabase
       .from('class_logs')
       .insert({
@@ -178,7 +175,7 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
       } as any);
 
     if (insertError) {
-      console.error('Error creating class log:', insertError);
+      log.error('Error creating class log', insertError);
       addBreadcrumb({ category: 'class.completion', message: 'Class log insert failed, restoring credit', level: 'error', data: { classId: data.classId, error: insertError.message } });
       try {
         const { data: restoreResult, error: restoreError } = await supabase.functions.invoke(
@@ -197,18 +194,18 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
         );
         
         if (restoreError || !restoreResult?.success) {
-          console.error('Failed to restore credit after log creation failure:', restoreError || restoreResult?.error);
+          log.error('Failed to restore credit after log creation failure', restoreError || restoreResult?.error);
           toast.error('Class log failed and credit could not be restored automatically', {
             description: 'Please contact admin to restore the credit manually'
           });
         } else {
-          console.log('Credit successfully restored after log creation failure');
+          log.info('Credit successfully restored after log creation failure');
           toast.error('Failed to create class log - credit has been restored', {
             description: 'Please try again or contact support if the issue persists'
           });
         }
       } catch (restoreErr) {
-        console.error('Exception restoring credit:', restoreErr);
+        log.error('Exception restoring credit', restoreErr);
         toast.error('Class log failed and credit restoration encountered an error', {
           description: 'Please contact admin to restore the credit manually'
         });
@@ -217,16 +214,14 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
       return false;
     }
 
-    // Mark the scheduled class as completed (keep on calendar)
     const { error: updateError } = await supabase
       .from('scheduled_classes')
       .update({ status: 'completed', attendance: 'present' })
       .eq('id', data.classId);
 
     if (updateError) {
-      console.error('Error updating scheduled class status:', updateError);
+      log.error('Error updating scheduled class status', updateError);
       addBreadcrumb({ category: 'class.completion', message: 'Status update failed, rolling back log', level: 'error', data: { classId: data.classId } });
-      // If update fails, try to remove the class log we just created
       await supabase
         .from('class_logs')
         .delete()
@@ -245,7 +240,6 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
       admin_override: isAdminOverride,
     });
 
-    // Show appropriate success message
     if (isAdminOverride) {
       toast.success('Class completed (Admin Override)', {
         description: 'Completed with 0 hours using admin privileges'
@@ -269,7 +263,7 @@ export const completeClass = async (data: CompleteClassData): Promise<boolean> =
     return true;
 
   } catch (error) {
-    console.error('Error completing class:', error);
+    log.error('Error completing class', error);
     if (error instanceof Error) {
       captureException(error, { classId: data.classId, studentId: data.studentId });
     }

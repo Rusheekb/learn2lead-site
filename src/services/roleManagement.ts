@@ -1,6 +1,9 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Profile } from '@/types/profile';
 import { addBreadcrumb, captureException } from '@/lib/sentry';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('roleManagement');
 
 export interface RolePromotionResult {
   success: boolean;
@@ -35,7 +38,7 @@ export async function promoteStudentToTutor(
       data: { targetUserId: studentUserId },
     });
     captureException(new Error(error.message), { context: 'promoteStudentToTutor', studentUserId });
-    console.error('Error promoting student to tutor:', error);
+    log.error('Error promoting student to tutor', error);
     return {
       success: false,
       error: error.message,
@@ -53,7 +56,6 @@ export async function promoteStudentToTutor(
   return data as unknown as RolePromotionResult;
 }
 
-// Helper to resolve a profile id from either a profiles.id or an email
 async function resolveProfileId(idOrMaybeStudentId: string, email?: string): Promise<string | null> {
   try {
     const byId = await supabase
@@ -73,7 +75,7 @@ async function resolveProfileId(idOrMaybeStudentId: string, email?: string): Pro
       if (byEmail.data?.id) return byEmail.data.id;
     }
   } catch (e) {
-    console.error('resolveProfileId error:', e);
+    log.error('resolveProfileId error', e);
   }
   return null;
 }
@@ -98,7 +100,7 @@ export async function promoteStudentToTutorByIdOrEmail(
       level: 'error',
       data: { email },
     });
-    console.error('Error promoting student to tutor:', error);
+    log.error('Error promoting student to tutor', error);
     return { success: false, error: error.message, code: 'RPC_ERROR' };
   }
 
@@ -135,7 +137,7 @@ export async function demoteTutorToStudent(
       data: { targetUserId: tutorUserId },
     });
     captureException(new Error(error.message), { context: 'demoteTutorToStudent', tutorUserId });
-    console.error('Error demoting tutor to student:', error);
+    log.error('Error demoting tutor to student', error);
     return {
       success: false,
       error: error.message,
@@ -173,7 +175,7 @@ export async function demoteTutorToStudentByIdOrEmail(
       level: 'error',
       data: { email },
     });
-    console.error('Error demoting tutor to student:', error);
+    log.error('Error demoting tutor to student', error);
     return { success: false, error: error.message, code: 'RPC_ERROR' };
   }
 
@@ -194,7 +196,7 @@ export async function fetchUserProfile(userId: string): Promise<Profile | null> 
     .single();
 
   if (error) {
-    console.error('Error fetching user profile:', error);
+    log.error('Error fetching user profile', error);
     return null;
   }
 
@@ -214,7 +216,7 @@ export async function fetchRoleChangeAudit(userId?: string) {
   const { data, error } = await query.limit(50);
 
   if (error) {
-    console.error('Error fetching role change audit:', error);
+    log.error('Error fetching role change audit', error);
     return [];
   }
 

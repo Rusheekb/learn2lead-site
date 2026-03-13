@@ -1,4 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('fileValidation');
 
 interface FileValidationResult {
   isValid: boolean;
@@ -7,14 +10,14 @@ interface FileValidationResult {
 }
 
 interface FileValidationConfig {
-  maxFileSize: number; // in bytes
+  maxFileSize: number;
   allowedMimeTypes: string[];
   maxFilesPerUser: number;
   scanForMalware: boolean;
 }
 
 const DEFAULT_CONFIG: FileValidationConfig = {
-  maxFileSize: 50 * 1024 * 1024, // 50MB
+  maxFileSize: 50 * 1024 * 1024,
   allowedMimeTypes: [
     'application/pdf',
     'application/msword',
@@ -33,11 +36,10 @@ const DEFAULT_CONFIG: FileValidationConfig = {
   scanForMalware: true
 };
 
-// Known malicious file signatures (simplified)
 const MALICIOUS_SIGNATURES = [
-  'MZ', // PE executable
-  '4D5A', // PE executable hex
-  'PK\x03\x04', // ZIP with suspicious content patterns
+  'MZ',
+  '4D5A',
+  'PK\x03\x04',
 ];
 
 export class FileValidationService {
@@ -54,25 +56,21 @@ export class FileValidationService {
       warnings: []
     };
 
-    // 1. File size validation
     if (file.size > this.config.maxFileSize) {
       result.isValid = false;
       result.errors.push(`File size ${this.formatFileSize(file.size)} exceeds maximum allowed size of ${this.formatFileSize(this.config.maxFileSize)}`);
     }
 
-    // 2. MIME type validation
     if (!this.config.allowedMimeTypes.includes(file.type)) {
       result.isValid = false;
       result.errors.push(`File type '${file.type}' is not allowed`);
     }
 
-    // 3. File name validation
     const sanitizedName = this.sanitizeFileName(file.name);
     if (sanitizedName !== file.name) {
       result.warnings.push('File name contains potentially unsafe characters and will be sanitized');
     }
 
-    // 4. File content validation
     if (this.config.scanForMalware) {
       const contentCheck = await this.scanFileContent(file);
       if (!contentCheck.isValid) {
@@ -81,14 +79,12 @@ export class FileValidationService {
       }
     }
 
-    // 5. User file limit check
     const userFileCount = await this.getUserFileCount(userId);
     if (userFileCount >= this.config.maxFilesPerUser) {
       result.isValid = false;
       result.errors.push(`User has reached maximum file limit of ${this.config.maxFilesPerUser} files`);
     }
 
-    // Log validation result
     await this.logValidation(file, userId, result);
 
     return result;
@@ -105,7 +101,6 @@ export class FileValidationService {
           .map(b => b.toString(16).padStart(2, '0'))
           .join('');
 
-        // Check for malicious signatures
         for (const signature of MALICIOUS_SIGNATURES) {
           if (header.includes(signature.toLowerCase())) {
             resolve({
@@ -116,7 +111,6 @@ export class FileValidationService {
           }
         }
 
-        // Additional content checks based on file type
         const suspiciousPatterns = [
           /javascript:/gi,
           /<script/gi,
@@ -146,14 +140,12 @@ export class FileValidationService {
         });
       };
 
-      // Read only first 1MB for scanning
       const blob = file.slice(0, Math.min(file.size, 1024 * 1024));
       reader.readAsArrayBuffer(blob);
     });
   }
 
   private sanitizeFileName(fileName: string): string {
-    // Remove or replace dangerous characters
     return fileName
       .replace(/[<>:"/\\|?*\x00-\x1f]/g, '_')
       .replace(/^\.*/, '')
@@ -178,16 +170,16 @@ export class FileValidationService {
       const { count, error } = await supabase
         .from('class_uploads')
         .select('*', { count: 'exact', head: true })
-        .eq('student_name', userId); // This would need to be adjusted based on your schema
+        .eq('student_name', userId);
 
       if (error) {
-        console.error('Error counting user files:', error);
+        log.error('Error counting user files', error);
         return 0;
       }
 
       return count || 0;
     } catch (error) {
-      console.error('Error in getUserFileCount:', error);
+      log.error('Error in getUserFileCount', error);
       return 0;
     }
   }
@@ -207,11 +199,9 @@ export class FileValidationService {
         timestamp: new Date().toISOString()
       };
 
-      // File validation logging removed since table was deleted
-      console.warn('File validation result:', { fileName: file.name, status, details });
+      log.warn('File validation result', { fileName: file.name, status, details });
     } catch (error) {
-      console.error('Failed to log file validation:', error);
-      // Don't throw - logging failure shouldn't break file upload
+      log.error('Failed to log file validation', error);
     }
   }
 

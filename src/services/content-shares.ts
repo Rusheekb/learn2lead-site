@@ -1,17 +1,18 @@
 
 import { supabase, handleResult } from './supabaseClient';
 import { ContentShareItem } from '@/types/sharedTypes';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('contentShares');
 
 export async function fetchContentShares(): Promise<ContentShareItem[]> {
   const result = await supabase.from('content_shares').select('*');
 
-  // Handle array response correctly
   if (result.error) {
-    console.error(result.error);
+    log.error('Error fetching content shares', result.error);
     throw result.error;
   }
   
-  // Filter out content shares where files don't exist in storage
   const shares = result.data || [];
   const validShares: ContentShareItem[] = [];
   
@@ -32,7 +33,7 @@ export async function fetchContentShares(): Promise<ContentShareItem[]> {
         validShares.push(share);
       }
     } catch (fileCheckError) {
-      console.warn(`File ${share.file_path} not found in storage, skipping share`);
+      log.warn(`File ${share.file_path} not found in storage, skipping share`);
     }
   }
   
@@ -75,7 +76,6 @@ export async function deleteContentShare(
   return handleResult(result);
 }
 
-// Fetch content shares for a specific user
 export async function fetchUserContentShares(
   userId: string
 ): Promise<ContentShareItem[]> {
@@ -84,13 +84,11 @@ export async function fetchUserContentShares(
     .select('*')
     .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`);
 
-  // Handle array response correctly
   if (result.error) {
-    console.error(result.error);
+    log.error('Error fetching user content shares', result.error);
     throw result.error;
   }
   
-  // Filter out content shares where files don't exist in storage
   const shares = result.data || [];
   const validShares: ContentShareItem[] = [];
   
@@ -111,7 +109,7 @@ export async function fetchUserContentShares(
         validShares.push(share);
       }
     } catch (fileCheckError) {
-      console.warn(`File ${share.file_path} not found in storage, skipping share`);
+      log.warn(`File ${share.file_path} not found in storage, skipping share`);
     }
   }
   

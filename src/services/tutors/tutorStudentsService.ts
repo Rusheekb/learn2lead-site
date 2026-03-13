@@ -1,4 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('tutorStudents');
 
 export interface TutorStudentData {
   tutor_id: string;
@@ -17,7 +20,7 @@ export async function fetchTutorStudentsByEmail(): Promise<TutorStudentData[]> {
   const { data, error } = await supabase.rpc('get_tutor_students_by_email');
   
   if (error) {
-    console.error('Error fetching tutor students:', error);
+    log.error('Error fetching tutor students', error);
     throw error;
   }
   

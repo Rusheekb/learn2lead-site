@@ -1,9 +1,11 @@
 import { supabase } from '@/services/supabaseClient';
 import { toast } from 'sonner';
 import { TutorStudentAssignment } from './types';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('assignments');
 
 async function resolveProfileIdFromTutorId(tutorId: string): Promise<string | null> {
-  // If already a profile id, return as-is
   const { data: existing } = await supabase
     .from('profiles')
     .select('id')
@@ -11,7 +13,6 @@ async function resolveProfileIdFromTutorId(tutorId: string): Promise<string | nu
     .maybeSingle();
   if (existing?.id) return tutorId;
 
-  // Otherwise, map tutors.id -> tutors.email -> profiles.id
   const { data: tutor } = await supabase
     .from('tutors')
     .select('email')
@@ -28,7 +29,6 @@ async function resolveProfileIdFromTutorId(tutorId: string): Promise<string | nu
 }
 
 async function resolveProfileIdFromStudentId(studentId: string): Promise<string | null> {
-  // If already a profile id, return as-is
   const { data: existing } = await supabase
     .from('profiles')
     .select('id')
@@ -36,7 +36,6 @@ async function resolveProfileIdFromStudentId(studentId: string): Promise<string 
     .maybeSingle();
   if (existing?.id) return studentId;
 
-  // Otherwise, map students.id -> students.email -> profiles.id
   const { data: student } = await supabase
     .from('students')
     .select('email')
@@ -56,19 +55,18 @@ export async function createAssignment(input: {
   tutor_id: string;
   student_id: string;
 }) {
-  console.log('Creating assignment with input:', input);
+  log.debug('Creating assignment with input', input);
 
-  // The input should now already contain profile IDs, but let's add a fallback
   const mappedTutorId = await resolveProfileIdFromTutorId(input.tutor_id);
   const mappedStudentId = await resolveProfileIdFromStudentId(input.student_id);
 
   if (!mappedTutorId || !mappedStudentId) {
-    console.error('Mapping to profile IDs failed', { mappedTutorId, mappedStudentId, input });
+    log.error('Mapping to profile IDs failed', undefined, { mappedTutorId, mappedStudentId, input });
     toast.error('Could not resolve selected users');
     throw new Error('Failed to resolve profile IDs for assignment');
   }
 
-  console.log('Final assignment data:', { tutor_id: mappedTutorId, student_id: mappedStudentId });
+  log.debug('Final assignment data', { tutor_id: mappedTutorId, student_id: mappedStudentId });
 
   const { data, error } = await supabase
     .from('tutor_student_assigned')
@@ -77,7 +75,7 @@ export async function createAssignment(input: {
     .single();
 
   if (error) {
-    console.error('Error creating assignment:', error);
+    log.error('Error creating assignment', error);
     throw error;
   }
 
@@ -94,7 +92,7 @@ export async function endAssignment(id: string) {
     .single();
 
   if (error) {
-    console.error('Error ending assignment:', error);
+    log.error('Error ending assignment', error);
     throw error;
   }
 

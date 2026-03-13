@@ -5,6 +5,9 @@ import { DbClassLog, DbCodeLog, TransformedClassLog } from './types';
 import { Database } from '@/integrations/supabase/types';
 import { calculateEndTime } from '@/services/utils/dateTimeTransformers';
 import { parseDateToLocal } from '@/utils/safeDateUtils';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('logTransformers');
 
 type ClassLogs = Database['public']['Tables']['class_logs']['Row'];
 
@@ -15,17 +18,16 @@ export const transformClassLog = (record: DbClassLog): TransformedClassLog => {
       try {
         dateObj = parse(record['Date'], 'yyyy-MM-dd', new Date());
       } catch (e) {
-        console.error('Error parsing date:', record['Date']);
+        log.error('Error parsing date', e, { date: record['Date'] });
         dateObj = new Date();
       }
     } else {
       dateObj = new Date();
     }
 
-    // Calculate duration and endTime
     const startTime = record['Time (CST)'] ?? '';
     const duration = parseNumericString(record['Time (hrs)'] ?? '0');
-    const endTime = calculateEndTime(startTime, duration) || startTime; // Default to startTime if calculation fails
+    const endTime = calculateEndTime(startTime, duration) || startTime;
 
     return {
       id: record.id,
@@ -48,14 +50,13 @@ export const transformClassLog = (record: DbClassLog): TransformedClassLog => {
       tutorPayment: record.tutor_payment_date ? 'paid' : 'unpaid',
       additionalInfo: record['Additional Info'],
       isCodeLog: false,
-      // Add these to match ClassEvent interface
       title: record['Class Number'] ?? '',
-      endTime: endTime, // Now always populated
+      endTime: endTime,
       zoomLink: null,
       notes: record['Additional Info'],
     };
   } catch (error) {
-    console.error(`Error transforming class log record:`, error, record);
+    log.error('Error transforming class log record', error, { recordId: record.id });
     return createErrorLog(record.id, false);
   }
 };
@@ -67,17 +68,16 @@ export const transformCodeLog = (record: DbCodeLog): TransformedClassLog => {
       try {
         dateObj = parse(record.date, 'yyyy-MM-dd', new Date());
       } catch (e) {
-        console.error('Error parsing date:', record.date);
+        log.error('Error parsing date', e, { date: record.date });
         dateObj = new Date();
       }
     } else {
       dateObj = new Date();
     }
 
-    // Calculate endTime from startTime and duration
     const startTime = record.time_cst || 'N/A';
     const duration = parseNumericString(record.time_hrs ?? '0');
-    const endTime = calculateEndTime(startTime, duration) || startTime; // Default to startTime if calculation fails
+    const endTime = calculateEndTime(startTime, duration) || startTime;
 
     return {
       id: record.id,
@@ -100,14 +100,13 @@ export const transformCodeLog = (record: DbCodeLog): TransformedClassLog => {
       tutorPayment: record.tutor_payment_date ? 'paid' : 'unpaid',
       additionalInfo: record.additional_info ?? null,
       isCodeLog: true,
-      // Add these to match ClassEvent interface
       title: record.class_number || 'Code Session',
-      endTime: endTime, // Now always populated
+      endTime: endTime,
       zoomLink: null,
       notes: record.additional_info,
     };
   } catch (error) {
-    console.error(`Error transforming code log record:`, error, record);
+    log.error('Error transforming code log record', error, { recordId: record.id });
     return createErrorLog(record.id, true);
   }
 };

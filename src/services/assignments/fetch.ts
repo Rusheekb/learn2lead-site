@@ -1,6 +1,9 @@
 
 import { supabase } from '@/services/supabaseClient';
 import type { TutorStudentAssignment } from './types';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('assignmentFetch');
 
 export async function fetchAssignmentsForTutor(
   tutorId: string
@@ -12,7 +15,7 @@ export async function fetchAssignmentsForTutor(
     .eq('active', true);
 
   if (error) {
-    console.error('Error fetching assignments:', error);
+    log.error('Error fetching assignments', error);
     throw error;
   }
 
@@ -29,7 +32,7 @@ export async function fetchAssignmentsForStudent(
     .eq('active', true);
 
   if (error) {
-    console.error('Error fetching assignments:', error);
+    log.error('Error fetching assignments', error);
     throw error;
   }
 

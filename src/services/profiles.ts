@@ -1,6 +1,9 @@
 
 import { supabase, handleResult } from './supabaseClient';
 import { Profile } from '@/types/profile';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('profiles');
 
 export async function fetchProfile(userId: string): Promise<Profile> {
   const result = await supabase
@@ -8,7 +11,13 @@ export async function fetchProfile(userId: string): Promise<Profile> {
     .select('*')
     .eq('id', userId)
     .single();
-  return handleResult(result);
+  
+  if (result.error) {
+    log.error('Error fetching profile', result.error);
+    throw result.error;
+  }
+  
+  return result.data;
 }
 
 export async function updateProfile(
@@ -21,5 +30,11 @@ export async function updateProfile(
     .eq('id', userId)
     .select()
     .single();
-  return handleResult(result);
+  
+  if (result.error) {
+    log.error('Error updating profile', result.error);
+    throw result.error;
+  }
+  
+  return result.data;
 }
