@@ -11,8 +11,10 @@ import {
 import { Plus } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { fetchStudents } from '@/services/dataService';
-import { useClassLogs } from '@/hooks/useClassLogs';
 import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
+import { ClassEvent } from '@/types/tutorTypes';
+import { transformDbRecordToClassEvent } from '@/services/utils/classEventMapper';
 
 import StudentTable, { Student } from './StudentTable';
 import StudentForm from './StudentForm';
@@ -23,8 +25,21 @@ const StudentsManager: React.FC = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const { classes } = useClassLogs();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  // Lightweight query for student stats (only needed columns)
+  const { data: classes = [] } = useQuery<ClassEvent[]>({
+    queryKey: ['class-logs-for-students'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('class_logs')
+        .select('id, "Student Name", "Date"')
+        .not('Student Name', 'is', null);
+      if (error) throw error;
+      return (data || []).map((r: any) => transformDbRecordToClassEvent(r));
+    },
+    staleTime: 60_000,
+  });
 
   const fetchStudentsData = useCallback(async () => {
     setIsLoading(true);
