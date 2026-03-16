@@ -28,29 +28,3 @@ export interface DbCodeLog {
   tutor_payment_date: string | null;
   additional_info: string | null;
 }
-
-/** @deprecated Use ClassEvent from '@/types/tutorTypes' instead */
-export interface TransformedClassLog {
-  id: string;
-  classNumber: string;
-  tutorName: string;
-  studentName: string;
-  date: Date;
-  day: string;
-  startTime: string;
-  duration: number;
-  subject: string;
-  content: string;
-  homework: string;
-  classId: string;
-  classCost: number;
-  tutorCost: number;
-  studentPaymentDate: Date | null;
-  tutorPaymentDate: Date | null;
-  additionalInfo: string | null;
-  isCodeLog: boolean;
-  title?: string;
-  endTime: string;
-  zoomLink?: string | null;
-  notes?: string | null;
-}
