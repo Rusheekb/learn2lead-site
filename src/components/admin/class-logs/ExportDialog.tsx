@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
-import { CalendarIcon, FileText } from 'lucide-react';
+import { CalendarIcon, FileText, Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -24,6 +24,7 @@ interface ExportDialogProps {
   onOpenChange: (open: boolean) => void;
   onExport: (startDate?: Date, endDate?: Date) => void;
   totalRecords: number;
+  isLoading?: boolean;
 }
 
 export const ExportDialog: React.FC<ExportDialogProps> = ({
@@ -31,19 +32,18 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
   onOpenChange,
   onExport,
   totalRecords,
+  isLoading = false,
 }) => {
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
 
   const handleExportAll = () => {
     onExport();
-    onOpenChange(false);
   };
 
   const handleExportRange = () => {
     if (startDate && endDate) {
       onExport(startDate, endDate);
-      onOpenChange(false);
     }
   };
 
@@ -147,17 +147,19 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
         </div>
 
         <DialogFooter className="flex-col sm:flex-row gap-2">
-          <Button variant="outline" onClick={handleCancel}>
+          <Button variant="outline" onClick={handleCancel} disabled={isLoading}>
             Cancel
           </Button>
           <Button
             variant="secondary"
             onClick={handleExportRange}
-            disabled={!isRangeValid}
+            disabled={!isRangeValid || isLoading}
           >
+            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Export Date Range
           </Button>
-          <Button onClick={handleExportAll}>
+          <Button onClick={handleExportAll} disabled={isLoading}>
+            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Export All ({totalRecords})
           </Button>
         </DialogFooter>
