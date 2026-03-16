@@ -176,9 +176,9 @@ export const useClassLogs = () => {
     queryKey: classLogsKeys.totals(serverFilters),
     queryFn: async () => {
       const { data, error } = await supabase.rpc('get_class_log_totals', {
-        p_search: debouncedSearch || null,
-        p_date: dateFilter ? format(dateFilter, 'yyyy-MM-dd') : null,
-        p_payment_filter: paymentFilter || null,
+        p_search: debouncedSearch || undefined,
+        p_date: dateFilter ? format(dateFilter, 'yyyy-MM-dd') : undefined,
+        p_payment_filter: paymentFilter || undefined,
       });
       if (error) throw error;
       const result = data as any;
