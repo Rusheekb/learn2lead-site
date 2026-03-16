@@ -1018,6 +1018,10 @@ export type Database = {
       get_auth_user_display_name: { Args: never; Returns: string }
       get_auth_user_email: { Args: never; Returns: string }
       get_auth_user_role: { Args: never; Returns: string }
+      get_class_log_totals: {
+        Args: { p_date?: string; p_payment_filter?: string; p_search?: string }
+        Returns: Json
+      }
       get_ics_feed: { Args: { feed_id: string }; Returns: string }
       get_student_classes: {
         Args: { requesting_user_id?: string }
