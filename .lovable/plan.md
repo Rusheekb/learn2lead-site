@@ -1,63 +1,64 @@
 
 
-# Setting Up Your New Custom Domain
+## Recommended Improvements to the Class Logging System
 
-Here are all the steps to properly configure your new domain with your Learn2Lead project:
+### 1. Delete dead code: `TransformedClassLog` type and `dataService.ts` functions
 
-## 1. Connect the domain in Lovable
+**Problem:** `TransformedClassLog` in `src/services/logs/types.ts` is marked `@deprecated` and has zero imports. The `fetchClassLogs` function in `src/services/classLogsService.ts` is also unused — the hook now queries Supabase directly. `dataService.ts` has legacy functions (`fetchTutors`, payment record types) that duplicate what the hook already does.
 
-1. Go to your Lovable project **Settings → Domains**
-2. Click **Connect Domain** and enter your domain (e.g., `learn2lead.com`)
-3. Follow the setup flow — Lovable will provide the DNS records you need
-4. **Add both** `yourdomain.com` and `www.yourdomain.com` as separate entries
-5. Set one as **Primary** (the other will redirect to it)
+**Action:**
+- Remove `TransformedClassLog` from `src/services/logs/types.ts`
+- Remove `fetchClassLogs` from `src/services/classLogsService.ts` (only `createClassLog`, `updateClassLog`, `deleteClassLog` are imported)
+- Audit `dataService.ts` — `fetchStudents` is still used by `StudentsManager.tsx`, but the class-log-related functions (`fetchTutors`, payment types) should be removed or migrated
 
-## 2. Configure DNS at your registrar
+### 2. Move summary totals to a database aggregate query
 
-Add these records at your domain registrar (GoDaddy, Namecheap, Cloudflare, etc.):
+**Problem:** `useClassLogs` fetches *every* record via `fetchAllBatched` just to compute 5 payment totals and populate the export. With thousands of records this downloads megabytes of data on every page load.
 
-| Type | Name | Value |
-|------|------|-------|
-| A | @ | 185.158.133.1 |
-| A | www | 185.158.133.1 |
-| TXT | _lovable | (value provided by Lovable during setup) |
+**Action:** Create a lightweight RPC (`get_class_log_totals`) that returns aggregate sums:
+```sql
+CREATE FUNCTION get_class_log_totals(
+  p_search text DEFAULT NULL,
+  p_date date DEFAULT NULL,
+  p_payment_filter text DEFAULT NULL
+) RETURNS jsonb AS $$
+  SELECT jsonb_build_object(
+    'total_class_cost', COALESCE(SUM("Class Cost"), 0),
+    'total_tutor_cost', COALESCE(SUM("Tutor Cost"), 0),
+    'pending_student', COALESCE(SUM(CASE WHEN student_payment_date IS NULL THEN "Class Cost" ELSE 0 END), 0),
+    'pending_tutor', COALESCE(SUM(CASE WHEN tutor_payment_date IS NULL THEN "Tutor Cost" ELSE 0 END), 0)
+  ) FROM class_logs WHERE ...filters...
+$$ LANGUAGE sql STABLE SECURITY DEFINER;
+```
+Replace the `fetchAllBatched` summary query with this RPC. Keep batched fetching only for CSV export (triggered on-demand, not on mount).
 
-DNS propagation can take up to 72 hours. Use [DNSChecker.org](https://dnschecker.org) to verify.
+### 3. Lazy-load CSV export data
 
-## 3. Update CORS in edge functions
+**Problem:** The `allClassesRaw` query (batched fetch of all records) runs on mount with `staleTime: 60s`. This is wasteful since exports are rare.
 
-Your `supabase/functions/_shared/cors.ts` has an `ALLOWED_ORIGINS` list. You'll need to add your new domain there so edge functions accept requests from it.
+**Action:** Change the summary query to `enabled: false` and trigger it only when the user clicks Export. Use `refetch()` on the export button click, then pass the data to `exportClassLogsToCSV`.
 
-## 4. Update Supabase auth redirect URLs
+### 4. Add secondary sort by time for same-date records
 
-In your Supabase dashboard (Authentication → URL Configuration):
-- Add your new domain to **Redirect URLs** (e.g., `https://yourdomain.com/login`)
-- Update **Site URL** if this becomes the primary domain
+**Problem:** Records on the same date appear in arbitrary order. The paginated query only sorts by `Date`.
 
-## 5. Update SEO assets
+**Action:** Add `.order('Time (CST)', { ascending: false })` as a secondary sort in both the paginated query and the RPC.
 
-Several files reference the current domain and need updating:
-- `index.html` — canonical URL, Open Graph URLs, meta tags
-- `public/sitemap.xml` — all `<loc>` URLs currently point to `learn2lead.vercel.app`
-- `public/robots.txt` — sitemap URL points to `learn2lead.vercel.app`
+### 5. Remove `classLogsService.ts` CRUD functions — inline into hook
 
-## 6. Update Stripe configuration
+**Problem:** `createClassLog`, `updateClassLog`, `deleteClassLog` in `classLogsService.ts` are thin Supabase wrappers used only by `useClassLogs`. The update mutation in the hook already re-maps fields manually before calling `updateClassLog`, creating a double-mapping layer.
 
-If you use Stripe webhooks or checkout:
-- Update the webhook endpoint URL in the Stripe dashboard
-- Verify the `origin` used in checkout return URLs (e.g., `customer-portal/index.ts` uses `origin` from the request, so this should work automatically)
-
-## 7. Update Supabase config
-
-In `supabase/config.toml`, update `site_url` and `additional_redirect_urls` to include the new domain.
-
-## 8. Publish
-
-Once DNS is verified and SSL is provisioned (Lovable handles SSL automatically), click **Publish → Update** to deploy.
+**Action:** Inline the Supabase calls directly in the mutation functions within `useClassLogs`, eliminating the middleman service file. This reduces indirection and makes the field mapping happen in one place.
 
 ---
 
-## What I can help implement (steps 3–5)
+### Summary of changes
 
-Steps 1, 2, 6, and 8 require action in external dashboards. But I can update the codebase for steps 3, 4, 5, and 7 once you share your domain name.
+| Change | Benefit |
+|--------|---------|
+| DB aggregate RPC for totals | Eliminates full-table download on every page load |
+| Lazy-load export data | Only fetches all records when user actually exports |
+| Secondary sort by time | Consistent ordering for same-date records |
+| Delete dead types/functions | Less code to maintain |
+| Inline CRUD into hook | Single field-mapping layer, less indirection |
 
