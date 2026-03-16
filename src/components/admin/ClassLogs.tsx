@@ -1,8 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileDown, Upload, DollarSign } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { exportClassLogsToCSV } from '@/utils/csvExport';
 import { toast } from 'sonner';
 import {
@@ -45,13 +44,15 @@ const ClassLogs: React.FC = () => {
     
     isLoading,
     error,
-    classes,
-    filteredClasses,
     paginatedClasses,
     page,
     pageSize,
     totalPages,
     totalItems,
+    totals,
+    exportData,
+    fetchExportData,
+    isExportLoading,
     handleClassClick,
     formatTime,
     clearFilters,
@@ -66,32 +67,16 @@ const ClassLogs: React.FC = () => {
     handleToggleTutorPayment,
   } = useClassLogs();
 
-  // Calculate payment totals from filtered classes
-  const paymentTotals = useMemo(() => {
-    return filteredClasses.reduce(
-      (totals, cls) => {
-        const classCost = cls.classCost || 0;
-        const tutorCost = cls.tutorCost || 0;
-        
-        return {
-          classCost: totals.classCost + classCost,
-          tutorCost: totals.tutorCost + tutorCost,
-          profit: totals.profit + (classCost - tutorCost),
-          pendingStudent: totals.pendingStudent + (cls.studentPaymentDate ? 0 : classCost),
-          pendingTutor: totals.pendingTutor + (cls.tutorPaymentDate ? 0 : tutorCost),
-        };
-      },
-      { classCost: 0, tutorCost: 0, profit: 0, pendingStudent: 0, pendingTutor: 0 }
-    );
-  }, [filteredClasses]);
-
-  const handleExportCSV = (startDate?: Date, endDate?: Date) => {
+  const handleExportCSV = async (startDate?: Date, endDate?: Date) => {
     try {
-      exportClassLogsToCSV(filteredClasses, startDate, endDate);
+      // Fetch all matching data on demand
+      const result = await fetchExportData();
+      const data = result.data || [];
+      exportClassLogsToCSV(data, startDate, endDate);
       if (startDate && endDate) {
-        toast.success(`Exported ${filteredClasses.length} class logs from ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}`);
+        toast.success(`Exported ${data.length} class logs from ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}`);
       } else {
-        toast.success(`Exported ${filteredClasses.length} class logs`);
+        toast.success(`Exported ${data.length} class logs`);
       }
     } catch (error) {
       console.error('Error exporting CSV:', error);
@@ -103,6 +88,7 @@ const ClassLogs: React.FC = () => {
     ? studentPaymentMethods[selectedClass.studentName] || 'zelle'
     : 'zelle';
 
+  const profit = totals.totalClassCost - totals.totalTutorCost;
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -123,7 +109,7 @@ const ClassLogs: React.FC = () => {
             size="sm"
             onClick={() => setIsExportOpen(true)}
             className="flex items-center gap-2"
-            disabled={filteredClasses.length === 0}
+            disabled={totals.totalCount === 0}
           >
             <FileDown className="h-4 w-4" />
             Export
@@ -147,7 +133,7 @@ const ClassLogs: React.FC = () => {
             <CardTitle className="text-sm font-medium text-muted-foreground">Total Revenue</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${paymentTotals.classCost.toFixed(2)}</div>
+            <div className="text-2xl font-bold">${totals.totalClassCost.toFixed(2)}</div>
           </CardContent>
         </Card>
         <Card>
@@ -155,7 +141,7 @@ const ClassLogs: React.FC = () => {
             <CardTitle className="text-sm font-medium text-muted-foreground">Tutor Payments</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${paymentTotals.tutorCost.toFixed(2)}</div>
+            <div className="text-2xl font-bold">${totals.totalTutorCost.toFixed(2)}</div>
           </CardContent>
         </Card>
         <Card>
@@ -163,7 +149,7 @@ const ClassLogs: React.FC = () => {
             <CardTitle className="text-sm font-medium text-muted-foreground">Net Profit</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${paymentTotals.profit.toFixed(2)}</div>
+            <div className="text-2xl font-bold">${profit.toFixed(2)}</div>
           </CardContent>
         </Card>
         <Card>
@@ -171,7 +157,7 @@ const ClassLogs: React.FC = () => {
             <CardTitle className="text-sm font-medium text-muted-foreground">Pending (Students)</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-destructive">${paymentTotals.pendingStudent.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-destructive">${totals.pendingStudent.toFixed(2)}</div>
           </CardContent>
         </Card>
         <Card>
@@ -179,14 +165,13 @@ const ClassLogs: React.FC = () => {
             <CardTitle className="text-sm font-medium text-muted-foreground">Pending (Tutors)</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-destructive">${paymentTotals.pendingTutor.toFixed(2)}</div>
+            <div className="text-2xl font-bold text-destructive">${totals.pendingTutor.toFixed(2)}</div>
           </CardContent>
         </Card>
       </div>
 
       {/* Tutor Payment Summary */}
       <TutorPaymentSummary
-        classes={classes}
         onPaymentUpdated={handleRefreshData}
       />
 
@@ -203,8 +188,6 @@ const ClassLogs: React.FC = () => {
       />
 
       <ClassTable
-        classes={classes}
-        filteredClasses={filteredClasses}
         paginatedClasses={paginatedClasses}
         isLoading={isLoading}
         error={error ? (error instanceof Error ? error.message : String(error)) : null}
@@ -215,6 +198,7 @@ const ClassLogs: React.FC = () => {
         pageSize={pageSize}
         totalPages={totalPages}
         totalItems={totalItems}
+        totalFiltered={totals.totalCount}
         onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}
         studentPaymentMethods={studentPaymentMethods}
@@ -256,7 +240,8 @@ const ClassLogs: React.FC = () => {
         open={isExportOpen}
         onOpenChange={setIsExportOpen}
         onExport={handleExportCSV}
-        totalRecords={filteredClasses.length}
+        totalRecords={totals.totalCount}
+        isLoading={isExportLoading}
       />
 
       <StudentPaymentRecorder

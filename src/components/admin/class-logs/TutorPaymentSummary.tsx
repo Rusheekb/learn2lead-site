@@ -5,9 +5,12 @@ import { ClassEvent } from '@/types/tutorTypes';
 import { toast } from 'sonner';
 import { batchUpdateTutorPaymentDate } from '@/services/class-operations/update/updatePaymentDate';
 import { DollarSign, CheckCircle2 } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { transformDbRecordToClassEvent } from '@/services/utils/classEventMapper';
+import { classLogsKeys } from '@/hooks/useClassLogs';
 
 interface TutorPaymentSummaryProps {
-  classes: ClassEvent[];
   onPaymentUpdated: () => void;
 }
 
@@ -18,14 +21,29 @@ interface TutorSummary {
 }
 
 const TutorPaymentSummary: React.FC<TutorPaymentSummaryProps> = ({
-  classes,
   onPaymentUpdated,
 }) => {
+  // Fetch only unpaid tutor classes (much smaller than full dataset)
+  const { data: unpaidClasses = [] } = useQuery({
+    queryKey: [...classLogsKeys.all, 'tutor-unpaid'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('class_logs')
+        .select('*')
+        .is('tutor_payment_date', null)
+        .not('Tutor Name', 'is', null)
+        .order('Date', { ascending: false });
+      if (error) throw error;
+      return (data || []).map(record => transformDbRecordToClassEvent(record));
+    },
+    staleTime: 30_000,
+  });
+
   const tutorSummaries = useMemo(() => {
     const map = new Map<string, TutorSummary>();
 
-    classes.forEach((cls) => {
-      if (cls.tutorPaymentDate || !cls.tutorName) return;
+    unpaidClasses.forEach((cls) => {
+      if (!cls.tutorName) return;
       const name = cls.tutorName;
       const existing = map.get(name) || {
         tutorName: name,
@@ -38,7 +56,7 @@ const TutorPaymentSummary: React.FC<TutorPaymentSummaryProps> = ({
     });
 
     return Array.from(map.values()).sort((a, b) => b.totalOwed - a.totalOwed);
-  }, [classes]);
+  }, [unpaidClasses]);
 
   const handleMarkAllPaid = async (summary: TutorSummary) => {
     const ids = summary.unpaidClasses.map((c) => c.id);

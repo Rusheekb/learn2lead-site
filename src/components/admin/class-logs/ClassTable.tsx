@@ -15,8 +15,6 @@ import {
 } from '@/components/ui/popover';
 
 interface ClassTableProps {
-  classes: ClassEvent[];
-  filteredClasses: ClassEvent[];
   paginatedClasses: ClassEvent[];
   isLoading: boolean;
   error?: string | null;
@@ -27,6 +25,7 @@ interface ClassTableProps {
   pageSize: number;
   totalPages: number;
   totalItems: number;
+  totalFiltered: number;
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
   studentPaymentMethods?: Record<string, string>;
@@ -46,8 +45,6 @@ const formatDate = (date: Date | string) => {
 };
 
 const ClassTable: React.FC<ClassTableProps> = memo(({
-  classes,
-  filteredClasses,
   paginatedClasses,
   isLoading,
   error,
@@ -58,6 +55,7 @@ const ClassTable: React.FC<ClassTableProps> = memo(({
   pageSize,
   totalPages,
   totalItems,
+  totalFiltered,
   onPageChange,
   onPageSizeChange,
   studentPaymentMethods = {},
@@ -211,7 +209,7 @@ const ClassTable: React.FC<ClassTableProps> = memo(({
       isLoading={isLoading}
       error={error}
       title="Class Records"
-      subtitle={`Showing ${filteredClasses.length} of ${classes.length} classes`}
+      subtitle={`Showing ${totalFiltered} of ${totalItems} classes`}
       onRowClick={handleClassClick}
       pagination={{
         currentPage: page,

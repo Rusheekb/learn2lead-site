@@ -5,10 +5,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { transformDbRecordToClassEvent } from '@/services/utils/classEventMapper';
 import { updatePaymentDate } from '@/services/class-operations/update/updatePaymentDate';
-import { createClassLog, updateClassLog, deleteClassLog } from '@/services/classLogsService';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { useDebounce } from './useDebounce';
+import { formatDateForDatabase } from '@/utils/safeDateUtils';
+import { parseDateToLocal } from '@/utils/safeDateUtils';
 import { logger } from '@/lib/logger';
 
 const log = logger.create('useClassLogs');
@@ -19,7 +20,9 @@ export const classLogsKeys = {
   lists: () => [...classLogsKeys.all] as const,
   page: (page: number, pageSize: number, filters: Record<string, unknown>) =>
     [...classLogsKeys.all, 'page', { page, pageSize, ...filters }] as const,
-  summary: () => [...classLogsKeys.all, 'summary'] as const,
+  totals: (filters: Record<string, unknown>) =>
+    [...classLogsKeys.all, 'totals', filters] as const,
+  export: () => [...classLogsKeys.all, 'export'] as const,
   detail: (id: string) => [...classLogsKeys.all, 'detail', id] as const,
 };
 
@@ -64,20 +67,28 @@ function applyServerFilters(
   return query;
 }
 
-/** Fetch all records in batches to bypass the 1000-row Supabase limit */
-async function fetchAllBatched(): Promise<ClassEvent[]> {
+/** Fetch all records in batches (only used for CSV export, triggered on demand) */
+async function fetchAllBatched(filters: {
+  searchTerm: string;
+  dateFilter: Date | null;
+  paymentFilter: string;
+}): Promise<ClassEvent[]> {
   const batchSize = 1000;
   const allRecords: ClassEvent[] = [];
   let from = 0;
   let hasMore = true;
 
   while (hasMore) {
-    const { data, error } = await supabase
+    let query = supabase
       .from('class_logs')
       .select('*')
       .order('Date', { ascending: false })
+      .order('Time (CST)', { ascending: false })
       .range(from, from + batchSize - 1);
 
+    query = applyServerFilters(query, filters);
+
+    const { data, error } = await query;
     if (error) throw error;
 
     const batch = (data || []).map(record => transformDbRecordToClassEvent(record));
@@ -87,6 +98,14 @@ async function fetchAllBatched(): Promise<ClassEvent[]> {
   }
 
   return allRecords;
+}
+
+export interface ClassLogTotals {
+  totalClassCost: number;
+  totalTutorCost: number;
+  pendingStudent: number;
+  pendingTutor: number;
+  totalCount: number;
 }
 
 export const useClassLogs = () => {
@@ -128,6 +147,7 @@ export const useClassLogs = () => {
         .from('class_logs')
         .select('*', { count: 'exact' })
         .order('Date', { ascending: false })
+        .order('Time (CST)', { ascending: false })
         .range(from, to);
 
       query = applyServerFilters(query, {
@@ -144,56 +164,49 @@ export const useClassLogs = () => {
         totalCount: count || 0,
       };
     },
-    placeholderData: (prev) => prev, // keep previous data while loading next page
+    placeholderData: (prev) => prev,
   });
 
   const paginatedClasses = paginatedData?.records || [];
   const totalItems = paginatedData?.totalCount || 0;
   const totalPages = Math.ceil(totalItems / pageSize);
 
-  // ─── All records query for summaries, totals & export (batched) ──────
-  const { data: allClassesRaw = [] } = useQuery({
-    queryKey: classLogsKeys.summary(),
-    queryFn: fetchAllBatched,
-    staleTime: 60_000, // 1 min — summaries don't need to be instant
+  // ─── Aggregate totals via RPC (no full-table download) ───────────────
+  const { data: totals } = useQuery<ClassLogTotals>({
+    queryKey: classLogsKeys.totals(serverFilters),
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('get_class_log_totals', {
+        p_search: debouncedSearch || undefined,
+        p_date: dateFilter ? format(dateFilter, 'yyyy-MM-dd') : undefined,
+        p_payment_filter: paymentFilter || undefined,
+      });
+      if (error) throw error;
+      const result = data as any;
+      return {
+        totalClassCost: Number(result?.total_class_cost ?? 0),
+        totalTutorCost: Number(result?.total_tutor_cost ?? 0),
+        pendingStudent: Number(result?.pending_student ?? 0),
+        pendingTutor: Number(result?.pending_tutor ?? 0),
+        totalCount: Number(result?.total_count ?? 0),
+      };
+    },
+    staleTime: 30_000,
   });
 
-  // Apply client-side filters on the full dataset for totals/export
-  const filteredClasses = useMemo(() => {
-    return allClassesRaw.filter(c => {
-      if (debouncedSearch) {
-        const terms = debouncedSearch.split(/[,&]/).map(t => t.trim().toLowerCase()).filter(Boolean);
-        const searchableText = [c.title, c.tutorName, c.studentName, c.subject]
-          .filter(Boolean)
-          .map(s => s!.toLowerCase());
-        const allMatch = terms.every(term =>
-          searchableText.some(field => field.includes(term))
-        );
-        if (!allMatch) return false;
-      }
-
-      if (dateFilter) {
-        const classDate = c.date instanceof Date ? c.date : new Date(c.date);
-        if (classDate.toDateString() !== dateFilter.toDateString()) return false;
-      }
-
-      if (paymentFilter) {
-        switch (paymentFilter) {
-          case 'student_unpaid': if (c.studentPaymentDate) return false; break;
-          case 'student_paid': if (!c.studentPaymentDate) return false; break;
-          case 'tutor_unpaid': if (c.tutorPaymentDate) return false; break;
-          case 'tutor_paid': if (!c.tutorPaymentDate) return false; break;
-        }
-      }
-
-      if (paymentMethodFilter && c.studentName) {
-        const method = studentPaymentMethods[c.studentName] || 'zelle';
-        if (method !== paymentMethodFilter) return false;
-      }
-
-      return true;
-    });
-  }, [allClassesRaw, debouncedSearch, dateFilter, paymentFilter, paymentMethodFilter]);
+  // ─── Lazy-loaded export query (only fetches when triggered) ──────────
+  const {
+    data: exportData,
+    refetch: fetchExportData,
+    isFetching: isExportLoading,
+  } = useQuery({
+    queryKey: classLogsKeys.export(),
+    queryFn: () => fetchAllBatched({
+      searchTerm: debouncedSearch,
+      dateFilter,
+      paymentFilter,
+    }),
+    enabled: false, // Only fetch on demand
+  });
 
   // ─── Student payment methods ─────────────────────────────────────────
   const { data: studentPaymentMethods = {} } = useQuery({
@@ -229,9 +242,39 @@ export const useClassLogs = () => {
     };
   }, [queryClient]);
 
-  // ─── CRUD mutations ──────────────────────────────────────────────────
+  // ─── CRUD mutations (inlined, no service middleman) ──────────────────
   const createMutation = useMutation({
-    mutationFn: createClassLog,
+    mutationFn: async (classEvent: ClassEvent) => {
+      const eventDate = parseDateToLocal(classEvent.date);
+      const record: Record<string, any> = {
+        'Class Number': classEvent.title,
+        'Tutor Name': classEvent.tutorName,
+        'Student Name': classEvent.studentName,
+        Date: formatDateForDatabase(eventDate),
+        Day: format(eventDate, 'EEEE'),
+        'Time (CST)': classEvent.startTime,
+        'Time (hrs)': classEvent.duration?.toString() || '0',
+        Subject: classEvent.subject,
+        Content: classEvent.content || null,
+        HW: classEvent.homework || null,
+        'Class ID': classEvent.id,
+        'Class Cost': classEvent.classCost ?? null,
+        'Tutor Cost': classEvent.tutorCost ?? null,
+        'Additional Info': classEvent.notes || null,
+      };
+
+      if (classEvent.tutorId) record.tutor_user_id = classEvent.tutorId;
+      if (classEvent.studentId) record.student_user_id = classEvent.studentId;
+
+      const { data, error } = await supabase
+        .from('class_logs')
+        .insert(record as any)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data ? transformDbRecordToClassEvent(data) : null;
+    },
     onSuccess: () => {
       toast.success('Class log created successfully');
       queryClient.invalidateQueries({ queryKey: classLogsKeys.all });
@@ -242,7 +285,7 @@ export const useClassLogs = () => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: (params: { id: string; classEvent: Partial<ClassEvent> }) => {
+    mutationFn: async (params: { id: string; classEvent: Partial<ClassEvent> }) => {
       const { id, classEvent } = params;
       const dbUpdates: Record<string, any> = {};
       if (classEvent.title !== undefined) dbUpdates['Class Number'] = classEvent.title;
@@ -258,10 +301,19 @@ export const useClassLogs = () => {
       if (classEvent.subject !== undefined) dbUpdates['Subject'] = classEvent.subject;
       if (classEvent.content !== undefined) dbUpdates['Content'] = classEvent.content;
       if (classEvent.homework !== undefined) dbUpdates['HW'] = classEvent.homework;
-      if (classEvent.classCost !== undefined) dbUpdates['Class Cost'] = classEvent.classCost?.toString();
-      if (classEvent.tutorCost !== undefined) dbUpdates['Tutor Cost'] = classEvent.tutorCost?.toString();
+      if (classEvent.classCost !== undefined) dbUpdates['Class Cost'] = classEvent.classCost;
+      if (classEvent.tutorCost !== undefined) dbUpdates['Tutor Cost'] = classEvent.tutorCost;
       if (classEvent.notes !== undefined) dbUpdates['Additional Info'] = classEvent.notes;
-      return updateClassLog(id, dbUpdates);
+
+      const { data, error } = await supabase
+        .from('class_logs')
+        .update(dbUpdates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data ? transformDbRecordToClassEvent(data) : null;
     },
     onSuccess: () => {
       toast.success('Class log updated successfully');
@@ -273,7 +325,14 @@ export const useClassLogs = () => {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: deleteClassLog,
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('class_logs')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+      return true;
+    },
     onSuccess: () => {
       toast.success('Class log deleted successfully');
       queryClient.invalidateQueries({ queryKey: classLogsKeys.all });
@@ -320,12 +379,6 @@ export const useClassLogs = () => {
     }
   }, [refreshData]);
 
-  const allSubjects = useMemo(() =>
-    Array.from(new Set(allClassesRaw.map(cls => cls.subject || '')))
-      .filter(s => s.trim() !== ''),
-    [allClassesRaw]
-  );
-
   const formatTime = (time: string) => time;
   const clearFilters = () => {
     setSearchTerm('');
@@ -335,8 +388,6 @@ export const useClassLogs = () => {
   };
 
   return {
-    // All records (unfiltered) for TutorPaymentSummary
-    classes: allClassesRaw,
     selectedClass,
     showDetails,
     isLoading,
@@ -359,15 +410,26 @@ export const useClassLogs = () => {
     studentUploads: [],
     studentMessages: [],
 
-    // Filtered results (all matching, for totals/export)
-    filteredClasses,
     // Server-paginated results for table
     paginatedClasses,
-    allSubjects,
     page,
     pageSize,
     totalPages,
     totalItems,
+
+    // Aggregate totals from RPC (no full download)
+    totals: totals || {
+      totalClassCost: 0,
+      totalTutorCost: 0,
+      pendingStudent: 0,
+      pendingTutor: 0,
+      totalCount: 0,
+    },
+
+    // Lazy-loaded export
+    exportData: exportData || [],
+    fetchExportData,
+    isExportLoading,
 
     handleSelectClass,
     handleClassClick: handleSelectClass,
