@@ -2,7 +2,7 @@ import React, { useState, memo, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clock, BookOpen, Edit3 } from 'lucide-react';
+import { Clock, BookOpen, Edit3, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -33,36 +33,50 @@ interface ClassHistoryProps {
   userRole: 'student' | 'tutor' | 'admin';
 }
 
-const fetchClassHistoryData = async (userId: string, userRole: string): Promise<ClassHistoryItem[]> => {
-  const column = userRole === 'tutor' ? 'tutor_user_id' : 'student_user_id';
+const PAGE_SIZE = 20;
 
-  const { data, error } = await supabase
+const fetchClassHistoryPage = async (
+  userId: string,
+  userRole: string,
+  page: number
+): Promise<{ data: ClassHistoryItem[]; totalCount: number }> => {
+  const column = userRole === 'tutor' ? 'tutor_user_id' : 'student_user_id';
+  const from = (page - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
+
+  const { data, error, count } = await supabase
     .from('class_logs')
-    .select('*')
+    .select('*', { count: 'exact' })
     .eq(column, userId)
     .order('Date', { ascending: false })
     .order('Time (CST)', { ascending: false })
-    .limit(50);
+    .range(from, to);
 
   if (error) throw error;
-  return data || [];
+  return { data: data || [], totalCount: count || 0 };
 };
 
 const ClassHistory: React.FC<ClassHistoryProps> = memo(({ userRole }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [page, setPage] = useState(1);
   const [expandedClassId, setExpandedClassId] = useState<string | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedClass, setSelectedClass] = useState<ClassHistoryItem | null>(null);
   const [editContent, setEditContent] = useState('');
   const [editHomework, setEditHomework] = useState('');
 
-  const { data: classHistory = [], isLoading } = useQuery({
-    queryKey: ['classHistory', user?.id, userRole],
-    queryFn: () => fetchClassHistoryData(user!.id, userRole),
+  const { data: result, isLoading, isPlaceholderData } = useQuery({
+    queryKey: ['classHistory', user?.id, userRole, page],
+    queryFn: () => fetchClassHistoryPage(user!.id, userRole, page),
     enabled: !!user?.id,
     staleTime: 2 * 60 * 1000,
+    placeholderData: (prev) => prev,
   });
+
+  const classHistory = result?.data ?? [];
+  const totalCount = result?.totalCount ?? 0;
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   const handleEditClass = useCallback((classItem: ClassHistoryItem) => {
     setSelectedClass(classItem);
@@ -105,7 +119,7 @@ const ClassHistory: React.FC<ClassHistoryProps> = memo(({ userRole }) => {
       <div className="flex items-center justify-between gap-2">
         <h3 className="text-lg sm:text-xl font-semibold">Class History</h3>
         <Badge variant="secondary" className="text-xs shrink-0">
-          {classHistory.length} completed
+          {totalCount} completed
         </Badge>
       </div>
 
@@ -117,7 +131,7 @@ const ClassHistory: React.FC<ClassHistoryProps> = memo(({ userRole }) => {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-2">
+        <div className={`space-y-2 ${isPlaceholderData ? 'opacity-60' : ''} transition-opacity`}>
           {classHistory.map((classItem) => {
             const isExpanded = expandedClassId === classItem.id;
             
@@ -190,6 +204,30 @@ const ClassHistory: React.FC<ClassHistoryProps> = memo(({ userRole }) => {
               </Card>
             );
           })}
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 pt-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page === 1 || isPlaceholderData}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            Page {page} of {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page >= totalPages || isPlaceholderData}
+            onClick={() => setPage((p) => p + 1)}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
       )}
 
