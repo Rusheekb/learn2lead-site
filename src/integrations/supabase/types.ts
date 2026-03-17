@@ -1084,6 +1084,7 @@ export type Database = {
           tutor_name: string
         }[]
       }
+      get_tutor_unpaid_summary: { Args: never; Returns: Json }
       get_user_calendar_events: { Args: { user_id: string }; Returns: string }
       handle_rest_get_ics: { Args: { request: Json }; Returns: Json }
       log_critical_security_event: {
