@@ -1,70 +1,46 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ClassEvent } from '@/types/tutorTypes';
 import { toast } from 'sonner';
 import { batchUpdateTutorPaymentDate } from '@/services/class-operations/update/updatePaymentDate';
 import { DollarSign, CheckCircle2 } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { transformDbRecordToClassEvent } from '@/services/utils/classEventMapper';
 import { classLogsKeys } from '@/hooks/useClassLogs';
 
 interface TutorPaymentSummaryProps {
   onPaymentUpdated: () => void;
 }
 
-interface TutorSummary {
-  tutorName: string;
-  unpaidClasses: ClassEvent[];
-  totalOwed: number;
+interface TutorSummaryRow {
+  tutor_name: string;
+  unpaid_count: number;
+  total_owed: number;
+  class_ids: string[];
 }
 
 const TutorPaymentSummary: React.FC<TutorPaymentSummaryProps> = ({
   onPaymentUpdated,
 }) => {
-  // Fetch only unpaid tutor classes (much smaller than full dataset)
-  const { data: unpaidClasses = [] } = useQuery({
-    queryKey: [...classLogsKeys.all, 'tutor-unpaid'],
+  const queryClient = useQueryClient();
+
+  const { data: tutorSummaries = [] } = useQuery<TutorSummaryRow[]>({
+    queryKey: [...classLogsKeys.all, 'tutor-unpaid-summary'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('class_logs')
-        .select('*')
-        .is('tutor_payment_date', null)
-        .not('Tutor Name', 'is', null)
-        .order('Date', { ascending: false });
+      const { data, error } = await supabase.rpc('get_tutor_unpaid_summary');
       if (error) throw error;
-      return (data || []).map(record => transformDbRecordToClassEvent(record));
+      return (data as TutorSummaryRow[]) || [];
     },
     staleTime: 30_000,
   });
 
-  const tutorSummaries = useMemo(() => {
-    const map = new Map<string, TutorSummary>();
-
-    unpaidClasses.forEach((cls) => {
-      if (!cls.tutorName) return;
-      const name = cls.tutorName;
-      const existing = map.get(name) || {
-        tutorName: name,
-        unpaidClasses: [],
-        totalOwed: 0,
-      };
-      existing.unpaidClasses.push(cls);
-      existing.totalOwed += cls.tutorCost || 0;
-      map.set(name, existing);
-    });
-
-    return Array.from(map.values()).sort((a, b) => b.totalOwed - a.totalOwed);
-  }, [unpaidClasses]);
-
-  const handleMarkAllPaid = async (summary: TutorSummary) => {
-    const ids = summary.unpaidClasses.map((c) => c.id);
-    const ok = await batchUpdateTutorPaymentDate(ids, new Date());
+  const handleMarkAllPaid = async (summary: TutorSummaryRow) => {
+    const ok = await batchUpdateTutorPaymentDate(summary.class_ids, new Date());
     if (ok) {
       toast.success(
-        `Marked ${ids.length} classes as paid for ${summary.tutorName}`
+        `Marked ${summary.unpaid_count} classes as paid for ${summary.tutor_name}`
       );
+      queryClient.invalidateQueries({ queryKey: classLogsKeys.all });
       onPaymentUpdated();
     } else {
       toast.error('Failed to update tutor payments');
@@ -94,19 +70,19 @@ const TutorPaymentSummary: React.FC<TutorPaymentSummaryProps> = ({
         <div className="space-y-3">
           {tutorSummaries.map((summary) => (
             <div
-              key={summary.tutorName}
+              key={summary.tutor_name}
               className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/30"
             >
               <div>
-                <div className="font-medium">{summary.tutorName}</div>
+                <div className="font-medium">{summary.tutor_name}</div>
                 <div className="text-sm text-muted-foreground">
-                  {summary.unpaidClasses.length} unpaid class
-                  {summary.unpaidClasses.length !== 1 ? 'es' : ''}
+                  {summary.unpaid_count} unpaid class
+                  {summary.unpaid_count !== 1 ? 'es' : ''}
                 </div>
               </div>
               <div className="flex items-center gap-4">
                 <span className="text-lg font-bold">
-                  ${summary.totalOwed.toFixed(2)}
+                  ${Number(summary.total_owed).toFixed(2)}
                 </span>
                 <Button
                   size="sm"
