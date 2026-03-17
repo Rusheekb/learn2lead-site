@@ -34,33 +34,16 @@ interface ClassHistoryProps {
 }
 
 const fetchClassHistoryData = async (userId: string, userRole: string): Promise<ClassHistoryItem[]> => {
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('first_name, last_name, email')
-    .eq('id', userId)
-    .single();
+  const column = userRole === 'tutor' ? 'tutor_user_id' : 'student_user_id';
 
-  if (!profile) return [];
+  const { data, error } = await supabase
+    .from('class_logs')
+    .select('*')
+    .eq(column, userId)
+    .order('Date', { ascending: false })
+    .order('Time (CST)', { ascending: false })
+    .limit(50);
 
-  const fullName = `${profile.first_name || ''} ${profile.last_name || ''}`.trim();
-
-  let query = supabase.from('class_logs').select('*');
-
-  if (userRole === 'tutor') {
-    if (fullName) {
-      query = query.or(`"Tutor Name".eq."${fullName}","Tutor Name".eq."${profile.email}"`);
-    } else {
-      query = query.eq('"Tutor Name"', profile.email);
-    }
-  } else if (userRole === 'student') {
-    if (fullName) {
-      query = query.or(`"Student Name".eq."${fullName}","Student Name".eq."${profile.email}"`);
-    } else {
-      query = query.eq('"Student Name"', profile.email);
-    }
-  }
-
-  const { data, error } = await query.order('Date', { ascending: false });
   if (error) throw error;
   return data || [];
 };
