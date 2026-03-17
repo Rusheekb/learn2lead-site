@@ -29,7 +29,7 @@ const TutorPaymentSummary: React.FC<TutorPaymentSummaryProps> = ({
     queryFn: async () => {
       const { data, error } = await supabase.rpc('get_tutor_unpaid_summary');
       if (error) throw error;
-      return (data as TutorSummaryRow[]) || [];
+      return (data as unknown as TutorSummaryRow[]) || [];
     },
     staleTime: 30_000,
   });
