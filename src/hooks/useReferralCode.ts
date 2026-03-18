@@ -136,7 +136,7 @@ export function useReferralCode() {
         return null;
       }
     } catch (err) {
-      console.error('Error in generateCode:', err);
+      log.error('Error in generateCode:', err);
       setError('An unexpected error occurred');
       return null;
     } finally {

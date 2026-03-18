@@ -1,7 +1,7 @@
 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { fetchContentShares } from '@/services/content/contentShareService';
+import { fetchContentShares } from '@/services/content-shares';
 import { toast } from 'sonner';
 import { useEffect } from 'react';
 import { contentSharesKeys } from './queryKeys';

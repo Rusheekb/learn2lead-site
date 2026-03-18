@@ -46,7 +46,7 @@ export function useRoleSync() {
             await deleteStudent(id);
           }
         } catch (error) {
-          console.error('Error syncing user role:', error);
+          log.error('Error syncing user role:', error);
         }
       }
     );

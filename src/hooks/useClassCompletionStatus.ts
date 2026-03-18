@@ -25,7 +25,7 @@ export const useClassCompletionStatus = (classId: string) => {
 
       setIsCompleted(!!data);
     } catch (error) {
-      console.error('Error in checkStatus:', error);
+      log.error('Error in checkStatus:', error);
     } finally {
       setIsLoading(false);
     }

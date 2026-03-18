@@ -76,7 +76,7 @@ export const useNotifications = () => {
           filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
-          console.log('Notification change received:', payload);
+          log.info('Notification change received');
           // Refresh notifications when there's a change
           loadNotifications();
         }

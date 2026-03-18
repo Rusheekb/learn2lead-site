@@ -1,5 +1,7 @@
 
-import { supabase, handleResult } from './supabaseClient';
+import { supabase } from '@/integrations/supabase/client';
+import type { PostgrestSingleResponse } from '@supabase/supabase-js';
+
 import { ContentShareItem } from '@/types/sharedTypes';
 import { logger } from '@/lib/logger';
 

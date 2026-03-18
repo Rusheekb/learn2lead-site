@@ -4,6 +4,9 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useRealtimeManager } from './useRealtimeManager';
 import { useAuth } from '@/contexts/AuthContext';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('useSimplifiedTutorScheduler');
 import { toast } from 'sonner';
 import { createScheduledClass, createScheduledClassBatch } from '@/services/class/create';
 import { formatClassEventDate, parseDateToLocal } from '@/utils/safeDateUtils';

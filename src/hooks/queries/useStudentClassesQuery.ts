@@ -193,7 +193,7 @@ export const useStudentUploadsQuery = (studentName: string) => {
           filter: `student_name=eq.${studentName}`,
         },
         (payload) => {
-          console.log('Realtime update for student uploads:', payload);
+          // Realtime update for student uploads
           
           // Invalidate the query to refetch data
           queryClient.invalidateQueries({ queryKey: studentKeys.uploads(studentName) });

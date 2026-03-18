@@ -199,6 +199,8 @@ function App() {
               <SubscriptionProvider>
                 <RoutePersistence />
                 <PostHogPageView />
+                <Toaster />
+                <Sonner />
                 <SidebarProvider>
                   <OfflineBanner />
                   <AnimatedRoutes />

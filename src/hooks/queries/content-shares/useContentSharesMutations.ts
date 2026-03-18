@@ -1,6 +1,6 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createContentShare, updateContentShare, deleteContentShare } from '@/services/content/contentShareService';
+import { createContentShare, updateContentShare, deleteContentShare } from '@/services/content-shares';
 import { ContentShareItem } from '@/types/sharedTypes';
 import { toast } from 'sonner';
 import { contentSharesKeys } from './queryKeys';

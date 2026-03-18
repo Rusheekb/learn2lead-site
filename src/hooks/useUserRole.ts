@@ -24,7 +24,7 @@ export const fetchUserRole = async (
 
     return (data?.role as AppRole) || null;
   } catch (error) {
-    console.error('Error in fetchUserRole:', error);
+    log.error('Error in fetchUserRole:', error);
     return null;
   }
 };
