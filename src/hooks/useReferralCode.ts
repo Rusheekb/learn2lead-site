@@ -117,7 +117,7 @@ export function useReferralCode() {
       const { data, error: fnError } = await supabase.functions.invoke('generate-referral-code');
 
       if (fnError) {
-        console.error('Error generating referral code:', fnError);
+        log.error('Error generating referral code:', fnError);
         setError('Failed to generate referral code');
         return null;
       }
