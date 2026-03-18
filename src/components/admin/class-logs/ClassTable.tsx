@@ -62,8 +62,8 @@ const ClassTable: React.FC<ClassTableProps> = memo(({
   onToggleStudentPayment,
   onToggleTutorPayment,
 }) => {
-  const getPaymentMethod = (studentName: string) => {
-    return studentPaymentMethods[studentName] || 'zelle';
+  const getPaymentMethod = (studentId: string) => {
+    return studentPaymentMethods[studentId] || 'zelle';
   };
 
   const columns: ColumnDefinition<ClassEvent>[] = [
