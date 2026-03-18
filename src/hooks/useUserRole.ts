@@ -18,7 +18,7 @@ export const fetchUserRole = async (
       .maybeSingle();
 
     if (error) {
-      console.error('Error fetching user role:', error);
+      log.error('Error fetching user role:', error);
       return null;
     }
 
