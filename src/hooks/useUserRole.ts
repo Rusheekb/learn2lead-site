@@ -1,5 +1,8 @@
 import { supabase } from '@/integrations/supabase/client';
 import { AppRole } from './useProfile';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('useUserRole');
 
 /**
  * Fetches the user's role as stored in the profiles table (only), no more domain logic.
