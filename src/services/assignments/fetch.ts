@@ -1,5 +1,5 @@
 
-import { supabase } from '@/services/supabaseClient';
+import { supabase } from '@/integrations/supabase/client';
 import type { TutorStudentAssignment } from './types';
 import { logger } from '@/lib/logger';
 

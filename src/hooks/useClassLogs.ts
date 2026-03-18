@@ -214,11 +214,11 @@ export const useClassLogs = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('students')
-        .select('name, payment_method');
+        .select('email, payment_method');
       if (error) throw error;
       const map: Record<string, string> = {};
       data?.forEach((s: any) => {
-        map[s.name] = s.payment_method || 'zelle';
+        if (s.email) map[s.email] = s.payment_method || 'zelle';
       });
       return map;
     },
