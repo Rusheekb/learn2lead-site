@@ -19,7 +19,7 @@ export const useClassCompletionStatus = (classId: string) => {
         .maybeSingle();
 
       if (error) {
-        console.error('Error checking completion status:', error);
+        log.error('Error checking completion status:', error);
         return;
       }
 
