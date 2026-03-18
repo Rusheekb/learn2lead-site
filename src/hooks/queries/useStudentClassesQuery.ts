@@ -100,7 +100,7 @@ export const useStudentClassesQuery = (studentName: string, studentId?: string) 
           filter: `student_id=eq.${studentId}`,
         },
         (payload) => {
-          console.log('Realtime update for student scheduled classes:', payload);
+          // Realtime update for student scheduled classes
           
           // Invalidate the query to refetch data
           queryClient.invalidateQueries({ queryKey: studentKeys.scheduledClasses(studentId) });
