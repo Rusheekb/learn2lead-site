@@ -206,7 +206,7 @@ export const useSimplifiedTutorScheduler = () => {
       
       return false;
     } catch (error) {
-      console.error('Error creating event:', error);
+      log.error('Error creating event:', error);
       toast.error('Failed to create class');
       return false;
     }
