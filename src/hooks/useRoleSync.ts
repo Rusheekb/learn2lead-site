@@ -14,7 +14,7 @@ export function useRoleSync() {
         // Only run on sign-in or metadata updates
         if (event !== 'SIGNED_IN' && event !== 'USER_UPDATED') return;
 
-        console.log('Role sync - auth event:', event, 'user:', user);
+        log.info('Role sync - auth event:', event);
         
         const { id, email, user_metadata } = user;
         const role = user_metadata.role as 'student' | 'tutor';
