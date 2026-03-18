@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('useReferralCode');
 
 interface ReferralCodeData {
   code: string;
@@ -45,7 +48,7 @@ export function useReferralCode() {
         .maybeSingle();
 
       if (codeError) {
-        console.error('Error fetching referral code:', codeError);
+        log.error('Error fetching referral code:', codeError);
         setError('Failed to fetch referral code');
         return;
       }
@@ -94,7 +97,7 @@ export function useReferralCode() {
         setUsageStats(null);
       }
     } catch (err) {
-      console.error('Error in fetchReferralCode:', err);
+      log.error('Error in fetchReferralCode:', err);
       setError('An unexpected error occurred');
     } finally {
       setIsLoading(false);
@@ -114,7 +117,7 @@ export function useReferralCode() {
       const { data, error: fnError } = await supabase.functions.invoke('generate-referral-code');
 
       if (fnError) {
-        console.error('Error generating referral code:', fnError);
+        log.error('Error generating referral code:', fnError);
         setError('Failed to generate referral code');
         return null;
       }
@@ -133,7 +136,7 @@ export function useReferralCode() {
         return null;
       }
     } catch (err) {
-      console.error('Error in generateCode:', err);
+      log.error('Error in generateCode:', err);
       setError('An unexpected error occurred');
       return null;
     } finally {

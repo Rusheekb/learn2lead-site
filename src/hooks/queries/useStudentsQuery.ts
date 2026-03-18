@@ -98,7 +98,7 @@ export const useStudentsQuery = (options: UseStudentsQueryOptions = {}) => {
           table: 'students',
         },
         (payload) => {
-          console.log('Realtime update for students:', payload);
+          // Realtime update for students
           
           // Invalidate the query to refetch data
           queryClient.invalidateQueries({ queryKey: studentsKeys.lists() });

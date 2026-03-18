@@ -20,7 +20,7 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
       const newState = !prev;
       
       // Sidebar toggled successfully
-      console.log(`Sidebar toggled from ${prev ? 'expanded' : 'collapsed'} to ${newState ? 'expanded' : 'collapsed'}`);
+      // Sidebar toggled
       
       return newState;
     });

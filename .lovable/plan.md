@@ -1,41 +1,63 @@
 
 
-## Remaining Improvements
+# Setting Up Your New Custom Domain
 
-After a thorough review, here are the actionable items left:
+Here are all the steps to properly configure your new domain with your Learn2Lead project:
+
+## 1. Connect the domain in Lovable
+
+1. Go to your Lovable project **Settings → Domains**
+2. Click **Connect Domain** and enter your domain (e.g., `learn2lead.com`)
+3. Follow the setup flow — Lovable will provide the DNS records you need
+4. **Add both** `yourdomain.com` and `www.yourdomain.com` as separate entries
+5. Set one as **Primary** (the other will redirect to it)
+
+## 2. Configure DNS at your registrar
+
+Add these records at your domain registrar (GoDaddy, Namecheap, Cloudflare, etc.):
+
+| Type | Name | Value |
+|------|------|-------|
+| A | @ | 185.158.133.1 |
+| A | www | 185.158.133.1 |
+| TXT | _lovable | (value provided by Lovable during setup) |
+
+DNS propagation can take up to 72 hours. Use [DNSChecker.org](https://dnschecker.org) to verify.
+
+## 3. Update CORS in edge functions
+
+Your `supabase/functions/_shared/cors.ts` has an `ALLOWED_ORIGINS` list. You'll need to add your new domain there so edge functions accept requests from it.
+
+## 4. Update Supabase auth redirect URLs
+
+In your Supabase dashboard (Authentication → URL Configuration):
+- Add your new domain to **Redirect URLs** (e.g., `https://yourdomain.com/login`)
+- Update **Site URL** if this becomes the primary domain
+
+## 5. Update SEO assets
+
+Several files reference the current domain and need updating:
+- `index.html` — canonical URL, Open Graph URLs, meta tags
+- `public/sitemap.xml` — all `<loc>` URLs currently point to `learn2lead.vercel.app`
+- `public/robots.txt` — sitemap URL points to `learn2lead.vercel.app`
+
+## 6. Update Stripe configuration
+
+If you use Stripe webhooks or checkout:
+- Update the webhook endpoint URL in the Stripe dashboard
+- Verify the `origin` used in checkout return URLs (e.g., `customer-portal/index.ts` uses `origin` from the request, so this should work automatically)
+
+## 7. Update Supabase config
+
+In `supabase/config.toml`, update `site_url` and `additional_redirect_urls` to include the new domain.
+
+## 8. Publish
+
+Once DNS is verified and SSL is provisioned (Lovable handles SSL automatically), click **Publish → Update** to deploy.
 
 ---
 
-### 1. Delete more dead service files (no importers)
+## What I can help implement (steps 3–5)
 
-- **`src/services/profiles.ts`** -- identical to `src/services/auth/profileService.ts`, and **neither is imported anywhere**. The `useProfile` hook does inline Supabase queries. Delete both files.
-- **`src/services/content/contentShareService.ts`** -- a pure re-export barrel of `src/services/content-shares.ts`. Update the 2 consumers (`useContentSharesBaseQuery.ts`, `useContentSharesMutations.ts`) to import directly from `@/services/content-shares`, then delete the barrel.
-- **`src/services/supabaseClient.ts`** -- now only imported by `src/services/content-shares.ts` and `src/services/profiles.ts`. After deleting profiles.ts, move `handleResult` into `content-shares.ts` (its only remaining consumer) or a shared utility, then delete `supabaseClient.ts`.
-
-### 2. Replace `console.log/error` with structured logger
-
-~17 hooks still use raw `console.log`/`console.error` instead of the project's `logger` utility. Key offenders:
-- `useRoleSync.ts`, `useSidebar.tsx`, `useProfile.ts`, `useClassCompletionStatus.ts`, `useSimplifiedTutorScheduler.ts`, `useReferralCode.ts`, `useUserRole.ts`
-- Realtime callbacks in `useStudentsQuery`, `useTutorsQuery`, `useStudentClassesQuery`, `useNotifications`, `useContentSharesBaseQuery`
-
-Replace with `logger.create('hookName')` for consistent, filterable logging.
-
-### 3. Duplicate Toasters in route tree
-
-In `App.tsx`, `<Toaster />` and `<Sonner />` are rendered **only inside the private route wrapper** (line 139-140). Public pages (login, pricing, home) use `toast()` from sonner but have no `<Sonner />` mounted, so toasts on public pages are silently lost. Move both Toasters to the top level of the `App` component, outside the route tree.
-
-### 4. `useProfile` should use React Query instead of manual cache
-
-`useProfile.ts` implements a hand-rolled `Map` cache with manual `useState`/`useEffect` loading. This duplicates what React Query provides (caching, stale management, deduplication). Refactor to `useQuery` for consistency with the rest of the codebase.
-
----
-
-### Implementation Summary
-
-| Task | Files affected | Effort |
-|------|---------------|--------|
-| Delete dead service files | 3 files deleted, 3 updated | Small |
-| Replace console.* with logger | ~12 hook files | Small |
-| Fix Toaster placement | `App.tsx` | Trivial |
-| Refactor useProfile to React Query | `useProfile.ts` | Medium |
+Steps 1, 2, 6, and 8 require action in external dashboards. But I can update the codebase for steps 3, 4, 5, and 7 once you share your domain name.
 

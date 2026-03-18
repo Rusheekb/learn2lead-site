@@ -4,6 +4,9 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useRealtimeManager } from './useRealtimeManager';
 import { useAuth } from '@/contexts/AuthContext';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('useSimplifiedTutorScheduler');
 import { toast } from 'sonner';
 import { createScheduledClass, createScheduledClassBatch } from '@/services/class/create';
 import { formatClassEventDate, parseDateToLocal } from '@/utils/safeDateUtils';
@@ -130,7 +133,7 @@ export const useSimplifiedTutorScheduler = () => {
       toast.success(isRecurring ? 'All recurring classes deleted' : 'Class deleted successfully');
       return true;
     } catch (error) {
-      console.error('Error deleting event:', error);
+      log.error('Error deleting event:', error);
       throw error;
     }
   }, [user?.id, refetch, queryClient]);
@@ -206,7 +209,7 @@ export const useSimplifiedTutorScheduler = () => {
       
       return false;
     } catch (error) {
-      console.error('Error creating event:', error);
+      log.error('Error creating event:', error);
       toast.error('Failed to create class');
       return false;
     }

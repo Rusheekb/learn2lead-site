@@ -1,7 +1,11 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('useProfile');
 
 export type AppRole = 'student' | 'tutor' | 'admin';
 
@@ -18,99 +22,90 @@ export interface Profile {
   updated_at: string;
 }
 
+const profileKeys = {
+  all: ['profiles'] as const,
+  detail: (id: string) => [...profileKeys.all, id] as const,
+};
+
+async function fetchProfileById(userId: string): Promise<Profile> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', userId)
+    .single();
+
+  if (error) {
+    log.error('Error fetching profile', error);
+    throw error;
+  }
+
+  return data;
+}
+
 export const useProfile = () => {
   const { user } = useAuth();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const queryClient = useQueryClient();
 
-  const profileCache = useMemo(() => new Map<string, Profile>(), []);
+  const { data: profile = null, isLoading } = useQuery({
+    queryKey: profileKeys.detail(user?.id ?? ''),
+    queryFn: () => fetchProfileById(user!.id),
+    enabled: !!user?.id,
+  });
 
-  const fetchProfile = useCallback(
-    async (userId: string) => {
-      if (profileCache.has(userId)) {
-        const cachedProfile = profileCache.get(userId);
-        if (cachedProfile) {
-          setProfile(cachedProfile);
-          return cachedProfile;
-        }
-      }
-
-      setIsLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', userId)
-          .single();
-
-        if (error) {
-          console.error('Error fetching profile:', error);
-          toast.error('Failed to load profile');
-          setIsLoading(false);
-          return null;
-        }
-
-        profileCache.set(userId, data);
-        setProfile(data);
-        setIsLoading(false);
-        return data;
-      } catch (error) {
-        console.error('Error in profile fetch:', error);
-        toast.error('Failed to load profile');
-        setIsLoading(false);
-        return null;
-      }
-    },
-    [profileCache]
-  );
-
-  useEffect(() => {
-    if (!user) {
-      setProfile(null);
-      return;
-    }
-
-    fetchProfile(user.id);
-  }, [user, fetchProfile]);
-
-  const updateProfile = async (updates: Partial<Profile>) => {
-    if (!user) return null;
-
-    try {
+  const updateMutation = useMutation({
+    mutationFn: async (updates: Partial<Profile>): Promise<Profile> => {
       const { data, error } = await supabase
         .from('profiles')
         .update(updates)
-        .eq('id', user.id)
+        .eq('id', user!.id)
         .select()
         .single();
+      if (error) throw error;
+      return data as Profile;
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(profileKeys.detail(user!.id), data);
+      toast.success('Profile updated successfully');
+    },
+    onError: (error) => {
+      log.error('Error updating profile', error);
+      toast.error('Failed to update profile');
+    },
+  });
 
-      if (error) {
-        toast.error('Failed to update profile');
-        console.error('Error updating profile:', error);
+  const updateProfile = useCallback(
+    async (updates: Partial<Profile>) => {
+      if (!user) return null;
+      try {
+        return await updateMutation.mutateAsync(updates);
+      } catch {
         return null;
       }
+    },
+    [user, updateMutation]
+  );
 
-      profileCache.set(user.id, data);
-      setProfile(data);
-      toast.success('Profile updated successfully');
-      return data;
-    } catch (error) {
-      console.error('Error in profile update:', error);
-      toast.error('Failed to update profile');
-      return null;
-    }
-  };
-
-  const fetchProfileById = async (
-    profileId: string
-  ): Promise<Profile | null> => {
-    return fetchProfile(profileId);
-  };
+  const fetchProfileByIdCb = useCallback(
+    async (profileId: string): Promise<Profile | null> => {
+      try {
+        return await queryClient.fetchQuery({
+          queryKey: profileKeys.detail(profileId),
+          queryFn: () => fetchProfileById(profileId),
+          staleTime: 60000,
+        });
+      } catch (error) {
+        log.error('Error fetching profile by id', error);
+        toast.error('Failed to load profile');
+        return null;
+      }
+    },
+    [queryClient]
+  );
 
   return {
     profile,
     isLoading,
     updateProfile,
-    fetchProfileById,
+    fetchProfileById: fetchProfileByIdCb,
   };
 };

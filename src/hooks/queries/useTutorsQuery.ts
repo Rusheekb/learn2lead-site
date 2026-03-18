@@ -98,7 +98,7 @@ export const useTutorsQuery = (options: UseTutorsQueryOptions = {}) => {
           table: 'tutors',
         },
         (payload) => {
-          console.log('Realtime update for tutors:', payload);
+          // Realtime update for tutors
           
           // Invalidate the query to refetch data
           queryClient.invalidateQueries({ queryKey: tutorsKeys.lists() });

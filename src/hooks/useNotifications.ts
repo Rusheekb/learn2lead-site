@@ -4,6 +4,9 @@ import { Notification } from '@/types/notificationTypes';
 import { fetchNotifications, markNotificationAsRead, markAllNotificationsAsRead } from '@/services/notificationService';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('useNotifications');
 
 export const useNotifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -73,7 +76,7 @@ export const useNotifications = () => {
           filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
-          console.log('Notification change received:', payload);
+          log.info('Notification change received');
           // Refresh notifications when there's a change
           loadNotifications();
         }

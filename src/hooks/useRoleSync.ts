@@ -3,6 +3,9 @@ import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { createStudent, deleteStudent } from '@/services/students/studentService';
 import { createTutor, deleteTutor } from '@/services/tutors/tutorService';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('useRoleSync');
 
 export function useRoleSync() {
   useEffect(() => {
@@ -14,7 +17,7 @@ export function useRoleSync() {
         // Only run on sign-in or metadata updates
         if (event !== 'SIGNED_IN' && event !== 'USER_UPDATED') return;
 
-        console.log('Role sync - auth event:', event, 'user:', user);
+        log.info('Role sync - auth event: ' + event);
         
         const { id, email, user_metadata } = user;
         const role = user_metadata.role as 'student' | 'tutor';
@@ -43,7 +46,7 @@ export function useRoleSync() {
             await deleteStudent(id);
           }
         } catch (error) {
-          console.error('Error syncing user role:', error);
+          log.error('Error syncing user role:', error);
         }
       }
     );

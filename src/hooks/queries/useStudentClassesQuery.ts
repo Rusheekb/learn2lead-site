@@ -67,7 +67,7 @@ export const useStudentClassesQuery = (studentName: string, studentId?: string) 
           filter: `Student Name=eq.${studentName}`,
         },
         (payload) => {
-          console.log('Realtime update for student classes:', payload);
+          // Realtime update for student classes
           
           // Invalidate the query to refetch data
           queryClient.invalidateQueries({ queryKey: studentKeys.classes(studentName) });
@@ -100,7 +100,7 @@ export const useStudentClassesQuery = (studentName: string, studentId?: string) 
           filter: `student_id=eq.${studentId}`,
         },
         (payload) => {
-          console.log('Realtime update for student scheduled classes:', payload);
+          // Realtime update for student scheduled classes
           
           // Invalidate the query to refetch data
           queryClient.invalidateQueries({ queryKey: studentKeys.scheduledClasses(studentId) });
@@ -193,7 +193,7 @@ export const useStudentUploadsQuery = (studentName: string) => {
           filter: `student_name=eq.${studentName}`,
         },
         (payload) => {
-          console.log('Realtime update for student uploads:', payload);
+          // Realtime update for student uploads
           
           // Invalidate the query to refetch data
           queryClient.invalidateQueries({ queryKey: studentKeys.uploads(studentName) });

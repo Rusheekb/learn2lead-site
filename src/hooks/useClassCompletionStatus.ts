@@ -1,5 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('useClassCompletionStatus');
 
 export const useClassCompletionStatus = (classId: string) => {
   const [isCompleted, setIsCompleted] = useState(false);
@@ -16,13 +19,13 @@ export const useClassCompletionStatus = (classId: string) => {
         .maybeSingle();
 
       if (error) {
-        console.error('Error checking completion status:', error);
+        log.error('Error checking completion status:', error);
         return;
       }
 
       setIsCompleted(!!data);
     } catch (error) {
-      console.error('Error in checkStatus:', error);
+      log.error('Error in checkStatus:', error);
     } finally {
       setIsLoading(false);
     }

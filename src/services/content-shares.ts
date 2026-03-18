@@ -1,5 +1,13 @@
 
-import { supabase, handleResult } from './supabaseClient';
+import { supabase } from '@/integrations/supabase/client';
+import type { PostgrestSingleResponse } from '@supabase/supabase-js';
+
+function handleResult<T>(response: PostgrestSingleResponse<T>): T {
+  if (response.error) throw response.error;
+  if (!response.data) throw new Error('No data returned');
+  return response.data;
+}
+
 import { ContentShareItem } from '@/types/sharedTypes';
 import { logger } from '@/lib/logger';
 
