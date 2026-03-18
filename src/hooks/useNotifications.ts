@@ -4,6 +4,9 @@ import { Notification } from '@/types/notificationTypes';
 import { fetchNotifications, markNotificationAsRead, markAllNotificationsAsRead } from '@/services/notificationService';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('useNotifications');
 
 export const useNotifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
