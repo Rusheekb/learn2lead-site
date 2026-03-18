@@ -48,7 +48,7 @@ export function useReferralCode() {
         .maybeSingle();
 
       if (codeError) {
-        console.error('Error fetching referral code:', codeError);
+        log.error('Error fetching referral code:', codeError);
         setError('Failed to fetch referral code');
         return;
       }
