@@ -67,7 +67,7 @@ export const useStudentClassesQuery = (studentName: string, studentId?: string) 
           filter: `Student Name=eq.${studentName}`,
         },
         (payload) => {
-          console.log('Realtime update for student classes:', payload);
+          // Realtime update for student classes
           
           // Invalidate the query to refetch data
           queryClient.invalidateQueries({ queryKey: studentKeys.classes(studentName) });
