@@ -1,5 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('useClassCompletionStatus');
 
 export const useClassCompletionStatus = (classId: string) => {
   const [isCompleted, setIsCompleted] = useState(false);
