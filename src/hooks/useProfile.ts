@@ -53,17 +53,16 @@ export const useProfile = () => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: (updates: Partial<Profile>) =>
-      supabase
+    mutationFn: async (updates: Partial<Profile>): Promise<Profile> => {
+      const { data, error } = await supabase
         .from('profiles')
         .update(updates)
         .eq('id', user!.id)
         .select()
-        .single()
-        .then(({ data, error }) => {
-          if (error) throw error;
-          return data as Profile;
-        }),
+        .single();
+      if (error) throw error;
+      return data as Profile;
+    },
     onSuccess: (data) => {
       queryClient.setQueryData(profileKeys.detail(user!.id), data);
       toast.success('Profile updated successfully');
