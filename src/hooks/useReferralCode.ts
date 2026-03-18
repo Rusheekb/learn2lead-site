@@ -97,7 +97,7 @@ export function useReferralCode() {
         setUsageStats(null);
       }
     } catch (err) {
-      console.error('Error in fetchReferralCode:', err);
+      log.error('Error in fetchReferralCode:', err);
       setError('An unexpected error occurred');
     } finally {
       setIsLoading(false);
