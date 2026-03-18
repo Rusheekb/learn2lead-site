@@ -3,6 +3,9 @@ import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { createStudent, deleteStudent } from '@/services/students/studentService';
 import { createTutor, deleteTutor } from '@/services/tutors/tutorService';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('useRoleSync');
 
 export function useRoleSync() {
   useEffect(() => {
