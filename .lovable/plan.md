@@ -1,63 +1,45 @@
 
 
-# Setting Up Your New Custom Domain
+## Recommended Improvements
 
-Here are all the steps to properly configure your new domain with your Learn2Lead project:
-
-## 1. Connect the domain in Lovable
-
-1. Go to your Lovable project **Settings → Domains**
-2. Click **Connect Domain** and enter your domain (e.g., `learn2lead.com`)
-3. Follow the setup flow — Lovable will provide the DNS records you need
-4. **Add both** `yourdomain.com` and `www.yourdomain.com` as separate entries
-5. Set one as **Primary** (the other will redirect to it)
-
-## 2. Configure DNS at your registrar
-
-Add these records at your domain registrar (GoDaddy, Namecheap, Cloudflare, etc.):
-
-| Type | Name | Value |
-|------|------|-------|
-| A | @ | 185.158.133.1 |
-| A | www | 185.158.133.1 |
-| TXT | _lovable | (value provided by Lovable during setup) |
-
-DNS propagation can take up to 72 hours. Use [DNSChecker.org](https://dnschecker.org) to verify.
-
-## 3. Update CORS in edge functions
-
-Your `supabase/functions/_shared/cors.ts` has an `ALLOWED_ORIGINS` list. You'll need to add your new domain there so edge functions accept requests from it.
-
-## 4. Update Supabase auth redirect URLs
-
-In your Supabase dashboard (Authentication → URL Configuration):
-- Add your new domain to **Redirect URLs** (e.g., `https://yourdomain.com/login`)
-- Update **Site URL** if this becomes the primary domain
-
-## 5. Update SEO assets
-
-Several files reference the current domain and need updating:
-- `index.html` — canonical URL, Open Graph URLs, meta tags
-- `public/sitemap.xml` — all `<loc>` URLs currently point to `learn2lead.vercel.app`
-- `public/robots.txt` — sitemap URL points to `learn2lead.vercel.app`
-
-## 6. Update Stripe configuration
-
-If you use Stripe webhooks or checkout:
-- Update the webhook endpoint URL in the Stripe dashboard
-- Verify the `origin` used in checkout return URLs (e.g., `customer-portal/index.ts` uses `origin` from the request, so this should work automatically)
-
-## 7. Update Supabase config
-
-In `supabase/config.toml`, update `site_url` and `additional_redirect_urls` to include the new domain.
-
-## 8. Publish
-
-Once DNS is verified and SSL is provisioned (Lovable handles SSL automatically), click **Publish → Update** to deploy.
+After reviewing the codebase, here are the remaining issues worth addressing, grouped by priority:
 
 ---
 
-## What I can help implement (steps 3–5)
+### 1. Dead code and duplicate files
 
-Steps 1, 2, 6, and 8 require action in external dashboards. But I can update the codebase for steps 3, 4, 5, and 7 once you share your domain name.
+- **`postcss.config 2.js`** is a duplicate of `postcss.config.js` (likely from an accidental copy). Delete it.
+- **`src/lib/supabase.ts`** creates a second Supabase client using env vars, but nothing imports it. The canonical client is `src/integrations/supabase/client.ts`. Delete `src/lib/supabase.ts`.
+- **`src/utils/dynamicImports.ts`** is an empty placeholder with no consumers. Delete it.
+- **`pages/index.js`** at the project root appears to be a stale Next.js artifact. Delete it.
+- **`src/services/classService.ts`** is a one-line re-export barrel from `./class`. Inline these imports at the call sites and delete the file.
+
+### 2. Inconsistent Supabase client imports
+
+Two files (`src/services/assignments/mutations.ts` and `src/services/assignments/fetch.ts`) import supabase from `@/services/supabaseClient` instead of the canonical `@/integrations/supabase/client`. Update them to use the canonical import and consider whether `src/services/supabaseClient.ts` (which re-exports + adds `handleResult`) should itself be consolidated or its `handleResult` moved to a utility.
+
+### 3. Student payment methods keyed by name (fragile)
+
+In `useClassLogs.ts` (line 212-225), `studentPaymentMethods` maps `student.name -> payment_method`. If two students share the same name, data collides. This should use a stable identifier (student email or ID) as the key, with a corresponding update to how `ClassTable` looks up the payment method.
+
+### 4. `useRoleSync` called outside AuthProvider
+
+In `App.tsx` line 196, `useRoleSync()` is called in the `App` component, which is **above** the `<AuthProvider>` in the tree. If `useRoleSync` depends on `useAuth()`, it will fail or use stale data. It should be moved inside `AuthProvider`.
+
+### 5. Realtime channel leak potential
+
+The realtime subscription in `useClassLogs.ts` (line 228-243) runs for every mount of the hook. Since the hook is used in the admin ClassLogs page, this is fine as a singleton. But if it were ever used in multiple components simultaneously, it would create duplicate channels. Consider adding a unique channel name with a ref or deduplicating via a shared context.
+
+---
+
+### Implementation Summary
+
+| Task | Files affected | Effort |
+|------|---------------|--------|
+| Delete dead files | 4 files deleted | Trivial |
+| Standardize supabase imports | 2-3 files | Small |
+| Fix payment method key collision | `useClassLogs.ts`, `ClassTable.tsx` | Small |
+| Move `useRoleSync` inside AuthProvider | `App.tsx` | Trivial |
+
+Total: ~30 minutes of implementation work across small, low-risk changes.
 
