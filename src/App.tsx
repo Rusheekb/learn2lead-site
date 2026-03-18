@@ -135,13 +135,7 @@ const AnimatedRoutes = () => {
         } />
         
         {/* Private routes */}
-        <Route element={
-          <>
-            <Toaster />
-            <Sonner />
-            <PrivateRoute />
-          </>
-        }>
+        <Route element={<PrivateRoute />}>
           <Route element={<PrivateRoute allowedRoles={['student']} />}>
             <Route path="/dashboard/*" element={
               <StudentDashboardWrapper>
