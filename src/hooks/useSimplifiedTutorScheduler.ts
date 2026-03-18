@@ -130,7 +130,7 @@ export const useSimplifiedTutorScheduler = () => {
       toast.success(isRecurring ? 'All recurring classes deleted' : 'Class deleted successfully');
       return true;
     } catch (error) {
-      console.error('Error deleting event:', error);
+      log.error('Error deleting event:', error);
       throw error;
     }
   }, [user?.id, refetch, queryClient]);
