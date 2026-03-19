@@ -1,5 +1,8 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('useRoutePersistence');
 
 const ROUTE_STORAGE_KEY = 'last_visited_route';
 
