@@ -21,7 +21,6 @@ const ContentShareContainer: React.FC<ContentShareContainerProps> = ({ role, fet
     shares,
     isLoading,
     users,
-    loadShares,
     handleDownload,
     markAsViewed,
     getUserName
