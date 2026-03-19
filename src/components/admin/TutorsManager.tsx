@@ -7,6 +7,9 @@ import { toast } from 'sonner';
 import SearchInput from '@/components/shared/filters/SearchInput';
 import PaginationControls from '@/components/common/Pagination';
 import { useTutorsQuery } from '@/hooks/queries/useTutorsQuery';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('TutorsManager');
 
 interface TutorsManagerProps {
   onSelect: (tutor: Tutor) => void;
@@ -33,7 +36,7 @@ const TutorsManager: React.FC<TutorsManagerProps> = memo(({ onSelect }) => {
       await deleteTutorMutation(tutorId);
       toast.success("Tutor deleted successfully");
     } catch (error) {
-      console.error('Error deleting tutor:', error);
+      log.error('Error deleting tutor:', error);
       toast.error("Failed to delete tutor");
     }
   }, [deleteTutorMutation]);

@@ -15,6 +15,9 @@ import SettingsSection from './SettingsSection';
 import NotificationPreferences from './NotificationPreferences';
 
 import AppearanceToggle from './AppearanceToggle';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('SettingsTab');
 
 interface SettingsTabProps {
   profile: Profile;
@@ -47,13 +50,13 @@ const SettingsTab: React.FC<SettingsTabProps> = ({ profile, updateProfile }) => 
 
       if (error) {
         toast.error('Failed to update password');
-        console.error('Password update error:', error);
+        log.error('Password update error:', error);
       } else {
         toast.success('Password updated successfully');
         setPasswords({ new: '', confirm: '' });
       }
     } catch (error) {
-      console.error('Password update error:', error);
+      log.error('Password update error:', error);
       toast.error('Failed to update password');
     } finally {
       setIsChangingPassword(false);

@@ -11,6 +11,9 @@ import {
   TutorPreferences 
 } from '@/utils/matchingAlgorithm';
 import { Check, AlertTriangle, Info, Loader2 } from 'lucide-react';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('SuggestedMatches');
 
 interface SuggestedMatchesProps {
   selectedStudentId: string;
@@ -161,7 +164,7 @@ const SuggestedMatches: React.FC<SuggestedMatchesProps> = ({
       const topMatches = getTopMatches(studentPrefs, enrichedTutors, 3);
       setMatches(topMatches);
     } catch (error) {
-      console.error('Error loading matches:', error);
+      log.error('Error loading matches:', error);
       setMatches([]);
     } finally {
       setLoading(false);

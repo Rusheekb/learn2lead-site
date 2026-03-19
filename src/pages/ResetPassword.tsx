@@ -9,6 +9,9 @@ import { toast } from 'sonner';
 import NavBar from '@/components/NavBar';
 import { CheckCircle, AlertCircle } from 'lucide-react';
 import { addBreadcrumb } from '@/lib/sentry';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('ResetPassword');
 
 const ResetPassword = () => {
   const [password, setPassword] = useState('');
@@ -62,7 +65,7 @@ const ResetPassword = () => {
       // Redirect to login after a short delay
       setTimeout(() => navigate('/login', { replace: true }), 3000);
     } catch (error) {
-      console.error('Password update error:', error);
+      log.error('Password update error:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to update password');
     } finally {
       setIsLoading(false);

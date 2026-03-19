@@ -6,6 +6,9 @@ import { Mail, Phone, MapPin, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { contactSchema, validateForm } from '@/lib/validation';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('Contact');
 
 const Contact = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -56,7 +59,7 @@ const Contact = () => {
       setFormData({ name: '', email: '', subject: '', message: '' });
       setErrors({});
     } catch (error: any) {
-      console.error('Contact form error:', error);
+      log.error('Contact form error:', error);
       toast.error(error.message || 'Failed to send message. Please try again later.');
     } finally {
       setIsSubmitting(false);

@@ -19,6 +19,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('Pricing');
 
 const SHARED_FEATURES = [
   'Use at your own pace',
@@ -106,7 +109,7 @@ const Pricing = () => {
         throw new Error('No checkout URL returned');
       }
     } catch (error: any) {
-      console.error('Checkout error:', error);
+      log.error('Checkout error:', error);
       toast.error(error.message || 'Failed to start checkout. Please try again.');
     } finally {
       setIsLoading(false);

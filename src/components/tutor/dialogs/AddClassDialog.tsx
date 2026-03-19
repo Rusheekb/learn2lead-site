@@ -12,6 +12,9 @@ import { ClassValidator } from '@/services/classValidation';
 import { ErrorHandler } from '@/services/errorHandling';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('AddClassDialog');
 
 interface AddClassDialogProps {
   isOpen: boolean;
@@ -100,17 +103,17 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
         });
         
         if (error) {
-          console.error('Error loading student relationships:', error);
+          log.error('Error loading student relationships:', error);
           toast.error(`Failed to load student list: ${error.message}`);
           return;
         }
         
         if (!relationshipData || relationshipData.length === 0) {
-          console.log('No student relationships found for tutor');
+          log.debug('No student relationships found for tutor');
           return;
         }
         
-        console.log('Found relationships:', relationshipData);
+        log.debug('Found relationships', { count: relationshipData.length });
         
         // Convert to format needed for dropdown
         const options: StudentOption[] = (relationshipData as any[]).map((rel: any) => ({
@@ -119,11 +122,11 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
           relationshipId: rel.relationship_id // Use the actual relationship ID
         }));
         
-        console.log('Converted student options:', options);
+        log.debug('Converted student options', { count: options.length });
         
         setStudentOptions(options);
       } catch (err: any) {
-        console.error('Error loading student relationships:', err);
+        log.error('Error loading student relationships:', err);
         toast.error(`Failed to load student list: ${err.message}`);
       } finally {
         setIsLoading(false);
@@ -152,7 +155,7 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
         studentName: selectedStudent.name,
         relationshipId: selectedStudent.relationshipId
       });
-      console.log(`Selected student ${selectedStudent.name} with relationship ID ${selectedStudent.relationshipId}`);
+      log.debug(`Selected student ${selectedStudent.name} with relationship ID ${selectedStudent.relationshipId}`);
       
       // Fetch credit balance
       setIsCheckingCredits(true);
@@ -162,13 +165,13 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
           p_student_id: studentId
         });
         if (error) {
-          console.error('Error checking credit balance:', error);
+          log.error('Error checking credit balance:', error);
           toast.error('Could not check student credit balance');
         } else {
           setStudentCredits(data ?? 0);
         }
       } catch (err) {
-        console.error('Error checking credits:', err);
+        log.error('Error checking credits:', err);
       } finally {
         setIsCheckingCredits(false);
       }

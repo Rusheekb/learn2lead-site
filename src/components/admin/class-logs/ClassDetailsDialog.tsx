@@ -17,6 +17,9 @@ import { FileText, ExternalLink, Pencil, Save } from 'lucide-react';
 import { parseDateToLocal } from '@/utils/safeDateUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('ClassDetailsDialog');
 
 interface ClassDetailsDialogProps {
   isDetailsOpen: boolean;
@@ -92,7 +95,7 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
       if (isNaN(dateObj.getTime())) return 'Invalid date';
       return format(dateObj, 'MMM d, yyyy');
     } catch (e) {
-      console.error('Error formatting date:', e);
+      log.error('Error formatting date:', e);
       return String(date);
     }
   };

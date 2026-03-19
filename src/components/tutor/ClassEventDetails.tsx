@@ -12,6 +12,9 @@ import CompletedClassActions from '@/components/tutor/CompletedClassActions';
 import { uploadMaterial, addMaterialToClass, removeMaterialFromClass } from '@/services/materialsService';
 import { toast } from 'sonner';
 import { parseDateToLocal } from '@/utils/safeDateUtils';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('ClassEventDetails');
 
 interface ClassEventDetailsProps {
   selectedEvent: ClassEvent;
@@ -55,7 +58,7 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
         }
       }
     } catch (error) {
-      console.error('Error uploading material:', error);
+      log.error('Error uploading material:', error);
       toast.error('Failed to upload material');
     } finally {
       setIsUploading(false);
@@ -71,7 +74,7 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
         await refreshEvent();
       }
     } catch (error) {
-      console.error('Error removing material:', error);
+      log.error('Error removing material:', error);
       toast.error('Failed to remove material');
     }
   };

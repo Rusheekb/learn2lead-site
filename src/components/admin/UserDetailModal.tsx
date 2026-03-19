@@ -25,6 +25,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { RolePromotionDialog } from './RolePromotionDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('UserDetailModal');
 
 type User = (Student | Tutor) & { role: 'student' | 'tutor' };
 
@@ -90,7 +93,7 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
           .maybeSingle();
 
         if (profileError) {
-          console.error('Error fetching profile:', profileError);
+          log.error('Error fetching profile:', profileError);
           setStats(null);
           return;
         }
@@ -104,7 +107,7 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
         const analytics = await fn(profile.id);
         setStats(analytics);
       } catch (error) {
-        console.error('Error fetching user analytics:', error);
+        log.error('Error fetching user analytics:', error);
         setStats(null);
       } finally {
         setIsLoadingStats(false);
@@ -147,7 +150,7 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
       toast.success('Rates updated successfully');
       onUserUpdated?.();
     } catch (error) {
-      console.error('Error saving rates:', error);
+      log.error('Error saving rates:', error);
       toast.error('Failed to update rates');
     } finally {
       setIsSaving(false);

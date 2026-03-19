@@ -6,6 +6,9 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Profile } from '@/hooks/useProfile';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('AvatarUploader');
 
 interface AvatarUploaderProps {
   profile: Profile;
@@ -51,7 +54,7 @@ const AvatarUploader: React.FC<AvatarUploaderProps> = ({ profile, onSave }) => {
 
       toast.success('Avatar updated successfully');
     } catch (error) {
-      console.error('Error uploading avatar:', error);
+      log.error('Error uploading avatar:', error);
       toast.error('Failed to upload avatar');
     } finally {
       setIsUploading(false);

@@ -13,6 +13,9 @@ import { format } from 'date-fns';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { parseDateToLocal } from '@/utils/safeDateUtils';
 import { ClassHistorySkeleton } from '@/components/shared/skeletons';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('ClassHistory');
 
 interface ClassHistoryItem {
   id: string;
@@ -103,9 +106,7 @@ const ClassHistory: React.FC<ClassHistoryProps> = memo(({ userRole }) => {
       setIsEditDialogOpen(false);
       queryClient.invalidateQueries({ queryKey: ['classHistory', user?.id, userRole] });
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Error updating class:', error);
-      }
+      log.error('Error updating class', error);
       toast.error('Failed to update class description');
     }
   };

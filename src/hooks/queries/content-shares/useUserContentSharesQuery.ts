@@ -4,6 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useEffect } from 'react';
 import { contentSharesKeys } from './queryKeys';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('useUserContentSharesQuery');
 
 /**
  * Hook for fetching content shares for a specific user
@@ -51,7 +54,7 @@ export const useUserContentSharesQuery = (userId: string) => {
           filter: `sender_id=eq.${userId} OR receiver_id=eq.${userId}`,
         },
         (payload) => {
-          console.log('Realtime update for user content shares:', payload);
+          log.debug('Realtime update for user content shares:', payload);
           
           // Invalidate the query to refetch data
           queryClient.invalidateQueries({ queryKey: contentSharesKeys.user(userId) });

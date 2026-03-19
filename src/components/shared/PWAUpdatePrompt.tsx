@@ -3,6 +3,9 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('PWAUpdatePrompt');
 
 export const PWAUpdatePrompt: React.FC = () => {
   const {
@@ -16,7 +19,7 @@ export const PWAUpdatePrompt: React.FC = () => {
       }
     },
     onRegSWUpdFound() {
-      console.log('SW update found');
+      log.debug('SW update found');
     },
   });
 

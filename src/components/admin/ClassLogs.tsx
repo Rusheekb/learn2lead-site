@@ -19,6 +19,9 @@ import { ExportDialog } from './class-logs/ExportDialog';
 import TutorPaymentSummary from './class-logs/TutorPaymentSummary';
 import StudentPaymentRecorder from './class-logs/StudentPaymentRecorder';
 import { useClassLogs } from '@/hooks/useClassLogs';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('ClassLogs');
 
 const ClassLogs: React.FC = () => {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
@@ -79,7 +82,7 @@ const ClassLogs: React.FC = () => {
         toast.success(`Exported ${data.length} class logs`);
       }
     } catch (error) {
-      console.error('Error exporting CSV:', error);
+      log.error('Error exporting CSV:', error);
       toast.error('Failed to export class logs');
     }
   };

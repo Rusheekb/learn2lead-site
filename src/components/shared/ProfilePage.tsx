@@ -6,6 +6,9 @@ import { toast } from 'sonner';
 import ProfileTabs from './profile/ProfileTabs';
 import LoadingState from './profile/LoadingState';
 import ProfileNotFound from './profile/ProfileNotFound';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('ProfilePage');
 
 const ProfilePage: React.FC = () => {
   const { profile, isLoading, updateProfile } = useProfile();
@@ -34,13 +37,13 @@ const ProfilePage: React.FC = () => {
 
       if (error) {
         toast.error('Failed to load users');
-        console.error('Error loading users:', error);
+        log.error('Error loading users:', error);
         return [];
       }
 
       return data || [];
     } catch (error) {
-      console.error('Error in fetchRelevantUsers:', error);
+      log.error('Error in fetchRelevantUsers:', error);
       return [];
     } finally {
       setLoadingUsers(false);

@@ -17,6 +17,9 @@ import StudentFileUpload from './StudentFileUpload';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { viewClassFile, deleteClassFile } from '@/services/classUploadsService';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('StudentClassDetailsDialog');
 
 interface StudentClassDetailsDialogProps {
   open: boolean;
@@ -68,7 +71,7 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
       
       setUploads(transformedUploads);
     } catch (error) {
-      console.error('Error fetching uploads:', error);
+      log.error('Error fetching uploads:', error);
       toast({
         title: "Error",
         description: "Failed to fetch uploads",
@@ -93,7 +96,7 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
       
       setTutorMaterials(data?.materials_url || []);
     } catch (error) {
-      console.error('Error fetching tutor materials:', error);
+      log.error('Error fetching tutor materials:', error);
       // Don't show error toast for this as it's secondary functionality
     }
   };
@@ -134,7 +137,7 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
         });
 
       if (uploadError) {
-        console.error('Storage upload error:', uploadError);
+        log.error('Storage upload error:', uploadError);
         throw new Error(`Storage upload failed: ${uploadError.message}`);
       }
 
@@ -152,7 +155,7 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
         });
 
       if (dbError) {
-        console.error('Database insert error:', dbError);
+        log.error('Database insert error:', dbError);
         // Try to clean up the uploaded file
         await supabase.storage.from('materials').remove([filePath]);
         throw new Error(`Database error: ${dbError.message}`);
@@ -165,7 +168,7 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
 
       fetchUploads();
     } catch (error) {
-      console.error('Error uploading file:', error);
+      log.error('Error uploading file:', error);
       toast({
         title: "Error",
         description: `Failed to upload file: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -191,7 +194,7 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('Error downloading file:', error);
+      log.error('Error downloading file:', error);
       toast({
         title: "Error",
         description: "Failed to download file",
@@ -207,7 +210,7 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
       }
       await viewClassFile(upload.id);
     } catch (error) {
-      console.error('Error viewing file:', error);
+      log.error('Error viewing file:', error);
       toast({
         title: "Error",
         description: "Failed to open file",
@@ -228,7 +231,7 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
         fetchUploads();
       }
     } catch (error) {
-      console.error('Error deleting file:', error);
+      log.error('Error deleting file:', error);
       toast({
         title: "Error",
         description: "Failed to delete file",

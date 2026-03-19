@@ -11,6 +11,9 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { RolePromotionDialog } from './RolePromotionDialog';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('StudentsManager');
 
 interface StudentsManagerProps {
   onSelect: (student: Student) => void;
@@ -40,7 +43,7 @@ const StudentsManager: React.FC<StudentsManagerProps> = memo(({ onSelect }) => {
       await deleteStudent(studentId);
       toast.success("Student deleted successfully");
     } catch (error) {
-      console.error('Error deleting student:', error);
+      log.error('Error deleting student:', error);
       toast.error("Failed to delete student");
     }
   }, [deleteStudent]);
