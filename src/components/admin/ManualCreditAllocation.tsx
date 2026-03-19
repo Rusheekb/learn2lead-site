@@ -96,7 +96,7 @@ export const ManualCreditAllocation = () => {
         });
       }
     } catch (error) {
-      console.error('Credit allocation error:', error);
+      log.error('Credit allocation error', error);
       toast.error('Failed to allocate credits', {
         description: error instanceof Error ? error.message : 'Unknown error occurred',
       });
