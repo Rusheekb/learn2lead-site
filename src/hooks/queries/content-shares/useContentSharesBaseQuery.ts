@@ -5,6 +5,9 @@ import { fetchContentShares } from '@/services/content-shares';
 import { toast } from 'sonner';
 import { useEffect } from 'react';
 import { contentSharesKeys } from './queryKeys';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('useContentSharesBaseQuery');
 
 /**
  * Hook for fetching all content shares with realtime updates
@@ -35,7 +38,7 @@ export const useContentSharesBaseQuery = () => {
           table: 'content_shares',
         },
         (payload) => {
-          console.log('Realtime update for content shares:', payload);
+          log.debug('Realtime update for content shares:', payload);
           
           // Invalidate the query to refetch data
           queryClient.invalidateQueries({ queryKey: contentSharesKeys.lists() });

@@ -5,6 +5,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { Check, Gift, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('ReferralLanding');
 
 interface ReferralCodeData {
   code: string;
@@ -91,7 +94,7 @@ const ReferralLanding: React.FC = () => {
           referrerName,
         });
       } catch (err) {
-        console.error('Error fetching referral data:', err);
+        log.error('Error fetching referral data:', err);
         setError('Something went wrong. Please try again.');
       } finally {
         setIsLoading(false);

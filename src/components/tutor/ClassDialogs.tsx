@@ -4,6 +4,9 @@ import ViewClassDialog from './dialogs/ViewClassDialog';
 import { ClassEvent } from '@/types/tutorTypes';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('ClassDialogs');
 
 interface ClassDialogsProps {
   isAddEventOpen: boolean;
@@ -41,7 +44,7 @@ export function ClassDialogs({
       }
       return success;
     } catch (error) {
-      console.error('Delete failed:', error);
+      log.error('Delete failed:', error);
       return false;
     }
   };

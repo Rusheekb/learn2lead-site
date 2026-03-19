@@ -1,4 +1,7 @@
 import { format, parse } from 'date-fns';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('dateTimeUtils');
 
 export const formatTime = (time: string): string => {
   try {
@@ -17,7 +20,7 @@ export const formatTime = (time: string): string => {
 
     return format(date, 'h:mm a');
   } catch (error) {
-    console.error('Error formatting time:', error);
+    log.error('Error formatting time:', error);
     return ''; // Return empty string for invalid times
   }
 };
@@ -44,7 +47,7 @@ export const formatTimeRange = (startTime: string, endTime: string): string => {
     // Different periods, show both
     return `${start} - ${end}`;
   } catch (error) {
-    console.error('Error formatting time range:', error);
+    log.error('Error formatting time range:', error);
     return 'Time not set';
   }
 };
@@ -65,7 +68,7 @@ export const parseTime24to12 = (time24: string): string => {
 
     return format(date, 'h:mm a');
   } catch (error) {
-    console.error('Error parsing time:', error);
+    log.error('Error parsing time:', error);
     return time24; // Return original time if parsing fails
   }
 };
@@ -81,7 +84,7 @@ export const formatDate = (dateString: string | Date): string => {
         : dateString;
     return format(date, 'MMMM d, yyyy');
   } catch (error) {
-    console.error('Error formatting date:', error);
+    log.error('Error formatting date:', error);
     return String(dateString); // Return original date if formatting fails
   }
 };
@@ -94,7 +97,7 @@ export const combineDateTime = (date: Date, time: string): string => {
     combined.setMinutes(minutes);
     return combined.toISOString();
   } catch (error) {
-    console.error('Error combining date and time:', error);
+    log.error('Error combining date and time:', error);
     throw error;
   }
 };

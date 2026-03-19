@@ -20,6 +20,9 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import SuggestedMatches from './SuggestedMatches';
 import { assignmentSchema } from '@/lib/validation';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('AssignmentManager');
 
 interface AssignmentManagerProps {
   tutors: Array<{ id: string; profileId: string; name: string }>;
@@ -89,7 +92,7 @@ const AssignmentManager: React.FC<AssignmentManagerProps> = ({
         return;
       }
 
-      console.log('Creating assignment with profile IDs:', {
+      log.debug('Creating assignment with profile IDs:', {
         tutor_id: selectedTutor.profileId,
         student_id: selectedStudent.profileId,
         tutorName: selectedTutor.name,
@@ -105,7 +108,7 @@ const AssignmentManager: React.FC<AssignmentManagerProps> = ({
       onAssignmentChange();
       toast.success("Assignment created successfully");
     } catch (error) {
-      console.error('Failed to create assignment:', error);
+      log.error('Failed to create assignment:', error);
       toast.error("Failed to create assignment");
     }
   };
@@ -116,7 +119,7 @@ const AssignmentManager: React.FC<AssignmentManagerProps> = ({
       onAssignmentChange();
       toast.success("Assignment ended successfully");
     } catch (error) {
-      console.error('Failed to end assignment:', error);
+      log.error('Failed to end assignment:', error);
       toast.error("Failed to end assignment");
     }
   };

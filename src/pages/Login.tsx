@@ -10,6 +10,9 @@ import { getSavedRoute } from '@/hooks/useRoutePersistence';
 import { signInSchema, signUpSchema, validateForm } from '@/lib/validation';
 import { addBreadcrumb, captureException } from '@/lib/sentry';
 import { useRateLimiter } from '@/hooks/useRateLimiter';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('Login');
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -85,7 +88,7 @@ const Login = () => {
     try {
       await signIn(result.data.email, result.data.password);
     } catch (error) {
-      console.error('Login error:', error);
+      log.error('Login error:', error);
       if (error instanceof Error) {
         setAuthError(error.message);
         captureException(error, { context: 'handleSignIn' });
@@ -122,7 +125,7 @@ const Login = () => {
       });
       toast.success('Account created! Please check your email for verification.');
     } catch (error) {
-      console.error('Registration error:', error);
+      log.error('Registration error:', error);
       if (error instanceof Error) {
         setAuthError(error.message);
         captureException(error, { context: 'handleSignUp' });
@@ -139,7 +142,7 @@ const Login = () => {
     try {
       await signInWithOAuth('google');
     } catch (error) {
-      console.error('Google sign in error:', error);
+      log.error('Google sign in error:', error);
       if (error instanceof Error) {
         setAuthError(error.message);
         captureException(error, { context: 'handleGoogleSignIn' });

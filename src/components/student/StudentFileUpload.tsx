@@ -10,6 +10,9 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { FileUp, Upload } from 'lucide-react';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('StudentFileUpload');
 
 interface StudentFileUploadProps {
   classId: string;
@@ -40,7 +43,7 @@ const StudentFileUpload: React.FC<StudentFileUploadProps> = ({
         setFileNote('');
         setIsOpen(false);
       } catch (error) {
-        console.error('Upload error:', error);
+        log.error('Upload error:', error);
       } finally {
         setIsUploading(false);
       }

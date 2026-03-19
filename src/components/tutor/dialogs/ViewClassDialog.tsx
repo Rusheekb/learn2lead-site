@@ -22,6 +22,9 @@ import { format } from 'date-fns';
 import ConfirmationDialog from '@/components/shared/ConfirmationDialog';
 import EditClassDialog from './EditClassDialog';
 import { parseDateToLocal } from '@/utils/safeDateUtils';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('ViewClassDialog');
 
 interface ViewClassDialogProps {
   isOpen: boolean;
@@ -75,7 +78,7 @@ const ViewClassDialog: React.FC<ViewClassDialogProps> = ({
       if (isNaN(dateObj.getTime())) return String(date);
       return format(dateObj, 'MMMM d, yyyy');
     } catch (e) {
-      console.error('Error formatting date:', e);
+      log.error('Error formatting date:', e);
       return String(date);
     }
   };
@@ -96,7 +99,7 @@ const ViewClassDialog: React.FC<ViewClassDialogProps> = ({
       setIsDeleteDialogOpen(false);
       setIsOpen(false);
     } catch (error) {
-      console.error('Delete failed:', error);
+      log.error('Delete failed:', error);
     } finally {
       setIsDeleting(false);
     }

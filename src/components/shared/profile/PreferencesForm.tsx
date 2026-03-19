@@ -10,6 +10,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { AVAILABILITY_OPTIONS, GRADE_LEVEL_OPTIONS } from '@/utils/matchingAlgorithm';
 import { Loader2, CheckCircle2 } from 'lucide-react';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('PreferencesForm');
 
 interface PreferencesFormProps {
   role: 'student' | 'tutor';
@@ -105,7 +108,7 @@ const PreferencesForm: React.FC<PreferencesFormProps> = ({ role, userEmail }) =>
         }
       }
     } catch (error) {
-      console.error('Error loading preferences:', error);
+      log.error('Error loading preferences:', error);
     } finally {
       setLoading(false);
     }
@@ -147,7 +150,7 @@ const PreferencesForm: React.FC<PreferencesFormProps> = ({ role, userEmail }) =>
       
       toast.success('Preferences saved successfully');
     } catch (error) {
-      console.error('Error saving preferences:', error);
+      log.error('Error saving preferences:', error);
       toast.error('Failed to save preferences');
     } finally {
       setSaving(false);

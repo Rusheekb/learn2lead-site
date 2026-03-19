@@ -11,6 +11,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { CREDIT_TIERS, STRIPE_PLAN_PRICES } from '@/config/stripe';
 import type { StripePlanKey } from '@/config/stripe';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('AutoRenewalSettings');
 
 interface AutoRenewalRow {
   id: string;
@@ -65,7 +68,7 @@ export const AutoRenewalSettings: React.FC = () => {
         setLastRenewalError(row.last_renewal_error);
       }
     } catch (err) {
-      console.error('Failed to load auto-renewal settings:', err);
+      log.error('Failed to load auto-renewal settings:', err);
     } finally {
       setLoading(false);
     }
@@ -92,7 +95,7 @@ export const AutoRenewalSettings: React.FC = () => {
       }
       toast.success('Auto-renewal settings saved');
     } catch (err) {
-      console.error('Failed to save auto-renewal settings:', err);
+      log.error('Failed to save auto-renewal settings:', err);
       toast.error('Failed to save settings');
     } finally {
       setSaving(false);

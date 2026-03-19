@@ -7,6 +7,9 @@ import { toast } from 'sonner';
 import { ArrowLeft, Mail } from 'lucide-react';
 import { useRateLimiter } from '@/hooks/useRateLimiter';
 import { addBreadcrumb } from '@/lib/sentry';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('ForgotPasswordForm');
 
 interface ForgotPasswordFormProps {
   onBack: () => void;
@@ -44,7 +47,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }) => {
       addBreadcrumb({ category: 'auth', message: 'Password reset email sent', level: 'info' });
       toast.success('Check your email for a password reset link');
     } catch (error) {
-      console.error('Password reset error:', error);
+      log.error('Password reset error:', error);
       // Don't reveal if account exists — always show success-like message
       setSent(true);
       toast.success('If an account exists with that email, a reset link has been sent');

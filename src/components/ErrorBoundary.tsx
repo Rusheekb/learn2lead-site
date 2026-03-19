@@ -2,6 +2,9 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Home } from 'lucide-react';
 import { captureException, addBreadcrumb } from '@/lib/sentry';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('ErrorBoundary');
 
 interface Props {
   children: ReactNode;
@@ -67,7 +70,7 @@ class ErrorBoundary extends Component<Props, State> {
     });
 
     if (import.meta.env.DEV) {
-      console.error('Error caught by boundary:', error, errorInfo);
+      log.error('Error caught by boundary:', error, errorInfo);
     }
   }
 

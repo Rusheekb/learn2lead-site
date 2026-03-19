@@ -1,3 +1,7 @@
+import { logger } from '@/lib/logger';
+
+const log = logger.create('safeDateUtils');
+
 /**
  * Safe date utilities to prevent timezone conversion issues
  * when working with date strings for database storage
@@ -76,7 +80,7 @@ export const parseDateToLocal = (dateInput: string | Date | unknown): Date => {
   }
   // Handle unexpected types gracefully - only log in development
   if (process.env.NODE_ENV === 'development') {
-    console.warn('Unexpected date input type:', typeof dateInput, dateInput);
+    log.warn('Unexpected date input type:', typeof dateInput, dateInput);
   }
   const fallback = new Date();
   return new Date(fallback.getFullYear(), fallback.getMonth(), fallback.getDate());

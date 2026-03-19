@@ -1,3 +1,7 @@
+import { logger } from '@/lib/logger';
+
+const log = logger.create('timeUtils');
+
 export const formatTime = (timeString: string): string => {
   try {
     if (!timeString) return 'N/A';
@@ -24,7 +28,7 @@ export const formatTime = (timeString: string): string => {
     return `${hour12}:${minute.toString().padStart(2, '0')} ${period}`;
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
-      console.warn('Error formatting time:', timeString, error);
+      log.warn('Error formatting time:', timeString, error);
     }
     return 'Invalid Time';
   }

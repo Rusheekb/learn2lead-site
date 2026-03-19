@@ -1,3 +1,7 @@
+import { logger } from '@/lib/logger';
+
+const log = logger.create('clipboardUtils');
+
 
 /**
  * Copies text to clipboard
@@ -26,7 +30,7 @@ export const copyToClipboard = async (text: string): Promise<boolean> => {
       return success;
     }
   } catch (error) {
-    console.error('Failed to copy text: ', error);
+    log.error('Failed to copy text: ', error);
     return false;
   }
 };

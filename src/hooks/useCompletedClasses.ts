@@ -3,6 +3,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { ClassEvent } from '@/types/tutorTypes';
 import { transformDbRecordToClassEvent } from '@/services/utils/classEventMapper';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('useCompletedClasses');
 
 export const useCompletedClasses = (userRole: 'student' | 'tutor' | 'admin') => {
   const { user } = useAuth();
@@ -43,7 +46,7 @@ export const useCompletedClasses = (userRole: 'student' | 'tutor' | 'admin') => 
       const transformedClasses = (data || []).map(item => transformDbRecordToClassEvent(item));
       setCompletedClasses(transformedClasses);
     } catch (error) {
-      console.error('Error fetching completed classes:', error);
+      log.error('Error fetching completed classes:', error);
     } finally {
       setIsLoading(false);
     }
