@@ -25,6 +25,9 @@ import { batchUpdateStudentPaymentDate } from '@/services/class-operations/updat
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { addBreadcrumb, captureException } from '@/lib/sentry';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('StudentPaymentRecorder');
 
 interface StudentPaymentRecorderProps {
   open: boolean;
