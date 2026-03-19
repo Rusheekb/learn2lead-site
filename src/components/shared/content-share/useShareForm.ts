@@ -1,9 +1,12 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
+import { logger } from '@/lib/logger';
 
-export const useShareForm = (userId: string | undefined, loadShares: () => Promise<void>) => {
+const log = logger.create('useShareForm');
+
+export const useShareForm = (userId: string | undefined) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<string>('');
   const [formData, setFormData] = useState({
@@ -12,6 +15,7 @@ export const useShareForm = (userId: string | undefined, loadShares: () => Promi
   });
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const queryClient = useQueryClient();
 
   const handleShare = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,9 +62,9 @@ export const useShareForm = (userId: string | undefined, loadShares: () => Promi
       setFormData({ title: '', description: '' });
       setFile(null);
       setSelectedUser('');
-      loadShares();
+      queryClient.invalidateQueries({ queryKey: ['content-shares'] });
     } catch (error) {
-      console.error('Error sharing content:', error);
+      log.error('Error sharing content', error);
       toast.error('Failed to share content');
     } finally {
       setIsUploading(false);
