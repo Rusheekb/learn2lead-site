@@ -187,7 +187,7 @@ export const ManualCreditAllocation = () => {
       setAdjustAmount('');
       setAdjustReason('');
     } catch (error) {
-      console.error('Credit adjustment error:', error);
+      log.error('Credit adjustment error', error);
       toast.error('Failed to adjust credits', {
         description: error instanceof Error ? error.message : 'Unknown error occurred',
       });
