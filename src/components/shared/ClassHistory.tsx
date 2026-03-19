@@ -106,9 +106,7 @@ const ClassHistory: React.FC<ClassHistoryProps> = memo(({ userRole }) => {
       setIsEditDialogOpen(false);
       queryClient.invalidateQueries({ queryKey: ['classHistory', user?.id, userRole] });
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        log.error('Error updating class:', error);
-      }
+      log.error('Error updating class', error);
       toast.error('Failed to update class description');
     }
   };
