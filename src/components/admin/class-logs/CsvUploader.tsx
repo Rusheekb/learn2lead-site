@@ -4,6 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Upload, CheckCircle2, AlertCircle, FileText } from 'lucide-react';
 import Papa from 'papaparse';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('CsvUploader');
 
 interface CsvUploaderProps {
   onUploadComplete: () => void;
