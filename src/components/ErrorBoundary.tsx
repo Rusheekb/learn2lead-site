@@ -70,7 +70,7 @@ class ErrorBoundary extends Component<Props, State> {
     });
 
     if (import.meta.env.DEV) {
-      log.error('Error caught by boundary:', error, errorInfo);
+      log.error('Error caught by boundary', error, { componentStack: errorInfo.componentStack });
     }
   }
 

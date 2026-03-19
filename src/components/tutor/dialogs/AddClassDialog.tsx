@@ -122,7 +122,7 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
           relationshipId: rel.relationship_id // Use the actual relationship ID
         }));
         
-        log.debug('Converted student options:', options);
+        log.debug('Converted student options', { count: options.length });
         
         setStudentOptions(options);
       } catch (err: any) {
