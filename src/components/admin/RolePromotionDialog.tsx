@@ -12,6 +12,9 @@ import { Label } from '@/components/ui/label';
 import { AlertTriangle, Users, UserCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { promoteStudentToTutorByIdOrEmail, demoteTutorToStudentByIdOrEmail } from '@/services/roleManagement';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('RolePromotionDialog');
 
 interface Props {
   isOpen: boolean;
@@ -80,7 +83,7 @@ export function RolePromotionDialog({ isOpen, onClose, user, onSuccess }: Props)
         }
       }
     } catch (error) {
-      console.error('Role change error:', error);
+      log.error('Role change error', error);
       toast.error('An unexpected error occurred');
     } finally {
       setIsLoading(false);

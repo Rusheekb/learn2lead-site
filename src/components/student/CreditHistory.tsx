@@ -1,12 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { AlertCircle, TrendingDown, TrendingUp, Calendar, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('CreditHistory');
 
 interface CreditTransaction {
   id: string;
@@ -20,38 +24,26 @@ interface CreditTransaction {
 
 export const CreditHistory: React.FC = () => {
   const { user } = useAuth();
-  const [transactions, setTransactions] = useState<CreditTransaction[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchCreditHistory = async () => {
-      if (!user?.id) return;
+  const { data: transactions = [], isLoading, error } = useQuery({
+    queryKey: ['credit-history', user?.id],
+    queryFn: async () => {
+      const { data, error: fetchError } = await supabase
+        .from('class_credits_ledger')
+        .select('*')
+        .eq('student_id', user!.id)
+        .order('created_at', { ascending: false })
+        .limit(20);
 
-      try {
-        setIsLoading(true);
-        setError(null);
-
-        const { data, error: fetchError } = await supabase
-          .from('class_credits_ledger')
-          .select('*')
-          .eq('student_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(20);
-
-        if (fetchError) throw fetchError;
-
-        setTransactions((data || []) as CreditTransaction[]);
-      } catch (err) {
-        console.error('Error fetching credit history:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load credit history');
-      } finally {
-        setIsLoading(false);
+      if (fetchError) {
+        log.error('Error fetching credit history', fetchError);
+        throw fetchError;
       }
-    };
 
-    fetchCreditHistory();
-  }, [user?.id]);
+      return (data || []) as CreditTransaction[];
+    },
+    enabled: !!user?.id,
+  });
 
   if (isLoading) {
     return (
@@ -74,7 +66,7 @@ export const CreditHistory: React.FC = () => {
         <CardContent className="pt-6">
           <div className="flex items-center gap-2 text-destructive">
             <AlertCircle className="h-5 w-5" />
-            <p className="text-sm">Error: {error}</p>
+            <p className="text-sm">Error: {error instanceof Error ? error.message : 'Failed to load credit history'}</p>
           </div>
         </CardContent>
       </Card>

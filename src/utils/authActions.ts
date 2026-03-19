@@ -2,6 +2,9 @@
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { addBreadcrumb, captureException } from '@/lib/sentry';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('authActions');
 
 /**
  * Signs in a user using Supabase email/password authentication.
@@ -36,7 +39,7 @@ export const signInWithEmail = async (email: string, password: string) => {
     });
     toast.success('Signed in successfully!');
   } catch (error) {
-    console.error('Error signing in:', error);
+    log.error('Error signing in', error);
     if (error instanceof Error) {
       captureException(error, { context: 'signInWithEmail' });
     }
@@ -131,7 +134,7 @@ export const signUpWithEmail = async (
       'Signed up successfully! Please check your email for verification.'
     );
   } catch (error) {
-    console.error('Error signing up:', error);
+    log.error('Error signing up', error);
     if (error instanceof Error) {
       captureException(error, { context: 'signUpWithEmail' });
     }
@@ -175,7 +178,7 @@ export const signInWithProvider = async (provider: 'google') => {
       data: { provider },
     });
   } catch (error) {
-    console.error(`Error signing in with ${provider}:`, error);
+    log.error(`Error signing in with ${provider}`, error);
     if (error instanceof Error) {
       captureException(error, { context: 'signInWithProvider', provider });
     }
@@ -204,7 +207,7 @@ export const signOut = async () => {
           message: `Sign-out failed: ${error.message}`,
           level: 'warning',
         });
-        console.error('Failed to sign out:', error);
+        log.error('Failed to sign out', error);
         toast.error('Failed to sign out');
         return false;
       }
@@ -221,12 +224,12 @@ export const signOut = async () => {
         message: 'Sign-out: no active session, clearing local state',
         level: 'info',
       });
-      console.info('No active session found, clearing local state');
+      log.info('No active session found, clearing local state');
       toast.success('Signed out successfully');
       return true;
     }
   } catch (error) {
-    console.error('Error during sign out:', error);
+    log.error('Error during sign out', error);
     if (error instanceof Error) {
       captureException(error, { context: 'signOut' });
     }

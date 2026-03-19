@@ -1,28 +1,19 @@
 import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ContentShareItem } from '@/types/sharedTypes';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useRealtimeManager } from '@/hooks/useRealtimeManager';
 import { logger } from '@/lib/logger';
 
 const log = logger.create('useContentShareData');
 
 export const useContentShareData = (userId?: string, fetchUsers?: () => Promise<any[]>) => {
-  const [shares, setShares] = useState<ContentShareItem[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  // Use simplified realtime manager
-  useRealtimeManager({
-    userId: user?.id,
-    userRole: user?.user_metadata?.role,
-    setContentShares: setShares,
-  });
-
-  // Fetch content shares
-  const { data: shareData, isLoading, error } = useQuery({
+  // Fetch content shares via React Query
+  const { data: shares = [], isLoading, error } = useQuery({
     queryKey: ['content-shares', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
@@ -38,11 +29,25 @@ export const useContentShareData = (userId?: string, fetchUsers?: () => Promise<
     enabled: !!user?.id,
   });
 
+  // Lightweight realtime subscription that invalidates React Query cache
   useEffect(() => {
-    if (shareData) {
-      setShares(shareData);
-    }
-  }, [shareData]);
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel('content-shares-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'content_shares' },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['content-shares', user.id] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, queryClient]);
 
   const handleDownload = async (filePath: string | null) => {
     if (!filePath) return;
@@ -66,7 +71,7 @@ export const useContentShareData = (userId?: string, fetchUsers?: () => Promise<
         .update({ viewed_at: new Date().toISOString() })
         .eq('id', shareId);
       if (error) throw error;
-      setShares(prev => prev.map(s => s.id === shareId ? { ...s, viewed_at: new Date().toISOString() } : s));
+      queryClient.invalidateQueries({ queryKey: ['content-shares', user?.id] });
     } catch (err) {
       log.error('Failed to mark share as viewed', err);
     }
