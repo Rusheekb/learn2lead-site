@@ -95,7 +95,7 @@ const CsvUploader: React.FC<CsvUploaderProps> = ({ onUploadComplete }) => {
             setShowPreview(false);
             onUploadComplete();
           } catch (error) {
-            console.error('Import error:', error);
+            log.error('Import error', error);
             toast.error(
               error instanceof Error ? error.message : 'Failed to import data'
             );
