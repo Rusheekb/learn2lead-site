@@ -1,6 +1,8 @@
-
 import { parseISO, format, parse } from 'date-fns';
 import { parseNumericString } from '@/utils/numberUtils';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('dateTimeTransformers');
 
 // Calculate end time based on start time and duration
 export const calculateEndTime = (startTime: string, duration: number): string => {
