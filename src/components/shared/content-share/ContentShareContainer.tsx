@@ -21,7 +21,6 @@ const ContentShareContainer: React.FC<ContentShareContainerProps> = ({ role, fet
     shares,
     isLoading,
     users,
-    loadShares,
     handleDownload,
     markAsViewed,
     getUserName
@@ -38,7 +37,7 @@ const ContentShareContainer: React.FC<ContentShareContainerProps> = ({ role, fet
     setFile,
     isUploading,
     handleShare
-  } = useShareForm(user?.id, loadShares);
+  } = useShareForm(user?.id);
   
   return (
     <div className="space-y-6">

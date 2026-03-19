@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query';
 import { ClassSession } from '@/types/classTypes';
 import { useAuth } from '@/contexts/AuthContext';
 import CalendarWithEvents from '@/components/CalendarWithEvents';
-import { useRealtimeManager } from '@/hooks/useRealtimeManager';
 import { fetchScheduledClasses } from '@/services/class/fetch';
 import { ClassEvent } from '@/types/tutorTypes';
 import StudentClassDetailsDialog from './StudentClassDetailsDialog';
@@ -19,11 +18,6 @@ export const ClassCalendarContainer: React.FC<ClassCalendarContainerProps> = mem
   const [selectedClass, setSelectedClass] = useState<ClassSession | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { user } = useAuth();
-
-  useRealtimeManager({
-    userId: user?.id,
-    userRole: user?.user_metadata?.role,
-  });
 
   const { data: sessions = [], isLoading } = useQuery({
     queryKey: ['student-classes', user?.id],

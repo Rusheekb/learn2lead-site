@@ -94,7 +94,7 @@ export class ErrorHandler {
     };
 
     if (import.meta.env.DEV) {
-      console.error(`[${appError.type.toUpperCase()}] ${context || 'Unknown context'}:`, errorData);
+      log.error(`[${appError.type.toUpperCase()}] ${context || 'Unknown context'}`, originalError, errorData);
     }
     
     // In production, route through Sentry

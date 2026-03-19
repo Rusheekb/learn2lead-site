@@ -12,6 +12,9 @@ import { AuthContextType } from '@/types/auth';
 import { getSavedRoute, clearSavedRoute } from '@/hooks/useRoutePersistence';
 import { setUser as setSentryUser, addBreadcrumb } from '@/lib/sentry';
 import { identifyUser, resetUser } from '@/lib/posthog';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('AuthProvider');
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -109,7 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               replace: true,
             });
           } catch (err) {
-            console.error('Error processing post-login actions:', err);
+            log.error('Error processing post-login actions', err);
             setUserRole(null);
             navigate('/login', { replace: true });
           }
@@ -171,17 +174,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const handleSignOut = async () => {
     try {
-      console.log('Signing out user...');
+      log.debug('Signing out user...');
       const success = await signOut();
       
       if (success) {
-        // Clear local state even if the API call failed but returned success
         setUser(null);
         setSession(null);
         setUserRole(null);
         navigate('/login');
       } else {
-        // Manual fallback if signOut fails but we want to force logout
         setUser(null);
         setSession(null);
         setUserRole(null);
@@ -191,8 +192,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         toast.success('Signed out successfully');
       }
     } catch (error) {
-      console.error('Error in handleSignOut:', error);
-      // Force logout even if there's an error
+      log.error('Error in handleSignOut', error);
       setUser(null);
       setSession(null);
       setUserRole(null);

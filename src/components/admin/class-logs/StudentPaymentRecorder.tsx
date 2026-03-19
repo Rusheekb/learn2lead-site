@@ -25,6 +25,9 @@ import { batchUpdateStudentPaymentDate } from '@/services/class-operations/updat
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { addBreadcrumb, captureException } from '@/lib/sentry';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('StudentPaymentRecorder');
 
 interface StudentPaymentRecorderProps {
   open: boolean;
@@ -154,7 +157,7 @@ const StudentPaymentRecorder: React.FC<StudentPaymentRecorderProps> = ({
           profileId: profile?.id || null,
         });
       } catch (err) {
-        console.error('Error fetching student summary:', err);
+        log.error('Error fetching student summary', err);
       } finally {
         setIsLoadingSummary(false);
       }
@@ -283,7 +286,7 @@ const StudentPaymentRecorder: React.FC<StudentPaymentRecorderProps> = ({
       onPaymentRecorded();
       onOpenChange(false);
     } catch (err) {
-      console.error('Payment recording error:', err);
+      log.error('Payment recording error', err);
       if (err instanceof Error) {
         captureException(err, { student: selectedStudent.name, amount: parseFloat(amount) });
       }

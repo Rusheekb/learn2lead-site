@@ -4,6 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Upload, CheckCircle2, AlertCircle, FileText } from 'lucide-react';
 import Papa from 'papaparse';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('CsvUploader');
 
 interface CsvUploaderProps {
   onUploadComplete: () => void;
@@ -82,7 +85,7 @@ const CsvUploader: React.FC<CsvUploaderProps> = ({ onUploadComplete }) => {
                   duration: 10000,
                 }
               );
-              console.error('Import errors:', errors);
+              log.warn('Import completed with errors', { errors });
             } else {
               toast.success(`Successfully imported ${success} class logs`);
             }
@@ -92,7 +95,7 @@ const CsvUploader: React.FC<CsvUploaderProps> = ({ onUploadComplete }) => {
             setShowPreview(false);
             onUploadComplete();
           } catch (error) {
-            console.error('Import error:', error);
+            log.error('Import error', error);
             toast.error(
               error instanceof Error ? error.message : 'Failed to import data'
             );
@@ -106,7 +109,7 @@ const CsvUploader: React.FC<CsvUploaderProps> = ({ onUploadComplete }) => {
         },
       });
     } catch (error) {
-      console.error('Upload error:', error);
+      log.error('Upload error', error);
       toast.error('Failed to process file');
       setIsUploading(false);
     }

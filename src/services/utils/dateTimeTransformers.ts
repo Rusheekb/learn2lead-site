@@ -1,6 +1,8 @@
-
 import { parseISO, format, parse } from 'date-fns';
 import { parseNumericString } from '@/utils/numberUtils';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('dateTimeTransformers');
 
 // Calculate end time based on start time and duration
 export const calculateEndTime = (startTime: string, duration: number): string => {
@@ -31,7 +33,7 @@ export const calculateEndTime = (startTime: string, duration: number): string =>
     // Format to HH:MM
     return `${String(totalHours).padStart(2, '0')}:${String(totalMinutes).padStart(2, '0')}`;
   } catch (error) {
-    console.error('Error calculating end time:', error);
+    log.error('Error calculating end time', error);
     return '';
   }
 };

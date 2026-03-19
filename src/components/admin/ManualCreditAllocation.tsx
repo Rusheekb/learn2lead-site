@@ -9,6 +9,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('ManualCreditAllocation');
 
 export const ManualCreditAllocation = () => {
   const [email, setEmail] = useState('');
@@ -52,7 +55,7 @@ export const ManualCreditAllocation = () => {
 
         setStudents(studentsList);
       } catch (error) {
-        console.error('Error fetching students:', error);
+        log.error('Error fetching students', error);
         toast.error('Failed to load students list');
       } finally {
         setLoadingStudents(false);
@@ -93,7 +96,7 @@ export const ManualCreditAllocation = () => {
         });
       }
     } catch (error) {
-      console.error('Credit allocation error:', error);
+      log.error('Credit allocation error', error);
       toast.error('Failed to allocate credits', {
         description: error instanceof Error ? error.message : 'Unknown error occurred',
       });
@@ -184,7 +187,7 @@ export const ManualCreditAllocation = () => {
       setAdjustAmount('');
       setAdjustReason('');
     } catch (error) {
-      console.error('Credit adjustment error:', error);
+      log.error('Credit adjustment error', error);
       toast.error('Failed to adjust credits', {
         description: error instanceof Error ? error.message : 'Unknown error occurred',
       });
@@ -293,7 +296,7 @@ export const ManualCreditAllocation = () => {
       setDirectNote('');
 
     } catch (error: any) {
-      console.error('Direct payment error:', error);
+      log.error('Direct payment error', error);
       toast.error('Failed to add credits', {
         description: error.message || 'Unknown error occurred',
       });

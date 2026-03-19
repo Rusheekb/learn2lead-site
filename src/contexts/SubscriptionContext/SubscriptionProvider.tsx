@@ -1,6 +1,9 @@
 import React, { createContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('SubscriptionProvider');
 
 export interface SubscriptionState {
   subscribed: boolean;
@@ -27,24 +30,24 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     isLoading: true,
     error: null,
   });
-  const pollIntervalRef = useRef<number>(120000); // 2 minutes (credits only change on purchase/completion)
+  const pollIntervalRef = useRef<number>(120000);
   const isRefreshingRef = useRef<boolean>(false);
 
   const handleSessionRefresh = useCallback(async () => {
     if (isRefreshingRef.current) return;
     
     isRefreshingRef.current = true;
-    console.log('[SubscriptionProvider] Attempting session refresh...');
+    log.debug('Attempting session refresh...');
     
     try {
       const { error: refreshError } = await supabase.auth.refreshSession();
       if (refreshError) throw refreshError;
       
-      console.log('[SubscriptionProvider] Session refreshed successfully');
+      log.debug('Session refreshed successfully');
       pollIntervalRef.current = 120000;
       return true;
     } catch (error) {
-      console.error('[SubscriptionProvider] Session refresh failed:', error);
+      log.error('Session refresh failed', error);
       return false;
     } finally {
       isRefreshingRef.current = false;
@@ -74,7 +77,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       });
 
       if (error && (error.message?.includes('Auth') || error.message?.includes('401'))) {
-        console.warn('[SubscriptionProvider] Auth error detected, attempting refresh...');
+        log.warn('Auth error detected, attempting refresh...');
         
         const refreshed = await handleSessionRefresh();
         if (refreshed) {
@@ -95,7 +98,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       if (error) throw error;
 
       if (data?.auth_error) {
-        console.warn('[SubscriptionProvider] Auth error in response, attempting refresh...');
+        log.warn('Auth error in response, attempting refresh...');
         
         const refreshed = await handleSessionRefresh();
         if (refreshed) {
@@ -124,7 +127,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         error: null,
       });
     } catch (err) {
-      console.error('[SubscriptionProvider] Error fetching subscription:', err);
+      log.error('Error fetching subscription', err);
       
       pollIntervalRef.current = Math.min(pollIntervalRef.current * 2, 240000);
       
