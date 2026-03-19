@@ -113,7 +113,7 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
           return;
         }
         
-        log.debug('Found relationships:', relationshipData);
+        log.debug('Found relationships', { count: relationshipData.length });
         
         // Convert to format needed for dropdown
         const options: StudentOption[] = (relationshipData as any[]).map((rel: any) => ({
