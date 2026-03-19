@@ -1,37 +1,37 @@
 
 
-## Remaining Improvements
+## Final Round of Improvements
 
-The codebase is in good shape after the previous rounds. Here are the final items worth addressing:
+After four rounds of cleanup, the codebase is in strong shape. Here are the last meaningful items:
 
 ---
 
-### 1. Delete unused `usePerformance.ts` hook
+### 1. Convert `CreditHistory` and `useStudentNotes` to React Query
 
-`src/hooks/usePerformance.ts` is imported by zero files. It also has a broken pattern -- `createMemoizedFilter` calls `useMemo` inside a `useCallback`, which violates the Rules of Hooks. Delete it entirely.
+Both use manual `useState`/`useEffect` fetch patterns, inconsistent with the rest of the codebase which uses React Query. Converting them gives you automatic caching, deduplication, and stale management.
 
-### 2. Remove no-op `useRealtimeManager` call in ClassCalendarContainer
+- **`CreditHistory.tsx`**: Replace `useState`+`useEffect` fetch with `useQuery` for credit ledger data
+- **`useStudentNotes.ts`**: Replace manual state with `useQuery` for fetching and `useMutation` for creating notes
 
-`ClassCalendarContainer.tsx` calls `useRealtimeManager()` without passing any `setClasses` callback, so it subscribes to nothing. This is dead code -- remove the call and import.
+### 2. Type the realtime handler payloads
 
-### 3. Remove pass-through wrapper `ContentShare.tsx`
+`useRealtimeManager.ts` uses `any` for all four handler functions (`handleClassUpdate`, `handleStudentUpdate`, `handleTutorUpdate`, `handleContentShareUpdate`). Replace `any` with Supabase's `RealtimePostgresChangesPayload<T>` generic for type safety.
 
-`src/components/shared/ContentShare.tsx` is a single-line wrapper that delegates to `ContentShareContainer`. Its only consumer is `SharedContentTab.tsx`. Update `SharedContentTab` to import `ContentShareContainer` directly and delete `ContentShare.tsx`.
+### 3. Remaining `console.*` → logger (batch)
 
-### 4. Replace remaining `console.*` with structured logger in services and components
+~35 files still have raw `console.*` calls. The highest-value batch to convert (files with 2+ calls each):
 
-Two service files (`errorHandling.ts`, `dateTimeTransformers.ts`) and ~30 component files still use raw `console.log/error`. The most impactful ones to convert:
-- `src/contexts/AuthContext/AuthProvider.tsx` (5 calls)
-- `src/contexts/SubscriptionContext/SubscriptionProvider.tsx` (6 calls)
-- `src/components/admin/ManualCreditAllocation.tsx` (4 calls)
-- `src/components/admin/class-logs/StudentPaymentRecorder.tsx` (2 calls)
-- `src/components/admin/class-logs/CsvUploader.tsx` (3 calls)
+- `calendarUtils.ts` (8 calls — mostly `console.warn`)
+- `authActions.ts` (5 calls)
+- `useStudentNotes.ts` (2 calls — done as part of task 1)
+- `useRoutePersistence.ts` (1 call)
+- `RolePromotionDialog.tsx`, `QuarterlyReports.tsx`, `CreditHistory.tsx` (1-2 each)
 
-Other component files with 1-2 console calls can be batched together.
+Remaining single-call files (`ErrorBoundary`, `timeUtils`) can be left as-is since they're in dev-only or utility code.
 
-### 5. Fix `useContentShareData` mock functions
+### 4. Remove `useRealtimeManager` from `useContentShareData`
 
-`useContentShareData.ts` has empty no-op functions for `loadShares`, `handleDownload`, and `markAsViewed`. These should either be implemented or removed from the return value to avoid confusing consumers.
+`useContentShareData.ts` calls `useRealtimeManager` to set up a realtime channel for `content_shares`, but the hook's data comes from React Query (`useContentSharesBaseQuery`). The realtime subscription writes to a local `useState` that's never read. Remove it and instead use React Query's `invalidateQueries` via a lightweight Supabase channel subscription in the base query hook.
 
 ---
 
@@ -39,9 +39,9 @@ Other component files with 1-2 console calls can be batched together.
 
 | Task | Files affected | Effort |
 |------|---------------|--------|
-| Delete `usePerformance.ts` | 1 file deleted | Trivial |
-| Remove dead realtime call | `ClassCalendarContainer.tsx` | Trivial |
-| Remove `ContentShare.tsx` wrapper | 2 files | Trivial |
-| Standardize remaining console.* | ~10 files (high-impact subset) | Small |
-| Fix or remove mock functions in useContentShareData | 1 file | Small |
+| CreditHistory → React Query | `CreditHistory.tsx` | Small |
+| useStudentNotes → React Query | `useStudentNotes.ts` | Small |
+| Type realtime handlers | `useRealtimeManager.ts` | Small |
+| Batch console.* → logger | ~8 files | Small |
+| Remove dead realtime in useContentShareData | `useContentShareData.ts` | Trivial |
 
