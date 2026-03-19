@@ -55,7 +55,7 @@ export const ManualCreditAllocation = () => {
 
         setStudents(studentsList);
       } catch (error) {
-        console.error('Error fetching students:', error);
+        log.error('Error fetching students', error);
         toast.error('Failed to load students list');
       } finally {
         setLoadingStudents(false);
