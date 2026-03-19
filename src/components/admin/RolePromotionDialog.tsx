@@ -83,7 +83,7 @@ export function RolePromotionDialog({ isOpen, onClose, user, onSuccess }: Props)
         }
       }
     } catch (error) {
-      console.error('Role change error:', error);
+      log.error('Role change error', error);
       toast.error('An unexpected error occurred');
     } finally {
       setIsLoading(false);

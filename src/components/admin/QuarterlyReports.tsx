@@ -139,7 +139,7 @@ const QuarterlyReports: React.FC = () => {
       
       refetch();
     } catch (error) {
-      console.error('Error sending report:', error);
+      log.error('Error sending report', error);
       toast.error('Failed to send report. Please try again.');
     } finally {
       setIsSending(false);

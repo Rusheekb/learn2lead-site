@@ -2,7 +2,8 @@ import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ClassEvent, Student, Tutor, ContentShareItem } from '@/types/tutorTypes';
-import { RealtimeChannel } from '@supabase/supabase-js';
+import { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+import { Tables } from '@/integrations/supabase/types';
 
 interface RealtimeManagerProps {
   userId?: string;
@@ -39,10 +40,10 @@ export const useRealtimeManager = ({
     if (setClasses) {
       const classChannel = supabase
         .channel('unified-classes')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'class_logs' }, (payload) => {
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'class_logs' }, (payload: RealtimePostgresChangesPayload<Tables<'class_logs'>>) => {
           handleClassUpdate(payload, setClasses);
         })
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'scheduled_classes' }, (payload) => {
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'scheduled_classes' }, (payload: RealtimePostgresChangesPayload<Tables<'scheduled_classes'>>) => {
           handleClassUpdate(payload, setClasses);
         })
         .subscribe();
@@ -54,7 +55,7 @@ export const useRealtimeManager = ({
       if (setStudents) {
         const studentChannel = supabase
           .channel('unified-students')
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'students' }, (payload) => {
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'students' }, (payload: RealtimePostgresChangesPayload<Tables<'students'>>) => {
             handleStudentUpdate(payload, setStudents);
           })
           .subscribe();
@@ -64,7 +65,7 @@ export const useRealtimeManager = ({
       if (setTutors) {
         const tutorChannel = supabase
           .channel('unified-tutors')
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'tutors' }, (payload) => {
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'tutors' }, (payload: RealtimePostgresChangesPayload<Tables<'tutors'>>) => {
             handleTutorUpdate(payload, setTutors);
           })
           .subscribe();
@@ -76,7 +77,7 @@ export const useRealtimeManager = ({
     if (setContentShares && (userRole === 'tutor' || userRole === 'student')) {
       const contentChannel = supabase
         .channel('unified-content')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'content_shares' }, (payload) => {
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'content_shares' }, (payload: RealtimePostgresChangesPayload<Tables<'content_shares'>>) => {
           handleContentShareUpdate(payload, setContentShares);
         })
         .subscribe();
@@ -93,58 +94,66 @@ export const useRealtimeManager = ({
   }, [userId, userRole, setClasses, setStudents, setTutors, setContentShares]);
 };
 
-const handleClassUpdate = (payload: any, setClasses: React.Dispatch<React.SetStateAction<ClassEvent[]>>) => {
+const handleClassUpdate = (payload: RealtimePostgresChangesPayload<Record<string, unknown>>, setClasses: React.Dispatch<React.SetStateAction<ClassEvent[]>>) => {
   const { eventType, new: newData, old: oldData } = payload;
   
   if (eventType === 'INSERT') {
-    setClasses(prev => [...prev, newData as ClassEvent]);
+    setClasses(prev => [...prev, newData as unknown as ClassEvent]);
     toast.success('New class added');
   } else if (eventType === 'UPDATE') {
-    setClasses(prev => prev.map(cls => cls.id === newData.id ? newData as ClassEvent : cls));
+    const updated = newData as unknown as ClassEvent;
+    setClasses(prev => prev.map(cls => cls.id === updated.id ? updated : cls));
   } else if (eventType === 'DELETE') {
-    setClasses(prev => prev.filter(cls => cls.id !== oldData.id));
+    const removed = oldData as unknown as ClassEvent;
+    setClasses(prev => prev.filter(cls => cls.id !== removed.id));
     toast.info('Class removed');
   }
 };
 
-const handleStudentUpdate = (payload: any, setStudents: React.Dispatch<React.SetStateAction<Student[]>>) => {
+const handleStudentUpdate = (payload: RealtimePostgresChangesPayload<Record<string, unknown>>, setStudents: React.Dispatch<React.SetStateAction<Student[]>>) => {
   const { eventType, new: newData, old: oldData } = payload;
   
   if (eventType === 'INSERT') {
-    setStudents(prev => [...prev, newData as Student]);
+    setStudents(prev => [...prev, newData as unknown as Student]);
     toast.success('New student added');
   } else if (eventType === 'UPDATE') {
-    setStudents(prev => prev.map(student => student.id === newData.id ? newData as Student : student));
+    const updated = newData as unknown as Student;
+    setStudents(prev => prev.map(student => student.id === updated.id ? updated : student));
   } else if (eventType === 'DELETE') {
-    setStudents(prev => prev.filter(student => student.id !== oldData.id));
+    const removed = oldData as unknown as Student;
+    setStudents(prev => prev.filter(student => student.id !== removed.id));
     toast.info('Student removed');
   }
 };
 
-const handleTutorUpdate = (payload: any, setTutors: React.Dispatch<React.SetStateAction<Tutor[]>>) => {
+const handleTutorUpdate = (payload: RealtimePostgresChangesPayload<Record<string, unknown>>, setTutors: React.Dispatch<React.SetStateAction<Tutor[]>>) => {
   const { eventType, new: newData, old: oldData } = payload;
   
   if (eventType === 'INSERT') {
-    setTutors(prev => [...prev, newData as Tutor]);
+    setTutors(prev => [...prev, newData as unknown as Tutor]);
     toast.success('New tutor added');
   } else if (eventType === 'UPDATE') {
-    setTutors(prev => prev.map(tutor => tutor.id === newData.id ? newData as Tutor : tutor));
+    const updated = newData as unknown as Tutor;
+    setTutors(prev => prev.map(tutor => tutor.id === updated.id ? updated : tutor));
   } else if (eventType === 'DELETE') {
-    setTutors(prev => prev.filter(tutor => tutor.id !== oldData.id));
+    const removed = oldData as unknown as Tutor;
+    setTutors(prev => prev.filter(tutor => tutor.id !== removed.id));
     toast.info('Tutor removed');
   }
 };
 
-const handleContentShareUpdate = (payload: any, setContentShares: React.Dispatch<React.SetStateAction<ContentShareItem[]>>) => {
+const handleContentShareUpdate = (payload: RealtimePostgresChangesPayload<Record<string, unknown>>, setContentShares: React.Dispatch<React.SetStateAction<ContentShareItem[]>>) => {
   const { eventType, new: newData, old: oldData } = payload;
   
   if (eventType === 'INSERT') {
-    setContentShares(prev => [...prev, newData as ContentShareItem]);
+    setContentShares(prev => [...prev, newData as unknown as ContentShareItem]);
     toast.success('New content shared');
   } else if (eventType === 'UPDATE') {
-    setContentShares(prev => prev.map(share => share.id === newData.id ? newData as ContentShareItem : share));
+    const updated = newData as unknown as ContentShareItem;
+    setContentShares(prev => prev.map(share => share.id === updated.id ? updated : share));
   } else if (eventType === 'DELETE') {
-    setContentShares(prev => prev.filter(share => share.id !== oldData.id));
+    const removed = oldData as unknown as ContentShareItem;
+    setContentShares(prev => prev.filter(share => share.id !== removed.id));
     toast.info('Content share removed');
   }
 };

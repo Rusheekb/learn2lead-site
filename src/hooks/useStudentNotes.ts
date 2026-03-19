@@ -1,66 +1,63 @@
-import { useState, useEffect } from 'react';
-import { fetchStudentNotes, createStudentNote, StudentNote } from '@/services/studentNotes';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { fetchStudentNotes, createStudentNote } from '@/services/studentNotes';
 import { useToast } from '@/hooks/use-toast';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('useStudentNotes');
 
 export const useStudentNotes = (studentId: string | null) => {
-  const [notes, setNotes] = useState<StudentNote[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [creating, setCreating] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    if (!studentId) {
-      setNotes([]);
-      return;
-    }
-
-    const loadNotes = async () => {
-      setLoading(true);
-      try {
-        const studentNotes = await fetchStudentNotes(studentId);
-        setNotes(studentNotes);
-      } catch (error) {
-        console.error('Failed to load student notes:', error);
+  const { data: notes = [], isLoading: loading } = useQuery({
+    queryKey: ['student-notes', studentId],
+    queryFn: () => {
+      if (!studentId) return [];
+      return fetchStudentNotes(studentId);
+    },
+    enabled: !!studentId,
+    meta: {
+      onError: (error: unknown) => {
+        log.error('Failed to load student notes', error);
         toast({
           title: 'Error',
           description: 'Failed to load student notes',
           variant: 'destructive',
         });
-      } finally {
-        setLoading(false);
-      }
-    };
+      },
+    },
+  });
 
-    loadNotes();
-  }, [studentId, toast]);
-
-  const addNote = async (title: string, content: string) => {
-    if (!studentId) return;
-
-    setCreating(true);
-    try {
-      const newNote = await createStudentNote(studentId, title, content);
-      setNotes(prev => [newNote, ...prev]);
+  const { mutate: addNote, isPending: creating } = useMutation({
+    mutationFn: ({ title, content }: { title: string; content: string }) => {
+      if (!studentId) throw new Error('No student selected');
+      return createStudentNote(studentId, title, content);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['student-notes', studentId] });
       toast({
         title: 'Success',
         description: 'Note added successfully',
       });
-    } catch (error) {
-      console.error('Failed to create note:', error);
+    },
+    onError: (error) => {
+      log.error('Failed to create note', error);
       toast({
         title: 'Error',
         description: 'Failed to add note',
         variant: 'destructive',
       });
-    } finally {
-      setCreating(false);
-    }
+    },
+  });
+
+  const handleAddNote = (title: string, content: string) => {
+    addNote({ title, content });
   };
 
   return {
     notes,
     loading,
     creating,
-    addNote,
+    addNote: handleAddNote,
   };
 };

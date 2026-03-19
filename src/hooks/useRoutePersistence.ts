@@ -45,7 +45,7 @@ export const getSavedRoute = (userId: string): string | null => {
       return routeData.path;
     }
   } catch (error) {
-    console.error('Error retrieving saved route:', error);
+    log.error('Error retrieving saved route', error);
   }
   
   return null;
