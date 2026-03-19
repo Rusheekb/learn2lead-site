@@ -157,7 +157,7 @@ const StudentPaymentRecorder: React.FC<StudentPaymentRecorderProps> = ({
           profileId: profile?.id || null,
         });
       } catch (err) {
-        console.error('Error fetching student summary:', err);
+        log.error('Error fetching student summary', err);
       } finally {
         setIsLoadingSummary(false);
       }
