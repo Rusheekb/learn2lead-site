@@ -296,7 +296,7 @@ export const ManualCreditAllocation = () => {
       setDirectNote('');
 
     } catch (error: any) {
-      console.error('Direct payment error:', error);
+      log.error('Direct payment error', error);
       toast.error('Failed to add credits', {
         description: error.message || 'Unknown error occurred',
       });

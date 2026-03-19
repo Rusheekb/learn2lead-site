@@ -1,6 +1,5 @@
-
 import React from 'react';
-import ContentShare from '../ContentShare';
+import ContentShareContainer from '../content-share/ContentShareContainer';
 import { Profile } from '@/hooks/useProfile';
 import { AppRole } from '@/types/profile';
 
@@ -10,7 +9,7 @@ interface SharedContentTabProps {
 }
 
 const SharedContentTab: React.FC<SharedContentTabProps> = ({ role, fetchUsers }) => {
-  return <ContentShare role={role} fetchUsers={fetchUsers} />;
+  return <ContentShareContainer role={role} fetchUsers={fetchUsers} />;
 };
 
 export default SharedContentTab;

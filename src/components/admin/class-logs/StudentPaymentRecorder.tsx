@@ -286,7 +286,7 @@ const StudentPaymentRecorder: React.FC<StudentPaymentRecorderProps> = ({
       onPaymentRecorded();
       onOpenChange(false);
     } catch (err) {
-      console.error('Payment recording error:', err);
+      log.error('Payment recording error', err);
       if (err instanceof Error) {
         captureException(err, { student: selectedStudent.name, amount: parseFloat(amount) });
       }

@@ -19,11 +19,6 @@ export const ClassCalendarContainer: React.FC<ClassCalendarContainerProps> = mem
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { user } = useAuth();
 
-  useRealtimeManager({
-    userId: user?.id,
-    userRole: user?.user_metadata?.role,
-  });
-
   const { data: sessions = [], isLoading } = useQuery({
     queryKey: ['student-classes', user?.id],
     queryFn: () => fetchScheduledClasses(undefined, user!.id),

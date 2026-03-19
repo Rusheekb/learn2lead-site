@@ -33,7 +33,7 @@ export const calculateEndTime = (startTime: string, duration: number): string =>
     // Format to HH:MM
     return `${String(totalHours).padStart(2, '0')}:${String(totalMinutes).padStart(2, '0')}`;
   } catch (error) {
-    console.error('Error calculating end time:', error);
+    log.error('Error calculating end time', error);
     return '';
   }
 };

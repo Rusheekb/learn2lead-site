@@ -109,7 +109,7 @@ const CsvUploader: React.FC<CsvUploaderProps> = ({ onUploadComplete }) => {
         },
       });
     } catch (error) {
-      console.error('Upload error:', error);
+      log.error('Upload error', error);
       toast.error('Failed to process file');
       setIsUploading(false);
     }
