@@ -10,6 +10,9 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { FileText, Send, Calendar, User, Mail, TestTube } from 'lucide-react';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
+import { logger } from '@/lib/logger';
+
+const log = logger.create('QuarterlyReports');
 
 interface QuarterlyReport {
   id: string;
