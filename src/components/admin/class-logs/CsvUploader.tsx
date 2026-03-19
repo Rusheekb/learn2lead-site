@@ -85,7 +85,7 @@ const CsvUploader: React.FC<CsvUploaderProps> = ({ onUploadComplete }) => {
                   duration: 10000,
                 }
               );
-              console.error('Import errors:', errors);
+              log.warn('Import completed with errors', { errors });
             } else {
               toast.success(`Successfully imported ${success} class logs`);
             }
