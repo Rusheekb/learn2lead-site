@@ -563,6 +563,7 @@ export type Database = {
           materials_url: string[] | null
           notes: string | null
           relationship_id: string | null
+          reminder_24h_sent: boolean | null
           reminder_sent: boolean | null
           start_time: string
           status: string
@@ -582,6 +583,7 @@ export type Database = {
           materials_url?: string[] | null
           notes?: string | null
           relationship_id?: string | null
+          reminder_24h_sent?: boolean | null
           reminder_sent?: boolean | null
           start_time: string
           status?: string
@@ -601,6 +603,7 @@ export type Database = {
           materials_url?: string[] | null
           notes?: string | null
           relationship_id?: string | null
+          reminder_24h_sent?: boolean | null
           reminder_sent?: boolean | null
           start_time?: string
           status?: string
