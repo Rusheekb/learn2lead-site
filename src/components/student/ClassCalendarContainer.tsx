@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query';
 import { ClassSession } from '@/types/classTypes';
 import { useAuth } from '@/contexts/AuthContext';
 import CalendarWithEvents from '@/components/CalendarWithEvents';
-import { useRealtimeManager } from '@/hooks/useRealtimeManager';
 import { fetchScheduledClasses } from '@/services/class/fetch';
 import { ClassEvent } from '@/types/tutorTypes';
 import StudentClassDetailsDialog from './StudentClassDetailsDialog';
