@@ -29,6 +29,7 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
 }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { optimisticDeductCredits } = useSubscription();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
