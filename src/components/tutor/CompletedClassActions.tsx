@@ -87,15 +87,7 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
         ? `${currentUserProfile.first_name} ${currentUserProfile.last_name}`.trim()
         : currentUserProfile?.email || 'Unknown Tutor';
       
-      // Calculate duration if missing
-      const duration = classEvent.duration || (() => {
-        if (classEvent.startTime && classEvent.endTime) {
-          const start = new Date(`2000-01-01T${classEvent.startTime}`);
-          const end = new Date(`2000-01-01T${classEvent.endTime}`);
-          return Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60) * 100) / 100;
-        }
-        return 1; // Default to 1 hour
-      })();
+      // Reuse the duration calculated above for optimistic deduction
       
       // Fetch existing class IDs for the same date to ensure unique ID generation
       const localDate = parseDateToLocal(classEvent.date);
