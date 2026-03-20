@@ -429,25 +429,58 @@ export const useClassLogs = () => {
 
   const handleToggleStudentPayment = useCallback(async (classId: string, currentlyPaid: boolean) => {
     const newDate = currentlyPaid ? null : new Date();
+    const newDateStr = newDate ? format(newDate, 'yyyy-MM-dd') : null;
+
+    // Optimistically update cached pages
+    queryClient.setQueriesData(
+      { queryKey: classLogsKeys.all },
+      (old: any) => {
+        if (!old?.records) return old;
+        return {
+          ...old,
+          records: old.records.map((r: ClassEvent) =>
+            r.id === classId ? { ...r, studentPaymentDate: newDateStr } : r
+          ),
+        };
+      }
+    );
+
     const ok = await updatePaymentDate(classId, 'student_payment_date', newDate);
     if (ok) {
       toast.success(currentlyPaid ? 'Student payment marked as unpaid' : 'Student payment marked as paid');
-      refreshData();
     } else {
       toast.error('Failed to update student payment');
     }
-  }, [refreshData]);
+    // Always revalidate to ensure consistency
+    refreshData();
+  }, [refreshData, queryClient]);
 
   const handleToggleTutorPayment = useCallback(async (classId: string, currentlyPaid: boolean) => {
     const newDate = currentlyPaid ? null : new Date();
+    const newDateStr = newDate ? format(newDate, 'yyyy-MM-dd') : null;
+
+    // Optimistically update cached pages
+    queryClient.setQueriesData(
+      { queryKey: classLogsKeys.all },
+      (old: any) => {
+        if (!old?.records) return old;
+        return {
+          ...old,
+          records: old.records.map((r: ClassEvent) =>
+            r.id === classId ? { ...r, tutorPaymentDate: newDateStr } : r
+          ),
+        };
+      }
+    );
+
     const ok = await updatePaymentDate(classId, 'tutor_payment_date', newDate);
     if (ok) {
       toast.success(currentlyPaid ? 'Tutor payment marked as unpaid' : 'Tutor payment marked as paid');
-      refreshData();
     } else {
       toast.error('Failed to update tutor payment');
     }
-  }, [refreshData]);
+    refreshData();
+  }, [refreshData, queryClient]);
 
   const formatTime = (time: string) => time;
   const clearFilters = () => {
