@@ -16,6 +16,7 @@ export interface SubscriptionState {
 
 export interface SubscriptionContextType extends SubscriptionState {
   refreshSubscription: () => Promise<void>;
+  optimisticDeductCredits: (amount: number) => void;
 }
 
 export const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
