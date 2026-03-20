@@ -116,6 +116,10 @@ export const useSimplifiedTutorScheduler = () => {
       throw new Error('User not authenticated');
     }
 
+    // Optimistically remove from local state immediately
+    const previousClasses = scheduledClasses;
+    setScheduledClasses(prev => prev.filter(c => c.id !== eventId));
+
     try {
       const { error } = await supabase
         .from('scheduled_classes')
@@ -125,18 +129,17 @@ export const useSimplifiedTutorScheduler = () => {
       
       if (error) throw error;
       
-      await Promise.all([
-        refetch(),
-        queryClient.invalidateQueries({ queryKey: ['scheduled-classes', user.id] }),
-      ]);
+      queryClient.invalidateQueries({ queryKey: ['scheduled-classes', user.id] });
       
       toast.success(isRecurring ? 'All recurring classes deleted' : 'Class deleted successfully');
       return true;
     } catch (error) {
+      // Rollback on failure
+      setScheduledClasses(previousClasses);
       log.error('Error deleting event:', error);
       throw error;
     }
-  }, [user?.id, refetch, queryClient]);
+  }, [user?.id, scheduledClasses, queryClient]);
 
   const closeAllDialogs = useCallback(() => {
     setIsViewEventOpen(false);
