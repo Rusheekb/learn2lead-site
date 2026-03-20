@@ -71,22 +71,23 @@ const TutorPaymentSummary: React.FC<TutorPaymentSummaryProps> = ({
           {tutorSummaries.map((summary) => (
             <div
               key={summary.tutor_name}
-              className="flex items-center justify-between p-3 rounded-lg border border-border bg-muted/30"
+              className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 p-3 rounded-lg border border-border bg-muted/30"
             >
-              <div>
-                <div className="font-medium">{summary.tutor_name}</div>
+              <div className="min-w-0">
+                <div className="font-medium truncate">{summary.tutor_name}</div>
                 <div className="text-sm text-muted-foreground">
                   {summary.unpaid_count} unpaid class
                   {summary.unpaid_count !== 1 ? 'es' : ''}
                 </div>
               </div>
-              <div className="flex items-center gap-4">
-                <span className="text-lg font-bold">
+              <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4">
+                <span className="text-lg font-bold whitespace-nowrap">
                   ${Number(summary.total_owed).toFixed(2)}
                 </span>
                 <Button
                   size="sm"
                   onClick={() => handleMarkAllPaid(summary)}
+                  className="whitespace-nowrap"
                 >
                   Mark All Paid
                 </Button>

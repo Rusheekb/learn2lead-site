@@ -44,9 +44,9 @@ const StudentTable: React.FC<StudentTableProps> = memo(({
     {
       header: 'Student',
       cell: (student) => (
-        <div className="flex flex-col">
-          <div className="font-medium">{student.name}</div>
-          <div className="text-xs sm:text-sm text-muted-foreground truncate max-w-[120px] sm:max-w-none">{student.email}</div>
+        <div className="flex flex-col min-w-0">
+          <div className="font-medium truncate">{student.name}</div>
+          <div className="text-xs text-muted-foreground truncate">{student.email}</div>
           {/* Show extra info on mobile inline */}
           <div className="flex flex-wrap gap-1.5 mt-1 sm:hidden">
             <Badge variant={student.paymentMethod === 'stripe' ? 'default' : 'secondary'} className="text-[10px]">
@@ -60,7 +60,7 @@ const StudentTable: React.FC<StudentTableProps> = memo(({
       ),
     },
     {
-      header: 'Payment Method',
+      header: 'Payment',
       className: 'hidden sm:table-cell',
       cell: (student) => (
         <Badge variant={student.paymentMethod === 'stripe' ? 'default' : 'secondary'}>
@@ -69,7 +69,7 @@ const StudentTable: React.FC<StudentTableProps> = memo(({
       ),
     },
     {
-      header: 'Class Rate',
+      header: 'Rate',
       className: 'hidden sm:table-cell',
       cell: (student) => (
         <span className="font-medium">
@@ -83,7 +83,7 @@ const StudentTable: React.FC<StudentTableProps> = memo(({
       cell: (student) => formatDate(student.lastSession),
     },
     {
-      header: 'Actions',
+      header: '',
       cell: (student) => (
         <div className="flex items-center gap-1">
           <ActionButton variant="ghost" size="icon" tooltip="Edit student">

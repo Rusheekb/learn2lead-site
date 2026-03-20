@@ -48,14 +48,14 @@ const ClassFilters: React.FC<ClassFiltersProps> = ({
       />
       
       {/* Payment status and method filters */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 flex-wrap">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
         {paymentFilter !== undefined && setPaymentFilter && (
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium">Payment Status:</label>
+          <div className="flex items-center gap-2 min-w-0">
+            <label className="text-sm font-medium whitespace-nowrap">Payment:</label>
             <select
               value={paymentFilter}
               onChange={(e) => setPaymentFilter(e.target.value)}
-              className="px-3 py-2 border border-border rounded-md text-sm bg-background"
+              className="flex-1 sm:flex-none px-3 py-2 border border-border rounded-md text-sm bg-background min-w-0"
             >
               <option value="">All</option>
               {paymentOptions.map((option) => (
@@ -67,12 +67,12 @@ const ClassFilters: React.FC<ClassFiltersProps> = ({
           </div>
         )}
         {paymentMethodFilter !== undefined && setPaymentMethodFilter && (
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium">Method:</label>
+          <div className="flex items-center gap-2 min-w-0">
+            <label className="text-sm font-medium whitespace-nowrap">Method:</label>
             <select
               value={paymentMethodFilter}
               onChange={(e) => setPaymentMethodFilter(e.target.value)}
-              className="px-3 py-2 border border-border rounded-md text-sm bg-background"
+              className="flex-1 sm:flex-none px-3 py-2 border border-border rounded-md text-sm bg-background min-w-0"
             >
               <option value="">All Methods</option>
               <option value="stripe">Stripe</option>
