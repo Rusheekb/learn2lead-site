@@ -22,9 +22,9 @@ const TutorTable: React.FC<TutorTableProps> = memo(({
     {
       header: 'Tutor',
       cell: (tutor) => (
-        <div className="flex flex-col">
-          <div className="font-medium">{tutor.name}</div>
-          <div className="text-xs sm:text-sm text-muted-foreground truncate max-w-[120px] sm:max-w-none">{tutor.email}</div>
+        <div className="flex flex-col min-w-0">
+          <div className="font-medium truncate">{tutor.name}</div>
+          <div className="text-xs text-muted-foreground truncate">{tutor.email}</div>
           {/* Show rate on mobile inline */}
           <div className="sm:hidden mt-0.5">
             <span className="text-xs text-muted-foreground">
