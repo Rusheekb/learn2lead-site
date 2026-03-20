@@ -331,11 +331,40 @@ export const useClassLogs = () => {
       if (error) throw error;
       return data ? transformDbRecordToClassEvent(data) : null;
     },
+    onMutate: async (params) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: classLogsKeys.all });
+
+      // Snapshot all page queries
+      const previousPages = queryClient.getQueriesData({ queryKey: classLogsKeys.all });
+
+      // Optimistically update the record in all cached pages
+      queryClient.setQueriesData(
+        { queryKey: classLogsKeys.all },
+        (old: any) => {
+          if (!old?.records) return old;
+          return {
+            ...old,
+            records: old.records.map((r: ClassEvent) =>
+              r.id === params.id ? { ...r, ...params.classEvent } : r
+            ),
+          };
+        }
+      );
+
+      return { previousPages };
+    },
     onSuccess: () => {
       toast.success('Class log updated successfully');
       queryClient.invalidateQueries({ queryKey: classLogsKeys.all });
     },
-    onError: (error) => {
+    onError: (error, _vars, context) => {
+      // Rollback to snapshot
+      if (context?.previousPages) {
+        context.previousPages.forEach(([key, data]) => {
+          queryClient.setQueryData(key, data);
+        });
+      }
       toast.error(`Failed to update class log: ${error instanceof Error ? error.message : 'Unknown error'}`);
     },
   });
@@ -349,11 +378,36 @@ export const useClassLogs = () => {
       if (error) throw error;
       return true;
     },
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: classLogsKeys.all });
+
+      const previousPages = queryClient.getQueriesData({ queryKey: classLogsKeys.all });
+
+      // Optimistically remove from cached pages
+      queryClient.setQueriesData(
+        { queryKey: classLogsKeys.all },
+        (old: any) => {
+          if (!old?.records) return old;
+          return {
+            ...old,
+            records: old.records.filter((r: ClassEvent) => r.id !== id),
+            totalCount: Math.max(0, (old.totalCount || 0) - 1),
+          };
+        }
+      );
+
+      return { previousPages };
+    },
     onSuccess: () => {
       toast.success('Class log deleted successfully');
       queryClient.invalidateQueries({ queryKey: classLogsKeys.all });
     },
-    onError: (error) => {
+    onError: (error, _id, context) => {
+      if (context?.previousPages) {
+        context.previousPages.forEach(([key, data]) => {
+          queryClient.setQueryData(key, data);
+        });
+      }
       toast.error(`Failed to delete class log: ${error instanceof Error ? error.message : 'Unknown error'}`);
     },
   });
@@ -375,25 +429,58 @@ export const useClassLogs = () => {
 
   const handleToggleStudentPayment = useCallback(async (classId: string, currentlyPaid: boolean) => {
     const newDate = currentlyPaid ? null : new Date();
+    const newDateStr = newDate ? format(newDate, 'yyyy-MM-dd') : null;
+
+    // Optimistically update cached pages
+    queryClient.setQueriesData(
+      { queryKey: classLogsKeys.all },
+      (old: any) => {
+        if (!old?.records) return old;
+        return {
+          ...old,
+          records: old.records.map((r: ClassEvent) =>
+            r.id === classId ? { ...r, studentPaymentDate: newDateStr } : r
+          ),
+        };
+      }
+    );
+
     const ok = await updatePaymentDate(classId, 'student_payment_date', newDate);
     if (ok) {
       toast.success(currentlyPaid ? 'Student payment marked as unpaid' : 'Student payment marked as paid');
-      refreshData();
     } else {
       toast.error('Failed to update student payment');
     }
-  }, [refreshData]);
+    // Always revalidate to ensure consistency
+    refreshData();
+  }, [refreshData, queryClient]);
 
   const handleToggleTutorPayment = useCallback(async (classId: string, currentlyPaid: boolean) => {
     const newDate = currentlyPaid ? null : new Date();
+    const newDateStr = newDate ? format(newDate, 'yyyy-MM-dd') : null;
+
+    // Optimistically update cached pages
+    queryClient.setQueriesData(
+      { queryKey: classLogsKeys.all },
+      (old: any) => {
+        if (!old?.records) return old;
+        return {
+          ...old,
+          records: old.records.map((r: ClassEvent) =>
+            r.id === classId ? { ...r, tutorPaymentDate: newDateStr } : r
+          ),
+        };
+      }
+    );
+
     const ok = await updatePaymentDate(classId, 'tutor_payment_date', newDate);
     if (ok) {
       toast.success(currentlyPaid ? 'Tutor payment marked as unpaid' : 'Tutor payment marked as paid');
-      refreshData();
     } else {
       toast.error('Failed to update tutor payment');
     }
-  }, [refreshData]);
+    refreshData();
+  }, [refreshData, queryClient]);
 
   const formatTime = (time: string) => time;
   const clearFilters = () => {

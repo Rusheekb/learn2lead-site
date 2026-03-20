@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { CheckCircle, Edit3, Save, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { ClassEvent } from '@/types/tutorTypes';
@@ -28,6 +29,7 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
 }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { optimisticDeductCredits } = useSubscription();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
@@ -57,6 +59,17 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
     setIsCompleting(true);
     setIsDialogOpen(false); // Close dialog immediately
 
+    // Optimistically deduct credits for instant feedback
+    const duration = classEvent.duration || (() => {
+      if (classEvent.startTime && classEvent.endTime) {
+        const start = new Date(`2000-01-01T${classEvent.startTime}`);
+        const end = new Date(`2000-01-01T${classEvent.endTime}`);
+        return Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60) * 100) / 100;
+      }
+      return 1;
+    })();
+    optimisticDeductCredits(duration);
+
     try {
       // Get the current user's profile to ensure name matches RLS policy
       const { data: currentUserProfile, error: profileError } = await supabase
@@ -74,15 +87,7 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
         ? `${currentUserProfile.first_name} ${currentUserProfile.last_name}`.trim()
         : currentUserProfile?.email || 'Unknown Tutor';
       
-      // Calculate duration if missing
-      const duration = classEvent.duration || (() => {
-        if (classEvent.startTime && classEvent.endTime) {
-          const start = new Date(`2000-01-01T${classEvent.startTime}`);
-          const end = new Date(`2000-01-01T${classEvent.endTime}`);
-          return Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60) * 100) / 100;
-        }
-        return 1; // Default to 1 hour
-      })();
+      // Reuse the duration calculated above for optimistic deduction
       
       // Fetch existing class IDs for the same date to ensure unique ID generation
       const localDate = parseDateToLocal(classEvent.date);

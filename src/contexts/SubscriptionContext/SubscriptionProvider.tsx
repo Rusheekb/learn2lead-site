@@ -16,6 +16,7 @@ export interface SubscriptionState {
 
 export interface SubscriptionContextType extends SubscriptionState {
   refreshSubscription: () => Promise<void>;
+  optimisticDeductCredits: (amount: number) => void;
 }
 
 export const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
@@ -139,6 +140,16 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   }, [user, session, handleSessionRefresh]);
 
+  /** Optimistically deduct credits for instant UI feedback during class completion */
+  const optimisticDeductCredits = useCallback((amount: number) => {
+    setState(prev => ({
+      ...prev,
+      creditsRemaining: prev.creditsRemaining !== null
+        ? Math.max(0, prev.creditsRemaining - amount)
+        : prev.creditsRemaining,
+    }));
+  }, []);
+
   useEffect(() => {
     fetchSubscription();
   }, [fetchSubscription]);
@@ -158,6 +169,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       value={{
         ...state,
         refreshSubscription: fetchSubscription,
+        optimisticDeductCredits,
       }}
     >
       {children}
