@@ -96,15 +96,15 @@ function TablePagination({
   pageSizeOptions = [10, 20, 50, 100],
 }: TablePaginationProps) {
   return (
-    <nav aria-label="Table pagination" className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 py-4">
-      <div className="text-sm text-muted-foreground" aria-live="polite">
-        {totalItems > 0 && (
-          <span>
-            {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, totalItems)} of {totalItems}
-          </span>
-        )}
-      </div>
-      <div className="flex flex-wrap items-center gap-3">
+    <nav aria-label="Table pagination" className="flex flex-col gap-3 py-4">
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-muted-foreground" aria-live="polite">
+          {totalItems > 0 && (
+            <span>
+              {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, totalItems)} of {totalItems}
+            </span>
+          )}
+        </div>
         {onPageSizeChange && (
           <div className="flex items-center gap-2">
             <label htmlFor="dt-page-size" className="text-sm font-medium whitespace-nowrap">Rows</label>
@@ -123,30 +123,29 @@ function TablePagination({
             </select>
           </div>
         )}
-        
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onPageChange(currentPage - 1)}
-            disabled={currentPage <= 1}
-            aria-label="Previous page"
-          >
-            Prev
-          </Button>
-          <div className="text-sm whitespace-nowrap" aria-current="page">
-            {currentPage}/{totalPages}
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => onPageChange(currentPage + 1)}
-            disabled={currentPage >= totalPages}
-            aria-label="Next page"
-          >
-            Next
-          </Button>
+      </div>
+      <div className="flex items-center justify-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage <= 1}
+          aria-label="Previous page"
+        >
+          Prev
+        </Button>
+        <div className="text-sm whitespace-nowrap" aria-current="page">
+          {currentPage}/{totalPages}
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage >= totalPages}
+          aria-label="Next page"
+        >
+          Next
+        </Button>
       </div>
     </nav>
   );
