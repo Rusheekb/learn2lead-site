@@ -59,6 +59,17 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
     setIsCompleting(true);
     setIsDialogOpen(false); // Close dialog immediately
 
+    // Optimistically deduct credits for instant feedback
+    const duration = classEvent.duration || (() => {
+      if (classEvent.startTime && classEvent.endTime) {
+        const start = new Date(`2000-01-01T${classEvent.startTime}`);
+        const end = new Date(`2000-01-01T${classEvent.endTime}`);
+        return Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60) * 100) / 100;
+      }
+      return 1;
+    })();
+    optimisticDeductCredits(duration);
+
     try {
       // Get the current user's profile to ensure name matches RLS policy
       const { data: currentUserProfile, error: profileError } = await supabase
