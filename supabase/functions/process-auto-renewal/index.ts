@@ -18,6 +18,10 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const rateLimitKey = getRateLimitKey(req, 'process-auto-renewal');
+  const { limited, retryAfterMs } = checkRateLimit(rateLimitKey, { maxRequests: 10, windowMs: 60_000 });
+  if (limited) return rateLimitResponse(retryAfterMs!, corsHeaders);
+
   const supabaseClient = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",

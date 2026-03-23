@@ -12,6 +12,10 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const rateLimitKey = getRateLimitKey(req, 'restore-class-credit');
+  const { limited, retryAfterMs } = checkRateLimit(rateLimitKey, { maxRequests: 20, windowMs: 60_000 });
+  if (limited) return rateLimitResponse(retryAfterMs!, corsHeaders);
+
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;

@@ -13,6 +13,10 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const rateLimitKey = getRateLimitKey(req, 'secure-file-upload');
+  const { limited, retryAfterMs } = checkRateLimit(rateLimitKey, { maxRequests: 15, windowMs: 60_000 });
+  if (limited) return rateLimitResponse(retryAfterMs!, corsHeaders);
+
   try {
     // Create Supabase client
     const supabaseClient = createClient(

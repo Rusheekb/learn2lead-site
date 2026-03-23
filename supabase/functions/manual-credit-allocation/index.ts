@@ -16,6 +16,10 @@ serve(async (req) => {
   const origin = req.headers.get("origin");
   const corsHeaders = getCorsHeaders(origin);
 
+  const rateLimitKey = getRateLimitKey(req, 'manual-credit-allocation');
+  const { limited, retryAfterMs } = checkRateLimit(rateLimitKey, { maxRequests: 20, windowMs: 60_000 });
+  if (limited) return rateLimitResponse(retryAfterMs!, corsHeaders);
+
   try {
     logStep("Function started");
 

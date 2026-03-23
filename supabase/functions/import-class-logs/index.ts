@@ -98,6 +98,10 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const rateLimitKey = getRateLimitKey(req, 'import-class-logs');
+  const { limited, retryAfterMs } = checkRateLimit(rateLimitKey, { maxRequests: 5, windowMs: 60_000 });
+  if (limited) return rateLimitResponse(retryAfterMs!, corsHeaders);
+
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;

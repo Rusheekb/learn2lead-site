@@ -25,6 +25,10 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const rateLimitKey = getRateLimitKey(req, 'send-weekly-digest');
+  const { limited, retryAfterMs } = checkRateLimit(rateLimitKey, { maxRequests: 10, windowMs: 60_000 });
+  if (limited) return rateLimitResponse(retryAfterMs!, corsHeaders);
+
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",

@@ -25,6 +25,10 @@ serve(async (req) => {
   const origin = req.headers.get("origin");
   const corsHeaders = getCorsHeaders(origin);
 
+  const rateLimitKey = getRateLimitKey(req, 'generate-referral-code');
+  const { limited, retryAfterMs } = checkRateLimit(rateLimitKey, { maxRequests: 10, windowMs: 60_000 });
+  if (limited) return rateLimitResponse(retryAfterMs!, corsHeaders);
+
   try {
     logStep("Function started");
 

@@ -435,6 +435,10 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const rateLimitKey = getRateLimitKey(req, 'generate-quarterly-report');
+  const { limited, retryAfterMs } = checkRateLimit(rateLimitKey, { maxRequests: 5, windowMs: 60_000 });
+  if (limited) return rateLimitResponse(retryAfterMs!, corsHeaders);
+
   try {
     const { student_id, report_quarter, test_email } = await req.json();
 
