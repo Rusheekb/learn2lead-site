@@ -18,17 +18,19 @@ const Pricing = React.lazy(() => import('./pages/Pricing'));
 const ReferralLanding = React.lazy(() => import('./pages/ReferralLanding'));
 import { AuthProvider } from './contexts/AuthContext';
 import { SubscriptionProvider } from './contexts/SubscriptionContext';
-import PrivateRoute from './components/PrivateRoute';
 import { useRoleSync } from './hooks/useRoleSync';
-import { RoutePersistence } from './components/shared/RoutePersistence';
 import PostHogPageView from './components/shared/PostHogPageView';
-import { SidebarProvider } from '@/hooks/useSidebar';
-import DashboardShell from './components/shared/DashboardShell';
 import ErrorBoundary from './components/ErrorBoundary';
 import InlineErrorFallback from './components/shared/InlineErrorFallback';
-import PWAInstallPrompt from './components/shared/PWAInstallPrompt';
-import PWAUpdatePrompt from './components/shared/PWAUpdatePrompt';
-import OfflineBanner from './components/shared/OfflineBanner';
+
+// Lazy-load auth-gated and heavy components
+const PrivateRoute = React.lazy(() => import('./components/PrivateRoute'));
+const DashboardShell = React.lazy(() => import('./components/shared/DashboardShell'));
+const RoutePersistence = React.lazy(() => import('./components/shared/RoutePersistence').then(m => ({ default: m.RoutePersistence })));
+const PWAInstallPrompt = React.lazy(() => import('./components/shared/PWAInstallPrompt'));
+const PWAUpdatePrompt = React.lazy(() => import('./components/shared/PWAUpdatePrompt'));
+const OfflineBanner = React.lazy(() => import('./components/shared/OfflineBanner'));
+const SidebarProvider = React.lazy(() => import('@/hooks/useSidebar').then(m => ({ default: m.SidebarProvider })));
 
 const Profile = React.lazy(() => import('./pages/Profile'));
 const TutorDashboard = React.lazy(() => import('./pages/TutorDashboard'));
