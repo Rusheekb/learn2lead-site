@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
+import { getRateLimitKey, checkRateLimit, rateLimitResponse } from "../_shared/rateLimiter.ts";
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -14,6 +15,10 @@ serve(async (req) => {
 
   const origin = req.headers.get("origin");
   const corsHeaders = getCorsHeaders(origin);
+
+  const rateLimitKey = getRateLimitKey(req, 'manual-credit-allocation');
+  const { limited, retryAfterMs } = checkRateLimit(rateLimitKey, { maxRequests: 20, windowMs: 60_000 });
+  if (limited) return rateLimitResponse(retryAfterMs!, corsHeaders);
 
   try {
     logStep("Function started");
