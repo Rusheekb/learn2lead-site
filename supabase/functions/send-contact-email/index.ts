@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "npm:resend@2.0.0";
 import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
+import { getRateLimitKey, checkRateLimit, rateLimitResponse } from "../_shared/rateLimiter.ts";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
@@ -21,22 +22,6 @@ function escapeHtml(text: string): string {
     .replace(/'/g, '&#039;');
 }
 
-// Simple in-memory rate limiter (per-instance, resets on cold start)
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT = 5; // max requests per window
-const RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour
-
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const entry = rateLimitMap.get(ip);
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
-    return false;
-  }
-  entry.count++;
-  return entry.count > RATE_LIMIT;
-}
-
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   const corsResponse = handleCorsPreflightRequest(req);
@@ -45,16 +30,10 @@ const handler = async (req: Request): Promise<Response> => {
   const origin = req.headers.get('origin');
   const corsHeaders = getCorsHeaders(origin);
 
-  // Rate limiting by IP
-  const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-                   req.headers.get('cf-connecting-ip') ||
-                   'unknown';
-  if (isRateLimited(clientIp)) {
-    return new Response(
-      JSON.stringify({ error: "Rate limit exceeded. Please try again later." }),
-      { status: 429, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
-  }
+  // Rate limiting
+  const rateLimitKey = getRateLimitKey(req, 'send-contact-email');
+  const { limited, retryAfterMs } = checkRateLimit(rateLimitKey, { maxRequests: 5, windowMs: 3_600_000 });
+  if (limited) return rateLimitResponse(retryAfterMs!, corsHeaders);
 
   try {
     const { name, email, subject, message }: ContactEmailRequest = await req.json();
