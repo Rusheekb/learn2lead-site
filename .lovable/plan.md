@@ -2,28 +2,50 @@
 
 ## Problem
 
-The frontend correctly switches Price IDs between test and live mode, but the `create-checkout` edge function always uses the single `STRIPE_SECRET_KEY` secret, which is your **live** key (`sk_live_...`). Stripe rejects the request because a live key cannot process test-mode Price IDs.
+The 5 "test" Price IDs in `src/config/stripe.ts` are live-mode objects. The `STRIPE_SECRET_KEY_TEST` (test key) cannot look up live-mode prices, causing the 500 error.
 
 ## Solution
 
-Add a `STRIPE_SECRET_KEY_TEST` secret containing your Stripe test secret key (`sk_test_...`), then update the edge function to pick the correct key based on which Price ID it receives.
+Create real test-mode products in Stripe, then update the code.
 
-## Changes
+## Step 1: Create 5 test products in Stripe Dashboard
 
-### 1. Add new secret: `STRIPE_SECRET_KEY_TEST`
-- You'll need to copy your test secret key from the [Stripe Dashboard → Developers → API Keys](https://dashboard.stripe.com/test/apikeys) (make sure "Test mode" is toggled on)
-- We'll store it as a Supabase edge function secret
+Go to [Stripe Dashboard (test mode)](https://dashboard.stripe.com/test/products) — make sure the **"Test mode"** toggle is ON (top-right).
 
-### 2. Update `supabase/functions/create-checkout/index.ts`
-- Define the known test Price ID prefixes (or a list of test price IDs)
-- If the incoming `priceId` matches a test-mode price, use `STRIPE_SECRET_KEY_TEST`; otherwise use `STRIPE_SECRET_KEY`
-- This is ~5 lines of logic change around line 50
+For each tier, click **"+ Add product"** and create:
 
-### 3. Update `supabase/functions/stripe-webhooks/index.ts`
-- Similarly, the webhook handler needs to verify signatures with the correct secret
-- `STRIPE_WEBHOOK_SECRET_TEST` already exists as a secret, so this may already be handled — will verify and update if needed
+| Product Name | Price | Type |
+|---|---|---|
+| 1 Hour Credit Pack | $40.00 | One time |
+| 2 Hours Credit Pack | $76.00 | One time |
+| 4 Hours Credit Pack | $140.00 | One time |
+| 8 Hours Credit Pack | $240.00 | One time |
+| 10 Hours Credit Pack | $280.00 | One time |
 
-## What You Need To Do
-1. Go to [Stripe Dashboard (test mode)](https://dashboard.stripe.com/test/apikeys) and copy your **Secret key** (starts with `sk_test_`)
-2. I'll prompt you to save it as a secret called `STRIPE_SECRET_KEY_TEST`
+After creating each product, copy its **Price ID** (starts with `price_`, found on the product detail page).
+
+## Step 2: Update `src/config/stripe.ts`
+
+Replace the `TEST_PRICE_IDS` object with the 5 new price IDs from step 1.
+
+## Step 3: Update `supabase/functions/create-checkout/index.ts`
+
+Replace the `TEST_PRICE_IDS` array (used for mode detection) with the same 5 new price IDs.
+
+## Step 4: Update `STRIPE_SECRET_KEY_TEST` if needed
+
+If you want to re-save the test secret key with a fresh value, I'll prompt you to do so.
+
+## What you need to provide
+
+After creating the 5 products, paste the price IDs here in this format:
+```
+1 hour: price_xxx
+2 hours: price_xxx
+4 hours: price_xxx
+8 hours: price_xxx
+10 hours: price_xxx
+```
+
+I'll then update both files automatically.
 
