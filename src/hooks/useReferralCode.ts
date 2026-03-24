@@ -61,13 +61,6 @@ export function useReferralCode() {
           createdAt: codeData.created_at,
         });
 
-        // Fetch the referral code ID first
-        const { data: codeIdData } = await supabase
-          .from('referral_codes')
-          .select('id')
-          .eq('created_by', user.id)
-          .single();
-
         // Use secure function for anonymized stats (no email exposure)
         const { data: statsData, error: statsError } = await supabase
           .rpc('get_referral_usage_stats', { p_user_id: user.id });
