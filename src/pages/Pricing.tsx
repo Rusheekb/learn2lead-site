@@ -5,7 +5,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { CREDIT_TIERS, DEFAULT_TIER_INDEX } from '@/config/stripe';
+import { CREDIT_TIERS, DEFAULT_TIER_INDEX, isTestMode } from '@/config/stripe';
 import {
   Select,
   SelectContent,
