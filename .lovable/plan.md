@@ -2,50 +2,41 @@
 
 ## Problem
 
-The 5 "test" Price IDs in `src/config/stripe.ts` are live-mode objects. The `STRIPE_SECRET_KEY_TEST` (test key) cannot look up live-mode prices, causing the 500 error.
+The Stripe webhook is working correctly — it receives the `checkout.session.completed` event, verifies the test signature, and retrieves the test price ID (`price_1TEZwr14Kl9WjCflCJO1JuLU`). However, when it queries the `subscription_plans` table to determine how many credits to award, no matching row exists because the table only contains **live-mode** Price IDs.
+
+From the logs:
+```
+ERROR: No plan found for price - {"priceId":"price_1TEZwr14Kl9WjCflCJO1JuLU"}
+```
+
+The `subscription_plans` table currently has these Price IDs (all live):
+- `price_1T3VMD14Kl9WjCfljetZW63c` (1 hour)
+- `price_1T3VME14Kl9WjCflQY8WEY97` (2 hours)
+- `price_1T20M714Kl9WjCflVbq3glKt` (4 hours)
+- `price_1T20M714Kl9WjCflDIKczcAX` (8 hours)
+- `price_1T3VMF14Kl9WjCfl0q3uc13H` (10 hours)
+
+But the checkout used test Price IDs that aren't in that table.
 
 ## Solution
 
-Create real test-mode products in Stripe, then update the code.
+Add the 5 test-mode plans to the `subscription_plans` table so the webhook can look up credits for test purchases. This is a database insert — no code changes needed.
 
-## Step 1: Create 5 test products in Stripe Dashboard
+### Insert test-mode plans via migration
 
-Go to [Stripe Dashboard (test mode)](https://dashboard.stripe.com/test/products) — make sure the **"Test mode"** toggle is ON (top-right).
+Insert 5 new rows into `subscription_plans` with the test Price IDs:
 
-For each tier, click **"+ Add product"** and create:
+| Name | Credits | Price | Test Price ID |
+|---|---|---|---|
+| 1 Credit Pack | 1 | $40 | `price_1TEZwr14Kl9WjCflCJO1JuLU` |
+| 2 Credit Pack | 2 | $76 | `price_1TEZy714Kl9WjCfl7YUFnRM3` |
+| 4 Credit Pack | 4 | $140 | `price_1TEZyQ14Kl9WjCflTtGqGEYL` |
+| 8 Credit Pack | 8 | $240 | `price_1TEZyh14Kl9WjCflk6c1kecm` |
+| 10 Credit Pack | 10 | $280 | `price_1TEZyu14Kl9WjCfluumnEvC0` |
 
-| Product Name | Price | Type |
-|---|---|---|
-| 1 Hour Credit Pack | $40.00 | One time |
-| 2 Hours Credit Pack | $76.00 | One time |
-| 4 Hours Credit Pack | $140.00 | One time |
-| 8 Hours Credit Pack | $240.00 | One time |
-| 10 Hours Credit Pack | $280.00 | One time |
+Each row will use a placeholder `stripe_product_id` prefixed with `test_` to distinguish them from live plans. The `price_per_class` values will match the live equivalents.
 
-After creating each product, copy its **Price ID** (starts with `price_`, found on the product detail page).
+### After the fix
 
-## Step 2: Update `src/config/stripe.ts`
-
-Replace the `TEST_PRICE_IDS` object with the 5 new price IDs from step 1.
-
-## Step 3: Update `supabase/functions/create-checkout/index.ts`
-
-Replace the `TEST_PRICE_IDS` array (used for mode detection) with the same 5 new price IDs.
-
-## Step 4: Update `STRIPE_SECRET_KEY_TEST` if needed
-
-If you want to re-save the test secret key with a fresh value, I'll prompt you to do so.
-
-## What you need to provide
-
-After creating the 5 products, paste the price IDs here in this format:
-```
-1 hour: price_xxx
-2 hours: price_xxx
-4 hours: price_xxx
-8 hours: price_xxx
-10 hours: price_xxx
-```
-
-I'll then update both files automatically.
+The two payments you already made will need manual credit allocation since the webhooks already fired and returned without allocating. I'll add 2 credits (2 x 1-hour pack) to your account after the fix is in place, or you can re-test with new purchases.
 
