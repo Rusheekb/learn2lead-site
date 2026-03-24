@@ -45,9 +45,26 @@ serve(async (req) => {
     const { priceId, referralCode } = await req.json();
     if (!priceId) throw new Error("Price ID is required");
 
-    logStep("Creating checkout session", { priceId, referralCode: referralCode || 'none' });
+    // Determine if this is a test-mode price by checking against known test price IDs
+    const TEST_PRICE_IDS = [
+      'price_1TEYGy14Kl9WjCflqVbMKnH6',
+      'price_1TEYGz14Kl9WjCflv5L7eQNc',
+      'price_1TEYGz14Kl9WjCflY2riU9Br',
+      'price_1TEYH014Kl9WjCflo0B0elKr',
+      'price_1TEYH114Kl9WjCflaF98Nb6V',
+    ];
+    const isTestMode = TEST_PRICE_IDS.includes(priceId);
+    const stripeKey = isTestMode
+      ? Deno.env.get("STRIPE_SECRET_KEY_TEST")
+      : Deno.env.get("STRIPE_SECRET_KEY");
 
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { 
+    if (!stripeKey) {
+      throw new Error(`Stripe ${isTestMode ? 'test' : 'live'} secret key is not configured`);
+    }
+
+    logStep("Creating checkout session", { priceId, isTestMode, referralCode: referralCode || 'none' });
+
+    const stripe = new Stripe(stripeKey, { 
       apiVersion: "2025-08-27.basil" 
     });
 
