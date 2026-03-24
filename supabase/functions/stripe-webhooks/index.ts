@@ -9,9 +9,6 @@ const logStep = (step: string, details?: any) => {
 };
 
 serve(async (req) => {
-  // Determine correct Stripe key after signature verification
-  let stripeInstance: Stripe;
-
   const supabaseClient = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
@@ -37,12 +34,18 @@ serve(async (req) => {
       throw new Error("Neither STRIPE_WEBHOOK_SECRET nor STRIPE_WEBHOOK_SECRET_TEST is set");
     }
 
+    // Use a temporary Stripe instance for signature verification
+    const tempStripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "sk_placeholder", { 
+      apiVersion: "2025-08-27.basil" 
+    });
+
     let event;
+    let isTestEvent = false;
     let verificationSucceeded = false;
     
     if (liveSecret) {
       try {
-        event = await stripe.webhooks.constructEventAsync(body, signature, liveSecret);
+        event = await tempStripe.webhooks.constructEventAsync(body, signature, liveSecret);
         logStep("Webhook signature verified with live secret");
         verificationSucceeded = true;
       } catch (liveErr) {
@@ -52,8 +55,9 @@ serve(async (req) => {
     
     if (!verificationSucceeded && testSecret) {
       try {
-        event = await stripe.webhooks.constructEventAsync(body, signature, testSecret);
+        event = await tempStripe.webhooks.constructEventAsync(body, signature, testSecret);
         logStep("Webhook signature verified with test secret");
+        isTestEvent = true;
         verificationSucceeded = true;
       } catch (testErr) {
         logStep("ERROR: Test secret verification also failed");
@@ -64,7 +68,13 @@ serve(async (req) => {
       throw new Error("Webhook signature verification failed with all available secrets");
     }
 
-    logStep("Event type", { type: event.type });
+    // Use the correct Stripe key for API calls based on event mode
+    const stripeKey = isTestEvent
+      ? (Deno.env.get("STRIPE_SECRET_KEY_TEST") || Deno.env.get("STRIPE_SECRET_KEY") || "")
+      : (Deno.env.get("STRIPE_SECRET_KEY") || "");
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+
+    logStep("Event type", { type: event.type, isTestEvent });
 
     switch (event.type) {
       case "checkout.session.completed": {
