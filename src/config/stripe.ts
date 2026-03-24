@@ -36,11 +36,11 @@ const LIVE_PRICE_IDS = {
 } as const;
 
 const TEST_PRICE_IDS = {
-  1: 'price_1TEYGy14Kl9WjCflqVbMKnH6',
-  2: 'price_1TEYGz14Kl9WjCflv5L7eQNc',
-  4: 'price_1TEYGz14Kl9WjCflY2riU9Br',
-  8: 'price_1TEYH014Kl9WjCflo0B0elKr',
-  10: 'price_1TEYH114Kl9WjCflaF98Nb6V',
+  1: 'price_1TEZwr14Kl9WjCflCJO1JuLU',
+  2: 'price_1TEZy714Kl9WjCfl7YUFnRM3',
+  4: 'price_1TEZyQ14Kl9WjCflTtGqGEYL',
+  8: 'price_1TEZyh14Kl9WjCflk6c1kecm',
+  10: 'price_1TEZyu14Kl9WjCfluumnEvC0',
 } as const;
 
 const priceIds = isTestMode ? TEST_PRICE_IDS : LIVE_PRICE_IDS;
