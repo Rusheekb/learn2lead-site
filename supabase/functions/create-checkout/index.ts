@@ -47,11 +47,11 @@ serve(async (req) => {
 
     // Determine if this is a test-mode price by checking against known test price IDs
     const TEST_PRICE_IDS = [
-      'price_1TEYGy14Kl9WjCflqVbMKnH6',
-      'price_1TEYGz14Kl9WjCflv5L7eQNc',
-      'price_1TEYGz14Kl9WjCflY2riU9Br',
-      'price_1TEYH014Kl9WjCflo0B0elKr',
-      'price_1TEYH114Kl9WjCflaF98Nb6V',
+      'price_1TEZwr14Kl9WjCflCJO1JuLU',
+      'price_1TEZy714Kl9WjCfl7YUFnRM3',
+      'price_1TEZyQ14Kl9WjCflTtGqGEYL',
+      'price_1TEZyh14Kl9WjCflk6c1kecm',
+      'price_1TEZyu14Kl9WjCfluumnEvC0',
     ];
     const isTestMode = TEST_PRICE_IDS.includes(priceId);
     const stripeKey = isTestMode
