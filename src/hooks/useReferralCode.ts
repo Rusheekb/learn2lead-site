@@ -61,36 +61,17 @@ export function useReferralCode() {
           createdAt: codeData.created_at,
         });
 
-        // Fetch the referral code ID first
-        const { data: codeIdData } = await supabase
-          .from('referral_codes')
-          .select('id')
-          .eq('created_by', user.id)
-          .single();
+        // Use secure function for anonymized stats (no email exposure)
+        const { data: statsData, error: statsError } = await supabase
+          .rpc('get_referral_usage_stats', { p_user_id: user.id });
 
-        if (codeIdData?.id) {
-          // Fetch usage history for this code
-          const { data: usageData, error: usageError } = await supabase
-            .from('referral_usage')
-            .select(`
-              used_at,
-              used_by_email,
-              referral_code_id
-            `)
-            .eq('referral_code_id', codeIdData.id)
-            .order('used_at', { ascending: false });
-
-          if (!usageError && usageData) {
-            const earnings = usageData.length * 25; // $25 per referral
-            setUsageStats({
-              timesUsed: usageData.length,
-              totalEarnings: earnings,
-              usageHistory: usageData.map(u => ({
-                usedAt: u.used_at,
-                usedByEmail: u.used_by_email,
-              })),
-            });
-          }
+        if (!statsError && statsData && statsData.length > 0) {
+          const stats = statsData[0];
+          setUsageStats({
+            timesUsed: Number(stats.times_used) || 0,
+            totalEarnings: Number(stats.total_earnings) || 0,
+            usageHistory: [],
+          });
         }
       } else {
         setReferralCode(null);
