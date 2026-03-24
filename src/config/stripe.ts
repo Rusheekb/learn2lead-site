@@ -4,6 +4,8 @@
  * Credit Pack system - one-time purchases (not subscriptions).
  * Students buy packs of hours and use them at their own pace.
  * 1 credit = 1 hour of tutoring. Half-hour increments supported.
+ * 
+ * Set VITE_STRIPE_MODE=test in .env to use test-mode prices.
  */
 
 export type CreditTier = {
@@ -17,10 +19,36 @@ export type CreditTier = {
   savingsPercent: number; // vs single-hour price
 };
 
+// Stripe mode: 'test' or 'live'
+export const STRIPE_MODE: 'test' | 'live' =
+  (import.meta.env.VITE_STRIPE_MODE as string)?.toLowerCase() === 'test'
+    ? 'test'
+    : 'live';
+
+export const isTestMode = STRIPE_MODE === 'test';
+
+const LIVE_PRICE_IDS = {
+  1: 'price_1T3VMD14Kl9WjCfljetZW63c',
+  2: 'price_1T3VME14Kl9WjCflQY8WEY97',
+  4: 'price_1T20M714Kl9WjCflVbq3glKt',
+  8: 'price_1T20M714Kl9WjCflDIKczcAX',
+  10: 'price_1T3VMF14Kl9WjCfl0q3uc13H',
+} as const;
+
+const TEST_PRICE_IDS = {
+  1: 'price_1TEYGy14Kl9WjCflqVbMKnH6',
+  2: 'price_1TEYGz14Kl9WjCflv5L7eQNc',
+  4: 'price_1TEYGz14Kl9WjCflY2riU9Br',
+  8: 'price_1TEYH014Kl9WjCflo0B0elKr',
+  10: 'price_1TEYH114Kl9WjCflaF98Nb6V',
+} as const;
+
+const priceIds = isTestMode ? TEST_PRICE_IDS : LIVE_PRICE_IDS;
+
 export const CREDIT_TIERS: CreditTier[] = [
   {
     credits: 1,
-    priceId: 'price_1T3VMD14Kl9WjCfljetZW63c',
+    priceId: priceIds[1],
     total: 40,
     perHour: 40,
     perClass: 40,
@@ -29,7 +57,7 @@ export const CREDIT_TIERS: CreditTier[] = [
   },
   {
     credits: 2,
-    priceId: 'price_1T3VME14Kl9WjCflQY8WEY97',
+    priceId: priceIds[2],
     total: 76,
     perHour: 38,
     perClass: 38,
@@ -38,7 +66,7 @@ export const CREDIT_TIERS: CreditTier[] = [
   },
   {
     credits: 4,
-    priceId: 'price_1T20M714Kl9WjCflVbq3glKt',
+    priceId: priceIds[4],
     total: 140,
     perHour: 35,
     perClass: 35,
@@ -47,7 +75,7 @@ export const CREDIT_TIERS: CreditTier[] = [
   },
   {
     credits: 8,
-    priceId: 'price_1T20M714Kl9WjCflDIKczcAX',
+    priceId: priceIds[8],
     total: 240,
     perHour: 30,
     perClass: 30,
@@ -56,7 +84,7 @@ export const CREDIT_TIERS: CreditTier[] = [
   },
   {
     credits: 10,
-    priceId: 'price_1T3VMF14Kl9WjCfl0q3uc13H',
+    priceId: priceIds[10],
     total: 280,
     perHour: 28,
     perClass: 28,
