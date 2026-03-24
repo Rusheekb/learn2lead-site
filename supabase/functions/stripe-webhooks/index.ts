@@ -9,9 +9,8 @@ const logStep = (step: string, details?: any) => {
 };
 
 serve(async (req) => {
-  const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", { 
-    apiVersion: "2025-08-27.basil" 
-  });
+  // Determine correct Stripe key after signature verification
+  let stripeInstance: Stripe;
 
   const supabaseClient = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
