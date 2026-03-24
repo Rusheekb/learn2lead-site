@@ -1026,6 +1026,14 @@ export type Database = {
         Returns: Json
       }
       get_ics_feed: { Args: { feed_id: string }; Returns: string }
+      get_referral_usage_stats: {
+        Args: { p_user_id: string }
+        Returns: {
+          latest_usage: string
+          times_used: number
+          total_earnings: number
+        }[]
+      }
       get_student_classes: {
         Args: { requesting_user_id?: string }
         Returns: {
