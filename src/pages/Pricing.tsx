@@ -5,7 +5,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { CREDIT_TIERS, DEFAULT_TIER_INDEX } from '@/config/stripe';
+import { CREDIT_TIERS, DEFAULT_TIER_INDEX, isTestMode } from '@/config/stripe';
 import {
   Select,
   SelectContent,
@@ -146,6 +146,13 @@ const Pricing = () => {
         tabIndex={-1}
         className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 focus:outline-none"
       >
+        {isTestMode && (
+          <div className="max-w-md mx-auto mb-6 rounded-md bg-yellow-50 border border-yellow-300 px-4 py-3 text-center">
+            <p className="text-sm font-medium text-yellow-800">
+              ⚠️ Test Mode — use card <code className="bg-yellow-100 px-1 rounded">4242 4242 4242 4242</code> with any future date &amp; CVC
+            </p>
+          </div>
+        )}
         {/* Hero */}
         <div className="max-w-3xl mx-auto text-center mb-12">
           <h2 className="text-3xl font-bold mb-4">Buy Tutoring Hours</h2>
