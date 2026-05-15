@@ -1,10 +1,10 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
-import { getRateLimitKey, checkRateLimit, rateLimitResponse } from "../_shared/rateLimiter.ts";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import {
+  getRateLimitKey,
+  checkRateLimit,
+  rateLimitResponse,
+} from '../_shared/rateLimiter.ts';
+import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 
 interface DbRecord {
   id: string;
@@ -18,15 +18,15 @@ interface DbRecord {
 // Helper functions for ID generation
 const getInitials = (name: string): string => {
   if (!name || name.trim() === '') return 'XX';
-  
+
   const words = name.trim().split(/\s+/);
   if (words.length === 1) {
     return words[0].substring(0, 2).toUpperCase();
   }
-  
+
   return words
     .slice(0, 2)
-    .map(word => word.charAt(0).toUpperCase())
+    .map((word) => word.charAt(0).toUpperCase())
     .join('');
 };
 
@@ -38,7 +38,11 @@ const formatDateForId = (date: Date | string): string => {
   return `${year}${month}${day}`;
 };
 
-const generateBaseId = (studentName: string, tutorName: string, date: Date | string): string => {
+const generateBaseId = (
+  studentName: string,
+  tutorName: string,
+  date: Date | string
+): string => {
   const studentInitials = getInitials(studentName);
   const tutorInitials = getInitials(tutorName);
   const dateStr = formatDateForId(date);
@@ -46,24 +50,24 @@ const generateBaseId = (studentName: string, tutorName: string, date: Date | str
 };
 
 const getNextSequence = (baseId: string, existingIds: string[]): number => {
-  const matchingIds = existingIds.filter(id => id.startsWith(baseId));
-  
+  const matchingIds = existingIds.filter((id) => id.startsWith(baseId));
+
   if (matchingIds.length === 0) {
     return 1;
   }
-  
+
   const sequences = matchingIds
-    .map(id => {
+    .map((id) => {
       const parts = id.split('-');
       const lastPart = parts[parts.length - 1];
       return parseInt(lastPart, 10);
     })
-    .filter(num => !isNaN(num));
-  
+    .filter((num) => !isNaN(num));
+
   if (sequences.length === 0) {
     return 1;
   }
-  
+
   return Math.max(...sequences) + 1;
 };
 
@@ -79,13 +83,17 @@ const generateClassId = (
 };
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const corsResponse = handleCorsPreflightRequest(req);
+  if (corsResponse) return corsResponse;
+
+  const origin = req.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
 
   const rateLimitKey = getRateLimitKey(req, 'migrate-class-numbers');
-  const { limited, retryAfterMs } = checkRateLimit(rateLimitKey, { maxRequests: 5, windowMs: 60_000 });
+  const { limited, retryAfterMs } = checkRateLimit(rateLimitKey, {
+    maxRequests: 5,
+    windowMs: 60_000,
+  });
   if (limited) return rateLimitResponse(retryAfterMs!, corsHeaders);
 
   try {
@@ -98,7 +106,9 @@ Deno.serve(async (req) => {
     // Fetch all class logs
     const { data: allLogs, error: fetchError } = await supabase
       .from('class_logs')
-      .select('id, "Class Number", "Tutor Name", "Student Name", Date, "Time (CST)"')
+      .select(
+        'id, "Class Number", "Tutor Name", "Student Name", Date, "Time (CST)"'
+      )
       .order('Date', { ascending: true });
 
     if (fetchError) {
@@ -107,12 +117,12 @@ Deno.serve(async (req) => {
 
     if (!allLogs || allLogs.length === 0) {
       return new Response(
-        JSON.stringify({ 
-          success: true, 
+        JSON.stringify({
+          success: true,
           message: 'No class logs found to migrate',
           totalRecords: 0,
           updated: 0,
-          skipped: 0
+          skipped: 0,
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -121,11 +131,11 @@ Deno.serve(async (req) => {
     console.log(`Found ${allLogs.length} class logs`);
 
     // Identify records that need migration
-    const needsMigration = allLogs.filter(log => {
+    const needsMigration = allLogs.filter((log) => {
       const classNumber = (log as any)['Class Number'];
       // Check if Class Number is null, empty, or doesn't match new format (XX-YY-YYYYMMDD-N)
       if (!classNumber || classNumber.trim() === '') return true;
-      
+
       const newFormatPattern = /^[A-Z]{2}-[A-Z]{2}-\d{8}-\d+$/;
       return !newFormatPattern.test(classNumber);
     });
@@ -134,12 +144,12 @@ Deno.serve(async (req) => {
 
     if (needsMigration.length === 0) {
       return new Response(
-        JSON.stringify({ 
-          success: true, 
+        JSON.stringify({
+          success: true,
           message: 'All class numbers are already in the correct format',
           totalRecords: allLogs.length,
           updated: 0,
-          skipped: allLogs.length
+          skipped: allLogs.length,
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -147,7 +157,7 @@ Deno.serve(async (req) => {
 
     // Get all existing class numbers to ensure uniqueness
     const existingIds = allLogs
-      .map(log => (log as any)['Class Number'] as string)
+      .map((log) => (log as any)['Class Number'] as string)
       .filter(Boolean);
 
     const updates: Array<{ id: string; newClassNumber: string }> = [];
@@ -170,7 +180,7 @@ Deno.serve(async (req) => {
 
         updates.push({
           id: record.id,
-          newClassNumber
+          newClassNumber,
         });
 
         // Add to existing IDs to prevent duplicates in this batch
@@ -178,11 +188,12 @@ Deno.serve(async (req) => {
 
         console.log(`Generated ID for ${record.id}: ${newClassNumber}`);
       } catch (error) {
-        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+        const errorMsg =
+          error instanceof Error ? error.message : 'Unknown error';
         console.error(`Error generating ID for ${log.id}:`, errorMsg);
         errors.push({
           id: log.id,
-          error: errorMsg
+          error: errorMsg,
         });
       }
     }
@@ -203,11 +214,12 @@ Deno.serve(async (req) => {
         successCount++;
         console.log(`Updated ${update.id} with ${update.newClassNumber}`);
       } catch (error) {
-        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+        const errorMsg =
+          error instanceof Error ? error.message : 'Unknown error';
         console.error(`Error updating ${update.id}:`, errorMsg);
         errors.push({
           id: update.id,
-          error: errorMsg
+          error: errorMsg,
         });
       }
     }
@@ -219,26 +231,25 @@ Deno.serve(async (req) => {
       needsMigration: needsMigration.length,
       updated: successCount,
       skipped: allLogs.length - needsMigration.length,
-      errors: errors.length > 0 ? errors : undefined
+      errors: errors.length > 0 ? errors : undefined,
     };
 
     console.log('Migration complete:', result);
 
-    return new Response(
-      JSON.stringify(result),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-
+    return new Response(JSON.stringify(result), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   } catch (error) {
     console.error('Migration error:', error);
     return new Response(
-      JSON.stringify({ 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error occurred'
+      JSON.stringify({
+        success: false,
+        error:
+          error instanceof Error ? error.message : 'Unknown error occurred',
       }),
-      { 
+      {
         status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );
   }

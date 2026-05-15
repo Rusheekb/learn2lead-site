@@ -8,8 +8,8 @@ import { updatePaymentDate } from '@/services/class-operations/update/updatePaym
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { useDebounce } from './useDebounce';
-import { formatDateForDatabase } from '@/utils/safeDateUtils';
-import { parseDateToLocal } from '@/utils/safeDateUtils';
+import { formatDateForDatabase, parseDateToLocal } from '@/utils/safeDateUtils';
+import { formatTime } from '@/utils/dateTimeUtils';
 import { logger } from '@/lib/logger';
 
 const log = logger.create('useClassLogs');
@@ -29,7 +29,11 @@ export const classLogsKeys = {
 /** Apply server-side filters to a Supabase query builder */
 function applyServerFilters(
   query: any,
-  filters: { searchTerm: string; dateFilter: Date | null; paymentFilter: string }
+  filters: {
+    searchTerm: string;
+    dateFilter: Date | null;
+    paymentFilter: string;
+  }
 ) {
   const { searchTerm, dateFilter, paymentFilter } = filters;
 
@@ -55,7 +59,10 @@ function applyServerFilters(
   }
 
   if (searchTerm) {
-    const terms = searchTerm.split(/[,&]/).map(t => t.trim()).filter(Boolean);
+    const terms = searchTerm
+      .split(/[,&]/)
+      .map((t) => t.trim())
+      .filter(Boolean);
     for (const term of terms) {
       const pattern = `%${term}%`;
       query = query.or(
@@ -91,7 +98,9 @@ async function fetchAllBatched(filters: {
     const { data, error } = await query;
     if (error) throw error;
 
-    const batch = (data || []).map(record => transformDbRecordToClassEvent(record));
+    const batch = (data || []).map((record) =>
+      transformDbRecordToClassEvent(record)
+    );
     allRecords.push(...batch);
     hasMore = (data?.length || 0) === batchSize;
     from += batchSize;
@@ -125,11 +134,14 @@ export const useClassLogs = () => {
   const debouncedSearch = useDebounce(searchTerm, 300);
 
   // Stable filter object for query keys
-  const serverFilters = useMemo(() => ({
-    searchTerm: debouncedSearch,
-    dateFilter: dateFilter ? format(dateFilter, 'yyyy-MM-dd') : null,
-    paymentFilter,
-  }), [debouncedSearch, dateFilter, paymentFilter]);
+  const serverFilters = useMemo(
+    () => ({
+      searchTerm: debouncedSearch,
+      dateFilter: dateFilter ? format(dateFilter, 'yyyy-MM-dd') : null,
+      paymentFilter,
+    }),
+    [debouncedSearch, dateFilter, paymentFilter]
+  );
 
   // Reset to page 1 when filters change
   useEffect(() => {
@@ -137,7 +149,12 @@ export const useClassLogs = () => {
   }, [debouncedSearch, dateFilter, paymentFilter, paymentMethodFilter]);
 
   // ─── Paginated query for table display ───────────────────────────────
-  const { data: paginatedData, isLoading, error, refetch } = useQuery({
+  const {
+    data: paginatedData,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: classLogsKeys.page(page, pageSize, serverFilters),
     queryFn: async () => {
       const from = (page - 1) * pageSize;
@@ -160,7 +177,9 @@ export const useClassLogs = () => {
       if (error) throw error;
 
       return {
-        records: (data || []).map(record => transformDbRecordToClassEvent(record)),
+        records: (data || []).map((record) =>
+          transformDbRecordToClassEvent(record)
+        ),
         totalCount: count || 0,
       };
     },
@@ -200,11 +219,12 @@ export const useClassLogs = () => {
     isFetching: isExportLoading,
   } = useQuery({
     queryKey: classLogsKeys.export(),
-    queryFn: () => fetchAllBatched({
-      searchTerm: debouncedSearch,
-      dateFilter,
-      paymentFilter,
-    }),
+    queryFn: () =>
+      fetchAllBatched({
+        searchTerm: debouncedSearch,
+        dateFilter,
+        paymentFilter,
+      }),
     enabled: false, // Only fetch on demand
   });
 
@@ -296,30 +316,47 @@ export const useClassLogs = () => {
       queryClient.invalidateQueries({ queryKey: classLogsKeys.all });
     },
     onError: (error) => {
-      toast.error(`Failed to create class log: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(
+        `Failed to create class log: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (params: { id: string; classEvent: Partial<ClassEvent> }) => {
+    mutationFn: async (params: {
+      id: string;
+      classEvent: Partial<ClassEvent>;
+    }) => {
       const { id, classEvent } = params;
       const dbUpdates: Record<string, any> = {};
-      if (classEvent.title !== undefined) dbUpdates['Class Number'] = classEvent.title;
-      if (classEvent.tutorName !== undefined) dbUpdates['Tutor Name'] = classEvent.tutorName;
-      if (classEvent.studentName !== undefined) dbUpdates['Student Name'] = classEvent.studentName;
+      if (classEvent.title !== undefined)
+        dbUpdates['Class Number'] = classEvent.title;
+      if (classEvent.tutorName !== undefined)
+        dbUpdates['Tutor Name'] = classEvent.tutorName;
+      if (classEvent.studentName !== undefined)
+        dbUpdates['Student Name'] = classEvent.studentName;
       if (classEvent.date !== undefined) {
-        dbUpdates['Date'] = classEvent.date instanceof Date
-          ? format(classEvent.date, 'yyyy-MM-dd')
-          : classEvent.date;
+        dbUpdates['Date'] =
+          classEvent.date instanceof Date
+            ? format(classEvent.date, 'yyyy-MM-dd')
+            : classEvent.date;
       }
-      if (classEvent.startTime !== undefined) dbUpdates['Time (CST)'] = classEvent.startTime;
-      if (classEvent.duration !== undefined) dbUpdates['Time (hrs)'] = classEvent.duration.toString();
-      if (classEvent.subject !== undefined) dbUpdates['Subject'] = classEvent.subject;
-      if (classEvent.content !== undefined) dbUpdates['Content'] = classEvent.content;
-      if (classEvent.homework !== undefined) dbUpdates['HW'] = classEvent.homework;
-      if (classEvent.classCost !== undefined) dbUpdates['Class Cost'] = classEvent.classCost;
-      if (classEvent.tutorCost !== undefined) dbUpdates['Tutor Cost'] = classEvent.tutorCost;
-      if (classEvent.notes !== undefined) dbUpdates['Additional Info'] = classEvent.notes;
+      if (classEvent.startTime !== undefined)
+        dbUpdates['Time (CST)'] = classEvent.startTime;
+      if (classEvent.duration !== undefined)
+        dbUpdates['Time (hrs)'] = classEvent.duration.toString();
+      if (classEvent.subject !== undefined)
+        dbUpdates['Subject'] = classEvent.subject;
+      if (classEvent.content !== undefined)
+        dbUpdates['Content'] = classEvent.content;
+      if (classEvent.homework !== undefined)
+        dbUpdates['HW'] = classEvent.homework;
+      if (classEvent.classCost !== undefined)
+        dbUpdates['Class Cost'] = classEvent.classCost;
+      if (classEvent.tutorCost !== undefined)
+        dbUpdates['Tutor Cost'] = classEvent.tutorCost;
+      if (classEvent.notes !== undefined)
+        dbUpdates['Additional Info'] = classEvent.notes;
 
       const { data, error } = await supabase
         .from('class_logs')
@@ -336,7 +373,9 @@ export const useClassLogs = () => {
       await queryClient.cancelQueries({ queryKey: classLogsKeys.all });
 
       // Snapshot all page queries
-      const previousPages = queryClient.getQueriesData({ queryKey: classLogsKeys.all });
+      const previousPages = queryClient.getQueriesData({
+        queryKey: classLogsKeys.all,
+      });
 
       // Optimistically update the record in all cached pages
       queryClient.setQueriesData(
@@ -365,23 +404,24 @@ export const useClassLogs = () => {
           queryClient.setQueryData(key, data);
         });
       }
-      toast.error(`Failed to update class log: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(
+        `Failed to update class log: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from('class_logs')
-        .delete()
-        .eq('id', id);
+      const { error } = await supabase.from('class_logs').delete().eq('id', id);
       if (error) throw error;
       return true;
     },
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: classLogsKeys.all });
 
-      const previousPages = queryClient.getQueriesData({ queryKey: classLogsKeys.all });
+      const previousPages = queryClient.getQueriesData({
+        queryKey: classLogsKeys.all,
+      });
 
       // Optimistically remove from cached pages
       queryClient.setQueriesData(
@@ -408,7 +448,9 @@ export const useClassLogs = () => {
           queryClient.setQueryData(key, data);
         });
       }
-      toast.error(`Failed to delete class log: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(
+        `Failed to delete class log: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     },
   });
 
@@ -427,62 +469,83 @@ export const useClassLogs = () => {
     queryClient.invalidateQueries({ queryKey: classLogsKeys.all });
   }, [queryClient]);
 
-  const handleToggleStudentPayment = useCallback(async (classId: string, currentlyPaid: boolean) => {
-    const newDate = currentlyPaid ? null : new Date();
-    const newDateStr = newDate ? format(newDate, 'yyyy-MM-dd') : null;
+  const handleToggleStudentPayment = useCallback(
+    async (classId: string, currentlyPaid: boolean) => {
+      const newDate = currentlyPaid ? null : new Date();
+      const newDateStr = newDate ? format(newDate, 'yyyy-MM-dd') : null;
 
-    // Optimistically update cached pages
-    queryClient.setQueriesData(
-      { queryKey: classLogsKeys.all },
-      (old: any) => {
-        if (!old?.records) return old;
-        return {
-          ...old,
-          records: old.records.map((r: ClassEvent) =>
-            r.id === classId ? { ...r, studentPaymentDate: newDateStr } : r
-          ),
-        };
+      // Optimistically update cached pages
+      queryClient.setQueriesData(
+        { queryKey: classLogsKeys.all },
+        (old: any) => {
+          if (!old?.records) return old;
+          return {
+            ...old,
+            records: old.records.map((r: ClassEvent) =>
+              r.id === classId ? { ...r, studentPaymentDate: newDateStr } : r
+            ),
+          };
+        }
+      );
+
+      const ok = await updatePaymentDate(
+        classId,
+        'student_payment_date',
+        newDate
+      );
+      if (ok) {
+        toast.success(
+          currentlyPaid
+            ? 'Student payment marked as unpaid'
+            : 'Student payment marked as paid'
+        );
+      } else {
+        toast.error('Failed to update student payment');
       }
-    );
+      // Always revalidate to ensure consistency
+      refreshData();
+    },
+    [refreshData, queryClient]
+  );
 
-    const ok = await updatePaymentDate(classId, 'student_payment_date', newDate);
-    if (ok) {
-      toast.success(currentlyPaid ? 'Student payment marked as unpaid' : 'Student payment marked as paid');
-    } else {
-      toast.error('Failed to update student payment');
-    }
-    // Always revalidate to ensure consistency
-    refreshData();
-  }, [refreshData, queryClient]);
+  const handleToggleTutorPayment = useCallback(
+    async (classId: string, currentlyPaid: boolean) => {
+      const newDate = currentlyPaid ? null : new Date();
+      const newDateStr = newDate ? format(newDate, 'yyyy-MM-dd') : null;
 
-  const handleToggleTutorPayment = useCallback(async (classId: string, currentlyPaid: boolean) => {
-    const newDate = currentlyPaid ? null : new Date();
-    const newDateStr = newDate ? format(newDate, 'yyyy-MM-dd') : null;
+      // Optimistically update cached pages
+      queryClient.setQueriesData(
+        { queryKey: classLogsKeys.all },
+        (old: any) => {
+          if (!old?.records) return old;
+          return {
+            ...old,
+            records: old.records.map((r: ClassEvent) =>
+              r.id === classId ? { ...r, tutorPaymentDate: newDateStr } : r
+            ),
+          };
+        }
+      );
 
-    // Optimistically update cached pages
-    queryClient.setQueriesData(
-      { queryKey: classLogsKeys.all },
-      (old: any) => {
-        if (!old?.records) return old;
-        return {
-          ...old,
-          records: old.records.map((r: ClassEvent) =>
-            r.id === classId ? { ...r, tutorPaymentDate: newDateStr } : r
-          ),
-        };
+      const ok = await updatePaymentDate(
+        classId,
+        'tutor_payment_date',
+        newDate
+      );
+      if (ok) {
+        toast.success(
+          currentlyPaid
+            ? 'Tutor payment marked as unpaid'
+            : 'Tutor payment marked as paid'
+        );
+      } else {
+        toast.error('Failed to update tutor payment');
       }
-    );
+      refreshData();
+    },
+    [refreshData, queryClient]
+  );
 
-    const ok = await updatePaymentDate(classId, 'tutor_payment_date', newDate);
-    if (ok) {
-      toast.success(currentlyPaid ? 'Tutor payment marked as unpaid' : 'Tutor payment marked as paid');
-    } else {
-      toast.error('Failed to update tutor payment');
-    }
-    refreshData();
-  }, [refreshData, queryClient]);
-
-  const formatTime = (time: string) => time;
   const clearFilters = () => {
     setSearchTerm('');
     setDateFilter(null);

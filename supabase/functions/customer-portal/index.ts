@@ -1,8 +1,12 @@
 // Deno.serve is built-in, no import needed
-import Stripe from "https://esm.sh/stripe@18.5.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
-import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
-import { getRateLimitKey, checkRateLimit, rateLimitResponse } from "../_shared/rateLimiter.ts";
+import Stripe from 'https://esm.sh/stripe@18.5.0';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
+import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
+import {
+  getRateLimitKey,
+  checkRateLimit,
+  rateLimitResponse,
+} from '../_shared/rateLimiter.ts';
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -13,47 +17,66 @@ Deno.serve(async (req) => {
   const corsResponse = handleCorsPreflightRequest(req);
   if (corsResponse) return corsResponse;
 
-  const origin = req.headers.get("origin");
+  const origin = req.headers.get('origin');
   const corsHeaders = getCorsHeaders(origin);
 
   const rateLimitKey = getRateLimitKey(req, 'customer-portal');
-  const { limited, retryAfterMs } = checkRateLimit(rateLimitKey, { maxRequests: 10, windowMs: 60_000 });
+  const { limited, retryAfterMs } = checkRateLimit(rateLimitKey, {
+    maxRequests: 10,
+    windowMs: 60_000,
+  });
   if (limited) return rateLimitResponse(retryAfterMs!, corsHeaders);
 
   try {
-    logStep("Function started");
+    logStep('Function started');
 
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
-    logStep("Stripe key verified");
+    const liveKey = Deno.env.get('STRIPE_SECRET_KEY');
+    const testKey = Deno.env.get('STRIPE_SECRET_KEY_TEST');
+    if (!liveKey && !testKey)
+      throw new Error('No Stripe secret key configured');
+    logStep('Stripe keys checked', { hasLive: !!liveKey, hasTest: !!testKey });
 
     const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       { auth: { persistSession: false } }
     );
 
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
-    logStep("Authorization header found");
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) throw new Error('No authorization header provided');
+    logStep('Authorization header found');
 
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
-    if (userError) throw new Error(`Authentication error: ${userError.message}`);
+    const token = authHeader.replace('Bearer ', '');
+    const { data: userData, error: userError } =
+      await supabaseClient.auth.getUser(token);
+    if (userError)
+      throw new Error(`Authentication error: ${userError.message}`);
     const user = userData.user;
-    if (!user?.email) throw new Error("User not authenticated or email not available");
-    logStep("User authenticated", { userId: user.id, email: user.email });
+    if (!user?.email)
+      throw new Error('User not authenticated or email not available');
+    logStep('User authenticated', { userId: user.id, email: user.email });
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
-    
-    if (customers.data.length === 0) {
-      logStep("No Stripe customer found");
-      throw new Error("No Stripe customer found for this user");
+    // Try live Stripe first, fall back to test if no customer found
+    let stripe = liveKey
+      ? new Stripe(liveKey, { apiVersion: '2025-08-27.basil' })
+      : null;
+    let customers = stripe
+      ? await stripe.customers.list({ email: user.email, limit: 1 })
+      : { data: [] };
+
+    if (customers.data.length === 0 && testKey) {
+      logStep('Customer not found in live mode, trying test mode');
+      stripe = new Stripe(testKey, { apiVersion: '2025-08-27.basil' });
+      customers = await stripe.customers.list({ email: user.email, limit: 1 });
     }
-    
+
+    if (!stripe || customers.data.length === 0) {
+      logStep('No Stripe customer found in live or test mode');
+      throw new Error('No Stripe customer found for this user');
+    }
+
     const customerId = customers.data[0].id;
-    logStep("Found Stripe customer", { customerId });
+    logStep('Found Stripe customer', { customerId });
 
     // Return to dashboard instead of homepage for better UX
     const returnUrl = `${origin}/dashboard`;
@@ -61,17 +84,21 @@ Deno.serve(async (req) => {
       customer: customerId,
       return_url: returnUrl,
     });
-    logStep("Customer portal session created", { sessionId: portalSession.id, url: portalSession.url, returnUrl });
+    logStep('Customer portal session created', {
+      sessionId: portalSession.id,
+      url: portalSession.url,
+      returnUrl,
+    });
 
     return new Response(JSON.stringify({ url: portalSession.url }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR in customer-portal", { message: errorMessage });
+    logStep('ERROR in customer-portal', { message: errorMessage });
     return new Response(JSON.stringify({ error: errorMessage }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
     });
   }

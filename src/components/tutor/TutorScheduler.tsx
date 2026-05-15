@@ -1,5 +1,5 @@
 import React, { useEffect, memo } from 'react';
-import { useTutorScheduler } from '@/hooks/useTutorScheduler';
+import { useSimplifiedTutorScheduler as useTutorScheduler } from '@/hooks/useSimplifiedTutorScheduler';
 import TutorSchedulerHeader from './scheduler/TutorSchedulerHeader';
 import TutorSchedulerCalendar from './scheduler/TutorSchedulerCalendar';
 import TutorSchedulerDialogs from './scheduler/TutorSchedulerDialogs';
@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const TutorScheduler: React.FC = memo(() => {
   const { user } = useAuth();
-  
+
   const {
     selectedDate,
     setSelectedDate,
@@ -42,14 +42,14 @@ const TutorScheduler: React.FC = memo(() => {
   // Set tutorId on new event when user is available
   useEffect(() => {
     if (user?.id && newEvent && !newEvent.tutorId) {
-      const tutorName = currentUser?.first_name 
-        ? `${currentUser.first_name} ${currentUser.last_name || ''}`.trim() 
+      const tutorName = currentUser?.first_name
+        ? `${currentUser.first_name} ${currentUser.last_name || ''}`.trim()
         : 'Current Tutor';
-      
+
       setNewEvent({
         ...newEvent,
         tutorId: user.id,
-        tutorName
+        tutorName,
       });
     }
   }, [user?.id, newEvent, setNewEvent]);
@@ -71,7 +71,7 @@ const TutorScheduler: React.FC = memo(() => {
   return (
     <div className="space-y-4 sm:space-y-6">
       <TutorSchedulerHeader onAddClick={handleAddEventClick} />
-      
+
       <div className="overflow-x-auto">
         <TutorSchedulerCalendar
           selectedDate={selectedDate}
@@ -82,7 +82,7 @@ const TutorScheduler: React.FC = memo(() => {
           getUnreadMessageCount={getUnreadMessageCount}
         />
       </div>
-      
+
       <TutorSchedulerDialogs
         isViewEventOpen={isViewEventOpen}
         setIsViewEventOpen={setIsViewEventOpen}

@@ -8,10 +8,19 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Clock, Calendar as CalendarIcon, User, Video, FileText, Download, Eye, Trash2 } from 'lucide-react';
+import {
+  Clock,
+  Calendar as CalendarIcon,
+  User,
+  Video,
+  FileText,
+  Download,
+  Eye,
+  Trash2,
+} from 'lucide-react';
 import { format } from 'date-fns';
 import { parseDateToLocal } from '@/utils/safeDateUtils';
-import { formatTime } from '@/utils/timeUtils';
+import { formatTime } from '@/utils/dateTimeUtils';
 import { ClassSession, StudentUpload } from '@/types/classTypes';
 import StudentFileUpload from './StudentFileUpload';
 import { supabase } from '@/integrations/supabase/client';
@@ -47,7 +56,7 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
 
   const fetchUploads = async () => {
     if (!classSession) return;
-    
+
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -56,26 +65,28 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
         .eq('class_id', classSession.id);
 
       if (error) throw error;
-      
+
       // Transform the data to match StudentUpload interface
-      const transformedUploads: StudentUpload[] = (data || []).map(upload => ({
-        id: upload.id,
-        fileName: upload.file_name,
-        uploadDate: upload.upload_date,
-        fileSize: upload.file_size,
-        uploadPath: upload.file_path,
-        classId: upload.class_id,
-        studentName: upload.student_name,
-        note: upload.note,
-      }));
-      
+      const transformedUploads: StudentUpload[] = (data || []).map(
+        (upload) => ({
+          id: upload.id,
+          fileName: upload.file_name,
+          uploadDate: upload.upload_date,
+          fileSize: upload.file_size,
+          uploadPath: upload.file_path,
+          classId: upload.class_id,
+          studentName: upload.student_name,
+          note: upload.note,
+        })
+      );
+
       setUploads(transformedUploads);
     } catch (error) {
       log.error('Error fetching uploads:', error);
       toast({
-        title: "Error",
-        description: "Failed to fetch uploads",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to fetch uploads',
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -84,7 +95,7 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
 
   const fetchTutorMaterials = async () => {
     if (!classSession) return;
-    
+
     try {
       const { data, error } = await supabase
         .from('scheduled_classes')
@@ -93,7 +104,7 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
         .single();
 
       if (error) throw error;
-      
+
       setTutorMaterials(data?.materials_url || []);
     } catch (error) {
       log.error('Error fetching tutor materials:', error);
@@ -106,7 +117,9 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
 
     try {
       // Get current user's profile for student name
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session?.user) {
         throw new Error('User not authenticated');
       }
@@ -117,8 +130,8 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
         .eq('id', session.user.id)
         .single();
 
-      const studentName = profile 
-        ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() 
+      const studentName = profile
+        ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim()
         : session.user.email || 'Student';
 
       // Generate unique file path
@@ -133,7 +146,7 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
         .from('materials')
         .upload(filePath, file, {
           cacheControl: '3600',
-          upsert: false
+          upsert: false,
         });
 
       if (uploadError) {
@@ -142,17 +155,15 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
       }
 
       // Create database record
-      const { error: dbError } = await supabase
-        .from('class_uploads')
-        .insert({
-          class_id: classSession.id,
-          student_name: studentName,
-          file_name: file.name,
-          file_path: filePath,
-          file_size: `${Math.round(file.size / 1024)} KB`,
-          upload_date: new Date().toISOString().split('T')[0],
-          note: note || null,
-        });
+      const { error: dbError } = await supabase.from('class_uploads').insert({
+        class_id: classSession.id,
+        student_name: studentName,
+        file_name: file.name,
+        file_path: filePath,
+        file_size: `${Math.round(file.size / 1024)} KB`,
+        upload_date: new Date().toISOString().split('T')[0],
+        note: note || null,
+      });
 
       if (dbError) {
         log.error('Database insert error:', dbError);
@@ -162,17 +173,17 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
       }
 
       toast({
-        title: "Success",
-        description: "File uploaded successfully",
+        title: 'Success',
+        description: 'File uploaded successfully',
       });
 
       fetchUploads();
     } catch (error) {
       log.error('Error uploading file:', error);
       toast({
-        title: "Error",
+        title: 'Error',
         description: `Failed to upload file: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        variant: "destructive",
+        variant: 'destructive',
       });
     }
   };
@@ -196,9 +207,9 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
     } catch (error) {
       log.error('Error downloading file:', error);
       toast({
-        title: "Error",
-        description: "Failed to download file",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to download file',
+        variant: 'destructive',
       });
     }
   };
@@ -212,9 +223,9 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
     } catch (error) {
       log.error('Error viewing file:', error);
       toast({
-        title: "Error",
-        description: "Failed to open file",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to open file',
+        variant: 'destructive',
       });
     }
   };
@@ -225,7 +236,9 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
         throw new Error('Upload ID not found');
       }
 
-      if (window.confirm(`Are you sure you want to delete ${upload.fileName}?`)) {
+      if (
+        window.confirm(`Are you sure you want to delete ${upload.fileName}?`)
+      ) {
         await deleteClassFile(upload.id);
         // Refresh the uploads list
         fetchUploads();
@@ -233,9 +246,9 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
     } catch (error) {
       log.error('Error deleting file:', error);
       toast({
-        title: "Error",
-        description: "Failed to delete file",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to delete file',
+        variant: 'destructive',
       });
     }
   };
@@ -247,13 +260,14 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
     // Decode URI components
     const decodedFilename = decodeURIComponent(filename);
     // Get everything after the last slash and before any query params
-    const matches = decodedFilename.match(/[^\/]+\.[^\/\.]+$/);
+    const matches = decodedFilename.match(/[^/]+\.[^/.]+$/);
     return matches ? matches[0] : decodedFilename;
   };
 
   if (!classSession) return null;
 
-  const formatDate = (date: string | Date) => format(parseDateToLocal(date), 'EEEE, MMMM d, yyyy');
+  const formatDate = (date: string | Date) =>
+    format(parseDateToLocal(date), 'EEEE, MMMM d, yyyy');
   const onClose = () => onOpenChange(false);
 
   return (
@@ -268,7 +282,11 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
           </DialogHeader>
 
           <div className="flex-1 overflow-y-auto py-4">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="w-full"
+            >
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="details">Class Details</TabsTrigger>
                 <TabsTrigger value="materials">Materials & Uploads</TabsTrigger>
@@ -281,18 +299,17 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
                       <User className="h-4 w-4 mr-2" />
                       <span>Tutor: {classSession.tutorName}</span>
                     </div>
-                    
+
                     <div className="flex items-center text-sm text-muted-foreground">
                       <CalendarIcon className="h-4 w-4 mr-2" />
-                      <span>
-                        {formatDate(classSession.date)}
-                      </span>
+                      <span>{formatDate(classSession.date)}</span>
                     </div>
 
                     <div className="flex items-center text-sm text-muted-foreground">
                       <Clock className="h-4 w-4 mr-2" />
                       <span>
-                        {formatTime(classSession.startTime)} - {formatTime(classSession.endTime)}
+                        {formatTime(classSession.startTime)} -{' '}
+                        {formatTime(classSession.endTime)}
                       </span>
                     </div>
 
@@ -312,11 +329,12 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
 
                   <div className="space-y-3">
                     {classSession.zoomLink && (
-                      <Button
-                        className="w-full"
-                        asChild
-                      >
-                        <a href={classSession.zoomLink} target="_blank" rel="noopener noreferrer">
+                      <Button className="w-full" asChild>
+                        <a
+                          href={classSession.zoomLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
                           <Video className="h-4 w-4 mr-2" />
                           Join Class
                         </a>
@@ -357,18 +375,20 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
                                 <div className="flex items-center space-x-3">
                                   <FileText className="h-5 w-5 text-primary" />
                                   <div>
-                                    <p className="font-medium">{getFilenameFromUrl(url)}</p>
+                                    <p className="font-medium">
+                                      {getFilenameFromUrl(url)}
+                                    </p>
                                     <p className="text-sm text-muted-foreground">
                                       Provided by tutor
                                     </p>
                                   </div>
                                 </div>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  asChild
-                                >
-                                  <a href={url} target="_blank" rel="noopener noreferrer">
+                                <Button variant="outline" size="sm" asChild>
+                                  <a
+                                    href={url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
                                     <Download className="h-4 w-4 mr-1" />
                                     View
                                   </a>
@@ -388,7 +408,9 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
                           <div className="text-center py-6 text-muted-foreground border rounded-lg bg-muted/20">
                             <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
                             <p>No student materials uploaded yet</p>
-                            <p className="text-sm">Use the upload button above to add files</p>
+                            <p className="text-sm">
+                              Use the upload button above to add files
+                            </p>
                           </div>
                         ) : (
                           <div className="space-y-3">
@@ -400,9 +422,15 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
                                 <div className="flex items-center space-x-3">
                                   <FileText className="h-5 w-5 text-muted-foreground" />
                                   <div>
-                                    <p className="font-medium">{upload.fileName}</p>
+                                    <p className="font-medium">
+                                      {upload.fileName}
+                                    </p>
                                     <p className="text-sm text-muted-foreground">
-                                      {upload.fileSize} • Uploaded on {format(new Date(upload.uploadDate), 'MMM d, yyyy')}
+                                      {upload.fileSize} • Uploaded on{' '}
+                                      {format(
+                                        new Date(upload.uploadDate),
+                                        'MMM d, yyyy'
+                                      )}
                                     </p>
                                     {upload.note && (
                                       <p className="text-sm text-muted-foreground italic">
@@ -449,7 +477,9 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
                         <div className="text-center py-8 text-muted-foreground">
                           <FileText className="w-10 h-10 mx-auto mb-2 opacity-50" />
                           <p>No materials available for this class yet</p>
-                          <p className="text-sm">Your tutor may add materials before class starts</p>
+                          <p className="text-sm">
+                            Your tutor may add materials before class starts
+                          </p>
                         </div>
                       )}
                     </div>

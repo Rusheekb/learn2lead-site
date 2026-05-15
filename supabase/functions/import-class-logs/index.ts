@@ -1,22 +1,22 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
-import { getRateLimitKey, checkRateLimit, rateLimitResponse } from "../_shared/rateLimiter.ts";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import {
+  getRateLimitKey,
+  checkRateLimit,
+  rateLimitResponse,
+} from '../_shared/rateLimiter.ts';
+import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 
 interface ClassLogRow {
   'Class Number': string;
   'Tutor Name': string;
   'Student Name': string;
-  'Date': string;
-  'Day': string;
+  Date: string;
+  Day: string;
   'Time (CST)': string;
   'Time (hrs)': string;
-  'Subject': string;
-  'Content': string;
-  'HW': string;
+  Subject: string;
+  Content: string;
+  HW: string;
   'Class Cost': string;
   'Tutor Cost': string;
   'Student Payment': string;
@@ -28,14 +28,14 @@ interface ClassLogRow {
 function getInitials(name: string): string {
   const cleaned = name.trim();
   const parts = cleaned.split(/\s+/);
-  
+
   if (parts.length === 1) {
     return cleaned.substring(0, 2).toUpperCase();
   }
-  
+
   const firstInitial = parts[0][0] || '';
   const lastInitial = parts[parts.length - 1][0] || '';
-  
+
   return (firstInitial + lastInitial).toUpperCase();
 }
 
@@ -44,39 +44,42 @@ function formatDateForId(dateStr: string): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
-  
+
   return `${year}${month}${day}`;
 }
 
-function generateBaseId(studentName: string, tutorName: string, dateStr: string): string {
+function generateBaseId(
+  studentName: string,
+  tutorName: string,
+  dateStr: string
+): string {
   const studentInitials = getInitials(studentName);
   const tutorInitials = getInitials(tutorName);
   const formattedDate = formatDateForId(dateStr);
-  
+
   return `${studentInitials}-${tutorInitials}-${formattedDate}`;
 }
 
-async function getNextSequence(
-  supabase: any,
-  baseId: string
-): Promise<number> {
+async function getNextSequence(supabase: any, baseId: string): Promise<number> {
   const { data: existingLogs } = await supabase
     .from('class_logs')
     .select('Class Number')
     .like('Class Number', `${baseId}-%`);
-  
+
   if (!existingLogs || existingLogs.length === 0) {
     return 1;
   }
-  
-  const pattern = new RegExp(`^${baseId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}-(\\d+)$`);
+
+  const pattern = new RegExp(
+    `^${baseId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}-(\\d+)$`
+  );
   const sequences = existingLogs
     .map((log: any) => {
       const match = log['Class Number']?.match(pattern);
       return match ? parseInt(match[1], 10) : 0;
     })
     .filter((seq: number) => seq > 0);
-  
+
   return sequences.length > 0 ? Math.max(...sequences) + 1 : 1;
 }
 
@@ -88,18 +91,22 @@ async function generateClassId(
 ): Promise<string> {
   const baseId = generateBaseId(studentName, tutorName, dateStr);
   const sequence = await getNextSequence(supabase, baseId);
-  
+
   return `${baseId}-${sequence}`;
 }
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const corsResponse = handleCorsPreflightRequest(req);
+  if (corsResponse) return corsResponse;
+
+  const origin = req.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
 
   const rateLimitKey = getRateLimitKey(req, 'import-class-logs');
-  const { limited, retryAfterMs } = checkRateLimit(rateLimitKey, { maxRequests: 5, windowMs: 60_000 });
+  const { limited, retryAfterMs } = checkRateLimit(rateLimitKey, {
+    maxRequests: 5,
+    windowMs: 60_000,
+  });
   if (limited) return rateLimitResponse(retryAfterMs!, corsHeaders);
 
   try {
@@ -113,9 +120,10 @@ Deno.serve(async (req) => {
       throw new Error('Missing authorization header');
     }
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
 
     if (authError || !user) {
       throw new Error('Unauthorized');
@@ -151,7 +159,7 @@ Deno.serve(async (req) => {
       }
 
       const trimmedValue = value.trim();
-      
+
       // Try to parse as date (common formats like MM/DD/YY, MM/DD/YYYY)
       const dateMatch = trimmedValue.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
       if (dateMatch) {
@@ -173,7 +181,7 @@ Deno.serve(async (req) => {
         if (!row['Date']) {
           throw new Error('Date is required');
         }
-        
+
         if (!row['Student Name'] || !row['Tutor Name']) {
           throw new Error('Student Name and Tutor Name are required');
         }
@@ -192,7 +200,7 @@ Deno.serve(async (req) => {
 
         // Generate or use existing Class Number
         let classNumber = row['Class Number'];
-        
+
         if (!classNumber || classNumber.trim() === '') {
           // Generate new ID if not provided
           classNumber = await generateClassId(
@@ -215,17 +223,25 @@ Deno.serve(async (req) => {
           'Class Number': classNumber,
           'Tutor Name': row['Tutor Name'],
           'Student Name': row['Student Name'],
-          'Date': parsedDate,
-          'Day': row['Day'] || null,
+          Date: parsedDate,
+          Day: row['Day'] || null,
           'Time (CST)': row['Time (CST)'] || null,
           'Time (hrs)': row['Time (hrs)'] || null,
-          'Subject': row['Subject'] || null,
-          'Content': row['Content'] || null,
-          'HW': row['HW'] || null,
-          'Class Cost': row['Class Cost'] ? parseFloat(row['Class Cost'].toString().replace(/[^0-9.-]/g, '')) || null : null,
-          'Tutor Cost': row['Tutor Cost'] ? parseFloat(row['Tutor Cost'].toString().replace(/[^0-9.-]/g, '')) || null : null,
-          'student_payment_date': studentPaymentDate,
-          'tutor_payment_date': tutorPaymentDate,
+          Subject: row['Subject'] || null,
+          Content: row['Content'] || null,
+          HW: row['HW'] || null,
+          'Class Cost': row['Class Cost']
+            ? parseFloat(
+                row['Class Cost'].toString().replace(/[^0-9.-]/g, '')
+              ) || null
+            : null,
+          'Tutor Cost': row['Tutor Cost']
+            ? parseFloat(
+                row['Tutor Cost'].toString().replace(/[^0-9.-]/g, '')
+              ) || null
+            : null,
+          student_payment_date: studentPaymentDate,
+          tutor_payment_date: tutorPaymentDate,
           'Additional Info': row['Additional Info'] || null,
         };
 
@@ -275,7 +291,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    console.log(`Import completed: ${results.success} success (${results.inserted} inserted, ${results.updated} updated), ${results.failed} failed`);
+    console.log(
+      `Import completed: ${results.success} success (${results.inserted} inserted, ${results.updated} updated), ${results.failed} failed`
+    );
 
     return new Response(JSON.stringify(results), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

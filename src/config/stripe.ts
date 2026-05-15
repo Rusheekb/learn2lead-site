@@ -1,10 +1,10 @@
 /**
  * Stripe Configuration
- * 
+ *
  * Credit Pack system - one-time purchases (not subscriptions).
  * Students buy packs of hours and use them at their own pace.
  * 1 credit = 1 hour of tutoring. Half-hour increments supported.
- * 
+ *
  * Set VITE_STRIPE_MODE=test in .env to use test-mode prices.
  */
 
@@ -13,8 +13,6 @@ export type CreditTier = {
   priceId: string;
   total: number;
   perHour: number;
-  /** @deprecated Use perHour */
-  perClass: number;
   label: string;
   savingsPercent: number; // vs single-hour price
 };
@@ -51,7 +49,6 @@ export const CREDIT_TIERS: CreditTier[] = [
     priceId: priceIds[1],
     total: 40,
     perHour: 40,
-    perClass: 40,
     label: '1 Hour',
     savingsPercent: 0,
   },
@@ -60,7 +57,6 @@ export const CREDIT_TIERS: CreditTier[] = [
     priceId: priceIds[2],
     total: 76,
     perHour: 38,
-    perClass: 38,
     label: '2 Hours',
     savingsPercent: 5,
   },
@@ -69,7 +65,6 @@ export const CREDIT_TIERS: CreditTier[] = [
     priceId: priceIds[4],
     total: 140,
     perHour: 35,
-    perClass: 35,
     label: '4 Hours',
     savingsPercent: 13,
   },
@@ -78,7 +73,6 @@ export const CREDIT_TIERS: CreditTier[] = [
     priceId: priceIds[8],
     total: 240,
     perHour: 30,
-    perClass: 30,
     label: '8 Hours',
     savingsPercent: 25,
   },
@@ -87,7 +81,6 @@ export const CREDIT_TIERS: CreditTier[] = [
     priceId: priceIds[10],
     total: 280,
     perHour: 28,
-    perClass: 28,
     label: '10 Hours',
     savingsPercent: 30,
   },

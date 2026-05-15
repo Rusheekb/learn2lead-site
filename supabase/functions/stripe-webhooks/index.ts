@@ -1,7 +1,7 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
-import { Resend } from "npm:resend@2.0.0";
+import { serve } from 'https://deno.land/std@0.190.0/http/server.ts';
+import Stripe from 'https://esm.sh/stripe@18.5.0';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
+import { Resend } from 'npm:resend@2.0.0';
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -10,82 +10,99 @@ const logStep = (step: string, details?: any) => {
 
 serve(async (req) => {
   const supabaseClient = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     { auth: { persistSession: false } }
   );
 
   try {
-    logStep("Webhook received");
+    logStep('Webhook received');
 
     const body = await req.text();
-    const signature = req.headers.get("stripe-signature");
+    const signature = req.headers.get('stripe-signature');
 
     if (!signature) {
-      logStep("ERROR: Missing signature");
-      throw new Error("No Stripe signature found in request headers");
+      logStep('ERROR: Missing signature');
+      throw new Error('No Stripe signature found in request headers');
     }
 
     // Verify webhook signature - supports both live and test secrets
-    const liveSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
-    const testSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET_TEST");
-    
+    const liveSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
+    const testSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET_TEST');
+
     if (!liveSecret && !testSecret) {
-      throw new Error("Neither STRIPE_WEBHOOK_SECRET nor STRIPE_WEBHOOK_SECRET_TEST is set");
+      throw new Error(
+        'Neither STRIPE_WEBHOOK_SECRET nor STRIPE_WEBHOOK_SECRET_TEST is set'
+      );
     }
 
     // Use a temporary Stripe instance for signature verification
-    const tempStripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "sk_placeholder", { 
-      apiVersion: "2025-08-27.basil" 
-    });
+    const tempStripe = new Stripe(
+      Deno.env.get('STRIPE_SECRET_KEY') || 'sk_placeholder',
+      {
+        apiVersion: '2025-08-27.basil',
+      }
+    );
 
     let event;
     let isTestEvent = false;
     let verificationSucceeded = false;
-    
+
     if (liveSecret) {
       try {
-        event = await tempStripe.webhooks.constructEventAsync(body, signature, liveSecret);
-        logStep("Webhook signature verified with live secret");
+        event = await tempStripe.webhooks.constructEventAsync(
+          body,
+          signature,
+          liveSecret
+        );
+        logStep('Webhook signature verified with live secret');
         verificationSucceeded = true;
       } catch (liveErr) {
-        logStep("Live secret verification failed, trying test secret...");
+        logStep('Live secret verification failed, trying test secret...');
       }
     }
-    
+
     if (!verificationSucceeded && testSecret) {
       try {
-        event = await tempStripe.webhooks.constructEventAsync(body, signature, testSecret);
-        logStep("Webhook signature verified with test secret");
+        event = await tempStripe.webhooks.constructEventAsync(
+          body,
+          signature,
+          testSecret
+        );
+        logStep('Webhook signature verified with test secret');
         isTestEvent = true;
         verificationSucceeded = true;
       } catch (testErr) {
-        logStep("ERROR: Test secret verification also failed");
+        logStep('ERROR: Test secret verification also failed');
       }
     }
-    
+
     if (!verificationSucceeded || !event) {
-      throw new Error("Webhook signature verification failed with all available secrets");
+      throw new Error(
+        'Webhook signature verification failed with all available secrets'
+      );
     }
 
     // Use the correct Stripe key for API calls based on event mode
     const stripeKey = isTestEvent
-      ? (Deno.env.get("STRIPE_SECRET_KEY_TEST") || Deno.env.get("STRIPE_SECRET_KEY") || "")
-      : (Deno.env.get("STRIPE_SECRET_KEY") || "");
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+      ? Deno.env.get('STRIPE_SECRET_KEY_TEST') ||
+        Deno.env.get('STRIPE_SECRET_KEY') ||
+        ''
+      : Deno.env.get('STRIPE_SECRET_KEY') || '';
+    const stripe = new Stripe(stripeKey, { apiVersion: '2025-08-27.basil' });
 
-    logStep("Event type", { type: event.type, isTestEvent });
+    logStep('Event type', { type: event.type, isTestEvent });
 
     switch (event.type) {
-      case "checkout.session.completed": {
+      case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
         const metadata = session.metadata || {};
-        
-        logStep("Checkout session completed", { 
+
+        logStep('Checkout session completed', {
           sessionId: session.id,
           customerId: session.customer,
           mode: session.mode,
-          metadata 
+          metadata,
         });
 
         // Process referral if present
@@ -97,13 +114,15 @@ serve(async (req) => {
             metadata.referrer_id,
             session.customer as string,
             session.customer_email || '',
-            metadata.discount_amount ? parseFloat(metadata.discount_amount) : 25,
+            metadata.discount_amount
+              ? parseFloat(metadata.discount_amount)
+              : 25,
             session.id
           );
         }
 
         // For one-time payments, allocate credits now
-        if (session.mode === "payment" && session.payment_status === "paid") {
+        if (session.mode === 'payment' && session.payment_status === 'paid') {
           await allocateCreditsFromCheckout(stripe, supabaseClient, session);
         }
 
@@ -111,18 +130,18 @@ serve(async (req) => {
       }
 
       default:
-        logStep("Unhandled event type", { type: event.type });
+        logStep('Unhandled event type', { type: event.type });
     }
 
     return new Response(JSON.stringify({ received: true }), {
-      headers: { "Content-Type": "application/json" },
+      headers: { 'Content-Type': 'application/json' },
       status: 200,
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR in webhook", { message: errorMessage });
+    logStep('ERROR in webhook', { message: errorMessage });
     return new Response(JSON.stringify({ error: errorMessage }), {
-      headers: { "Content-Type": "application/json" },
+      headers: { 'Content-Type': 'application/json' },
       status: 400,
     });
   }
@@ -136,11 +155,16 @@ async function allocateCreditsFromCheckout(
 ) {
   const sessionId = session.id;
   const customerId = session.customer as string;
-  const customerEmail = session.customer_email || session.customer_details?.email || '';
+  const customerEmail =
+    session.customer_email || session.customer_details?.email || '';
   const metadata = session.metadata || {};
   const userId = metadata.user_id;
 
-  logStep("Allocating credits from checkout", { sessionId, customerId, customerEmail });
+  logStep('Allocating credits from checkout', {
+    sessionId,
+    customerId,
+    customerEmail,
+  });
 
   // Idempotency check - use session ID as invoice_id
   const { data: existingEntry } = await supabaseClient
@@ -149,16 +173,20 @@ async function allocateCreditsFromCheckout(
     .eq('invoice_id', sessionId);
 
   if (existingEntry && existingEntry.length > 0) {
-    logStep("Credits already allocated for this session, skipping", { sessionId });
+    logStep('Credits already allocated for this session, skipping', {
+      sessionId,
+    });
     return;
   }
 
   // Get the price ID from the checkout session line items
-  const lineItems = await stripe.checkout.sessions.listLineItems(sessionId, { limit: 1 });
+  const lineItems = await stripe.checkout.sessions.listLineItems(sessionId, {
+    limit: 1,
+  });
   const priceId = lineItems.data[0]?.price?.id;
 
   if (!priceId) {
-    logStep("ERROR: No price ID found in checkout session", { sessionId });
+    logStep('ERROR: No price ID found in checkout session', { sessionId });
     return;
   }
 
@@ -170,7 +198,10 @@ async function allocateCreditsFromCheckout(
     .single();
 
   if (planError || !plan) {
-    logStep("ERROR: No plan found for price", { priceId, error: planError?.message });
+    logStep('ERROR: No plan found for price', {
+      priceId,
+      error: planError?.message,
+    });
     return;
   }
 
@@ -186,7 +217,10 @@ async function allocateCreditsFromCheckout(
   }
 
   if (!profileId) {
-    logStep("ERROR: Cannot find user for credit allocation", { customerEmail, userId });
+    logStep('ERROR: Cannot find user for credit allocation', {
+      customerEmail,
+      userId,
+    });
     return;
   }
 
@@ -204,22 +238,25 @@ async function allocateCreditsFromCheckout(
 
     const { error: ledgerError } = await supabaseClient
       .from('class_credits_ledger')
-      .insert({
-        student_id: profileId,
-        subscription_id: existingSub.id,
-        transaction_type: 'credit',
-        amount: plan.classes_per_month,
-        balance_after: newCredits,
-        reason: `Credit pack purchase - ${plan.name}`,
-        invoice_id: sessionId,
-      });
+      .upsert(
+        {
+          student_id: profileId,
+          subscription_id: existingSub.id,
+          transaction_type: 'credit',
+          amount: plan.classes_per_month,
+          balance_after: newCredits,
+          reason: `Credit pack purchase - ${plan.name}`,
+          invoice_id: sessionId,
+        },
+        { onConflict: 'invoice_id', ignoreDuplicates: true }
+      );
 
     if (ledgerError) {
-      logStep("ERROR creating ledger entry", { error: ledgerError });
+      logStep('ERROR creating ledger entry', { error: ledgerError });
       throw ledgerError;
     }
 
-    logStep("Credits added to existing record", { newCredits, sessionId });
+    logStep('Credits added to existing record', { newCredits, sessionId });
 
     await sendPurchaseConfirmationEmail(
       customerEmail || '',
@@ -246,28 +283,34 @@ async function allocateCreditsFromCheckout(
       .single();
 
     if (insertError) {
-      logStep("ERROR creating subscription record", { error: insertError });
+      logStep('ERROR creating subscription record', { error: insertError });
       throw insertError;
     }
 
     const { error: ledgerError } = await supabaseClient
       .from('class_credits_ledger')
-      .insert({
-        student_id: profileId,
-        subscription_id: newSub.id,
-        transaction_type: 'credit',
-        amount: plan.classes_per_month,
-        balance_after: plan.classes_per_month,
-        reason: `Initial credit pack purchase - ${plan.name}`,
-        invoice_id: sessionId,
-      });
+      .upsert(
+        {
+          student_id: profileId,
+          subscription_id: newSub.id,
+          transaction_type: 'credit',
+          amount: plan.classes_per_month,
+          balance_after: plan.classes_per_month,
+          reason: `Initial credit pack purchase - ${plan.name}`,
+          invoice_id: sessionId,
+        },
+        { onConflict: 'invoice_id', ignoreDuplicates: true }
+      );
 
     if (ledgerError) {
-      logStep("ERROR creating initial ledger entry", { error: ledgerError });
+      logStep('ERROR creating initial ledger entry', { error: ledgerError });
       throw ledgerError;
     }
 
-    logStep("New subscription created with credits", { subscriptionId: newSub.id, sessionId });
+    logStep('New subscription created with credits', {
+      subscriptionId: newSub.id,
+      sessionId,
+    });
 
     await sendPurchaseConfirmationEmail(
       customerEmail || '',
@@ -292,7 +335,11 @@ async function processReferralReward(
   sessionId: string
 ) {
   try {
-    logStep("Processing referral reward", { referralCodeId, referrerId, discountAmount });
+    logStep('Processing referral reward', {
+      referralCodeId,
+      referrerId,
+      discountAmount,
+    });
 
     const { data: referrerProfile, error: referrerError } = await supabaseClient
       .from('profiles')
@@ -301,30 +348,35 @@ async function processReferralReward(
       .single();
 
     if (referrerError || !referrerProfile) {
-      logStep("ERROR: Referrer not found", { referrerId });
+      logStep('ERROR: Referrer not found', { referrerId });
       return;
     }
 
-    const referrerCustomers = await stripe.customers.list({ 
-      email: referrerProfile.email, 
-      limit: 1 
+    const referrerCustomers = await stripe.customers.list({
+      email: referrerProfile.email,
+      limit: 1,
     });
 
     if (referrerCustomers.data.length === 0) {
-      logStep("ERROR: Referrer has no Stripe customer record", { email: referrerProfile.email });
+      logStep('ERROR: Referrer has no Stripe customer record', {
+        email: referrerProfile.email,
+      });
       return;
     }
 
     const referrerCustomerId = referrerCustomers.data[0].id;
     const creditAmount = Math.round(discountAmount * 100);
-    
+
     await stripe.customers.createBalanceTransaction(referrerCustomerId, {
       amount: -creditAmount,
       currency: 'usd',
       description: `Referral reward - new customer signup`,
     });
 
-    logStep("Referrer credited", { referrerCustomerId, creditAmount: discountAmount });
+    logStep('Referrer credited', {
+      referrerCustomerId,
+      creditAmount: discountAmount,
+    });
 
     const { data: newUserProfile } = await supabaseClient
       .from('profiles')
@@ -342,7 +394,9 @@ async function processReferralReward(
       });
 
     if (usageError) {
-      logStep("WARNING: Failed to record referral usage", { error: usageError.message });
+      logStep('WARNING: Failed to record referral usage', {
+        error: usageError.message,
+      });
     }
 
     // Increment times_used
@@ -351,7 +405,7 @@ async function processReferralReward(
       .select('times_used')
       .eq('id', referralCodeId)
       .single();
-    
+
     if (codeData) {
       await supabaseClient
         .from('referral_codes')
@@ -360,15 +414,17 @@ async function processReferralReward(
     }
 
     // Send notification
-    await supabaseClient.from("notifications").insert({
+    await supabaseClient.from('notifications').insert({
       user_id: referrerId,
       message: `Your referral code was used by ${newCustomerEmail}! You earned a $${discountAmount} credit.`,
-      type: "referral_reward",
+      type: 'referral_reward',
     });
 
-    logStep("Referral reward processed successfully");
+    logStep('Referral reward processed successfully');
   } catch (error) {
-    logStep("ERROR processing referral reward", { error: error instanceof Error ? error.message : String(error) });
+    logStep('ERROR processing referral reward', {
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 }
 
@@ -379,12 +435,12 @@ async function sendPurchaseConfirmationEmail(
   planName: string,
   creditsAdded: number,
   totalCredits: number,
-  amountPaid: number,
+  amountPaid: number
 ) {
   try {
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    const resendApiKey = Deno.env.get('RESEND_API_KEY');
     if (!resendApiKey) {
-      logStep("Skipping email - RESEND_API_KEY not configured");
+      logStep('Skipping email - RESEND_API_KEY not configured');
       return;
     }
 
@@ -394,15 +450,15 @@ async function sendPurchaseConfirmationEmail(
       .ilike('email', customerEmail)
       .maybeSingle();
 
-    const studentName = profile?.first_name 
+    const studentName = profile?.first_name
       ? `${profile.first_name} ${profile.last_name || ''}`.trim()
       : 'Valued Student';
 
     const resend = new Resend(resendApiKey);
     await resend.emails.send({
-      from: "Learn2Lead <noreply@learn2lead.com>",
+      from: 'Learn2Lead <noreply@learn2lead.com>',
       to: [customerEmail],
-      subject: "Your Credit Pack Purchase Confirmation",
+      subject: 'Your Credit Pack Purchase Confirmation',
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h1 style="color: #16a34a;">Credits Added!</h1>
@@ -447,8 +503,10 @@ async function sendPurchaseConfirmationEmail(
       `,
     });
 
-    logStep("Purchase confirmation email sent", { customerEmail, planName });
+    logStep('Purchase confirmation email sent', { customerEmail, planName });
   } catch (error) {
-    logStep("WARNING: Failed to send purchase confirmation email", { error: error instanceof Error ? error.message : String(error) });
+    logStep('WARNING: Failed to send purchase confirmation email', {
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 }

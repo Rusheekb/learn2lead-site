@@ -1,21 +1,20 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import { componentTagger } from 'lovable-tagger';
 import { VitePWA } from 'vite-plugin-pwa';
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig(() => ({
   plugins: [
     react(),
-    mode === 'development' && componentTagger(),
     VitePWA({
       registerType: 'prompt',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'og-image.png'],
       manifest: {
         name: 'Learn2Lead - Tutoring Platform',
         short_name: 'Learn2Lead',
-        description: 'Premium tutoring platform connecting students with expert tutors',
+        description:
+          'Premium tutoring platform connecting students with expert tutors',
         start_url: '/',
         display: 'standalone',
         background_color: '#ffffff',

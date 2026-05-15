@@ -1,8 +1,11 @@
-
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { Resend } from "https://esm.sh/resend@1.0.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.58.0";
-import { getRateLimitKey, checkRateLimit, rateLimitResponse } from "../_shared/rateLimiter.ts";
+import { Resend } from 'https://esm.sh/resend@1.0.0';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.58.0';
+import {
+  getRateLimitKey,
+  checkRateLimit,
+  rateLimitResponse,
+} from '../_shared/rateLimiter.ts';
+import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 
 // Define types for clarity
 interface ClassReminder {
@@ -19,71 +22,77 @@ interface ClassReminder {
   student_name: string;
 }
 
-// Configure CORS headers
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
-
 // Initialize Resend with API key
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
 
-serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+Deno.serve(async (req) => {
+  const corsResponse = handleCorsPreflightRequest(req);
+  if (corsResponse) return corsResponse;
+
+  const origin = req.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
 
   const rateLimitKey = getRateLimitKey(req, 'send-class-reminders');
-  const { limited, retryAfterMs } = checkRateLimit(rateLimitKey, { maxRequests: 10, windowMs: 60_000 });
+  const { limited, retryAfterMs } = checkRateLimit(rateLimitKey, {
+    maxRequests: 10,
+    windowMs: 60_000,
+  });
   if (limited) return rateLimitResponse(retryAfterMs!, corsHeaders);
 
   try {
     // Create Supabase client
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
     if (!supabaseUrl || !supabaseKey) {
       console.error('Missing required environment variables');
       return new Response(
-        JSON.stringify({ 
-          success: false, 
-          error: 'Server configuration error' 
+        JSON.stringify({
+          success: false,
+          error: 'Server configuration error',
         }),
-        { 
+        {
           status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         }
       );
     }
-    
+
     const supabase = createClient(supabaseUrl, supabaseKey);
-    
+
     // Call the database function to check upcoming classes
-    const { error: functionError } = await supabase.rpc('check_upcoming_classes');
+    const { error: functionError } = await supabase.rpc(
+      'check_upcoming_classes'
+    );
     if (functionError) {
-      throw new Error(`Failed to execute check_upcoming_classes: ${functionError.message}`);
+      throw new Error(
+        `Failed to execute check_upcoming_classes: ${functionError.message}`
+      );
     }
-    
+
     // Query classes that need reminders (those that were just marked for sending)
     const { data: classesToRemind, error: queryError } = await supabase
       .from('scheduled_classes')
-      .select(`
+      .select(
+        `
         id, title, date, start_time, end_time, zoom_link, subject, tutor_id, student_id
-      `)
+      `
+      )
       .eq('reminder_sent', true)
       .gt('date', new Date().toISOString().split('T')[0]) // Ensure future classes
       .order('date', { ascending: true })
       .order('start_time', { ascending: true });
-    
+
     if (queryError) {
       throw new Error(`Failed to query classes: ${queryError.message}`);
     }
 
-    console.log(`Found ${classesToRemind?.length || 0} classes to send reminders for`);
-    
+    console.log(
+      `Found ${classesToRemind?.length || 0} classes to send reminders for`
+    );
+
     const sentEmails = [];
-    
+
     // Process each class and send reminders
     for (const cls of classesToRemind || []) {
       // Get tutor and student info
@@ -92,18 +101,18 @@ serve(async (req) => {
         .select('email, first_name, last_name')
         .eq('id', cls.tutor_id)
         .single();
-        
+
       const { data: studentData } = await supabase
         .from('profiles')
         .select('email, first_name, last_name')
         .eq('id', cls.student_id)
         .single();
-      
+
       if (!tutorData || !studentData) {
         console.warn(`Missing tutor or student data for class ${cls.id}`);
         continue;
       }
-      
+
       // Extract the needed information with proper typings
       const classReminder: ClassReminder = {
         id: cls.id,
@@ -114,26 +123,30 @@ serve(async (req) => {
         zoom_link: cls.zoom_link,
         subject: cls.subject,
         tutor_email: tutorData.email,
-        tutor_name: `${tutorData.first_name || ''} ${tutorData.last_name || ''}`.trim() || tutorData.email,
+        tutor_name:
+          `${tutorData.first_name || ''} ${tutorData.last_name || ''}`.trim() ||
+          tutorData.email,
         student_email: studentData.email,
-        student_name: `${studentData.first_name || ''} ${studentData.last_name || ''}`.trim() || studentData.email,
+        student_name:
+          `${studentData.first_name || ''} ${studentData.last_name || ''}`.trim() ||
+          studentData.email,
       };
-      
+
       // Send reminder to tutor
       const tutorEmailResult = await sendReminderEmail(
         classReminder,
         classReminder.tutor_email,
         classReminder.tutor_name,
-        "tutor"
+        'tutor'
       );
       sentEmails.push(tutorEmailResult);
-      
+
       // Send reminder to student
       const studentEmailResult = await sendReminderEmail(
         classReminder,
         classReminder.student_email,
         classReminder.student_name,
-        "student"
+        'student'
       );
       sentEmails.push(studentEmailResult);
     }
@@ -146,15 +159,14 @@ serve(async (req) => {
       {
         status: 200,
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           ...corsHeaders,
         },
       }
     );
-
   } catch (error) {
-    console.error("Error processing class reminders:", error);
-    
+    console.error('Error processing class reminders:', error);
+
     return new Response(
       JSON.stringify({
         success: false,
@@ -163,7 +175,7 @@ serve(async (req) => {
       {
         status: 500,
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           ...corsHeaders,
         },
       }
@@ -178,33 +190,34 @@ async function sendReminderEmail(
   classInfo: ClassReminder,
   recipientEmail: string,
   recipientName: string,
-  recipientType: "tutor" | "student"
+  recipientType: 'tutor' | 'student'
 ): Promise<any> {
   try {
-    const formattedDate = new Date(classInfo.date).toLocaleDateString("en-US", {
-      weekday: "long",
-      month: "long",
-      day: "numeric",
-      year: "numeric",
+    const formattedDate = new Date(classInfo.date).toLocaleDateString('en-US', {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
     });
-    
+
     // Format time from 24h to 12h format
     const formatTime = (time24: string): string => {
-      const [hour, minute] = time24.split(":");
+      const [hour, minute] = time24.split(':');
       const hourNum = parseInt(hour, 10);
       return `${hourNum % 12 || 12}:${minute} ${hourNum >= 12 ? 'PM' : 'AM'}`;
     };
-    
+
     const startTime = formatTime(classInfo.start_time);
     const endTime = formatTime(classInfo.end_time);
-    
+
     // Customize the message based on recipient type
-    const roleSpecificText = recipientType === "tutor"
-      ? `Your student ${classInfo.student_name} will be attending.`
-      : `Your tutor ${classInfo.tutor_name} will be teaching this session.`;
-    
+    const roleSpecificText =
+      recipientType === 'tutor'
+        ? `Your student ${classInfo.student_name} will be attending.`
+        : `Your tutor ${classInfo.tutor_name} will be teaching this session.`;
+
     const result = await resend.emails.send({
-      from: "Learn2Lead <noreply@learn2lead.com>",
+      from: 'Learn2Lead <noreply@learn2lead.com>',
       to: recipientEmail,
       subject: `Upcoming Class Reminder: ${classInfo.title} - Starting in 1 hour`,
       html: `
@@ -231,12 +244,16 @@ async function sendReminderEmail(
         </div>
       `,
     });
-    
-    console.log(`Sent reminder email to ${recipientType} (${recipientEmail}) for class: ${classInfo.title}`);
+
+    console.log(
+      `Sent reminder email to ${recipientType} (${recipientEmail}) for class: ${classInfo.title}`
+    );
     return result;
-    
   } catch (error) {
     console.error(`Failed to send reminder email to ${recipientEmail}:`, error);
-    return { error: true, message: error instanceof Error ? error.message : 'Unknown error' };
+    return {
+      error: true,
+      message: error instanceof Error ? error.message : 'Unknown error',
+    };
   }
 }
