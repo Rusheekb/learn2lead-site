@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, User, Calendar, Book } from 'lucide-react';
@@ -9,18 +8,18 @@ interface StudentNavLinksProps {
   profilePath: string;
 }
 
-const StudentNavLinks: React.FC<StudentNavLinksProps> = ({ 
-  isExpanded, 
-  profilePath 
+const StudentNavLinks: React.FC<StudentNavLinksProps> = ({
+  isExpanded,
+  profilePath,
 }) => {
   const { baseClasses, activeClasses, isLinkActive } = useSidebarStyles();
   const expandedClasses = isExpanded ? 'justify-start' : 'justify-center';
-  
+
   return (
     <nav className="space-y-1" aria-label="Student navigation">
-      <NavLink 
-        to="/dashboard" 
-        className={({ isActive }) => 
+      <NavLink
+        to="/dashboard"
+        className={({ isActive }) =>
           isActive || isLinkActive('/dashboard')
             ? `${baseClasses} ${expandedClasses} ${activeClasses}`
             : `${baseClasses} ${expandedClasses}`
@@ -31,9 +30,9 @@ const StudentNavLinks: React.FC<StudentNavLinksProps> = ({
         <LayoutDashboard className="h-5 w-5" aria-hidden="true" />
         {isExpanded && <span className="ml-3">Dashboard</span>}
       </NavLink>
-      <NavLink 
-        to="/dashboard?tab=schedule" 
-        className={() => 
+      <NavLink
+        to="/dashboard?tab=schedule"
+        className={() =>
           isLinkActive('/dashboard', { key: 'tab', value: 'schedule' })
             ? `${baseClasses} ${expandedClasses} ${activeClasses}`
             : `${baseClasses} ${expandedClasses}`
@@ -43,9 +42,9 @@ const StudentNavLinks: React.FC<StudentNavLinksProps> = ({
         <Calendar className="h-5 w-5" aria-hidden="true" />
         {isExpanded && <span className="ml-3">My Schedule</span>}
       </NavLink>
-      <NavLink 
-        to="/dashboard?tab=resources" 
-        className={() => 
+      <NavLink
+        to="/dashboard?tab=resources"
+        className={() =>
           isLinkActive('/dashboard', { key: 'tab', value: 'resources' })
             ? `${baseClasses} ${expandedClasses} ${activeClasses}`
             : `${baseClasses} ${expandedClasses}`
@@ -55,10 +54,10 @@ const StudentNavLinks: React.FC<StudentNavLinksProps> = ({
         <Book className="h-5 w-5" aria-hidden="true" />
         {isExpanded && <span className="ml-3">Resources</span>}
       </NavLink>
-      <NavLink 
-        to={profilePath} 
-        className={({ isActive }) => 
-          isActive 
+      <NavLink
+        to="/dashboard?tab=profile"
+        className={() =>
+          isLinkActive('/dashboard', { key: 'tab', value: 'profile' })
             ? `${baseClasses} ${expandedClasses} ${activeClasses}`
             : `${baseClasses} ${expandedClasses}`
         }

@@ -1,7 +1,19 @@
-
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { BarChart3, Calendar, CreditCard, FileText, LayoutDashboard, Settings, User, UserRound, Users, UsersRound, Mail, Gift } from 'lucide-react';
+import {
+  BarChart3,
+  Calendar,
+  CreditCard,
+  FileText,
+  LayoutDashboard,
+  Settings,
+  User,
+  UserRound,
+  Users,
+  UsersRound,
+  Mail,
+  Gift,
+} from 'lucide-react';
 import { useSidebarStyles } from './useSidebarStyles';
 
 interface AdminNavLinksProps {
@@ -9,18 +21,18 @@ interface AdminNavLinksProps {
   profilePath: string;
 }
 
-const AdminNavLinks: React.FC<AdminNavLinksProps> = ({ 
-  isExpanded, 
-  profilePath 
+const AdminNavLinks: React.FC<AdminNavLinksProps> = ({
+  isExpanded,
+  profilePath,
 }) => {
   const { baseClasses, activeClasses, isLinkActive } = useSidebarStyles();
   const expandedClasses = isExpanded ? 'justify-start' : 'justify-center';
-  
+
   return (
     <nav className="space-y-1" aria-label="Admin navigation">
-      <NavLink 
+      <NavLink
         to="/admin-dashboard?tab=calendar"
-        className={() => 
+        className={() =>
           isLinkActive('/admin-dashboard', { key: 'tab', value: 'calendar' })
             ? `${baseClasses} ${expandedClasses} ${activeClasses}`
             : `${baseClasses} ${expandedClasses}`
@@ -30,9 +42,9 @@ const AdminNavLinks: React.FC<AdminNavLinksProps> = ({
         <Calendar className="h-5 w-5" aria-hidden="true" />
         {isExpanded && <span className="ml-3">Calendar</span>}
       </NavLink>
-      <NavLink 
+      <NavLink
         to="/admin-dashboard?tab=schedule"
-        className={() => 
+        className={() =>
           isLinkActive('/admin-dashboard', { key: 'tab', value: 'schedule' })
             ? `${baseClasses} ${expandedClasses} ${activeClasses}`
             : `${baseClasses} ${expandedClasses}`
@@ -43,8 +55,8 @@ const AdminNavLinks: React.FC<AdminNavLinksProps> = ({
         {isExpanded && <span className="ml-3">Class Logs</span>}
       </NavLink>
       <NavLink
-        to="/admin-dashboard?tab=credits" 
-        className={() => 
+        to="/admin-dashboard?tab=credits"
+        className={() =>
           isLinkActive('/admin-dashboard', { key: 'tab', value: 'credits' })
             ? `${baseClasses} ${expandedClasses} ${activeClasses}`
             : `${baseClasses} ${expandedClasses}`
@@ -55,8 +67,8 @@ const AdminNavLinks: React.FC<AdminNavLinksProps> = ({
         {isExpanded && <span className="ml-3">Credits</span>}
       </NavLink>
       <NavLink
-        to="/admin-dashboard?tab=reports" 
-        className={() => 
+        to="/admin-dashboard?tab=reports"
+        className={() =>
           isLinkActive('/admin-dashboard', { key: 'tab', value: 'reports' })
             ? `${baseClasses} ${expandedClasses} ${activeClasses}`
             : `${baseClasses} ${expandedClasses}`
@@ -67,8 +79,8 @@ const AdminNavLinks: React.FC<AdminNavLinksProps> = ({
         {isExpanded && <span className="ml-3">Reports</span>}
       </NavLink>
       <NavLink
-        to="/admin-dashboard?tab=referrals" 
-        className={() => 
+        to="/admin-dashboard?tab=referrals"
+        className={() =>
           isLinkActive('/admin-dashboard', { key: 'tab', value: 'referrals' })
             ? `${baseClasses} ${expandedClasses} ${activeClasses}`
             : `${baseClasses} ${expandedClasses}`
@@ -78,9 +90,9 @@ const AdminNavLinks: React.FC<AdminNavLinksProps> = ({
         <Gift className="h-5 w-5" aria-hidden="true" />
         {isExpanded && <span className="ml-3">Referrals</span>}
       </NavLink>
-      <NavLink 
+      <NavLink
         to="/admin-dashboard?tab=tutors"
-        className={() => 
+        className={() =>
           isLinkActive('/admin-dashboard', { key: 'tab', value: 'tutors' })
             ? `${baseClasses} ${expandedClasses} ${activeClasses}`
             : `${baseClasses} ${expandedClasses}`
@@ -90,9 +102,9 @@ const AdminNavLinks: React.FC<AdminNavLinksProps> = ({
         <UserRound className="h-5 w-5" aria-hidden="true" />
         {isExpanded && <span className="ml-3">Tutors</span>}
       </NavLink>
-      <NavLink 
-        to="/admin-dashboard?tab=students" 
-        className={() => 
+      <NavLink
+        to="/admin-dashboard?tab=students"
+        className={() =>
           isLinkActive('/admin-dashboard', { key: 'tab', value: 'students' })
             ? `${baseClasses} ${expandedClasses} ${activeClasses}`
             : `${baseClasses} ${expandedClasses}`
@@ -102,9 +114,9 @@ const AdminNavLinks: React.FC<AdminNavLinksProps> = ({
         <Users className="h-5 w-5" aria-hidden="true" />
         {isExpanded && <span className="ml-3">Students</span>}
       </NavLink>
-      <NavLink 
-        to="/admin-dashboard?tab=assignments" 
-        className={() => 
+      <NavLink
+        to="/admin-dashboard?tab=assignments"
+        className={() =>
           isLinkActive('/admin-dashboard', { key: 'tab', value: 'assignments' })
             ? `${baseClasses} ${expandedClasses} ${activeClasses}`
             : `${baseClasses} ${expandedClasses}`
@@ -114,9 +126,9 @@ const AdminNavLinks: React.FC<AdminNavLinksProps> = ({
         <UsersRound className="h-5 w-5" aria-hidden="true" />
         {isExpanded && <span className="ml-3">Assignments</span>}
       </NavLink>
-      <NavLink 
-        to="/admin-dashboard?tab=settings" 
-        className={() => 
+      <NavLink
+        to="/admin-dashboard?tab=settings"
+        className={() =>
           isLinkActive('/admin-dashboard', { key: 'tab', value: 'settings' })
             ? `${baseClasses} ${expandedClasses} ${activeClasses}`
             : `${baseClasses} ${expandedClasses}`
@@ -126,10 +138,10 @@ const AdminNavLinks: React.FC<AdminNavLinksProps> = ({
         <Settings className="h-5 w-5" aria-hidden="true" />
         {isExpanded && <span className="ml-3">Settings</span>}
       </NavLink>
-      <NavLink 
-        to={profilePath} 
-        className={({ isActive }) => 
-          isActive 
+      <NavLink
+        to="/admin-dashboard?tab=profile"
+        className={() =>
+          isLinkActive('/admin-dashboard', { key: 'tab', value: 'profile' })
             ? `${baseClasses} ${expandedClasses} ${activeClasses}`
             : `${baseClasses} ${expandedClasses}`
         }

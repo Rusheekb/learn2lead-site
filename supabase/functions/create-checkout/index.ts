@@ -1,49 +1,56 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
-import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
-import { getRateLimitKey, checkRateLimit, rateLimitResponse } from "../_shared/rateLimiter.ts";
+import Stripe from 'https://esm.sh/stripe@18.5.0';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
+import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
+import {
+  getRateLimitKey,
+  checkRateLimit,
+  rateLimitResponse,
+} from '../_shared/rateLimiter.ts';
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
   console.log(`[CREATE-CHECKOUT] ${step}${detailsStr}`);
 };
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   const corsResponse = handleCorsPreflightRequest(req);
   if (corsResponse) return corsResponse;
 
-  const origin = req.headers.get("origin");
+  const origin = req.headers.get('origin');
   const corsHeaders = getCorsHeaders(origin);
 
   // Rate limit: 10 checkout attempts per 5 minutes
   const rlKey = getRateLimitKey(req, 'create-checkout');
-  const rl = checkRateLimit(rlKey, { maxRequests: 10, windowMs: 5 * 60 * 1000 });
+  const rl = checkRateLimit(rlKey, {
+    maxRequests: 10,
+    windowMs: 5 * 60 * 1000,
+  });
   if (rl.limited) {
-    logStep("Rate limited", { key: rlKey });
+    logStep('Rate limited', { key: rlKey });
     return rateLimitResponse(rl.retryAfterMs!, corsHeaders);
   }
 
   const supabaseClient = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
   );
 
   try {
-    logStep("Function started");
+    logStep('Function started');
 
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header provided");
-    
-    const token = authHeader.replace("Bearer ", "");
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) throw new Error('No authorization header provided');
+
+    const token = authHeader.replace('Bearer ', '');
     const { data } = await supabaseClient.auth.getUser(token);
     const user = data.user;
-    if (!user?.email) throw new Error("User not authenticated or email not available");
+    if (!user?.email)
+      throw new Error('User not authenticated or email not available');
 
-    logStep("User authenticated", { userId: user.id, email: user.email });
+    logStep('User authenticated', { userId: user.id, email: user.email });
 
     const { priceId, referralCode } = await req.json();
-    if (!priceId) throw new Error("Price ID is required");
+    if (!priceId) throw new Error('Price ID is required');
 
     // Determine if this is a test-mode price by checking against known test price IDs
     const TEST_PRICE_IDS = [
@@ -55,27 +62,36 @@ serve(async (req) => {
     ];
     const isTestMode = TEST_PRICE_IDS.includes(priceId);
     const stripeKey = isTestMode
-      ? Deno.env.get("STRIPE_SECRET_KEY_TEST")
-      : Deno.env.get("STRIPE_SECRET_KEY");
+      ? Deno.env.get('STRIPE_SECRET_KEY_TEST')
+      : Deno.env.get('STRIPE_SECRET_KEY');
 
     if (!stripeKey) {
-      throw new Error(`Stripe ${isTestMode ? 'test' : 'live'} secret key is not configured`);
+      throw new Error(
+        `Stripe ${isTestMode ? 'test' : 'live'} secret key is not configured`
+      );
     }
 
-    logStep("Creating checkout session", { priceId, isTestMode, referralCode: referralCode || 'none' });
+    logStep('Creating checkout session', {
+      priceId,
+      isTestMode,
+      referralCode: referralCode || 'none',
+    });
 
-    const stripe = new Stripe(stripeKey, { 
-      apiVersion: "2025-08-27.basil" 
+    const stripe = new Stripe(stripeKey, {
+      apiVersion: '2025-08-27.basil',
     });
 
     // Check if customer exists
-    const customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    const customers = await stripe.customers.list({
+      email: user.email,
+      limit: 1,
+    });
     let customerId;
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
-      logStep("Existing customer found", { customerId });
+      logStep('Existing customer found', { customerId });
     } else {
-      logStep("Creating new customer");
+      logStep('Creating new customer');
     }
 
     // Validate referral code if provided
@@ -85,32 +101,37 @@ serve(async (req) => {
     let discountAmount: number | null = null;
 
     if (referralCode) {
-      logStep("Validating referral code", { code: referralCode });
+      logStep('Validating referral code', { code: referralCode });
 
       const { data: codeData, error: codeError } = await supabaseClient
         .from('referral_codes')
-        .select('id, code, stripe_coupon_id, active, expires_at, max_uses, times_used, created_by, discount_amount')
+        .select(
+          'id, code, stripe_coupon_id, active, expires_at, max_uses, times_used, created_by, discount_amount'
+        )
         .eq('code', referralCode.toUpperCase())
         .single();
 
       if (codeError || !codeData) {
-        logStep("Invalid referral code", { code: referralCode });
-        throw new Error("Invalid referral code");
+        logStep('Invalid referral code', { code: referralCode });
+        throw new Error('Invalid referral code');
       }
 
       if (!codeData.active) {
-        logStep("Referral code is inactive", { code: referralCode });
-        throw new Error("This referral code is no longer active");
+        logStep('Referral code is inactive', { code: referralCode });
+        throw new Error('This referral code is no longer active');
       }
 
       if (codeData.expires_at && new Date(codeData.expires_at) < new Date()) {
-        logStep("Referral code expired", { code: referralCode, expires_at: codeData.expires_at });
-        throw new Error("This referral code has expired");
+        logStep('Referral code expired', {
+          code: referralCode,
+          expires_at: codeData.expires_at,
+        });
+        throw new Error('This referral code has expired');
       }
 
       if (codeData.max_uses && codeData.times_used >= codeData.max_uses) {
-        logStep("Referral code max uses reached", { code: referralCode });
-        throw new Error("This referral code has reached its usage limit");
+        logStep('Referral code max uses reached', { code: referralCode });
+        throw new Error('This referral code has reached its usage limit');
       }
 
       const { data: existingUsage } = await supabaseClient
@@ -120,13 +141,13 @@ serve(async (req) => {
         .limit(1);
 
       if (existingUsage && existingUsage.length > 0) {
-        logStep("User has already used a referral code", { userId: user.id });
-        throw new Error("You have already used a referral code");
+        logStep('User has already used a referral code', { userId: user.id });
+        throw new Error('You have already used a referral code');
       }
 
       if (codeData.created_by === user.id) {
-        logStep("Self-referral attempted", { userId: user.id });
-        throw new Error("You cannot use your own referral code");
+        logStep('Self-referral attempted', { userId: user.id });
+        throw new Error('You cannot use your own referral code');
       }
 
       stripeCouponId = codeData.stripe_coupon_id;
@@ -134,11 +155,11 @@ serve(async (req) => {
       referrerId = codeData.created_by;
       discountAmount = codeData.discount_amount;
 
-      logStep("Referral code validated", { 
-        codeId: referralCodeId, 
-        referrerId, 
+      logStep('Referral code validated', {
+        codeId: referralCodeId,
+        referrerId,
         stripeCouponId,
-        discountAmount 
+        discountAmount,
       });
     }
 
@@ -152,7 +173,7 @@ serve(async (req) => {
           quantity: 1,
         },
       ],
-      mode: "payment",
+      mode: 'payment',
       payment_intent_data: {
         setup_future_usage: 'off_session', // Save payment method for auto-renewal
       },
@@ -169,22 +190,25 @@ serve(async (req) => {
     // Apply coupon if referral code is valid
     if (stripeCouponId) {
       sessionConfig.discounts = [{ coupon: stripeCouponId }];
-      logStep("Applying coupon to checkout", { couponId: stripeCouponId });
+      logStep('Applying coupon to checkout', { couponId: stripeCouponId });
     }
 
     const session = await stripe.checkout.sessions.create(sessionConfig);
 
-    logStep("Checkout session created", { sessionId: session.id, url: session.url });
+    logStep('Checkout session created', {
+      sessionId: session.id,
+      url: session.url,
+    });
 
     return new Response(JSON.stringify({ url: session.url }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR in create-checkout", { message: errorMessage });
+    logStep('ERROR in create-checkout', { message: errorMessage });
     return new Response(JSON.stringify({ error: errorMessage }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,
     });
   }

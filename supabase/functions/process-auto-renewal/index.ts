@@ -33,7 +33,11 @@ Deno.serve(async (req) => {
     { auth: { persistSession: false } }
   );
 
-  const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
+  const liveKey = Deno.env.get('STRIPE_SECRET_KEY');
+  const testKey = Deno.env.get('STRIPE_SECRET_KEY_TEST');
+  if (!liveKey && !testKey) throw new Error('No Stripe secret key configured');
+  // Use live key by default; falls back to test key if only test key is available
+  const stripe = new Stripe(liveKey || testKey || '', {
     apiVersion: '2025-08-27.basil',
   });
 

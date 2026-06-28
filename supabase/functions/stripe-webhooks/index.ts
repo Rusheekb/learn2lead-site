@@ -1,4 +1,3 @@
-import { serve } from 'https://deno.land/std@0.190.0/http/server.ts';
 import Stripe from 'https://esm.sh/stripe@18.5.0';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 import { Resend } from 'npm:resend@2.0.0';
@@ -8,7 +7,7 @@ const logStep = (step: string, details?: any) => {
   console.log(`[STRIPE-WEBHOOK] ${step}${detailsStr}`);
 };
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   const supabaseClient = createClient(
     Deno.env.get('SUPABASE_URL') ?? '',
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
@@ -187,7 +186,9 @@ async function allocateCreditsFromCheckout(
 
   if (!priceId) {
     logStep('ERROR: No price ID found in checkout session', { sessionId });
-    return;
+    throw new Error(
+      `No price ID found in checkout session ${sessionId} — Stripe will retry`
+    );
   }
 
   // Get plan details by price id
@@ -202,7 +203,9 @@ async function allocateCreditsFromCheckout(
       priceId,
       error: planError?.message,
     });
-    return;
+    throw new Error(
+      `No subscription plan found for price ${priceId} — Stripe will retry`
+    );
   }
 
   // Get user profile - try metadata user_id first, then email lookup
@@ -221,7 +224,9 @@ async function allocateCreditsFromCheckout(
       customerEmail,
       userId,
     });
-    return;
+    throw new Error(
+      `Cannot find user for credit allocation — email: ${customerEmail}, userId: ${userId} — Stripe will retry`
+    );
   }
 
   // Check for existing subscription record
@@ -340,6 +345,20 @@ async function processReferralReward(
       referrerId,
       discountAmount,
     });
+
+    // Idempotency check — skip if this session was already processed
+    const { data: existingUsage } = await supabaseClient
+      .from('referral_usage')
+      .select('id')
+      .eq('subscription_id', sessionId)
+      .maybeSingle();
+
+    if (existingUsage) {
+      logStep('Referral already processed for this session, skipping', {
+        sessionId,
+      });
+      return;
+    }
 
     const { data: referrerProfile, error: referrerError } = await supabaseClient
       .from('profiles')

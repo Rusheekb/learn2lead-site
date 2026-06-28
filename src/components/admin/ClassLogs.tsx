@@ -27,7 +27,7 @@ const ClassLogs: React.FC = () => {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
-  
+
   const {
     searchTerm,
     setSearchTerm,
@@ -44,7 +44,7 @@ const ClassLogs: React.FC = () => {
     studentMessages,
     activeDetailsTab,
     setActiveDetailsTab,
-    
+
     isLoading,
     error,
     paginatedClasses,
@@ -60,7 +60,7 @@ const ClassLogs: React.FC = () => {
     formatTime,
     clearFilters,
     handleDownloadFile,
-    
+
     handleRefreshData,
     handlePageChange,
     handlePageSizeChange,
@@ -77,7 +77,9 @@ const ClassLogs: React.FC = () => {
       const data = result.data || [];
       exportClassLogsToCSV(data, startDate, endDate);
       if (startDate && endDate) {
-        toast.success(`Exported ${data.length} class logs from ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}`);
+        toast.success(
+          `Exported ${data.length} class logs from ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}`
+        );
       } else {
         toast.success(`Exported ${data.length} class logs`);
       }
@@ -133,50 +135,68 @@ const ClassLogs: React.FC = () => {
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader className="p-3 sm:p-4 pb-1 sm:pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Total Revenue</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+              Total Revenue
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-3 sm:p-4 pt-0">
-            <div className="text-lg sm:text-2xl font-bold truncate">${totals.totalClassCost.toFixed(2)}</div>
+            <div className="text-lg sm:text-2xl font-bold truncate">
+              ${totals.totalClassCost.toFixed(2)}
+            </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="p-3 sm:p-4 pb-1 sm:pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Tutor Payments</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+              Tutor Payments
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-3 sm:p-4 pt-0">
-            <div className="text-lg sm:text-2xl font-bold truncate">${totals.totalTutorCost.toFixed(2)}</div>
+            <div className="text-lg sm:text-2xl font-bold truncate">
+              ${totals.totalTutorCost.toFixed(2)}
+            </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="p-3 sm:p-4 pb-1 sm:pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Net Profit</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+              Net Profit
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-3 sm:p-4 pt-0">
-            <div className="text-lg sm:text-2xl font-bold truncate">${profit.toFixed(2)}</div>
+            <div className="text-lg sm:text-2xl font-bold truncate">
+              ${profit.toFixed(2)}
+            </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="p-3 sm:p-4 pb-1 sm:pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Pending (Students)</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+              Pending (Students)
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-3 sm:p-4 pt-0">
-            <div className="text-lg sm:text-2xl font-bold text-destructive truncate">${totals.pendingStudent.toFixed(2)}</div>
+            <div className="text-lg sm:text-2xl font-bold text-destructive truncate">
+              ${totals.pendingStudent.toFixed(2)}
+            </div>
           </CardContent>
         </Card>
         <Card className="col-span-2 lg:col-span-1">
           <CardHeader className="p-3 sm:p-4 pb-1 sm:pb-2">
-            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Pending (Tutors)</CardTitle>
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">
+              Pending (Tutors)
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-3 sm:p-4 pt-0">
-            <div className="text-lg sm:text-2xl font-bold text-destructive truncate">${totals.pendingTutor.toFixed(2)}</div>
+            <div className="text-lg sm:text-2xl font-bold text-destructive truncate">
+              ${totals.pendingTutor.toFixed(2)}
+            </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Tutor Payment Summary */}
-      <TutorPaymentSummary
-        onPaymentUpdated={handleRefreshData}
-      />
+      <TutorPaymentSummary onPaymentUpdated={handleRefreshData} />
 
       <ClassFilters
         searchTerm={searchTerm}
@@ -193,7 +213,13 @@ const ClassLogs: React.FC = () => {
       <ClassTable
         paginatedClasses={paginatedClasses}
         isLoading={isLoading}
-        error={error ? (error instanceof Error ? error.message : String(error)) : null}
+        error={
+          error
+            ? error instanceof Error
+              ? error.message
+              : ((error as any)?.message ?? JSON.stringify(error))
+            : null
+        }
         handleClassClick={handleClassClick}
         clearFilters={handleRefreshData}
         formatTime={formatTime}

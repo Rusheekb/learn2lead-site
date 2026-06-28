@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { User, Calendar, Users } from 'lucide-react';
@@ -9,18 +8,18 @@ interface TutorNavLinksProps {
   profilePath: string;
 }
 
-const TutorNavLinks: React.FC<TutorNavLinksProps> = ({ 
-  isExpanded, 
-  profilePath 
+const TutorNavLinks: React.FC<TutorNavLinksProps> = ({
+  isExpanded,
+  profilePath,
 }) => {
   const { baseClasses, activeClasses, isLinkActive } = useSidebarStyles();
   const expandedClasses = isExpanded ? 'justify-start' : 'justify-center';
-  
+
   return (
     <nav className="space-y-1" aria-label="Tutor navigation">
-      <NavLink 
-        to="/tutor-dashboard?tab=schedule" 
-        className={() => 
+      <NavLink
+        to="/tutor-dashboard?tab=schedule"
+        className={() =>
           isLinkActive('/tutor-dashboard', { key: 'tab', value: 'schedule' })
             ? `${baseClasses} ${expandedClasses} ${activeClasses}`
             : `${baseClasses} ${expandedClasses}`
@@ -30,9 +29,9 @@ const TutorNavLinks: React.FC<TutorNavLinksProps> = ({
         <Calendar className="h-5 w-5" aria-hidden="true" />
         {isExpanded && <span className="ml-3">My Schedule</span>}
       </NavLink>
-      <NavLink 
-        to="/tutor-dashboard?tab=students" 
-        className={() => 
+      <NavLink
+        to="/tutor-dashboard?tab=students"
+        className={() =>
           isLinkActive('/tutor-dashboard', { key: 'tab', value: 'students' })
             ? `${baseClasses} ${expandedClasses} ${activeClasses}`
             : `${baseClasses} ${expandedClasses}`
@@ -42,10 +41,10 @@ const TutorNavLinks: React.FC<TutorNavLinksProps> = ({
         <Users className="h-5 w-5" aria-hidden="true" />
         {isExpanded && <span className="ml-3">My Students</span>}
       </NavLink>
-      <NavLink 
-        to={profilePath} 
-        className={({ isActive }) => 
-          isActive 
+      <NavLink
+        to="/tutor-dashboard?tab=profile"
+        className={() =>
+          isLinkActive('/tutor-dashboard', { key: 'tab', value: 'profile' })
             ? `${baseClasses} ${expandedClasses} ${activeClasses}`
             : `${baseClasses} ${expandedClasses}`
         }

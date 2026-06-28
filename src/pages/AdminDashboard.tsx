@@ -1,4 +1,3 @@
-
 import React, { useState, Suspense, lazy } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { UserDetailModal } from '@/components/admin/UserDetailModal';
@@ -6,20 +5,41 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Student, Tutor } from '@/types/tutorTypes';
 import { TutorStudentAssignment } from '@/services/assignments/assignmentService';
-import { fetchTutorsWithProfileIds, fetchStudentsWithProfileIds } from '@/services/assignments/fetchService';
-import { AdminDashboardSkeleton, TableSkeleton } from '@/components/shared/skeletons';
+import {
+  fetchTutorsWithProfileIds,
+  fetchStudentsWithProfileIds,
+} from '@/services/assignments/fetchService';
+import {
+  AdminDashboardSkeleton,
+  TableSkeleton,
+} from '@/components/shared/skeletons';
 import { ContentTransition } from '@/components/shared/PageTransition';
+import ProfilePage from '@/components/shared/ProfilePage';
 
 // Dynamically import heavy components
 const ClassLogs = lazy(() => import('@/components/admin/ClassLogs'));
 const TutorsManager = lazy(() => import('@/components/admin/TutorsManager'));
-const StudentsManager = lazy(() => import('@/components/admin/StudentsManager'));
-const AssignmentManager = lazy(() => import('@/components/admin/AssignmentManager'));
+const StudentsManager = lazy(
+  () => import('@/components/admin/StudentsManager')
+);
+const AssignmentManager = lazy(
+  () => import('@/components/admin/AssignmentManager')
+);
 const AdminSettings = lazy(() => import('@/pages/AdminSettings'));
-const ManualCreditAllocation = lazy(() => import('@/components/admin/ManualCreditAllocation').then(m => ({ default: m.ManualCreditAllocation })));
-const QuarterlyReports = lazy(() => import('@/components/admin/QuarterlyReports'));
-const ReferralAnalytics = lazy(() => import('@/components/admin/ReferralAnalytics'));
-const AdminCalendarView = lazy(() => import('@/components/admin/AdminCalendarView'));
+const ManualCreditAllocation = lazy(() =>
+  import('@/components/admin/ManualCreditAllocation').then((m) => ({
+    default: m.ManualCreditAllocation,
+  }))
+);
+const QuarterlyReports = lazy(
+  () => import('@/components/admin/QuarterlyReports')
+);
+const ReferralAnalytics = lazy(
+  () => import('@/components/admin/ReferralAnalytics')
+);
+const AdminCalendarView = lazy(
+  () => import('@/components/admin/AdminCalendarView')
+);
 
 type User = (Student | Tutor) & { role: 'student' | 'tutor' };
 
@@ -41,27 +61,23 @@ const AdminDashboard: React.FC = () => {
   const activeTab = searchParams.get('tab') || 'schedule';
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
-  const { 
-    data: assignments = [], 
+  const {
+    data: assignments = [],
     isLoading: isAssignmentsLoading,
-    refetch: refetchAssignments
+    refetch: refetchAssignments,
   } = useQuery({
     queryKey: ['assignments'],
     queryFn: fetchAssignments,
   });
-  
+
   // Fetch tutors with profile IDs for the AssignmentManager
-  const { 
-    data: tutorsWithProfileIds = []
-  } = useQuery({
+  const { data: tutorsWithProfileIds = [] } = useQuery({
     queryKey: ['tutors-with-profile-ids'],
     queryFn: fetchTutorsWithProfileIds,
   });
-  
+
   // Fetch students with profile IDs for the AssignmentManager
-  const { 
-    data: studentsWithProfileIds = []
-  } = useQuery({
+  const { data: studentsWithProfileIds = [] } = useQuery({
     queryKey: ['students-with-profile-ids'],
     queryFn: fetchStudentsWithProfileIds,
   });
@@ -140,11 +156,15 @@ const AdminDashboard: React.FC = () => {
             <AdminCalendarView />
           </Suspense>
         );
+      case 'profile':
+        return <ProfilePage />;
       default:
         return (
           <div className="space-y-6">
             <h3 className="text-lg font-semibold">Analytics Overview</h3>
-            <p className="text-muted-foreground">Basic analytics coming soon...</p>
+            <p className="text-muted-foreground">
+              Basic analytics coming soon...
+            </p>
           </div>
         );
     }
@@ -153,12 +173,15 @@ const AdminDashboard: React.FC = () => {
   return (
     <div className="space-y-6">
       <h2 className="text-xl sm:text-2xl font-bold">Admin Dashboard</h2>
-      
+
       <ContentTransition transitionKey={activeTab}>
         {renderContent()}
       </ContentTransition>
-      
-      <UserDetailModal user={selectedUser} onClose={() => setSelectedUser(null)} />
+
+      <UserDetailModal
+        user={selectedUser}
+        onClose={() => setSelectedUser(null)}
+      />
     </div>
   );
 };

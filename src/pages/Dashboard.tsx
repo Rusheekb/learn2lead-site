@@ -5,7 +5,11 @@ import DashboardContent from '@/components/student/DashboardContent';
 import { ClassCalendarContainer } from '@/components/student/ClassCalendarContainer';
 import { StudentDashboardSkeleton } from '@/components/shared/skeletons';
 import { ContentTransition } from '@/components/shared/PageTransition';
-import { SubjectResourcesList, SubjectResourcesPage } from '@/components/student/resources';
+import {
+  SubjectResourcesList,
+  SubjectResourcesPage,
+} from '@/components/student/resources';
+import ProfilePage from '@/components/shared/ProfilePage';
 
 const Dashboard = () => {
   const [selectedSubject, setSelectedSubject] = useState<number | null>(null);
@@ -46,23 +50,31 @@ const Dashboard = () => {
       case 'schedule':
         return (
           <div className="py-4">
-            <h3 className="text-lg sm:text-xl md:text-2xl font-bold mb-4 sm:mb-6">My Schedule</h3>
+            <h3 className="text-lg sm:text-xl md:text-2xl font-bold mb-4 sm:mb-6">
+              My Schedule
+            </h3>
             <ClassCalendarContainer studentId={user?.id || null} />
           </div>
         );
       case 'resources':
         return (
           <div className="py-4">
-            <h3 className="text-lg sm:text-xl md:text-2xl font-bold mb-4 sm:mb-6">Learning Resources</h3>
+            <h3 className="text-lg sm:text-xl md:text-2xl font-bold mb-4 sm:mb-6">
+              Learning Resources
+            </h3>
             <SubjectResourcesList />
           </div>
         );
+      case 'profile':
+        return <ProfilePage />;
       default:
-        return <DashboardContent 
-          studentId={user?.id || null}
-          selectedSubject={selectedSubject}
-          onSubjectClick={handleSubjectClick}
-        />;
+        return (
+          <DashboardContent
+            studentId={user?.id || null}
+            selectedSubject={selectedSubject}
+            onSubjectClick={handleSubjectClick}
+          />
+        );
     }
   };
 

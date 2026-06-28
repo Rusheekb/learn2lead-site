@@ -66,7 +66,7 @@ function applyServerFilters(
     for (const term of terms) {
       const pattern = `%${term}%`;
       query = query.or(
-        `Class Number.ilike.${pattern},Tutor Name.ilike.${pattern},Student Name.ilike.${pattern},Subject.ilike.${pattern},Title.ilike.${pattern}`
+        `"Class Number".ilike.${pattern},"Tutor Name".ilike.${pattern},"Student Name".ilike.${pattern},Subject.ilike.${pattern},Title.ilike.${pattern}`
       );
     }
   }
@@ -90,7 +90,7 @@ async function fetchAllBatched(filters: {
       .from('class_logs')
       .select('*')
       .order('Date', { ascending: false })
-      .order('Time (CST)', { ascending: false })
+      .order('"Time (CST)"', { ascending: false })
       .range(from, from + batchSize - 1);
 
     query = applyServerFilters(query, filters);
@@ -164,7 +164,7 @@ export const useClassLogs = () => {
         .from('class_logs')
         .select('*', { count: 'exact' })
         .order('Date', { ascending: false })
-        .order('Time (CST)', { ascending: false })
+        .order('"Time (CST)"', { ascending: false })
         .range(from, to);
 
       query = applyServerFilters(query, {

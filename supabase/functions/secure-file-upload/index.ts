@@ -1,20 +1,23 @@
-import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.58.0";
-import { getRateLimitKey, checkRateLimit, rateLimitResponse } from "../_shared/rateLimiter.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.58.0';
+import {
+  getRateLimitKey,
+  checkRateLimit,
+  rateLimitResponse,
+} from '../_shared/rateLimiter.ts';
+import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+Deno.serve(async (req) => {
+  const corsResponse = handleCorsPreflightRequest(req);
+  if (corsResponse) return corsResponse;
 
-serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const origin = req.headers.get('origin');
+  const corsHeaders = getCorsHeaders(origin);
 
   const rateLimitKey = getRateLimitKey(req, 'secure-file-upload');
-  const { limited, retryAfterMs } = checkRateLimit(rateLimitKey, { maxRequests: 15, windowMs: 60_000 });
+  const { limited, retryAfterMs } = checkRateLimit(rateLimitKey, {
+    maxRequests: 15,
+    windowMs: 60_000,
+  });
   if (limited) return rateLimitResponse(retryAfterMs!, corsHeaders);
 
   try {
@@ -30,18 +33,25 @@ serve(async (req) => {
     if (!authHeader) {
       return new Response(
         JSON.stringify({ error: 'Missing authorization header' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
       );
     }
 
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
+    const {
+      data: { user },
+      error: authError,
+    } = await supabaseClient.auth.getUser(authHeader.replace('Bearer ', ''));
 
     if (authError || !user) {
       return new Response(
         JSON.stringify({ error: 'Invalid authorization token' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        {
+          status: 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
       );
     }
 
@@ -52,8 +62,13 @@ serve(async (req) => {
 
     if (!file || !bucket || !path) {
       return new Response(
-        JSON.stringify({ error: 'Missing required fields: file, bucket, path' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({
+          error: 'Missing required fields: file, bucket, path',
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
       );
     }
 
@@ -66,7 +81,7 @@ serve(async (req) => {
       'text/plain',
       'image/jpeg',
       'image/png',
-      'image/gif'
+      'image/gif',
     ];
 
     // Validate file size
@@ -74,14 +89,17 @@ serve(async (req) => {
       await logValidation(supabaseClient, user.id, file, 'failed', {
         error: 'File size exceeds limit',
         maxSize: maxFileSize,
-        actualSize: file.size
+        actualSize: file.size,
       });
 
       return new Response(
-        JSON.stringify({ 
-          error: `File size ${formatFileSize(file.size)} exceeds maximum allowed size of ${formatFileSize(maxFileSize)}` 
+        JSON.stringify({
+          error: `File size ${formatFileSize(file.size)} exceeds maximum allowed size of ${formatFileSize(maxFileSize)}`,
         }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
       );
     }
 
@@ -90,28 +108,34 @@ serve(async (req) => {
       await logValidation(supabaseClient, user.id, file, 'failed', {
         error: 'Invalid file type',
         allowedTypes: allowedMimeTypes,
-        actualType: file.type
+        actualType: file.type,
       });
 
       return new Response(
         JSON.stringify({ error: `File type '${file.type}' is not allowed` }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
       );
     }
 
     // Basic malware scan
     const fileBuffer = await file.arrayBuffer();
     const malwareCheck = await scanForMalware(fileBuffer);
-    
+
     if (!malwareCheck.isClean) {
       await logValidation(supabaseClient, user.id, file, 'failed', {
         error: 'Malware detected',
-        details: malwareCheck.details
+        details: malwareCheck.details,
       });
 
       return new Response(
         JSON.stringify({ error: 'File failed security scan' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
       );
     }
 
@@ -122,102 +146,102 @@ serve(async (req) => {
     const securePath = `${user.id}/${timestamp}_${random}.${extension}`;
 
     // Upload to Supabase Storage
-    const { data: uploadData, error: uploadError } = await supabaseClient.storage
-      .from(bucket)
-      .upload(securePath, fileBuffer, {
+    const { data: uploadData, error: uploadError } =
+      await supabaseClient.storage.from(bucket).upload(securePath, fileBuffer, {
         contentType: file.type,
         cacheControl: '3600',
       });
 
     if (uploadError) {
       console.error('Upload error:', uploadError);
-      
+
       await logValidation(supabaseClient, user.id, file, 'failed', {
         error: 'Upload failed',
-        details: uploadError.message
+        details: uploadError.message,
       });
 
-      return new Response(
-        JSON.stringify({ error: 'Failed to upload file' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      return new Response(JSON.stringify({ error: 'Failed to upload file' }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     // Log successful validation and upload
     await logValidation(supabaseClient, user.id, file, 'passed', {
       uploadPath: securePath,
-      bucket: bucket
+      bucket: bucket,
     });
 
     // Log security event
-    await supabaseClient
-      .from('security_logs')
-      .insert({
-        event_type: 'file_upload_success',
-        user_id: user.id,
-        details: {
-          fileName: file.name,
-          fileSize: file.size,
-          mimeType: file.type,
-          bucket: bucket,
-          path: securePath
-        }
-      });
+    await supabaseClient.from('security_logs').insert({
+      event_type: 'file_upload_success',
+      user_id: user.id,
+      details: {
+        fileName: file.name,
+        fileSize: file.size,
+        mimeType: file.type,
+        bucket: bucket,
+        path: securePath,
+      },
+    });
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
+      JSON.stringify({
+        success: true,
         path: securePath,
-        publicUrl: supabaseClient.storage.from(bucket).getPublicUrl(securePath).data.publicUrl
+        publicUrl: supabaseClient.storage.from(bucket).getPublicUrl(securePath)
+          .data.publicUrl,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-
   } catch (error) {
     console.error('Secure upload error:', error);
-    
-    return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 });
 
 // Helper functions
-async function scanForMalware(fileBuffer: ArrayBuffer): Promise<{ isClean: boolean; details?: string }> {
+async function scanForMalware(
+  fileBuffer: ArrayBuffer
+): Promise<{ isClean: boolean; details?: string }> {
   const bytes = new Uint8Array(fileBuffer);
   const header = Array.from(bytes.slice(0, 100))
-    .map(b => b.toString(16).padStart(2, '0'))
+    .map((b) => b.toString(16).padStart(2, '0'))
     .join('');
 
   // Check for known malicious signatures
   const maliciousSignatures = ['4d5a', 'pk0304']; // PE executable, suspicious ZIP
-  
+
   for (const signature of maliciousSignatures) {
     if (header.includes(signature)) {
-      return { 
-        isClean: false, 
-        details: `Malicious signature detected: ${signature}` 
+      return {
+        isClean: false,
+        details: `Malicious signature detected: ${signature}`,
       };
     }
   }
 
   // Check for script content in text files
-  const textContent = new TextDecoder('utf-8', { fatal: false })
-    .decode(bytes.slice(0, 1000));
-  
+  const textContent = new TextDecoder('utf-8', { fatal: false }).decode(
+    bytes.slice(0, 1000)
+  );
+
   const suspiciousPatterns = [
     /javascript:/gi,
     /<script/gi,
     /eval\(/gi,
-    /document\.cookie/gi
+    /document\.cookie/gi,
   ];
 
   for (const pattern of suspiciousPatterns) {
     if (pattern.test(textContent)) {
-      return { 
-        isClean: false, 
-        details: `Suspicious script content detected` 
+      return {
+        isClean: false,
+        details: `Suspicious script content detected`,
       };
     }
   }
@@ -233,16 +257,14 @@ async function logValidation(
   details: any
 ): Promise<void> {
   try {
-    await supabaseClient
-      .from('file_validation_logs')
-      .insert({
-        file_name: file.name,
-        file_size: file.size,
-        mime_type: file.type,
-        validation_status: status,
-        validation_details: details,
-        user_id: userId
-      });
+    await supabaseClient.from('file_validation_logs').insert({
+      file_name: file.name,
+      file_size: file.size,
+      mime_type: file.type,
+      validation_status: status,
+      validation_details: details,
+      user_id: userId,
+    });
   } catch (error) {
     console.error('Failed to log validation:', error);
   }
@@ -252,11 +274,11 @@ function formatFileSize(bytes: number): string {
   const units = ['B', 'KB', 'MB', 'GB'];
   let size = bytes;
   let unitIndex = 0;
-  
+
   while (size >= 1024 && unitIndex < units.length - 1) {
     size /= 1024;
     unitIndex++;
   }
-  
+
   return `${Math.round(size * 100) / 100} ${units[unitIndex]}`;
 }
