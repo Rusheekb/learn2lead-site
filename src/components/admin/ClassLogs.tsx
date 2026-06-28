@@ -19,6 +19,7 @@ import { ExportDialog } from './class-logs/ExportDialog';
 import TutorPaymentSummary from './class-logs/TutorPaymentSummary';
 import StudentPaymentRecorder from './class-logs/StudentPaymentRecorder';
 import { useClassLogs } from '@/hooks/useClassLogs';
+import { getErrorMessage } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 
 const log = logger.create('ClassLogs');
@@ -213,13 +214,7 @@ const ClassLogs: React.FC = () => {
       <ClassTable
         paginatedClasses={paginatedClasses}
         isLoading={isLoading}
-        error={
-          error
-            ? error instanceof Error
-              ? error.message
-              : ((error as any)?.message ?? JSON.stringify(error))
-            : null
-        }
+        error={error ? getErrorMessage(error) : null}
         handleClassClick={handleClassClick}
         clearFilters={handleRefreshData}
         formatTime={formatTime}

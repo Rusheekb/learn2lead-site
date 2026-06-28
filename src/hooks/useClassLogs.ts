@@ -11,6 +11,7 @@ import { useDebounce } from './useDebounce';
 import { formatDateForDatabase, parseDateToLocal } from '@/utils/safeDateUtils';
 import { formatTime } from '@/utils/dateTimeUtils';
 import { logger } from '@/lib/logger';
+import { getErrorMessage } from '@/lib/utils';
 
 const log = logger.create('useClassLogs');
 
@@ -316,9 +317,7 @@ export const useClassLogs = () => {
       queryClient.invalidateQueries({ queryKey: classLogsKeys.all });
     },
     onError: (error) => {
-      toast.error(
-        `Failed to create class log: ${error instanceof Error ? error.message : 'Unknown error'}`
-      );
+      toast.error(`Failed to create class log: ${getErrorMessage(error)}`);
     },
   });
 
@@ -404,9 +403,7 @@ export const useClassLogs = () => {
           queryClient.setQueryData(key, data);
         });
       }
-      toast.error(
-        `Failed to update class log: ${error instanceof Error ? error.message : 'Unknown error'}`
-      );
+      toast.error(`Failed to update class log: ${getErrorMessage(error)}`);
     },
   });
 
@@ -448,9 +445,7 @@ export const useClassLogs = () => {
           queryClient.setQueryData(key, data);
         });
       }
-      toast.error(
-        `Failed to delete class log: ${error instanceof Error ? error.message : 'Unknown error'}`
-      );
+      toast.error(`Failed to delete class log: ${getErrorMessage(error)}`);
     },
   });
 
