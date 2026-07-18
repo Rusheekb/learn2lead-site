@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Profile } from '@/hooks/useProfile';
 import ProfileEditor from '../ProfileEditor';
@@ -17,7 +16,6 @@ const ProfileDisplay: React.FC<ProfileDisplayProps> = ({
   setIsEditMode,
   updateProfile,
 }) => {
-
   return isEditMode ? (
     <ProfileEditor
       profile={profile}
@@ -29,18 +27,7 @@ const ProfileDisplay: React.FC<ProfileDisplayProps> = ({
       onCancel={() => setIsEditMode(false)}
     />
   ) : (
-    <div className="space-y-6">
-      <ProfileView profile={profile} />
-      
-      <div className="flex justify-end">
-        <button
-          onClick={() => setIsEditMode(true)}
-          className="text-tutoring-blue hover:text-tutoring-blue/80 dark:text-tutoring-teal dark:hover:text-tutoring-teal/80"
-        >
-          Edit Profile
-        </button>
-      </div>
-    </div>
+    <ProfileView profile={profile} onEdit={() => setIsEditMode(true)} />
   );
 };
 

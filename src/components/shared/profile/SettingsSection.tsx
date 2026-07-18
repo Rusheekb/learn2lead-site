@@ -6,18 +6,20 @@ interface SettingsSectionProps {
   children: React.ReactNode;
 }
 
-const SettingsSection: React.FC<SettingsSectionProps> = ({ title, description, children }) => {
+const SettingsSection: React.FC<SettingsSectionProps> = ({
+  title,
+  description,
+  children,
+}) => {
   return (
-    <div className="space-y-4">
-      <div>
-        <h3 className="text-lg font-semibold text-foreground">{title}</h3>
+    <div className="rounded-xl border bg-card overflow-hidden shadow-sm">
+      <div className="px-6 py-4 border-b bg-muted/30">
+        <h3 className="text-sm font-semibold text-foreground">{title}</h3>
         {description && (
-          <p className="text-sm text-muted-foreground mt-1">{description}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
         )}
       </div>
-      <div className="space-y-4">
-        {children}
-      </div>
+      <div className="divide-y divide-border">{children}</div>
     </div>
   );
 };

@@ -1,4 +1,10 @@
-import React, { createContext, useState, useEffect, useCallback, useRef } from 'react';
+import React, {
+  createContext,
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+} from 'react';
 import { useAuth } from '../AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logger';
@@ -17,11 +23,16 @@ export interface SubscriptionState {
 export interface SubscriptionContextType extends SubscriptionState {
   refreshSubscription: () => Promise<void>;
   optimisticDeductCredits: (amount: number) => void;
+  restoreOptimisticCredits: (amount: number) => void;
 }
 
-export const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
+export const SubscriptionContext = createContext<
+  SubscriptionContextType | undefined
+>(undefined);
 
-export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const { user, session } = useAuth();
   const [state, setState] = useState<SubscriptionState>({
     subscribed: false,
@@ -36,14 +47,14 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const handleSessionRefresh = useCallback(async () => {
     if (isRefreshingRef.current) return;
-    
+
     isRefreshingRef.current = true;
     log.debug('Attempting session refresh...');
-    
+
     try {
       const { error: refreshError } = await supabase.auth.refreshSession();
       if (refreshError) throw refreshError;
-      
+
       log.debug('Session refreshed successfully');
       pollIntervalRef.current = 120000;
       return true;
@@ -69,17 +80,23 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
 
     try {
-      setState(prev => ({ ...prev, isLoading: true, error: null }));
+      setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
-      const { data, error } = await supabase.functions.invoke('check-subscription', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
+      const { data, error } = await supabase.functions.invoke(
+        'check-subscription',
+        {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        }
+      );
 
-      if (error && (error.message?.includes('Auth') || error.message?.includes('401'))) {
+      if (
+        error &&
+        (error.message?.includes('Auth') || error.message?.includes('401'))
+      ) {
         log.warn('Auth error detected, attempting refresh...');
-        
+
         const refreshed = await handleSessionRefresh();
         if (refreshed) {
           return fetchSubscription();
@@ -100,7 +117,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       if (data?.auth_error) {
         log.warn('Auth error in response, attempting refresh...');
-        
+
         const refreshed = await handleSessionRefresh();
         if (refreshed) {
           return fetchSubscription();
@@ -129,24 +146,37 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
       });
     } catch (err) {
       log.error('Error fetching subscription', err);
-      
+
       pollIntervalRef.current = Math.min(pollIntervalRef.current * 2, 240000);
-      
-      setState(prev => ({
+
+      setState((prev) => ({
         ...prev,
         isLoading: false,
-        error: err instanceof Error ? err.message : 'Failed to fetch subscription',
+        error:
+          err instanceof Error ? err.message : 'Failed to fetch subscription',
       }));
     }
   }, [user, session, handleSessionRefresh]);
 
   /** Optimistically deduct credits for instant UI feedback during class completion */
   const optimisticDeductCredits = useCallback((amount: number) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
-      creditsRemaining: prev.creditsRemaining !== null
-        ? Math.max(0, prev.creditsRemaining - amount)
-        : prev.creditsRemaining,
+      creditsRemaining:
+        prev.creditsRemaining !== null
+          ? Math.max(0, prev.creditsRemaining - amount)
+          : prev.creditsRemaining,
+    }));
+  }, []);
+
+  /** Restore credits that were optimistically deducted but whose operation failed */
+  const restoreOptimisticCredits = useCallback((amount: number) => {
+    setState((prev) => ({
+      ...prev,
+      creditsRemaining:
+        prev.creditsRemaining !== null
+          ? prev.creditsRemaining + amount
+          : prev.creditsRemaining,
     }));
   }, []);
 
@@ -170,6 +200,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         ...state,
         refreshSubscription: fetchSubscription,
         optimisticDeductCredits,
+        restoreOptimisticCredits,
       }}
     >
       {children}

@@ -31,16 +31,16 @@ const AdminNavLinks: React.FC<AdminNavLinksProps> = ({
   return (
     <nav className="space-y-1" aria-label="Admin navigation">
       <NavLink
-        to="/admin-dashboard?tab=calendar"
+        to="/admin-dashboard?tab=overview"
         className={() =>
-          isLinkActive('/admin-dashboard', { key: 'tab', value: 'calendar' })
+          isLinkActive('/admin-dashboard', { key: 'tab', value: 'overview' })
             ? `${baseClasses} ${expandedClasses} ${activeClasses}`
             : `${baseClasses} ${expandedClasses}`
         }
-        aria-label="Calendar"
+        aria-label="Overview"
       >
-        <Calendar className="h-5 w-5" aria-hidden="true" />
-        {isExpanded && <span className="ml-3">Calendar</span>}
+        <LayoutDashboard className="h-5 w-5" aria-hidden="true" />
+        {isExpanded && <span className="ml-3">Overview</span>}
       </NavLink>
       <NavLink
         to="/admin-dashboard?tab=schedule"
@@ -53,6 +53,18 @@ const AdminNavLinks: React.FC<AdminNavLinksProps> = ({
       >
         <FileText className="h-5 w-5" aria-hidden="true" />
         {isExpanded && <span className="ml-3">Class Logs</span>}
+      </NavLink>
+      <NavLink
+        to="/admin-dashboard?tab=calendar"
+        className={() =>
+          isLinkActive('/admin-dashboard', { key: 'tab', value: 'calendar' })
+            ? `${baseClasses} ${expandedClasses} ${activeClasses}`
+            : `${baseClasses} ${expandedClasses}`
+        }
+        aria-label="Calendar"
+      >
+        <Calendar className="h-5 w-5" aria-hidden="true" />
+        {isExpanded && <span className="ml-3">Calendar</span>}
       </NavLink>
       <NavLink
         to="/admin-dashboard?tab=credits"

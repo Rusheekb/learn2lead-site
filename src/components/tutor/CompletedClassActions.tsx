@@ -1,6 +1,11 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -29,16 +34,21 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
 }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { optimisticDeductCredits } = useSubscription();
+  const { optimisticDeductCredits, restoreOptimisticCredits } =
+    useSubscription();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
   const [content, setContent] = useState(classEvent.content || '');
   const [homework, setHomework] = useState(classEvent.homework || '');
   const [confirmChecked, setConfirmChecked] = useState(false);
-  
+
   // Use stable completion status hook to prevent flashing
-  const { isCompleted, isLoading: isCheckingStatus, setIsCompleted } = useClassCompletionStatus(classEvent.id);
+  const {
+    isCompleted,
+    isLoading: isCheckingStatus,
+    setIsCompleted,
+  } = useClassCompletionStatus(classEvent.id);
 
   const handleMarkComplete = useCallback(async () => {
     if (!user?.id || isCompleting || isCompleted) {
@@ -55,20 +65,24 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
       return;
     }
 
-    // Immediately set completing state and start removal process
+    // Immediately set completing state and close dialog
     setIsCompleting(true);
-    setIsDialogOpen(false); // Close dialog immediately
+    setIsDialogOpen(false);
 
-    // Optimistically deduct credits for instant feedback
-    const duration = classEvent.duration || (() => {
-      if (classEvent.startTime && classEvent.endTime) {
-        const start = new Date(`2000-01-01T${classEvent.startTime}`);
-        const end = new Date(`2000-01-01T${classEvent.endTime}`);
-        return Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60) * 100) / 100;
-      }
-      return 1;
-    })();
-    optimisticDeductCredits(duration);
+    const duration =
+      classEvent.duration ||
+      (() => {
+        if (classEvent.startTime && classEvent.endTime) {
+          const start = new Date(`2000-01-01T${classEvent.startTime}`);
+          const end = new Date(`2000-01-01T${classEvent.endTime}`);
+          return (
+            Math.round(
+              ((end.getTime() - start.getTime()) / (1000 * 60 * 60)) * 100
+            ) / 100
+          );
+        }
+        return 1;
+      })();
 
     try {
       // Get the current user's profile to ensure name matches RLS policy
@@ -83,34 +97,35 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
       }
 
       // Improve name matching for RLS policies
-      const tutorName = currentUserProfile?.first_name && currentUserProfile?.last_name
-        ? `${currentUserProfile.first_name} ${currentUserProfile.last_name}`.trim()
-        : currentUserProfile?.email || 'Unknown Tutor';
-      
+      const tutorName =
+        currentUserProfile?.first_name && currentUserProfile?.last_name
+          ? `${currentUserProfile.first_name} ${currentUserProfile.last_name}`.trim()
+          : currentUserProfile?.email || 'Unknown Tutor';
+
       // Reuse the duration calculated above for optimistic deduction
-      
+
       // Fetch existing class IDs for the same date to ensure unique ID generation
       const localDate = parseDateToLocal(classEvent.date);
       const dateStr = formatDateForDatabase(localDate);
-      
+
       const { data: existingLogs } = await supabase
         .from('class_logs')
         .select('"Class Number"')
         .eq('Date', dateStr);
-      
+
       const existingIds = (existingLogs || [])
-        .map(log => log['Class Number'])
+        .map((log) => log['Class Number'])
         .filter(Boolean) as string[];
-      
+
       // Generate unique Class ID (e.g., AR-MV-20251111-1)
       const studentName = classEvent.studentName || 'Unknown Student';
       const classNumber = generateClassId({
         studentName,
         tutorName,
         date: localDate,
-        existingIds
+        existingIds,
       });
-      
+
       // Prepare completion data with student ID for credit deduction
       const completionData: CompleteClassData = {
         classId: classEvent.id,
@@ -136,12 +151,15 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
         return;
       }
 
+      // Deduct credits optimistically now that all pre-flight checks have passed
+      optimisticDeductCredits(duration);
+
       // Use the new service function
       const success = await completeClass(completionData);
 
       if (!success) {
-        // If completion failed, the error was already shown by the service
-        setIsRemoving(true);
+        // Service already showed an error toast; roll back the optimistic deduction
+        restoreOptimisticCredits(duration);
         onUpdate();
         return;
       }
@@ -149,40 +167,67 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
       // Start the removal process immediately after success
       setIsRemoving(true);
       // toast.success is already shown by the service
-      
+
       // Force refresh of all relevant data to ensure UI is in sync
       const refreshPromises = [];
-      
+
       if (user?.id) {
         refreshPromises.push(
-          queryClient.invalidateQueries({ queryKey: ['scheduledClasses', user.id] }),
-          queryClient.refetchQueries({ queryKey: ['scheduledClasses', user.id] }),
-          queryClient.invalidateQueries({ queryKey: ['upcomingClasses', user.id] }),
+          queryClient.invalidateQueries({
+            queryKey: ['scheduledClasses', user.id],
+          }),
+          queryClient.refetchQueries({
+            queryKey: ['scheduledClasses', user.id],
+          }),
+          queryClient.invalidateQueries({
+            queryKey: ['upcomingClasses', user.id],
+          }),
           queryClient.invalidateQueries({ queryKey: ['classLogs'] })
         );
       }
-      
+
       if (classEvent.studentId) {
         refreshPromises.push(
-          queryClient.invalidateQueries({ queryKey: ['studentClasses', classEvent.studentId] }),
-          queryClient.invalidateQueries({ queryKey: ['upcomingClasses', classEvent.studentId] }),
-          queryClient.invalidateQueries({ queryKey: ['studentDashboard', classEvent.studentId] })
+          queryClient.invalidateQueries({
+            queryKey: ['studentClasses', classEvent.studentId],
+          }),
+          queryClient.invalidateQueries({
+            queryKey: ['upcomingClasses', classEvent.studentId],
+          }),
+          queryClient.invalidateQueries({
+            queryKey: ['studentDashboard', classEvent.studentId],
+          })
         );
       }
-      
+
       await Promise.all(refreshPromises);
+      queryClient.invalidateQueries({ queryKey: ['classHistory'] });
       setIsDialogOpen(false);
       onUpdate();
     } catch (error) {
       ErrorHandler.handle(error, 'CompletedClassActions.handleMarkComplete');
-      
+
+      // Roll back optimistic credit deduction (if it was applied before the error)
+      restoreOptimisticCredits(duration);
+
       // Reset state on error to show button again
       setIsCompleted(false);
       setIsRemoving(false);
     } finally {
       setIsCompleting(false);
     }
-  }, [user?.id, isCompleting, isCompleted, classEvent, content, homework, queryClient, onUpdate]);
+  }, [
+    user?.id,
+    isCompleting,
+    isCompleted,
+    classEvent,
+    content,
+    homework,
+    queryClient,
+    onUpdate,
+    optimisticDeductCredits,
+    restoreOptimisticCredits,
+  ]);
 
   // If class is being removed or already completed, don't render anything
   if (isRemoving || isCompleted) {
@@ -195,7 +240,7 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
 
   // Show processing state if currently completing
   if (isCompleting) {
-    return <Badge variant="secondary">Removing...</Badge>;
+    return <Badge variant="secondary">Logging class...</Badge>;
   }
 
   return (
@@ -218,15 +263,18 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
               Complete Class & Add Description
             </DialogTitle>
           </DialogHeader>
-          
+
           <div className="space-y-4">
             <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg flex gap-3">
               <AlertTriangle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
               <div className="space-y-1">
-                <p className="font-medium text-sm text-destructive">This action is permanent</p>
+                <p className="font-medium text-sm text-destructive">
+                  This action is permanent
+                </p>
                 <p className="text-sm text-muted-foreground">
-                  Credits will be deducted from the student's account and cannot be automatically restored. 
-                  Please verify all class information is correct before completing.
+                  Credits will be deducted from the student's account and cannot
+                  be automatically restored. Please verify all class information
+                  is correct before completing.
                 </p>
               </div>
             </div>
@@ -238,13 +286,16 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
                   <span className="font-medium">Title:</span> {classEvent.title}
                 </div>
                 <div>
-                  <span className="font-medium">Subject:</span> {classEvent.subject}
+                  <span className="font-medium">Subject:</span>{' '}
+                  {classEvent.subject}
                 </div>
                 <div>
-                  <span className="font-medium">Student:</span> {classEvent.studentName}
+                  <span className="font-medium">Student:</span>{' '}
+                  {classEvent.studentName}
                 </div>
                 <div>
-<span className="font-medium">Date:</span> {parseDateToLocal(classEvent.date).toLocaleDateString()}
+                  <span className="font-medium">Date:</span>{' '}
+                  {parseDateToLocal(classEvent.date).toLocaleDateString()}
                 </div>
               </div>
             </div>
@@ -262,7 +313,9 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
             </div>
 
             <div>
-              <Label htmlFor="homework">Homework/Follow-up tasks assigned</Label>
+              <Label htmlFor="homework">
+                Homework/Follow-up tasks assigned
+              </Label>
               <Textarea
                 id="homework"
                 value={homework}
@@ -276,13 +329,16 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
               <Checkbox
                 id="confirm"
                 checked={confirmChecked}
-                onCheckedChange={(checked) => setConfirmChecked(checked === true)}
+                onCheckedChange={(checked) =>
+                  setConfirmChecked(checked === true)
+                }
               />
               <label
                 htmlFor="confirm"
                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
               >
-                I confirm that all class information is accurate and understand that this action cannot be undone
+                I confirm that all class information is accurate and understand
+                that this action cannot be undone
               </label>
             </div>
 

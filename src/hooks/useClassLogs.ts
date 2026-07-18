@@ -4,7 +4,10 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { transformDbRecordToClassEvent } from '@/services/utils/classEventMapper';
-import { updatePaymentDate } from '@/services/class-operations/update/updatePaymentDate';
+import {
+  updatePaymentDate,
+  updateTutorPaymentStatus,
+} from '@/services/class-operations/update/updatePaymentDate';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { useDebounce } from './useDebounce';
@@ -505,8 +508,8 @@ export const useClassLogs = () => {
 
   const handleToggleTutorPayment = useCallback(
     async (classId: string, currentlyPaid: boolean) => {
-      const newDate = currentlyPaid ? null : new Date();
-      const newDateStr = newDate ? format(newDate, 'yyyy-MM-dd') : null;
+      const isPaid = !currentlyPaid;
+      const newDateStr = isPaid ? format(new Date(), 'yyyy-MM-dd') : null;
 
       // Optimistically update cached pages
       queryClient.setQueriesData(
@@ -516,17 +519,15 @@ export const useClassLogs = () => {
           return {
             ...old,
             records: old.records.map((r: ClassEvent) =>
-              r.id === classId ? { ...r, tutorPaymentDate: newDateStr } : r
+              r.id === classId
+                ? { ...r, tutorIsPaid: isPaid, tutorPaymentDate: newDateStr }
+                : r
             ),
           };
         }
       );
 
-      const ok = await updatePaymentDate(
-        classId,
-        'tutor_payment_date',
-        newDate
-      );
+      const ok = await updateTutorPaymentStatus(classId, isPaid);
       if (ok) {
         toast.success(
           currentlyPaid

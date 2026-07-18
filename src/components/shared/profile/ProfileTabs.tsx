@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Profile } from '@/hooks/useProfile';
@@ -26,22 +25,27 @@ const ProfileTabs: React.FC<ProfileTabsProps> = ({
   updateProfile,
   fetchRelevantUsers,
 }) => {
-  // Only show preferences tab for students and tutors, not admins
-  const showPreferences = profile.role === 'student' || profile.role === 'tutor';
+  // Preferences tab: students and tutors only
+  const showPreferences =
+    profile.role === 'student' || profile.role === 'tutor';
+  // Settings subtab: admins have a dedicated top-level Settings page, so hide it here
+  const showSettings = profile.role !== 'admin';
+
+  const colCount = showPreferences ? 3 : showSettings ? 2 : 1;
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab}>
-      <TabsList className={`grid w-full ${showPreferences ? 'grid-cols-3' : 'grid-cols-2'}`}>
+      <TabsList className={`grid w-full grid-cols-${colCount}`}>
         <TabsTrigger value="profile">Profile</TabsTrigger>
         {showPreferences && (
           <TabsTrigger value="preferences">Preferences</TabsTrigger>
         )}
-        <TabsTrigger value="settings">Settings</TabsTrigger>
+        {showSettings && <TabsTrigger value="settings">Settings</TabsTrigger>}
       </TabsList>
 
       <TabsContent value="profile" className="pt-6">
         <ContentTransition transitionKey={activeTab}>
-          <ProfileDisplay 
+          <ProfileDisplay
             profile={profile}
             isEditMode={isEditMode}
             setIsEditMode={setIsEditMode}
@@ -53,7 +57,7 @@ const ProfileTabs: React.FC<ProfileTabsProps> = ({
       {showPreferences && (
         <TabsContent value="preferences" className="pt-6">
           <ContentTransition transitionKey={activeTab}>
-            <PreferencesForm 
+            <PreferencesForm
               role={profile.role as 'student' | 'tutor'}
               userEmail={profile.email}
             />
@@ -61,14 +65,13 @@ const ProfileTabs: React.FC<ProfileTabsProps> = ({
         </TabsContent>
       )}
 
-      <TabsContent value="settings" className="pt-6">
-        <ContentTransition transitionKey={activeTab}>
-          <SettingsTab 
-            profile={profile}
-            updateProfile={updateProfile}
-          />
-        </ContentTransition>
-      </TabsContent>
+      {showSettings && (
+        <TabsContent value="settings" className="pt-6">
+          <ContentTransition transitionKey={activeTab}>
+            <SettingsTab profile={profile} updateProfile={updateProfile} />
+          </ContentTransition>
+        </TabsContent>
+      )}
     </Tabs>
   );
 };

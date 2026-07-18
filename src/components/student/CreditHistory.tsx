@@ -1,11 +1,16 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { AlertCircle, TrendingDown, TrendingUp, Calendar, FileText } from 'lucide-react';
+import {
+  AlertCircle,
+  TrendingDown,
+  TrendingUp,
+  FileText,
+  ChevronDown,
+} from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/logger';
@@ -24,8 +29,13 @@ interface CreditTransaction {
 
 export const CreditHistory: React.FC = () => {
   const { user } = useAuth();
+  const [isExpanded, setIsExpanded] = useState(false);
 
-  const { data: transactions = [], isLoading, error } = useQuery({
+  const {
+    data: transactions = [],
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ['credit-history', user?.id],
     queryFn: async () => {
       const { data, error: fetchError } = await supabase
@@ -33,7 +43,7 @@ export const CreditHistory: React.FC = () => {
         .select('*')
         .eq('student_id', user!.id)
         .order('created_at', { ascending: false })
-        .limit(20);
+        .limit(50);
 
       if (fetchError) {
         log.error('Error fetching credit history', fetchError);
@@ -45,137 +55,121 @@ export const CreditHistory: React.FC = () => {
     enabled: !!user?.id,
   });
 
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-6 w-48" />
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-16 w-full" />
-          ))}
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card className="border-destructive">
-        <CardContent className="pt-6">
-          <div className="flex items-center gap-2 text-destructive">
-            <AlertCircle className="h-5 w-5" />
-            <p className="text-sm">Error: {error instanceof Error ? error.message : 'Failed to load credit history'}</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (transactions.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            Credit History
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground text-center py-8">
-            No credit transactions yet. Complete a class to see your history here.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
+  const countLabel = isLoading
+    ? ''
+    : error
+      ? ''
+      : transactions.length === 0
+        ? 'No transactions'
+        : `${transactions.length}${transactions.length === 50 ? '+' : ''} transaction${transactions.length !== 1 ? 's' : ''}`;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileText className="h-5 w-5" />
-          Credit History
-        </CardTitle>
-        <p className="text-sm text-muted-foreground">
-          Recent transactions (last 20)
-        </p>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          {transactions.map((transaction) => {
-            const isDebit = transaction.transaction_type === 'debit';
-            
-            return (
-              <div
-                key={transaction.id}
-                className={cn(
-                  'flex items-center justify-between p-4 rounded-lg border',
-                  'transition-colors hover:bg-accent/5'
-                )}
-              >
-                <div className="flex items-start gap-3 flex-1">
+    <div className="rounded-lg border bg-card overflow-hidden">
+      {/* Always-visible toggle header */}
+      <button
+        type="button"
+        className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors text-left"
+        onClick={() => setIsExpanded((e) => !e)}
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+          <span className="text-sm font-medium">Credit History</span>
+          {countLabel && (
+            <span className="text-xs text-muted-foreground">
+              ({countLabel})
+            </span>
+          )}
+        </div>
+        <ChevronDown
+          className={cn(
+            'h-4 w-4 text-muted-foreground shrink-0 transition-transform duration-200',
+            isExpanded && 'rotate-180'
+          )}
+        />
+      </button>
+
+      {/* Collapsible content */}
+      {isExpanded && (
+        <div className="border-t">
+          {isLoading ? (
+            <div className="p-4 space-y-2">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-10 w-full" />
+              ))}
+            </div>
+          ) : error ? (
+            <div className="flex items-center gap-2 text-destructive p-4">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <p className="text-sm">Failed to load credit history</p>
+            </div>
+          ) : transactions.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-6 px-4">
+              No credit transactions yet. Complete a class to see your history
+              here.
+            </p>
+          ) : (
+            <div className="max-h-80 overflow-y-auto divide-y divide-border">
+              {transactions.map((t) => {
+                const isDebit = t.transaction_type === 'debit';
+                return (
                   <div
-                    className={cn(
-                      'rounded-full p-2',
-                      isDebit ? 'bg-destructive/10' : 'bg-primary/10'
-                    )}
+                    key={t.id}
+                    className="flex items-center gap-3 px-4 py-2.5"
                   >
-                    {isDebit ? (
-                      <TrendingDown className="h-4 w-4 text-destructive" />
-                    ) : (
-                      <TrendingUp className="h-4 w-4 text-primary" />
-                    )}
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">
-                      {transaction.reason}
-                    </p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Calendar className="h-3 w-3 text-muted-foreground" />
-                      <span className="text-xs text-muted-foreground">
-                        {format(new Date(transaction.created_at), 'MMM dd, yyyy h:mm a')}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 ml-4">
-                  <div className="text-right">
-                    <p
+                    <div
                       className={cn(
-                        'text-sm font-semibold',
-                        isDebit ? 'text-destructive' : 'text-primary'
+                        'rounded-full p-1.5 shrink-0',
+                        isDebit ? 'bg-destructive/10' : 'bg-primary/10'
                       )}
                     >
-                      {isDebit ? '' : '+'}
-                      {transaction.amount} {Math.abs(transaction.amount) === 1 ? 'hour' : 'hours'}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Balance: {transaction.balance_after}
-                    </p>
-                  </div>
-                  
-                  <Badge
-                    variant={isDebit ? 'destructive' : 'default'}
-                    className="capitalize"
-                  >
-                    {transaction.transaction_type}
-                  </Badge>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+                      {isDebit ? (
+                        <TrendingDown className="h-3 w-3 text-destructive" />
+                      ) : (
+                        <TrendingUp className="h-3 w-3 text-primary" />
+                      )}
+                    </div>
 
-        {transactions.length === 20 && (
-          <p className="text-xs text-muted-foreground text-center mt-4">
-            Showing most recent 20 transactions
-          </p>
-        )}
-      </CardContent>
-    </Card>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm truncate">{t.reason}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {format(new Date(t.created_at), 'MMM d, yyyy')}
+                      </p>
+                    </div>
+
+                    <div className="shrink-0 text-right whitespace-nowrap">
+                      <p
+                        className={cn(
+                          'text-sm font-semibold',
+                          isDebit ? 'text-destructive' : 'text-primary'
+                        )}
+                      >
+                        {isDebit ? '' : '+'}
+                        {t.amount}h
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Bal: {t.balance_after}
+                      </p>
+                    </div>
+
+                    <Badge
+                      variant={isDebit ? 'destructive' : 'default'}
+                      className="shrink-0 text-xs capitalize"
+                    >
+                      {t.transaction_type === 'credit' ? 'Credit' : 'Debit'}
+                    </Badge>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {!isLoading && !error && transactions.length === 50 && (
+            <p className="text-xs text-muted-foreground text-center py-2 border-t">
+              Showing most recent 50 transactions
+            </p>
+          )}
+        </div>
+      )}
+    </div>
   );
 };

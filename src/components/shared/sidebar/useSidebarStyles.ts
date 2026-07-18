@@ -6,7 +6,7 @@ export const useSidebarStyles = () => {
 
   const baseClasses = useMemo(
     () =>
-      'flex items-center px-4 py-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors duration-200 rounded-md focus:outline-none focus:ring-2 focus:ring-tutoring-blue',
+      'flex items-center px-4 py-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors duration-200 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-tutoring-blue',
     []
   );
 
@@ -17,28 +17,27 @@ export const useSidebarStyles = () => {
 
   const isLinkActive = (
     path: string,
-    queryParam?: { key: string; value?: string }
+    queryParam?: { key: string; value?: string | null }
   ) => {
     const searchParams = new URLSearchParams(location.search);
-
-    // First check if we're on the correct path
     const pathMatches = location.pathname === path;
 
-    // If no query param is required, just check the path
     if (!queryParam) return pathMatches;
 
-    // Check if the query parameter exists and has the right value (if specified)
+    // value: null means the param must NOT be present (e.g. the default/no-tab state)
+    if (queryParam.value === null) {
+      return pathMatches && !searchParams.has(queryParam.key);
+    }
+
     const paramExists = searchParams.has(queryParam.key);
     if (!paramExists) return false;
 
-    // If a specific value is required, check that too
-    if (queryParam.value) {
+    if (queryParam.value !== undefined) {
       return (
         pathMatches && searchParams.get(queryParam.key) === queryParam.value
       );
     }
 
-    // Otherwise just confirm the path matches and the param exists
     return pathMatches;
   };
 

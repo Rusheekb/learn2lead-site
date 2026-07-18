@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import { Bell, CreditCard } from 'lucide-react';
 import { Profile } from '@/hooks/useProfile';
 import { toast } from 'sonner';
@@ -11,7 +9,10 @@ interface NotificationPreferencesProps {
   updateProfile: (updates: Partial<Profile>) => Promise<Profile | null>;
 }
 
-const NotificationPreferences: React.FC<NotificationPreferencesProps> = ({ profile, updateProfile }) => {
+const NotificationPreferences: React.FC<NotificationPreferencesProps> = ({
+  profile,
+  updateProfile,
+}) => {
   const [classReminders, setClassReminders] = useState(
     (profile as any).notify_class_reminders ?? true
   );
@@ -25,7 +26,6 @@ const NotificationPreferences: React.FC<NotificationPreferencesProps> = ({ profi
     try {
       const result = await updateProfile({ [field]: value } as any);
       if (!result) {
-        // Revert on failure
         if (field === 'notify_class_reminders') setClassReminders(!value);
         if (field === 'notify_low_credits') setLowCredits(!value);
       }
@@ -39,34 +39,38 @@ const NotificationPreferences: React.FC<NotificationPreferencesProps> = ({ profi
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Notification Preferences</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Bell className="h-4 w-4 text-muted-foreground" />
-            <Label htmlFor="classReminders" className="cursor-pointer">
-              Class reminder emails
-            </Label>
+    <>
+      <div className="flex items-center justify-between px-6 py-4">
+        <div className="flex items-center gap-3">
+          <Bell className="h-4 w-4 text-muted-foreground shrink-0" />
+          <div>
+            <p className="text-sm font-medium">Upcoming class reminders</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Email sent before each scheduled class
+            </p>
           </div>
-          <Switch
-            id="classReminders"
-            checked={classReminders}
-            disabled={isSaving}
-            onCheckedChange={(checked) => {
-              setClassReminders(checked);
-              handleToggle('notify_class_reminders', checked);
-            }}
-          />
         </div>
-        <div className="flex items-center justify-between">
+        <Switch
+          id="classReminders"
+          checked={classReminders}
+          disabled={isSaving}
+          onCheckedChange={(checked) => {
+            setClassReminders(checked);
+            handleToggle('notify_class_reminders', checked);
+          }}
+        />
+      </div>
+
+      {profile.role === 'student' && (
+        <div className="flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
-            <CreditCard className="h-4 w-4 text-muted-foreground" />
-            <Label htmlFor="lowCredits" className="cursor-pointer">
-              Low-credit alerts
-            </Label>
+            <CreditCard className="h-4 w-4 text-muted-foreground shrink-0" />
+            <div>
+              <p className="text-sm font-medium">Low-credit alerts</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Notified when your credit balance runs low
+              </p>
+            </div>
           </div>
           <Switch
             id="lowCredits"
@@ -78,8 +82,8 @@ const NotificationPreferences: React.FC<NotificationPreferencesProps> = ({ profi
             }}
           />
         </div>
-      </CardContent>
-    </Card>
+      )}
+    </>
   );
 };
 

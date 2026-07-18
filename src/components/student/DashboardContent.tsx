@@ -1,10 +1,12 @@
-
 import React, { memo } from 'react';
 import SubjectCards from './SubjectCards';
 import { ClassCalendarContainer } from './ClassCalendarContainer';
 import ClassHistory from '@/components/shared/ClassHistory';
+import { CreditHistory } from './CreditHistory';
+import HomeworkInbox from './HomeworkInbox';
 import { subjects } from '@/constants/subjectsData';
 import { SimpleCreditsCounter } from './SimpleCreditsCounter';
+import OutstandingBalance from './OutstandingBalance';
 
 interface DashboardContentProps {
   studentId: string | null;
@@ -16,8 +18,11 @@ const DashboardContent: React.FC<DashboardContentProps> = memo(
   ({ studentId, selectedSubject, onSubjectClick }) => {
     return (
       <>
-        <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">My Learning Portal</h2>
+        <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
+          My Learning Portal
+        </h2>
         <SimpleCreditsCounter />
+        <OutstandingBalance />
         <div className="mt-6 sm:mt-8">
           <SubjectCards
             subjects={subjects}
@@ -28,9 +33,15 @@ const DashboardContent: React.FC<DashboardContentProps> = memo(
         <div className="mt-6 sm:mt-8">
           <ClassCalendarContainer studentId={studentId} />
         </div>
-        
+
         <div className="mt-6 sm:mt-8">
-          <ClassHistory userRole="student" />
+          <ClassHistory userRole="student" collapsible />
+        </div>
+        <div className="mt-3">
+          <HomeworkInbox />
+        </div>
+        <div className="mt-3">
+          <CreditHistory />
         </div>
       </>
     );

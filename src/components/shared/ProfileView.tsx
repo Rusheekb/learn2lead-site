@@ -2,12 +2,15 @@ import React from 'react';
 import { Profile } from '@/hooks/useProfile';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Pencil } from 'lucide-react';
 
 interface ProfileViewProps {
   profile: Profile;
+  onEdit?: () => void;
 }
 
-const ProfileView: React.FC<ProfileViewProps> = ({ profile }) => {
+const ProfileView: React.FC<ProfileViewProps> = ({ profile, onEdit }) => {
   const getInitials = (firstName?: string | null, lastName?: string | null) => {
     let initials = '';
     if (firstName) initials += firstName[0];
@@ -17,8 +20,14 @@ const ProfileView: React.FC<ProfileViewProps> = ({ profile }) => {
 
   return (
     <Card className="w-full max-w-2xl mx-auto overflow-hidden">
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between pb-4">
         <CardTitle>Profile</CardTitle>
+        {onEdit && (
+          <Button variant="outline" size="sm" onClick={onEdit}>
+            <Pencil className="h-3.5 w-3.5 mr-1.5" />
+            Edit
+          </Button>
+        )}
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="flex flex-col items-center gap-4 mb-6">

@@ -1,4 +1,3 @@
-
 // Common status and payment types
 export type ClassStatus = 'scheduled' | 'completed' | 'cancelled' | 'pending';
 export type AttendanceStatus =
@@ -45,6 +44,7 @@ export interface ClassEvent extends BaseEvent {
   tutorCost?: number;
   studentPaymentDate?: Date | null;
   tutorPaymentDate?: Date | null;
+  tutorIsPaid?: boolean;
   studentPayment?: PaymentStatus;
   tutorPayment?: PaymentStatus;
   isCodeLog?: boolean;
@@ -103,6 +103,7 @@ export interface Tutor {
   email: string;
   subjects: string[];
   rating?: number;
+  ratingCount?: number;
   classes?: number;
   hourlyRate?: number;
   active?: boolean;

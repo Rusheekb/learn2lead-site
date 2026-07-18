@@ -242,6 +242,9 @@ Deno.serve(async (req) => {
             : null,
           student_payment_date: studentPaymentDate,
           tutor_payment_date: tutorPaymentDate,
+          // Set the explicit paid flag based on whether a payment date exists.
+          // New rows default to FALSE, so imports with a date must set this explicitly.
+          tutor_is_paid: !!tutorPaymentDate,
           'Additional Info': row['Additional Info'] || null,
         };
 

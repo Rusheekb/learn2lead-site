@@ -1,4 +1,3 @@
-
 import React, { useMemo, useCallback, memo } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -46,135 +45,165 @@ const buildDateSets = (classes: ClassEvent[]) => {
   return { scheduled, completed };
 };
 
-const CalendarWithEvents: React.FC<CalendarWithEventsProps> = memo(({
-  selectedDate,
-  setSelectedDate,
-  scheduledClasses,
-  onSelectEvent,
-  onAddEventClick,
-  getUnreadMessageCount,
-}) => {
-  const { userRole } = useAuth();
+const CalendarWithEvents: React.FC<CalendarWithEventsProps> = memo(
+  ({
+    selectedDate,
+    setSelectedDate,
+    scheduledClasses,
+    onSelectEvent,
+    onAddEventClick,
+    getUnreadMessageCount,
+  }) => {
+    const { userRole } = useAuth();
 
-  // Memoize date sets so modifier functions are O(1) lookups
-  const { scheduled: scheduledDates, completed: completedDates } = useMemo(
-    () => buildDateSets(scheduledClasses),
-    [scheduledClasses]
-  );
+    // Memoize date sets so modifier functions are O(1) lookups
+    const { scheduled: scheduledDates, completed: completedDates } = useMemo(
+      () => buildDateSets(scheduledClasses),
+      [scheduledClasses]
+    );
 
-  const hasScheduledOnDate = useCallback(
-    (date: Date) => scheduledDates.has(format(date, 'yyyy-MM-dd')),
-    [scheduledDates]
-  );
+    const hasScheduledOnDate = useCallback(
+      (date: Date) => scheduledDates.has(format(date, 'yyyy-MM-dd')),
+      [scheduledDates]
+    );
 
-  const hasCompletedOnDate = useCallback(
-    (date: Date) => completedDates.has(format(date, 'yyyy-MM-dd')),
-    [completedDates]
-  );
+    const hasCompletedOnDate = useCallback(
+      (date: Date) => completedDates.has(format(date, 'yyyy-MM-dd')),
+      [completedDates]
+    );
 
-  // Memoize filtered events for selected date
-  const eventsForSelectedDate = useMemo(() => {
-    return scheduledClasses.filter((event) => {
-      const eventDate = parseDateToLocal(event.date);
-      return isSameDay(selectedDate, eventDate);
-    });
-  }, [selectedDate, scheduledClasses]);
+    // Memoize filtered events for selected date
+    const eventsForSelectedDate = useMemo(() => {
+      return scheduledClasses.filter((event) => {
+        const eventDate = parseDateToLocal(event.date);
+        return isSameDay(selectedDate, eventDate);
+      });
+    }, [selectedDate, scheduledClasses]);
 
-  const handleClassUpdate = useCallback(() => {
-    if (eventsForSelectedDate.length > 0) {
-      onSelectEvent(eventsForSelectedDate[0]);
-    }
-  }, [eventsForSelectedDate, onSelectEvent]);
+    const handleClassUpdate = useCallback(() => {
+      if (eventsForSelectedDate.length > 0) {
+        onSelectEvent(eventsForSelectedDate[0]);
+      }
+    }, [eventsForSelectedDate, onSelectEvent]);
 
-  // Memoize calendar modifiers object
-  const modifiers = useMemo(() => ({
-    hasScheduled: hasScheduledOnDate,
-    hasCompleted: hasCompletedOnDate,
-  }), [hasScheduledOnDate, hasCompletedOnDate]);
+    // Memoize calendar modifiers object
+    const modifiers = useMemo(
+      () => ({
+        hasScheduled: hasScheduledOnDate,
+        hasCompleted: hasCompletedOnDate,
+      }),
+      [hasScheduledOnDate, hasCompletedOnDate]
+    );
 
-  const modifiersClassNames = useMemo(() => ({
-    hasScheduled:
-      'relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:bg-green-500 after:rounded-full',
-    hasCompleted:
-      'relative after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:bg-gray-400 after:rounded-full',
-  }), []);
+    const modifiersClassNames = useMemo(
+      () => ({
+        hasScheduled:
+          'relative before:absolute before:bottom-0.5 before:left-1/3 before:-translate-x-1/2 before:h-1.5 before:w-1.5 before:bg-blue-500 before:rounded-full',
+        hasCompleted:
+          'relative after:absolute after:bottom-0.5 after:left-2/3 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:bg-emerald-500 after:rounded-full',
+      }),
+      []
+    );
 
-  // Stable DayContent component
-  const DayContent = useCallback(({ date, ...props }: { date: Date }) => (
-    <div {...props}>
-      {date.getDate()}
-      {hasScheduledOnDate(date) && (
-        <span className="sr-only"> (has scheduled classes)</span>
-      )}
-      {hasCompletedOnDate(date) && (
-        <span className="sr-only"> (has completed classes)</span>
-      )}
-    </div>
-  ), [hasScheduledOnDate, hasCompletedOnDate]);
-
-  const components = useMemo(() => ({
-    DayContent,
-  }), [DayContent]);
-
-  const handleDateSelect = useCallback(
-    (date: Date | undefined) => { if (date) setSelectedDate(date); },
-    [setSelectedDate]
-  );
-
-  return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-      <Card className="md:col-span-1">
-        <CardHeader className="pb-2 sm:pb-4">
-          <CardTitle className="text-base sm:text-lg">Calendar</CardTitle>
-        </CardHeader>
-        <CardContent className="p-2 sm:p-6 pt-0">
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={handleDateSelect}
-            className="border rounded-md p-1 sm:p-2 bg-card mx-auto"
-            modifiers={modifiers}
-            modifiersClassNames={modifiersClassNames}
-            components={components}
-          />
-        </CardContent>
-      </Card>
-      <Card className="md:col-span-2">
-        <CardHeader className="flex flex-row items-center justify-between pb-2 sm:pb-4">
-          <CardTitle className="text-base sm:text-lg">{format(selectedDate, 'MMMM d, yyyy')}</CardTitle>
-        </CardHeader>
-        <CardContent className="p-3 sm:p-6 pt-0">
-          {eventsForSelectedDate.length === 0 ? (
-            <div className="flex flex-col items-center justify-center p-6 sm:p-8 border border-dashed rounded-lg space-y-4">
-              <p className="text-muted-foreground text-sm sm:text-base">No classes scheduled for this day</p>
-              {userRole === 'tutor' && (
-                <button 
-                  className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors text-sm"
-                  onClick={onAddEventClick}
-                >
-                  Add Class
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-3 sm:space-y-4">
-              {eventsForSelectedDate.map((event) => (
-                <EventRow
-                  key={event.id}
-                  event={event}
-                  onSelectEvent={onSelectEvent}
-                  getUnreadMessageCount={getUnreadMessageCount}
-                  userRole={userRole}
-                  onUpdate={handleClassUpdate}
-                />
-              ))}
-            </div>
+    // Stable DayContent component
+    const DayContent = useCallback(
+      ({ date, ...props }: { date: Date }) => (
+        <div {...props}>
+          {date.getDate()}
+          {hasScheduledOnDate(date) && (
+            <span className="sr-only"> (has scheduled classes)</span>
           )}
-        </CardContent>
-      </Card>
-    </div>
-  );
-});
+          {hasCompletedOnDate(date) && (
+            <span className="sr-only"> (has completed classes)</span>
+          )}
+        </div>
+      ),
+      [hasScheduledOnDate, hasCompletedOnDate]
+    );
+
+    const components = useMemo(
+      () => ({
+        DayContent,
+      }),
+      [DayContent]
+    );
+
+    const handleDateSelect = useCallback(
+      (date: Date | undefined) => {
+        if (date) setSelectedDate(date);
+      },
+      [setSelectedDate]
+    );
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+        <Card className="md:col-span-1">
+          <CardHeader className="pb-2 sm:pb-4">
+            <CardTitle className="text-base sm:text-lg">Calendar</CardTitle>
+          </CardHeader>
+          <CardContent className="p-2 sm:p-6 pt-0">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={handleDateSelect}
+              className="border rounded-md p-1 sm:p-2 bg-card mx-auto"
+              modifiers={modifiers}
+              modifiersClassNames={modifiersClassNames}
+              components={components}
+            />
+            <div className="mt-2 px-1 flex flex-col gap-1 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1.5">
+                <div className="h-1.5 w-1.5 rounded-full bg-blue-500 shrink-0" />
+                Scheduled
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
+                Logged
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="md:col-span-2">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 sm:pb-4">
+            <CardTitle className="text-base sm:text-lg">
+              {format(selectedDate, 'MMMM d, yyyy')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-3 sm:p-6 pt-0">
+            {eventsForSelectedDate.length === 0 ? (
+              <div className="flex flex-col items-center justify-center p-6 sm:p-8 border border-dashed rounded-lg space-y-4">
+                <p className="text-muted-foreground text-sm sm:text-base">
+                  No classes scheduled for this day
+                </p>
+                {userRole === 'tutor' && (
+                  <button
+                    className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors text-sm"
+                    onClick={onAddEventClick}
+                  >
+                    Add Class
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-3 sm:space-y-4">
+                {eventsForSelectedDate.map((event) => (
+                  <EventRow
+                    key={event.id}
+                    event={event}
+                    onSelectEvent={onSelectEvent}
+                    getUnreadMessageCount={getUnreadMessageCount}
+                    userRole={userRole}
+                    onUpdate={handleClassUpdate}
+                  />
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+);
 
 CalendarWithEvents.displayName = 'CalendarWithEvents';
 
@@ -187,69 +216,71 @@ interface EventRowProps {
   onUpdate: () => void;
 }
 
-const EventRow: React.FC<EventRowProps> = memo(({
-  event,
-  onSelectEvent,
-  getUnreadMessageCount,
-  userRole,
-  onUpdate,
-}) => {
-  const unreadCount = getUnreadMessageCount(event.id);
+const EventRow: React.FC<EventRowProps> = memo(
+  ({ event, onSelectEvent, getUnreadMessageCount, userRole, onUpdate }) => {
+    const unreadCount = getUnreadMessageCount(event.id);
 
-  return (
-    <div
-      className={`p-3 sm:p-4 border rounded-lg transition-colors ${event.status === 'completed' ? 'bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-900' : 'hover:bg-muted/50'}`}
-    >
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
-        <div 
-          className="flex-1 min-w-0 cursor-pointer"
-          onClick={() => onSelectEvent(event)}
-        >
-          <h3 className="font-medium flex items-center gap-1.5 text-sm sm:text-base">
-            {event.status === 'completed' && <CheckCircle className="h-4 w-4 text-green-600 shrink-0" />}
-            <span className="truncate">{event.title}</span>
-          </h3>
-          <p className="text-xs sm:text-sm text-muted-foreground">{event.subject}</p>
-          <p className="text-xs sm:text-sm text-muted-foreground">
-            {event.startTime} - {event.endTime} • {event.studentName}
-          </p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          {unreadCount > 0 && (
-            <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
-              {unreadCount}
+    return (
+      <div
+        className={`p-3 sm:p-4 border rounded-lg transition-colors ${event.status === 'completed' ? 'bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-900' : 'hover:bg-muted/50'}`}
+      >
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+          <div
+            className="flex-1 min-w-0 cursor-pointer"
+            onClick={() => onSelectEvent(event)}
+          >
+            <h3 className="font-medium flex items-center gap-1.5 text-sm sm:text-base">
+              {event.status === 'completed' && (
+                <CheckCircle className="h-4 w-4 text-green-600 shrink-0" />
+              )}
+              <span className="truncate">{event.title}</span>
+            </h3>
+            <p className="text-xs sm:text-sm text-muted-foreground">
+              {event.subject}
+            </p>
+            <p className="text-xs sm:text-sm text-muted-foreground">
+              {event.startTime} - {event.endTime} • {event.studentName}
+            </p>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            {unreadCount > 0 && (
+              <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
+                {unreadCount}
+              </span>
+            )}
+            <span
+              className={`px-2 py-0.5 text-xs rounded-full ${
+                event.status === 'completed'
+                  ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300'
+                  : event.status === 'cancelled'
+                    ? 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300'
+                    : 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300'
+              }`}
+            >
+              {event.status}
             </span>
-          )}
-          <span className={`px-2 py-0.5 text-xs rounded-full ${
-            event.status === 'completed' ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300' :
-            event.status === 'cancelled' ? 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300' :
-            'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300'
-          }`}>
-            {event.status}
-          </span>
-          {userRole === 'tutor' && (
-            <CompletedClassActions 
-              classEvent={event} 
-              onUpdate={onUpdate}
-            />
-          )}
+            {userRole === 'tutor' && (
+              <CompletedClassActions classEvent={event} onUpdate={onUpdate} />
+            )}
+          </div>
         </div>
       </div>
-    </div>
-  );
-}, (prev, next) => {
-  return (
-    prev.event.id === next.event.id &&
-    prev.event.status === next.event.status &&
-    prev.event.title === next.event.title &&
-    prev.event.startTime === next.event.startTime &&
-    prev.event.endTime === next.event.endTime &&
-    prev.event.studentName === next.event.studentName &&
-    prev.userRole === next.userRole &&
-    prev.onSelectEvent === next.onSelectEvent &&
-    prev.getUnreadMessageCount === next.getUnreadMessageCount
-  );
-});
+    );
+  },
+  (prev, next) => {
+    return (
+      prev.event.id === next.event.id &&
+      prev.event.status === next.event.status &&
+      prev.event.title === next.event.title &&
+      prev.event.startTime === next.event.startTime &&
+      prev.event.endTime === next.event.endTime &&
+      prev.event.studentName === next.event.studentName &&
+      prev.userRole === next.userRole &&
+      prev.onSelectEvent === next.onSelectEvent &&
+      prev.getUnreadMessageCount === next.getUnreadMessageCount
+    );
+  }
+);
 
 EventRow.displayName = 'EventRow';
 

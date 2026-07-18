@@ -19,12 +19,11 @@ const StudentNavLinks: React.FC<StudentNavLinksProps> = ({
     <nav className="space-y-1" aria-label="Student navigation">
       <NavLink
         to="/dashboard"
-        className={({ isActive }) =>
-          isActive || isLinkActive('/dashboard')
+        className={() =>
+          isLinkActive('/dashboard', { key: 'tab', value: null })
             ? `${baseClasses} ${expandedClasses} ${activeClasses}`
             : `${baseClasses} ${expandedClasses}`
         }
-        end
         aria-label="Dashboard"
       >
         <LayoutDashboard className="h-5 w-5" aria-hidden="true" />

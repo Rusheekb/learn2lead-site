@@ -25,9 +25,13 @@ Deno.serve(async (req) => {
       throw new Error('No Stripe signature found in request headers');
     }
 
-    // Verify webhook signature - supports both live and test secrets
+    // Verify webhook signature.
+    // In live mode (STRIPE_MODE=live) only the live secret is tried — the test secret
+    // fallback is intentionally disabled to prevent test events being processed as real payments.
     const liveSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
     const testSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET_TEST');
+    const stripeMode = Deno.env.get('STRIPE_MODE') || 'live';
+    const isLiveMode = stripeMode === 'live';
 
     if (!liveSecret && !testSecret) {
       throw new Error(
@@ -35,12 +39,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Use a temporary Stripe instance for signature verification
     const tempStripe = new Stripe(
       Deno.env.get('STRIPE_SECRET_KEY') || 'sk_placeholder',
-      {
-        apiVersion: '2025-08-27.basil',
-      }
+      { apiVersion: '2025-08-27.basil' }
     );
 
     let event;
@@ -56,30 +57,29 @@ Deno.serve(async (req) => {
         );
         logStep('Webhook signature verified with live secret');
         verificationSucceeded = true;
-      } catch (liveErr) {
-        logStep('Live secret verification failed, trying test secret...');
+      } catch (_liveErr) {
+        logStep('Live secret verification failed');
       }
     }
 
-    if (!verificationSucceeded && testSecret) {
+    // Only fall back to test secret in non-live environments.
+    if (!verificationSucceeded && !isLiveMode && testSecret) {
       try {
         event = await tempStripe.webhooks.constructEventAsync(
           body,
           signature,
           testSecret
         );
-        logStep('Webhook signature verified with test secret');
+        logStep('Webhook signature verified with test secret (non-live mode)');
         isTestEvent = true;
         verificationSucceeded = true;
-      } catch (testErr) {
+      } catch (_testErr) {
         logStep('ERROR: Test secret verification also failed');
       }
     }
 
     if (!verificationSucceeded || !event) {
-      throw new Error(
-        'Webhook signature verification failed with all available secrets'
-      );
+      throw new Error('Webhook signature verification failed');
     }
 
     // Use the correct Stripe key for API calls based on event mode
@@ -128,6 +128,15 @@ Deno.serve(async (req) => {
         break;
       }
 
+      case 'payment_intent.succeeded': {
+        const pi = event.data.object as Stripe.PaymentIntent;
+        // Only recover auto-renewal payments — manual purchases flow through checkout.session.completed
+        if (pi.metadata?.auto_renewal === 'true') {
+          await handleAutoRenewalRecovery(supabaseClient, pi);
+        }
+        break;
+      }
+
       default:
         logStep('Unhandled event type', { type: event.type });
     }
@@ -145,6 +154,100 @@ Deno.serve(async (req) => {
     });
   }
 });
+
+// Recovery handler: allocates credits for auto-renewal PaymentIntents that succeeded
+// but whose ledger entry was never created (e.g. network failure in process-auto-renewal).
+async function handleAutoRenewalRecovery(
+  supabaseClient: any,
+  pi: Stripe.PaymentIntent
+) {
+  const studentId = pi.metadata?.user_id;
+  const planName = pi.metadata?.plan_name;
+
+  if (!studentId || !planName) {
+    logStep('payment_intent.succeeded: missing metadata, skipping recovery', {
+      id: pi.id,
+    });
+    return;
+  }
+
+  // Idempotency: skip if credits were already allocated for this payment intent
+  const { data: existing } = await supabaseClient
+    .from('class_credits_ledger')
+    .select('id')
+    .eq('invoice_id', pi.id)
+    .maybeSingle();
+
+  if (existing) {
+    logStep(
+      'payment_intent.succeeded: credits already allocated, no recovery needed',
+      { id: pi.id }
+    );
+    return;
+  }
+
+  logStep(
+    'payment_intent.succeeded: recovering missing credits from auto-renewal',
+    {
+      id: pi.id,
+      studentId,
+      planName,
+    }
+  );
+
+  const { data: plan } = await supabaseClient
+    .from('subscription_plans')
+    .select('*')
+    .ilike('name', planName)
+    .eq('active', true)
+    .single();
+
+  if (!plan) {
+    logStep('payment_intent.succeeded: plan not found for recovery', {
+      planName,
+      id: pi.id,
+    });
+    return;
+  }
+
+  const { data: sub } = await supabaseClient
+    .from('student_subscriptions')
+    .select('id, credits_remaining')
+    .eq('student_id', studentId)
+    .in('status', ['active', 'trialing'])
+    .maybeSingle();
+
+  if (!sub) {
+    logStep(
+      'payment_intent.succeeded: no active subscription found for recovery',
+      { studentId, id: pi.id }
+    );
+    return;
+  }
+
+  const newBalance = sub.credits_remaining + plan.classes_per_month;
+
+  await supabaseClient.from('class_credits_ledger').insert({
+    student_id: studentId,
+    subscription_id: sub.id,
+    transaction_type: 'credit',
+    amount: plan.classes_per_month,
+    balance_after: newBalance,
+    reason: `Auto-renewal (webhook recovery): ${plan.name}`,
+    invoice_id: pi.id,
+  });
+
+  await supabaseClient.from('notifications').insert({
+    user_id: studentId,
+    message: `${plan.classes_per_month} credits added from your recent auto-renewal (${plan.name}).`,
+    type: 'auto_renewal_success',
+  });
+
+  logStep('payment_intent.succeeded: recovery complete', {
+    newBalance,
+    id: pi.id,
+  });
+}
 
 // Allocate credits from a one-time payment checkout session
 async function allocateCreditsFromCheckout(

@@ -4,1261 +4,1269 @@ export type Json =
   | boolean
   | null
   | { [key: string]: Json | undefined }
-  | Json[]
+  | Json[];
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "12.2.3 (519615d)"
-  }
+    PostgrestVersion: '12.2.3 (519615d)';
+  };
   public: {
     Tables: {
       auto_renewal_settings: {
         Row: {
-          created_at: string
-          enabled: boolean
-          id: string
-          last_renewal_at: string | null
-          last_renewal_error: string | null
-          renewal_pack: string
-          stripe_customer_id: string | null
-          student_id: string
-          threshold: number
-          updated_at: string
-        }
+          created_at: string;
+          enabled: boolean;
+          id: string;
+          last_renewal_at: string | null;
+          last_renewal_error: string | null;
+          renewal_pack: string;
+          stripe_customer_id: string | null;
+          student_id: string;
+          threshold: number;
+          updated_at: string;
+        };
         Insert: {
-          created_at?: string
-          enabled?: boolean
-          id?: string
-          last_renewal_at?: string | null
-          last_renewal_error?: string | null
-          renewal_pack?: string
-          stripe_customer_id?: string | null
-          student_id: string
-          threshold?: number
-          updated_at?: string
-        }
+          created_at?: string;
+          enabled?: boolean;
+          id?: string;
+          last_renewal_at?: string | null;
+          last_renewal_error?: string | null;
+          renewal_pack?: string;
+          stripe_customer_id?: string | null;
+          student_id: string;
+          threshold?: number;
+          updated_at?: string;
+        };
         Update: {
-          created_at?: string
-          enabled?: boolean
-          id?: string
-          last_renewal_at?: string | null
-          last_renewal_error?: string | null
-          renewal_pack?: string
-          stripe_customer_id?: string | null
-          student_id?: string
-          threshold?: number
-          updated_at?: string
-        }
+          created_at?: string;
+          enabled?: boolean;
+          id?: string;
+          last_renewal_at?: string | null;
+          last_renewal_error?: string | null;
+          renewal_pack?: string;
+          stripe_customer_id?: string | null;
+          student_id?: string;
+          threshold?: number;
+          updated_at?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "auto_renewal_settings_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: true
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            foreignKeyName: 'auto_renewal_settings_student_id_fkey';
+            columns: ['student_id'];
+            isOneToOne: true;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
           },
-        ]
-      }
+        ];
+      };
       class_credits_ledger: {
         Row: {
-          amount: number
-          balance_after: number
-          created_at: string | null
-          id: string
-          invoice_id: string | null
-          reason: string
-          related_class_id: string | null
-          student_id: string
-          subscription_id: string | null
-          transaction_type: string
-        }
+          amount: number;
+          balance_after: number;
+          created_at: string | null;
+          id: string;
+          invoice_id: string | null;
+          reason: string;
+          related_class_id: string | null;
+          student_id: string;
+          subscription_id: string | null;
+          transaction_type: string;
+        };
         Insert: {
-          amount: number
-          balance_after: number
-          created_at?: string | null
-          id?: string
-          invoice_id?: string | null
-          reason: string
-          related_class_id?: string | null
-          student_id: string
-          subscription_id?: string | null
-          transaction_type: string
-        }
+          amount: number;
+          balance_after: number;
+          created_at?: string | null;
+          id?: string;
+          invoice_id?: string | null;
+          reason: string;
+          related_class_id?: string | null;
+          student_id: string;
+          subscription_id?: string | null;
+          transaction_type: string;
+        };
         Update: {
-          amount?: number
-          balance_after?: number
-          created_at?: string | null
-          id?: string
-          invoice_id?: string | null
-          reason?: string
-          related_class_id?: string | null
-          student_id?: string
-          subscription_id?: string | null
-          transaction_type?: string
-        }
+          amount?: number;
+          balance_after?: number;
+          created_at?: string | null;
+          id?: string;
+          invoice_id?: string | null;
+          reason?: string;
+          related_class_id?: string | null;
+          student_id?: string;
+          subscription_id?: string | null;
+          transaction_type?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "class_credits_ledger_subscription_id_fkey"
-            columns: ["subscription_id"]
-            isOneToOne: false
-            referencedRelation: "credit_discrepancies"
-            referencedColumns: ["subscription_id"]
+            foreignKeyName: 'class_credits_ledger_subscription_id_fkey';
+            columns: ['subscription_id'];
+            isOneToOne: false;
+            referencedRelation: 'credit_discrepancies';
+            referencedColumns: ['subscription_id'];
           },
           {
-            foreignKeyName: "class_credits_ledger_subscription_id_fkey"
-            columns: ["subscription_id"]
-            isOneToOne: false
-            referencedRelation: "student_subscriptions"
-            referencedColumns: ["id"]
+            foreignKeyName: 'class_credits_ledger_subscription_id_fkey';
+            columns: ['subscription_id'];
+            isOneToOne: false;
+            referencedRelation: 'student_subscriptions';
+            referencedColumns: ['id'];
           },
-        ]
-      }
+        ];
+      };
       class_logs: {
         Row: {
-          "Additional Info": string | null
-          "Class Cost": number | null
-          "Class ID": string | null
-          "Class Number": string | null
-          Content: string | null
-          Date: string
-          Day: string | null
-          dispute_reason: string | null
-          disputed: boolean | null
-          HW: string | null
-          id: string
-          "Student Name": string | null
-          student_payment_date: string | null
-          student_user_id: string | null
-          Subject: string | null
-          "Time (CST)": string | null
-          "Time (hrs)": string | null
-          Title: string | null
-          "Tutor Cost": number | null
-          "Tutor Name": string | null
-          tutor_payment_date: string | null
-          tutor_user_id: string | null
-          verification_deadline: string | null
-          verified_by_student: boolean | null
-        }
+          'Additional Info': string | null;
+          'Class Cost': number | null;
+          'Class ID': string | null;
+          'Class Number': string | null;
+          Content: string | null;
+          Date: string;
+          Day: string | null;
+          dispute_reason: string | null;
+          disputed: boolean | null;
+          HW: string | null;
+          id: string;
+          'Student Name': string | null;
+          student_payment_date: string | null;
+          student_user_id: string | null;
+          Subject: string | null;
+          'Time (CST)': string | null;
+          'Time (hrs)': string | null;
+          Title: string | null;
+          'Tutor Cost': number | null;
+          'Tutor Name': string | null;
+          tutor_is_paid: boolean;
+          tutor_payment_date: string | null;
+          tutor_user_id: string | null;
+          verification_deadline: string | null;
+          verified_by_student: boolean | null;
+        };
         Insert: {
-          "Additional Info"?: string | null
-          "Class Cost"?: number | null
-          "Class ID"?: string | null
-          "Class Number"?: string | null
-          Content?: string | null
-          Date: string
-          Day?: string | null
-          dispute_reason?: string | null
-          disputed?: boolean | null
-          HW?: string | null
-          id?: string
-          "Student Name"?: string | null
-          student_payment_date?: string | null
-          student_user_id?: string | null
-          Subject?: string | null
-          "Time (CST)"?: string | null
-          "Time (hrs)"?: string | null
-          Title?: string | null
-          "Tutor Cost"?: number | null
-          "Tutor Name"?: string | null
-          tutor_payment_date?: string | null
-          tutor_user_id?: string | null
-          verification_deadline?: string | null
-          verified_by_student?: boolean | null
-        }
+          'Additional Info'?: string | null;
+          'Class Cost'?: number | null;
+          'Class ID'?: string | null;
+          'Class Number'?: string | null;
+          Content?: string | null;
+          Date: string;
+          Day?: string | null;
+          dispute_reason?: string | null;
+          disputed?: boolean | null;
+          HW?: string | null;
+          id?: string;
+          'Student Name'?: string | null;
+          student_payment_date?: string | null;
+          student_user_id?: string | null;
+          Subject?: string | null;
+          'Time (CST)'?: string | null;
+          'Time (hrs)'?: string | null;
+          Title?: string | null;
+          'Tutor Cost'?: number | null;
+          'Tutor Name'?: string | null;
+          tutor_is_paid?: boolean;
+          tutor_payment_date?: string | null;
+          tutor_user_id?: string | null;
+          verification_deadline?: string | null;
+          verified_by_student?: boolean | null;
+        };
         Update: {
-          "Additional Info"?: string | null
-          "Class Cost"?: number | null
-          "Class ID"?: string | null
-          "Class Number"?: string | null
-          Content?: string | null
-          Date?: string
-          Day?: string | null
-          dispute_reason?: string | null
-          disputed?: boolean | null
-          HW?: string | null
-          id?: string
-          "Student Name"?: string | null
-          student_payment_date?: string | null
-          student_user_id?: string | null
-          Subject?: string | null
-          "Time (CST)"?: string | null
-          "Time (hrs)"?: string | null
-          Title?: string | null
-          "Tutor Cost"?: number | null
-          "Tutor Name"?: string | null
-          tutor_payment_date?: string | null
-          tutor_user_id?: string | null
-          verification_deadline?: string | null
-          verified_by_student?: boolean | null
-        }
+          'Additional Info'?: string | null;
+          'Class Cost'?: number | null;
+          'Class ID'?: string | null;
+          'Class Number'?: string | null;
+          Content?: string | null;
+          Date?: string;
+          Day?: string | null;
+          dispute_reason?: string | null;
+          disputed?: boolean | null;
+          HW?: string | null;
+          id?: string;
+          'Student Name'?: string | null;
+          student_payment_date?: string | null;
+          student_user_id?: string | null;
+          Subject?: string | null;
+          'Time (CST)'?: string | null;
+          'Time (hrs)'?: string | null;
+          Title?: string | null;
+          'Tutor Cost'?: number | null;
+          'Tutor Name'?: string | null;
+          tutor_is_paid?: boolean;
+          tutor_payment_date?: string | null;
+          tutor_user_id?: string | null;
+          verification_deadline?: string | null;
+          verified_by_student?: boolean | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "class_logs_student_user_id_fkey"
-            columns: ["student_user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            foreignKeyName: 'class_logs_student_user_id_fkey';
+            columns: ['student_user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
           },
           {
-            foreignKeyName: "class_logs_tutor_user_id_fkey"
-            columns: ["tutor_user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            foreignKeyName: 'class_logs_tutor_user_id_fkey';
+            columns: ['tutor_user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
           },
-        ]
-      }
+        ];
+      };
       class_uploads: {
         Row: {
-          class_id: string
-          created_at: string
-          file_name: string
-          file_path: string
-          file_size: string
-          id: string
-          note: string | null
-          student_name: string
-          upload_date: string
-        }
+          class_id: string;
+          created_at: string;
+          file_name: string;
+          file_path: string;
+          file_size: string;
+          id: string;
+          note: string | null;
+          student_name: string;
+          upload_date: string;
+        };
         Insert: {
-          class_id: string
-          created_at?: string
-          file_name: string
-          file_path: string
-          file_size: string
-          id?: string
-          note?: string | null
-          student_name: string
-          upload_date: string
-        }
+          class_id: string;
+          created_at?: string;
+          file_name: string;
+          file_path: string;
+          file_size: string;
+          id?: string;
+          note?: string | null;
+          student_name: string;
+          upload_date: string;
+        };
         Update: {
-          class_id?: string
-          created_at?: string
-          file_name?: string
-          file_path?: string
-          file_size?: string
-          id?: string
-          note?: string | null
-          student_name?: string
-          upload_date?: string
-        }
+          class_id?: string;
+          created_at?: string;
+          file_name?: string;
+          file_path?: string;
+          file_size?: string;
+          id?: string;
+          note?: string | null;
+          student_name?: string;
+          upload_date?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "class_uploads_class_id_fkey"
-            columns: ["class_id"]
-            isOneToOne: false
-            referencedRelation: "scheduled_classes"
-            referencedColumns: ["id"]
+            foreignKeyName: 'class_uploads_class_id_fkey';
+            columns: ['class_id'];
+            isOneToOne: false;
+            referencedRelation: 'scheduled_classes';
+            referencedColumns: ['id'];
           },
-        ]
-      }
+        ];
+      };
       content_shares: {
         Row: {
-          content_type: string | null
-          description: string | null
-          file_path: string | null
-          id: string
-          receiver_id: string
-          sender_id: string
-          shared_at: string
-          title: string
-          viewed_at: string | null
-        }
+          content_type: string | null;
+          description: string | null;
+          file_path: string | null;
+          id: string;
+          receiver_id: string;
+          sender_id: string;
+          shared_at: string;
+          title: string;
+          viewed_at: string | null;
+        };
         Insert: {
-          content_type?: string | null
-          description?: string | null
-          file_path?: string | null
-          id?: string
-          receiver_id: string
-          sender_id: string
-          shared_at?: string
-          title: string
-          viewed_at?: string | null
-        }
+          content_type?: string | null;
+          description?: string | null;
+          file_path?: string | null;
+          id?: string;
+          receiver_id: string;
+          sender_id: string;
+          shared_at?: string;
+          title: string;
+          viewed_at?: string | null;
+        };
         Update: {
-          content_type?: string | null
-          description?: string | null
-          file_path?: string | null
-          id?: string
-          receiver_id?: string
-          sender_id?: string
-          shared_at?: string
-          title?: string
-          viewed_at?: string | null
-        }
-        Relationships: []
-      }
+          content_type?: string | null;
+          description?: string | null;
+          file_path?: string | null;
+          id?: string;
+          receiver_id?: string;
+          sender_id?: string;
+          shared_at?: string;
+          title?: string;
+          viewed_at?: string | null;
+        };
+        Relationships: [];
+      };
       monthly_reports_sent: {
         Row: {
-          created_at: string
-          id: string
-          report_content: string | null
-          report_month: string
-          sent_at: string
-          student_id: string
-        }
+          created_at: string;
+          id: string;
+          report_content: string | null;
+          report_month: string;
+          sent_at: string;
+          student_id: string;
+        };
         Insert: {
-          created_at?: string
-          id?: string
-          report_content?: string | null
-          report_month: string
-          sent_at?: string
-          student_id: string
-        }
+          created_at?: string;
+          id?: string;
+          report_content?: string | null;
+          report_month: string;
+          sent_at?: string;
+          student_id: string;
+        };
         Update: {
-          created_at?: string
-          id?: string
-          report_content?: string | null
-          report_month?: string
-          sent_at?: string
-          student_id?: string
-        }
+          created_at?: string;
+          id?: string;
+          report_content?: string | null;
+          report_month?: string;
+          sent_at?: string;
+          student_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "monthly_reports_sent_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            foreignKeyName: 'monthly_reports_sent_student_id_fkey';
+            columns: ['student_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
           },
-        ]
-      }
+        ];
+      };
       notifications: {
         Row: {
-          created_at: string
-          id: string
-          message: string
-          read: boolean
-          related_id: string | null
-          type: string
-          user_id: string
-        }
+          created_at: string;
+          id: string;
+          message: string;
+          read: boolean;
+          related_id: string | null;
+          type: string;
+          user_id: string;
+        };
         Insert: {
-          created_at?: string
-          id?: string
-          message: string
-          read?: boolean
-          related_id?: string | null
-          type?: string
-          user_id: string
-        }
+          created_at?: string;
+          id?: string;
+          message: string;
+          read?: boolean;
+          related_id?: string | null;
+          type?: string;
+          user_id: string;
+        };
         Update: {
-          created_at?: string
-          id?: string
-          message?: string
-          read?: boolean
-          related_id?: string | null
-          type?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
+          created_at?: string;
+          id?: string;
+          message?: string;
+          read?: boolean;
+          related_id?: string | null;
+          type?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       overdraw_reminders_sent: {
         Row: {
-          amount_owed: number
-          created_at: string
-          id: string
-          sent_at: string
-          student_id: string
-          threshold: number
-        }
+          amount_owed: number;
+          created_at: string;
+          id: string;
+          sent_at: string;
+          student_id: string;
+          threshold: number;
+        };
         Insert: {
-          amount_owed: number
-          created_at?: string
-          id?: string
-          sent_at?: string
-          student_id: string
-          threshold: number
-        }
+          amount_owed: number;
+          created_at?: string;
+          id?: string;
+          sent_at?: string;
+          student_id: string;
+          threshold: number;
+        };
         Update: {
-          amount_owed?: number
-          created_at?: string
-          id?: string
-          sent_at?: string
-          student_id?: string
-          threshold?: number
-        }
-        Relationships: []
-      }
+          amount_owed?: number;
+          created_at?: string;
+          id?: string;
+          sent_at?: string;
+          student_id?: string;
+          threshold?: number;
+        };
+        Relationships: [];
+      };
       profiles: {
         Row: {
-          avatar_url: string | null
-          bio: string | null
-          calendar_feed_id: string | null
-          created_at: string
-          email: string
-          first_name: string | null
-          id: string
-          last_name: string | null
-          notify_class_reminders: boolean | null
-          notify_low_credits: boolean | null
-          role: Database["public"]["Enums"]["app_role"]
-          updated_at: string
-          zoom_link: string | null
-        }
+          avatar_url: string | null;
+          bio: string | null;
+          calendar_feed_id: string | null;
+          created_at: string;
+          email: string;
+          first_name: string | null;
+          id: string;
+          last_name: string | null;
+          notify_class_reminders: boolean | null;
+          notify_low_credits: boolean | null;
+          role: Database['public']['Enums']['app_role'];
+          updated_at: string;
+          zoom_link: string | null;
+        };
         Insert: {
-          avatar_url?: string | null
-          bio?: string | null
-          calendar_feed_id?: string | null
-          created_at?: string
-          email: string
-          first_name?: string | null
-          id: string
-          last_name?: string | null
-          notify_class_reminders?: boolean | null
-          notify_low_credits?: boolean | null
-          role?: Database["public"]["Enums"]["app_role"]
-          updated_at?: string
-          zoom_link?: string | null
-        }
+          avatar_url?: string | null;
+          bio?: string | null;
+          calendar_feed_id?: string | null;
+          created_at?: string;
+          email: string;
+          first_name?: string | null;
+          id: string;
+          last_name?: string | null;
+          notify_class_reminders?: boolean | null;
+          notify_low_credits?: boolean | null;
+          role?: Database['public']['Enums']['app_role'];
+          updated_at?: string;
+          zoom_link?: string | null;
+        };
         Update: {
-          avatar_url?: string | null
-          bio?: string | null
-          calendar_feed_id?: string | null
-          created_at?: string
-          email?: string
-          first_name?: string | null
-          id?: string
-          last_name?: string | null
-          notify_class_reminders?: boolean | null
-          notify_low_credits?: boolean | null
-          role?: Database["public"]["Enums"]["app_role"]
-          updated_at?: string
-          zoom_link?: string | null
-        }
-        Relationships: []
-      }
+          avatar_url?: string | null;
+          bio?: string | null;
+          calendar_feed_id?: string | null;
+          created_at?: string;
+          email?: string;
+          first_name?: string | null;
+          id?: string;
+          last_name?: string | null;
+          notify_class_reminders?: boolean | null;
+          notify_low_credits?: boolean | null;
+          role?: Database['public']['Enums']['app_role'];
+          updated_at?: string;
+          zoom_link?: string | null;
+        };
+        Relationships: [];
+      };
       referral_codes: {
         Row: {
-          active: boolean
-          code: string
-          created_at: string
-          created_by: string | null
-          discount_amount: number
-          expires_at: string | null
-          id: string
-          max_uses: number | null
-          stripe_coupon_id: string
-          times_used: number
-          updated_at: string
-        }
+          active: boolean;
+          code: string;
+          created_at: string;
+          created_by: string | null;
+          discount_amount: number;
+          expires_at: string | null;
+          id: string;
+          max_uses: number | null;
+          stripe_coupon_id: string;
+          times_used: number;
+          updated_at: string;
+        };
         Insert: {
-          active?: boolean
-          code: string
-          created_at?: string
-          created_by?: string | null
-          discount_amount?: number
-          expires_at?: string | null
-          id?: string
-          max_uses?: number | null
-          stripe_coupon_id: string
-          times_used?: number
-          updated_at?: string
-        }
+          active?: boolean;
+          code: string;
+          created_at?: string;
+          created_by?: string | null;
+          discount_amount?: number;
+          expires_at?: string | null;
+          id?: string;
+          max_uses?: number | null;
+          stripe_coupon_id: string;
+          times_used?: number;
+          updated_at?: string;
+        };
         Update: {
-          active?: boolean
-          code?: string
-          created_at?: string
-          created_by?: string | null
-          discount_amount?: number
-          expires_at?: string | null
-          id?: string
-          max_uses?: number | null
-          stripe_coupon_id?: string
-          times_used?: number
-          updated_at?: string
-        }
+          active?: boolean;
+          code?: string;
+          created_at?: string;
+          created_by?: string | null;
+          discount_amount?: number;
+          expires_at?: string | null;
+          id?: string;
+          max_uses?: number | null;
+          stripe_coupon_id?: string;
+          times_used?: number;
+          updated_at?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "referral_codes_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            foreignKeyName: 'referral_codes_created_by_fkey';
+            columns: ['created_by'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
           },
-        ]
-      }
+        ];
+      };
       referral_usage: {
         Row: {
-          id: string
-          referral_code_id: string
-          subscription_id: string | null
-          used_at: string
-          used_by_email: string
-          used_by_user_id: string
-        }
+          id: string;
+          referral_code_id: string;
+          subscription_id: string | null;
+          used_at: string;
+          used_by_email: string;
+          used_by_user_id: string;
+        };
         Insert: {
-          id?: string
-          referral_code_id: string
-          subscription_id?: string | null
-          used_at?: string
-          used_by_email: string
-          used_by_user_id: string
-        }
+          id?: string;
+          referral_code_id: string;
+          subscription_id?: string | null;
+          used_at?: string;
+          used_by_email: string;
+          used_by_user_id: string;
+        };
         Update: {
-          id?: string
-          referral_code_id?: string
-          subscription_id?: string | null
-          used_at?: string
-          used_by_email?: string
-          used_by_user_id?: string
-        }
+          id?: string;
+          referral_code_id?: string;
+          subscription_id?: string | null;
+          used_at?: string;
+          used_by_email?: string;
+          used_by_user_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "referral_usage_referral_code_id_fkey"
-            columns: ["referral_code_id"]
-            isOneToOne: false
-            referencedRelation: "referral_codes"
-            referencedColumns: ["id"]
+            foreignKeyName: 'referral_usage_referral_code_id_fkey';
+            columns: ['referral_code_id'];
+            isOneToOne: false;
+            referencedRelation: 'referral_codes';
+            referencedColumns: ['id'];
           },
           {
-            foreignKeyName: "referral_usage_used_by_user_id_fkey"
-            columns: ["used_by_user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            foreignKeyName: 'referral_usage_used_by_user_id_fkey';
+            columns: ['used_by_user_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
           },
-        ]
-      }
+        ];
+      };
       role_change_audit: {
         Row: {
-          changed_by: string | null
-          created_at: string | null
-          id: string
-          new_role: string
-          old_role: string
-          reason: string | null
-          user_id: string
-        }
+          changed_by: string | null;
+          created_at: string | null;
+          id: string;
+          new_role: string;
+          old_role: string;
+          reason: string | null;
+          user_id: string;
+        };
         Insert: {
-          changed_by?: string | null
-          created_at?: string | null
-          id?: string
-          new_role: string
-          old_role: string
-          reason?: string | null
-          user_id: string
-        }
+          changed_by?: string | null;
+          created_at?: string | null;
+          id?: string;
+          new_role: string;
+          old_role: string;
+          reason?: string | null;
+          user_id: string;
+        };
         Update: {
-          changed_by?: string | null
-          created_at?: string | null
-          id?: string
-          new_role?: string
-          old_role?: string
-          reason?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
+          changed_by?: string | null;
+          created_at?: string | null;
+          id?: string;
+          new_role?: string;
+          old_role?: string;
+          reason?: string | null;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       scheduled_classes: {
         Row: {
-          attendance: string | null
-          created_at: string
-          date: string
-          end_time: string
-          id: string
-          materials_url: string[] | null
-          notes: string | null
-          relationship_id: string | null
-          reminder_24h_sent: boolean | null
-          reminder_sent: boolean | null
-          start_time: string
-          status: string
-          student_id: string
-          subject: string
-          title: string
-          tutor_id: string
-          updated_at: string
-          zoom_link: string | null
-        }
+          attendance: string | null;
+          created_at: string;
+          date: string;
+          end_time: string;
+          id: string;
+          materials_url: string[] | null;
+          notes: string | null;
+          relationship_id: string | null;
+          reminder_24h_sent: boolean | null;
+          reminder_sent: boolean | null;
+          start_time: string;
+          status: string;
+          student_id: string;
+          subject: string;
+          title: string;
+          tutor_id: string;
+          updated_at: string;
+          zoom_link: string | null;
+        };
         Insert: {
-          attendance?: string | null
-          created_at?: string
-          date: string
-          end_time: string
-          id?: string
-          materials_url?: string[] | null
-          notes?: string | null
-          relationship_id?: string | null
-          reminder_24h_sent?: boolean | null
-          reminder_sent?: boolean | null
-          start_time: string
-          status?: string
-          student_id: string
-          subject: string
-          title: string
-          tutor_id: string
-          updated_at?: string
-          zoom_link?: string | null
-        }
+          attendance?: string | null;
+          created_at?: string;
+          date: string;
+          end_time: string;
+          id?: string;
+          materials_url?: string[] | null;
+          notes?: string | null;
+          relationship_id?: string | null;
+          reminder_24h_sent?: boolean | null;
+          reminder_sent?: boolean | null;
+          start_time: string;
+          status?: string;
+          student_id: string;
+          subject: string;
+          title: string;
+          tutor_id: string;
+          updated_at?: string;
+          zoom_link?: string | null;
+        };
         Update: {
-          attendance?: string | null
-          created_at?: string
-          date?: string
-          end_time?: string
-          id?: string
-          materials_url?: string[] | null
-          notes?: string | null
-          relationship_id?: string | null
-          reminder_24h_sent?: boolean | null
-          reminder_sent?: boolean | null
-          start_time?: string
-          status?: string
-          student_id?: string
-          subject?: string
-          title?: string
-          tutor_id?: string
-          updated_at?: string
-          zoom_link?: string | null
-        }
+          attendance?: string | null;
+          created_at?: string;
+          date?: string;
+          end_time?: string;
+          id?: string;
+          materials_url?: string[] | null;
+          notes?: string | null;
+          relationship_id?: string | null;
+          reminder_24h_sent?: boolean | null;
+          reminder_sent?: boolean | null;
+          start_time?: string;
+          status?: string;
+          student_id?: string;
+          subject?: string;
+          title?: string;
+          tutor_id?: string;
+          updated_at?: string;
+          zoom_link?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "scheduled_classes_relationship_id_fkey"
-            columns: ["relationship_id"]
-            isOneToOne: false
-            referencedRelation: "tutor_student_assigned"
-            referencedColumns: ["id"]
+            foreignKeyName: 'scheduled_classes_relationship_id_fkey';
+            columns: ['relationship_id'];
+            isOneToOne: false;
+            referencedRelation: 'tutor_student_assigned';
+            referencedColumns: ['id'];
           },
           {
-            foreignKeyName: "scheduled_classes_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            foreignKeyName: 'scheduled_classes_student_id_fkey';
+            columns: ['student_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
           },
           {
-            foreignKeyName: "scheduled_classes_tutor_id_fkey"
-            columns: ["tutor_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            foreignKeyName: 'scheduled_classes_tutor_id_fkey';
+            columns: ['tutor_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
           },
-        ]
-      }
+        ];
+      };
       student_notes: {
         Row: {
-          content: string
-          created_at: string
-          id: string
-          student_id: string
-          title: string
-          tutor_id: string
-          updated_at: string
-        }
+          content: string;
+          created_at: string;
+          id: string;
+          student_id: string;
+          title: string;
+          tutor_id: string;
+          updated_at: string;
+        };
         Insert: {
-          content: string
-          created_at?: string
-          id?: string
-          student_id: string
-          title: string
-          tutor_id: string
-          updated_at?: string
-        }
+          content: string;
+          created_at?: string;
+          id?: string;
+          student_id: string;
+          title: string;
+          tutor_id: string;
+          updated_at?: string;
+        };
         Update: {
-          content?: string
-          created_at?: string
-          id?: string
-          student_id?: string
-          title?: string
-          tutor_id?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
+          content?: string;
+          created_at?: string;
+          id?: string;
+          student_id?: string;
+          title?: string;
+          tutor_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       student_subscriptions: {
         Row: {
-          created_at: string | null
-          credits_allocated: number
-          credits_remaining: number
-          current_period_end: string | null
-          current_period_start: string | null
-          id: string
-          plan_id: string | null
-          status: string
-          stripe_customer_id: string
-          stripe_subscription_id: string
-          student_id: string
-          updated_at: string | null
-        }
+          created_at: string | null;
+          credits_allocated: number;
+          credits_remaining: number;
+          current_period_end: string | null;
+          current_period_start: string | null;
+          id: string;
+          plan_id: string | null;
+          status: string;
+          stripe_customer_id: string;
+          stripe_subscription_id: string;
+          student_id: string;
+          updated_at: string | null;
+        };
         Insert: {
-          created_at?: string | null
-          credits_allocated: number
-          credits_remaining?: number
-          current_period_end?: string | null
-          current_period_start?: string | null
-          id?: string
-          plan_id?: string | null
-          status: string
-          stripe_customer_id: string
-          stripe_subscription_id: string
-          student_id: string
-          updated_at?: string | null
-        }
+          created_at?: string | null;
+          credits_allocated: number;
+          credits_remaining?: number;
+          current_period_end?: string | null;
+          current_period_start?: string | null;
+          id?: string;
+          plan_id?: string | null;
+          status: string;
+          stripe_customer_id: string;
+          stripe_subscription_id: string;
+          student_id: string;
+          updated_at?: string | null;
+        };
         Update: {
-          created_at?: string | null
-          credits_allocated?: number
-          credits_remaining?: number
-          current_period_end?: string | null
-          current_period_start?: string | null
-          id?: string
-          plan_id?: string | null
-          status?: string
-          stripe_customer_id?: string
-          stripe_subscription_id?: string
-          student_id?: string
-          updated_at?: string | null
-        }
+          created_at?: string | null;
+          credits_allocated?: number;
+          credits_remaining?: number;
+          current_period_end?: string | null;
+          current_period_start?: string | null;
+          id?: string;
+          plan_id?: string | null;
+          status?: string;
+          stripe_customer_id?: string;
+          stripe_subscription_id?: string;
+          student_id?: string;
+          updated_at?: string | null;
+        };
         Relationships: [
           {
-            foreignKeyName: "student_subscriptions_plan_id_fkey"
-            columns: ["plan_id"]
-            isOneToOne: false
-            referencedRelation: "subscription_plans"
-            referencedColumns: ["id"]
+            foreignKeyName: 'student_subscriptions_plan_id_fkey';
+            columns: ['plan_id'];
+            isOneToOne: false;
+            referencedRelation: 'subscription_plans';
+            referencedColumns: ['id'];
           },
-        ]
-      }
+        ];
+      };
       students: {
         Row: {
-          active: boolean
-          availability_windows: string[] | null
-          class_rate: number | null
+          active: boolean;
+          availability_windows: string[] | null;
+          class_rate: number | null;
           communication_pref:
-            | Database["public"]["Enums"]["communication_style"]
-            | null
-          created_at: string
-          email: string
-          enrollment_date: string
-          grade: string | null
-          id: string
-          learning_pace: Database["public"]["Enums"]["learning_pace"] | null
-          name: string
-          payment_method: string | null
-          payment_status: string
-          prepaid_balance: number | null
-          primary_goal: Database["public"]["Enums"]["student_goal"] | null
+            | Database['public']['Enums']['communication_style']
+            | null;
+          created_at: string;
+          email: string;
+          enrollment_date: string;
+          grade: string | null;
+          id: string;
+          learning_pace: Database['public']['Enums']['learning_pace'] | null;
+          name: string;
+          payment_method: string | null;
+          payment_status: string;
+          prepaid_balance: number | null;
+          primary_goal: Database['public']['Enums']['student_goal'] | null;
           session_structure_pref:
-            | Database["public"]["Enums"]["session_structure"]
-            | null
-          subjects: string[]
+            | Database['public']['Enums']['session_structure']
+            | null;
+          subjects: string[];
           teaching_style_pref:
-            | Database["public"]["Enums"]["teaching_style"]
-            | null
-        }
+            | Database['public']['Enums']['teaching_style']
+            | null;
+        };
         Insert: {
-          active?: boolean
-          availability_windows?: string[] | null
-          class_rate?: number | null
+          active?: boolean;
+          availability_windows?: string[] | null;
+          class_rate?: number | null;
           communication_pref?:
-            | Database["public"]["Enums"]["communication_style"]
-            | null
-          created_at?: string
-          email: string
-          enrollment_date?: string
-          grade?: string | null
-          id?: string
-          learning_pace?: Database["public"]["Enums"]["learning_pace"] | null
-          name: string
-          payment_method?: string | null
-          payment_status?: string
-          prepaid_balance?: number | null
-          primary_goal?: Database["public"]["Enums"]["student_goal"] | null
+            | Database['public']['Enums']['communication_style']
+            | null;
+          created_at?: string;
+          email: string;
+          enrollment_date?: string;
+          grade?: string | null;
+          id?: string;
+          learning_pace?: Database['public']['Enums']['learning_pace'] | null;
+          name: string;
+          payment_method?: string | null;
+          payment_status?: string;
+          prepaid_balance?: number | null;
+          primary_goal?: Database['public']['Enums']['student_goal'] | null;
           session_structure_pref?:
-            | Database["public"]["Enums"]["session_structure"]
-            | null
-          subjects?: string[]
+            | Database['public']['Enums']['session_structure']
+            | null;
+          subjects?: string[];
           teaching_style_pref?:
-            | Database["public"]["Enums"]["teaching_style"]
-            | null
-        }
+            | Database['public']['Enums']['teaching_style']
+            | null;
+        };
         Update: {
-          active?: boolean
-          availability_windows?: string[] | null
-          class_rate?: number | null
+          active?: boolean;
+          availability_windows?: string[] | null;
+          class_rate?: number | null;
           communication_pref?:
-            | Database["public"]["Enums"]["communication_style"]
-            | null
-          created_at?: string
-          email?: string
-          enrollment_date?: string
-          grade?: string | null
-          id?: string
-          learning_pace?: Database["public"]["Enums"]["learning_pace"] | null
-          name?: string
-          payment_method?: string | null
-          payment_status?: string
-          prepaid_balance?: number | null
-          primary_goal?: Database["public"]["Enums"]["student_goal"] | null
+            | Database['public']['Enums']['communication_style']
+            | null;
+          created_at?: string;
+          email?: string;
+          enrollment_date?: string;
+          grade?: string | null;
+          id?: string;
+          learning_pace?: Database['public']['Enums']['learning_pace'] | null;
+          name?: string;
+          payment_method?: string | null;
+          payment_status?: string;
+          prepaid_balance?: number | null;
+          primary_goal?: Database['public']['Enums']['student_goal'] | null;
           session_structure_pref?:
-            | Database["public"]["Enums"]["session_structure"]
-            | null
-          subjects?: string[]
+            | Database['public']['Enums']['session_structure']
+            | null;
+          subjects?: string[];
           teaching_style_pref?:
-            | Database["public"]["Enums"]["teaching_style"]
-            | null
-        }
-        Relationships: []
-      }
+            | Database['public']['Enums']['teaching_style']
+            | null;
+        };
+        Relationships: [];
+      };
       subscription_plans: {
         Row: {
-          active: boolean | null
-          classes_per_month: number
-          created_at: string | null
-          description: string | null
-          features: string[] | null
-          id: string
-          monthly_price: number
-          name: string
-          price_per_class: number
-          stripe_price_id: string
-          stripe_product_id: string
-        }
+          active: boolean | null;
+          classes_per_month: number;
+          created_at: string | null;
+          description: string | null;
+          features: string[] | null;
+          id: string;
+          monthly_price: number;
+          name: string;
+          price_per_class: number;
+          stripe_price_id: string;
+          stripe_product_id: string;
+        };
         Insert: {
-          active?: boolean | null
-          classes_per_month: number
-          created_at?: string | null
-          description?: string | null
-          features?: string[] | null
-          id?: string
-          monthly_price: number
-          name: string
-          price_per_class: number
-          stripe_price_id: string
-          stripe_product_id: string
-        }
+          active?: boolean | null;
+          classes_per_month: number;
+          created_at?: string | null;
+          description?: string | null;
+          features?: string[] | null;
+          id?: string;
+          monthly_price: number;
+          name: string;
+          price_per_class: number;
+          stripe_price_id: string;
+          stripe_product_id: string;
+        };
         Update: {
-          active?: boolean | null
-          classes_per_month?: number
-          created_at?: string | null
-          description?: string | null
-          features?: string[] | null
-          id?: string
-          monthly_price?: number
-          name?: string
-          price_per_class?: number
-          stripe_price_id?: string
-          stripe_product_id?: string
-        }
-        Relationships: []
-      }
+          active?: boolean | null;
+          classes_per_month?: number;
+          created_at?: string | null;
+          description?: string | null;
+          features?: string[] | null;
+          id?: string;
+          monthly_price?: number;
+          name?: string;
+          price_per_class?: number;
+          stripe_price_id?: string;
+          stripe_product_id?: string;
+        };
+        Relationships: [];
+      };
       tutor_student_assigned: {
         Row: {
-          active: boolean
-          assigned_at: string
-          id: string
-          student_id: string
-          subject: string | null
-          tutor_id: string
-        }
+          active: boolean;
+          assigned_at: string;
+          id: string;
+          student_id: string;
+          subject: string | null;
+          tutor_id: string;
+        };
         Insert: {
-          active?: boolean
-          assigned_at?: string
-          id?: string
-          student_id: string
-          subject?: string | null
-          tutor_id: string
-        }
+          active?: boolean;
+          assigned_at?: string;
+          id?: string;
+          student_id: string;
+          subject?: string | null;
+          tutor_id: string;
+        };
         Update: {
-          active?: boolean
-          assigned_at?: string
-          id?: string
-          student_id?: string
-          subject?: string | null
-          tutor_id?: string
-        }
+          active?: boolean;
+          assigned_at?: string;
+          id?: string;
+          student_id?: string;
+          subject?: string | null;
+          tutor_id?: string;
+        };
         Relationships: [
           {
-            foreignKeyName: "tutor_student_assigned_student_fk"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            foreignKeyName: 'tutor_student_assigned_student_fk';
+            columns: ['student_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
           },
           {
-            foreignKeyName: "tutor_student_assigned_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            foreignKeyName: 'tutor_student_assigned_student_id_fkey';
+            columns: ['student_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
           },
           {
-            foreignKeyName: "tutor_student_assigned_tutor_fk"
-            columns: ["tutor_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            foreignKeyName: 'tutor_student_assigned_tutor_fk';
+            columns: ['tutor_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
           },
           {
-            foreignKeyName: "tutor_student_assigned_tutor_id_fkey"
-            columns: ["tutor_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            foreignKeyName: 'tutor_student_assigned_tutor_id_fkey';
+            columns: ['tutor_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
           },
-        ]
-      }
+        ];
+      };
       tutors: {
         Row: {
-          active: boolean
-          availability_windows: string[] | null
-          created_at: string
-          email: string
-          grade_level_comfort: string[] | null
-          hourly_rate: number | null
-          id: string
-          name: string
-          pace_flexibility: boolean | null
-          preferred_pace: Database["public"]["Enums"]["learning_pace"] | null
+          active: boolean;
+          availability_windows: string[] | null;
+          created_at: string;
+          email: string;
+          grade_level_comfort: string[] | null;
+          hourly_rate: number | null;
+          id: string;
+          name: string;
+          pace_flexibility: boolean | null;
+          preferred_pace: Database['public']['Enums']['learning_pace'] | null;
           session_structure:
-            | Database["public"]["Enums"]["session_structure"]
-            | null
-          specialty_focus: Database["public"]["Enums"]["tutor_specialty"] | null
-          subjects: string[] | null
+            | Database['public']['Enums']['session_structure']
+            | null;
+          specialty_focus:
+            | Database['public']['Enums']['tutor_specialty']
+            | null;
+          subjects: string[] | null;
           teaching_style_strength:
-            | Database["public"]["Enums"]["teaching_style"]
-            | null
-        }
+            | Database['public']['Enums']['teaching_style']
+            | null;
+        };
         Insert: {
-          active?: boolean
-          availability_windows?: string[] | null
-          created_at?: string
-          email: string
-          grade_level_comfort?: string[] | null
-          hourly_rate?: number | null
-          id?: string
-          name: string
-          pace_flexibility?: boolean | null
-          preferred_pace?: Database["public"]["Enums"]["learning_pace"] | null
+          active?: boolean;
+          availability_windows?: string[] | null;
+          created_at?: string;
+          email: string;
+          grade_level_comfort?: string[] | null;
+          hourly_rate?: number | null;
+          id?: string;
+          name: string;
+          pace_flexibility?: boolean | null;
+          preferred_pace?: Database['public']['Enums']['learning_pace'] | null;
           session_structure?:
-            | Database["public"]["Enums"]["session_structure"]
-            | null
+            | Database['public']['Enums']['session_structure']
+            | null;
           specialty_focus?:
-            | Database["public"]["Enums"]["tutor_specialty"]
-            | null
-          subjects?: string[] | null
+            | Database['public']['Enums']['tutor_specialty']
+            | null;
+          subjects?: string[] | null;
           teaching_style_strength?:
-            | Database["public"]["Enums"]["teaching_style"]
-            | null
-        }
+            | Database['public']['Enums']['teaching_style']
+            | null;
+        };
         Update: {
-          active?: boolean
-          availability_windows?: string[] | null
-          created_at?: string
-          email?: string
-          grade_level_comfort?: string[] | null
-          hourly_rate?: number | null
-          id?: string
-          name?: string
-          pace_flexibility?: boolean | null
-          preferred_pace?: Database["public"]["Enums"]["learning_pace"] | null
+          active?: boolean;
+          availability_windows?: string[] | null;
+          created_at?: string;
+          email?: string;
+          grade_level_comfort?: string[] | null;
+          hourly_rate?: number | null;
+          id?: string;
+          name?: string;
+          pace_flexibility?: boolean | null;
+          preferred_pace?: Database['public']['Enums']['learning_pace'] | null;
           session_structure?:
-            | Database["public"]["Enums"]["session_structure"]
-            | null
+            | Database['public']['Enums']['session_structure']
+            | null;
           specialty_focus?:
-            | Database["public"]["Enums"]["tutor_specialty"]
-            | null
-          subjects?: string[] | null
+            | Database['public']['Enums']['tutor_specialty']
+            | null;
+          subjects?: string[] | null;
           teaching_style_strength?:
-            | Database["public"]["Enums"]["teaching_style"]
-            | null
-        }
-        Relationships: []
-      }
-    }
+            | Database['public']['Enums']['teaching_style']
+            | null;
+        };
+        Relationships: [];
+      };
+    };
     Views: {
       credit_discrepancies: {
         Row: {
-          difference: number | null
-          ledger_credits: number | null
-          student_id: string | null
-          subscription_credits: number | null
-          subscription_id: string | null
-        }
+          difference: number | null;
+          ledger_credits: number | null;
+          student_id: string | null;
+          subscription_credits: number | null;
+          subscription_id: string | null;
+        };
         Insert: {
-          difference?: never
-          ledger_credits?: never
-          student_id?: string | null
-          subscription_credits?: number | null
-          subscription_id?: string | null
-        }
+          difference?: never;
+          ledger_credits?: never;
+          student_id?: string | null;
+          subscription_credits?: number | null;
+          subscription_id?: string | null;
+        };
         Update: {
-          difference?: never
-          ledger_credits?: never
-          student_id?: string | null
-          subscription_credits?: number | null
-          subscription_id?: string | null
-        }
-        Relationships: []
-      }
-    }
+          difference?: never;
+          ledger_credits?: never;
+          student_id?: string | null;
+          subscription_credits?: number | null;
+          subscription_id?: string | null;
+        };
+        Relationships: [];
+      };
+    };
     Functions: {
-      check_upcoming_classes: { Args: never; Returns: undefined }
+      check_upcoming_classes: { Args: never; Returns: undefined };
       complete_class_atomic: {
         Args: {
-          p_additional_info: string
-          p_class_id: string
-          p_class_number: string
-          p_content: string
-          p_date: string
-          p_day: string
-          p_hw: string
-          p_student_name: string
-          p_subject: string
-          p_time_cst: string
-          p_time_hrs: string
-          p_tutor_name: string
-        }
-        Returns: Json
-      }
+          p_additional_info: string;
+          p_class_id: string;
+          p_class_number: string;
+          p_content: string;
+          p_date: string;
+          p_day: string;
+          p_hw: string;
+          p_student_name: string;
+          p_subject: string;
+          p_time_cst: string;
+          p_time_hrs: string;
+          p_tutor_name: string;
+        };
+        Returns: Json;
+      };
       demote_tutor_to_student: {
-        Args: { reason?: string; tutor_user_id: string }
-        Returns: Json
-      }
-      generate_class_notifications: { Args: never; Returns: undefined }
-      get_auth_user_display_name: { Args: never; Returns: string }
-      get_auth_user_email: { Args: never; Returns: string }
-      get_auth_user_role: { Args: never; Returns: string }
+        Args: { reason?: string; tutor_user_id: string };
+        Returns: Json;
+      };
+      generate_class_notifications: { Args: never; Returns: undefined };
+      get_auth_user_display_name: { Args: never; Returns: string };
+      get_auth_user_email: { Args: never; Returns: string };
+      get_auth_user_role: { Args: never; Returns: string };
       get_class_log_totals: {
-        Args: { p_date?: string; p_payment_filter?: string; p_search?: string }
-        Returns: Json
-      }
-      get_ics_feed: { Args: { feed_id: string }; Returns: string }
+        Args: { p_date?: string; p_payment_filter?: string; p_search?: string };
+        Returns: Json;
+      };
+      get_ics_feed: { Args: { feed_id: string }; Returns: string };
       get_referral_usage_stats: {
-        Args: { p_user_id: string }
+        Args: { p_user_id: string };
         Returns: {
-          latest_usage: string
-          times_used: number
-          total_earnings: number
-        }[]
-      }
+          latest_usage: string;
+          times_used: number;
+          total_earnings: number;
+        }[];
+      };
       get_student_classes: {
-        Args: { requesting_user_id?: string }
+        Args: { requesting_user_id?: string };
         Returns: {
-          attendance: string
-          date: string
-          end_time: string
-          id: string
-          notes: string
-          start_time: string
-          status: string
-          student_id: string
-          student_name: string
-          subject: string
-          title: string
-          tutor_id: string
-          tutor_name: string
-          zoom_link: string
-        }[]
-      }
+          attendance: string;
+          date: string;
+          end_time: string;
+          id: string;
+          notes: string;
+          start_time: string;
+          status: string;
+          student_id: string;
+          student_name: string;
+          subject: string;
+          title: string;
+          tutor_id: string;
+          tutor_name: string;
+          zoom_link: string;
+        }[];
+      };
       get_student_credit_balance: {
-        Args: { p_student_id: string }
-        Returns: number
-      }
+        Args: { p_student_id: string };
+        Returns: number;
+      };
       get_tutor_student_relationships: {
-        Args: { tutor_uuid: string }
+        Args: { tutor_uuid: string };
         Returns: {
-          relationship_id: string
-          student_id: string
-          student_name: string
-          tutor_id: string
-        }[]
-      }
+          relationship_id: string;
+          student_id: string;
+          student_name: string;
+          tutor_id: string;
+        }[];
+      };
       get_tutor_students: {
-        Args: { requesting_user_id?: string }
+        Args: { requesting_user_id?: string };
         Returns: {
-          active: boolean
-          assigned_at: string
-          grade: string
-          payment_status: string
-          student_id: string
-          student_name: string
-          subjects: string[]
-          tutor_id: string
-          tutor_name: string
-        }[]
-      }
+          active: boolean;
+          assigned_at: string;
+          grade: string;
+          payment_status: string;
+          student_id: string;
+          student_name: string;
+          subjects: string[];
+          tutor_id: string;
+          tutor_name: string;
+        }[];
+      };
       get_tutor_students_by_email: {
-        Args: { requesting_user_id?: string }
+        Args: { requesting_user_id?: string };
         Returns: {
-          active: boolean
-          assigned_at: string
-          grade: string
-          payment_status: string
-          student_email: string
-          student_id: string
-          student_name: string
-          subjects: string[]
-          tutor_id: string
-          tutor_name: string
-        }[]
-      }
-      get_tutor_unpaid_summary: { Args: never; Returns: Json }
-      get_user_calendar_events: { Args: { user_id: string }; Returns: string }
-      handle_rest_get_ics: { Args: { request: Json }; Returns: Json }
+          active: boolean;
+          assigned_at: string;
+          grade: string;
+          payment_status: string;
+          student_email: string;
+          student_id: string;
+          student_name: string;
+          subjects: string[];
+          tutor_id: string;
+          tutor_name: string;
+        }[];
+      };
+      get_tutor_unpaid_summary: { Args: never; Returns: Json };
+      get_user_calendar_events: { Args: { user_id: string }; Returns: string };
+      handle_rest_get_ics: { Args: { request: Json }; Returns: Json };
       log_critical_security_event: {
-        Args: { details?: Json; event_type: string; user_id: string }
-        Returns: undefined
-      }
+        Args: { details?: Json; event_type: string; user_id: string };
+        Returns: undefined;
+      };
       log_enhanced_security_event: {
-        Args: { operation_type: string; row_id?: string; target_table: string }
-        Returns: undefined
-      }
+        Args: { operation_type: string; row_id?: string; target_table: string };
+        Returns: undefined;
+      };
       promote_student_to_tutor: {
-        Args: { reason?: string; student_user_id: string }
-        Returns: Json
-      }
-      require_admin_access: { Args: never; Returns: undefined }
-      sync_user_roles: { Args: never; Returns: Json }
+        Args: { reason?: string; student_user_id: string };
+        Returns: Json;
+      };
+      require_admin_access: { Args: never; Returns: undefined };
+      sync_user_roles: { Args: never; Returns: Json };
       validate_file_access_permissions: {
-        Args: { file_path: string; requested_by?: string }
-        Returns: boolean
-      }
-    }
+        Args: { file_path: string; requested_by?: string };
+        Returns: boolean;
+      };
+    };
     Enums: {
-      app_role: "student" | "tutor" | "admin"
-      communication_style: "encouraging" | "direct" | "balanced"
-      learning_pace: "slow" | "moderate" | "fast"
-      session_structure: "structured" | "flexible" | "mixed"
-      student_goal: "catch_up" | "maintain" | "get_ahead" | "test_prep"
-      teaching_style: "visual" | "verbal" | "hands_on" | "mixed"
-      tutor_specialty: "struggling" | "maintaining" | "advanced" | "all"
-    }
+      app_role: 'student' | 'tutor' | 'admin';
+      communication_style: 'encouraging' | 'direct' | 'balanced';
+      learning_pace: 'slow' | 'moderate' | 'fast';
+      session_structure: 'structured' | 'flexible' | 'mixed';
+      student_goal: 'catch_up' | 'maintain' | 'get_ahead' | 'test_prep';
+      teaching_style: 'visual' | 'verbal' | 'hands_on' | 'mixed';
+      tutor_specialty: 'struggling' | 'maintaining' | 'advanced' | 'all';
+    };
     CompositeTypes: {
-      [_ in never]: never
-    }
-  }
-}
+      [_ in never]: never;
+    };
+  };
+};
 
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>;
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+type DefaultSchema = DatabaseWithoutInternals[Extract<
+  keyof Database,
+  'public'
+>];
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof DatabaseWithoutInternals;
   }
-    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
-  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+      Row: infer R;
     }
     ? R
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema['Tables'] &
+        DefaultSchema['Views'])
+    ? (DefaultSchema['Tables'] &
+        DefaultSchema['Views'])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R;
       }
       ? R
       : never
-    : never
+    : never;
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
+    | keyof DefaultSchema['Tables']
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof DatabaseWithoutInternals;
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+      Insert: infer I;
     }
     ? I
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
+    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I;
       }
       ? I
       : never
-    : never
+    : never;
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
+    | keyof DefaultSchema['Tables']
     | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof DatabaseWithoutInternals;
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
     : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
-  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+      Update: infer U;
     }
     ? U
     : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema['Tables']
+    ? DefaultSchema['Tables'][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U;
       }
       ? U
       : never
-    : never
+    : never;
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
+    | keyof DefaultSchema['Enums']
     | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof DatabaseWithoutInternals;
   }
-    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
     : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
-  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
+    ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
+    : never;
 
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
+    | keyof DefaultSchema['CompositeTypes']
     | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals
+    schema: keyof DatabaseWithoutInternals;
   }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
     : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals
+  schema: keyof DatabaseWithoutInternals;
 }
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
+    ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
+    : never;
 
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["student", "tutor", "admin"],
-      communication_style: ["encouraging", "direct", "balanced"],
-      learning_pace: ["slow", "moderate", "fast"],
-      session_structure: ["structured", "flexible", "mixed"],
-      student_goal: ["catch_up", "maintain", "get_ahead", "test_prep"],
-      teaching_style: ["visual", "verbal", "hands_on", "mixed"],
-      tutor_specialty: ["struggling", "maintaining", "advanced", "all"],
+      app_role: ['student', 'tutor', 'admin'],
+      communication_style: ['encouraging', 'direct', 'balanced'],
+      learning_pace: ['slow', 'moderate', 'fast'],
+      session_structure: ['structured', 'flexible', 'mixed'],
+      student_goal: ['catch_up', 'maintain', 'get_ahead', 'test_prep'],
+      teaching_style: ['visual', 'verbal', 'hands_on', 'mixed'],
+      tutor_specialty: ['struggling', 'maintaining', 'advanced', 'all'],
     },
   },
-} as const
+} as const;

@@ -1,4 +1,3 @@
-
 import {
   ClassEvent,
   ClassStatus,
@@ -22,7 +21,7 @@ const log = logger.create('classEventMapper');
 interface DbRecord {
   id: string;
   'Class Number'?: string | null;
-  'Title'?: string | null;
+  Title?: string | null;
   'Tutor Name'?: string | null;
   'Student Name'?: string | null;
   Date?: string | null;
@@ -43,7 +42,7 @@ export const transformDbRecordToClassEvent = (record: unknown): ClassEvent => {
     log.error('Invalid record format', undefined, { record });
     return createErrorClassEvent('unknown');
   }
-  
+
   const dbRecord = record as DbRecord;
   try {
     let dateObj: Date;
@@ -64,20 +63,21 @@ export const transformDbRecordToClassEvent = (record: unknown): ClassEvent => {
     const startTime = parseStartTime(rawStartTime);
     const endTime = calculateEndTime(startTime, duration);
 
-    const studentPaymentDate = dbRecord.student_payment_date 
-      ? (typeof dbRecord.student_payment_date === 'string' 
-          ? parseDateToLocal(dbRecord.student_payment_date) 
-          : dbRecord.student_payment_date)
+    const studentPaymentDate = dbRecord.student_payment_date
+      ? typeof dbRecord.student_payment_date === 'string'
+        ? parseDateToLocal(dbRecord.student_payment_date)
+        : dbRecord.student_payment_date
       : null;
 
-    const tutorPaymentDate = dbRecord.tutor_payment_date 
-      ? (typeof dbRecord.tutor_payment_date === 'string' 
-          ? parseDateToLocal(dbRecord.tutor_payment_date) 
-          : dbRecord.tutor_payment_date)
+    const tutorPaymentDate = dbRecord.tutor_payment_date
+      ? typeof dbRecord.tutor_payment_date === 'string'
+        ? parseDateToLocal(dbRecord.tutor_payment_date)
+        : dbRecord.tutor_payment_date
       : null;
 
+    const tutorIsPaid = !!dbRecord.tutor_is_paid;
     const studentPayment = studentPaymentDate ? 'paid' : 'unpaid';
-    const tutorPayment = tutorPaymentDate ? 'paid' : 'unpaid';
+    const tutorPayment = tutorIsPaid ? 'paid' : 'unpaid';
 
     const classCost = dbRecord['Class Cost'] ?? 0;
     const tutorCost = dbRecord['Tutor Cost'] ?? 0;
@@ -103,6 +103,7 @@ export const transformDbRecordToClassEvent = (record: unknown): ClassEvent => {
       tutorCost,
       studentPaymentDate,
       tutorPaymentDate,
+      tutorIsPaid,
       studentPayment: studentPayment as PaymentStatus,
       tutorPayment: tutorPayment as PaymentStatus,
       recurring: false,
@@ -135,6 +136,7 @@ function createErrorClassEvent(id: string): ClassEvent {
     tutorCost: 0,
     studentPaymentDate: null,
     tutorPaymentDate: null,
+    tutorIsPaid: false,
     studentPayment: 'pending' as PaymentStatus,
     tutorPayment: 'pending' as PaymentStatus,
     recurring: false,

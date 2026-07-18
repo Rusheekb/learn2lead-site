@@ -43,11 +43,12 @@ Deno.serve(async (req) => {
   try {
     logStep('Starting weekly digest');
 
-    // Get all students with active profiles
+    // Get all students with active profiles who have reminders enabled
     const { data: students, error: studentsError } = await supabase
       .from('profiles')
-      .select('id, email, first_name, last_name')
-      .eq('role', 'student');
+      .select('id, email, first_name, last_name, notify_class_reminders')
+      .eq('role', 'student')
+      .neq('notify_class_reminders', false);
 
     if (studentsError)
       throw new Error(`Failed to fetch students: ${studentsError.message}`);

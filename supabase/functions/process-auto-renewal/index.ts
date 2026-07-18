@@ -93,10 +93,11 @@ Deno.serve(async (req) => {
     }
 
     // Get the plan details
+    // UI shows: basic=4h, standard=8h, premium=10h — must match subscription_plans.name exactly.
     const packMap: Record<string, string> = {
       basic: '4 Credit Pack',
       standard: '8 Credit Pack',
-      premium: '12 Credit Pack',
+      premium: '10 Credit Pack',
     };
 
     const { data: plan, error: planError } = await supabaseClient
@@ -237,6 +238,46 @@ Deno.serve(async (req) => {
       id: paymentIntent.id,
     });
 
+    // SCA / 3D Secure: card requires additional authentication off-session
+    if (paymentIntent.status === 'requires_action') {
+      const errorMsg =
+        'Your card requires additional authentication (3D Secure). Please make a manual purchase to re-save your card.';
+      logStep('PaymentIntent requires SCA action', { id: paymentIntent.id });
+
+      await supabaseClient
+        .from('auto_renewal_settings')
+        .update({ last_renewal_error: errorMsg })
+        .eq('student_id', student_id);
+
+      await supabaseClient.from('notifications').insert({
+        user_id: student_id,
+        message: `Auto-renewal requires card authentication. Please visit the pricing page to complete a manual purchase and update your saved payment method.`,
+        type: 'auto_renewal_failed',
+      });
+
+      await sendAutoRenewalEmail(
+        supabaseClient,
+        student_id,
+        '',
+        0,
+        0,
+        0,
+        false
+      );
+
+      return new Response(
+        JSON.stringify({
+          success: false,
+          reason: 'requires_action',
+          error: errorMsg,
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      );
+    }
+
     if (paymentIntent.status === 'succeeded') {
       // Get current subscription and balance
       const { data: existingSub } = await supabaseClient
@@ -261,46 +302,66 @@ Deno.serve(async (req) => {
         });
 
         logStep('Credits allocated via auto-renewal', { newBalance });
+
+        // Update settings
+        await supabaseClient
+          .from('auto_renewal_settings')
+          .update({
+            last_renewal_at: new Date().toISOString(),
+            last_renewal_error: null,
+          })
+          .eq('student_id', student_id);
+
+        await supabaseClient.from('notifications').insert({
+          user_id: student_id,
+          message: `Auto-renewal successful! ${plan.classes_per_month} credits added (${plan.name} - $${plan.monthly_price}).`,
+          type: 'auto_renewal_success',
+        });
+
+        await sendAutoRenewalEmail(
+          supabaseClient,
+          student_id,
+          plan.name,
+          plan.classes_per_month,
+          newBalance,
+          plan.monthly_price,
+          true
+        );
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            credits_added: plan.classes_per_month,
+            payment_intent_id: paymentIntent.id,
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200,
+          }
+        );
+      } else {
+        // Charged but no active subscription — the webhook recovery path will handle this.
+        // Log a warning so it's visible in function logs.
+        logStep(
+          'WARNING: PaymentIntent succeeded but no active subscription found — webhook recovery expected',
+          {
+            student_id,
+            payment_intent_id: paymentIntent.id,
+          }
+        );
+
+        return new Response(
+          JSON.stringify({
+            success: false,
+            reason: 'no_subscription_for_credit',
+            payment_intent_id: paymentIntent.id,
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200,
+          }
+        );
       }
-
-      // Update settings
-      await supabaseClient
-        .from('auto_renewal_settings')
-        .update({
-          last_renewal_at: new Date().toISOString(),
-          last_renewal_error: null,
-        })
-        .eq('student_id', student_id);
-
-      // Send success notification
-      await supabaseClient.from('notifications').insert({
-        user_id: student_id,
-        message: `Auto-renewal successful! ${plan.classes_per_month} credits added (${plan.name} - $${plan.monthly_price}).`,
-        type: 'auto_renewal_success',
-      });
-
-      // Send confirmation email
-      await sendAutoRenewalEmail(
-        supabaseClient,
-        student_id,
-        plan.name,
-        plan.classes_per_month,
-        (existingSub?.credits_remaining || 0) + plan.classes_per_month,
-        plan.monthly_price,
-        true
-      );
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          credits_added: plan.classes_per_month,
-          payment_intent_id: paymentIntent.id,
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200,
-        }
-      );
     } else {
       throw new Error(`PaymentIntent status: ${paymentIntent.status}`);
     }

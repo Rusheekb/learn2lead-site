@@ -8,8 +8,12 @@ import { logger } from '@/lib/logger';
 
 const log = logger.create('useSimplifiedTutorScheduler');
 import { toast } from 'sonner';
-import { createScheduledClass, createScheduledClassBatch } from '@/services/class/create';
+import {
+  createScheduledClass,
+  createScheduledClassBatch,
+} from '@/services/class/create';
 import { formatClassEventDate, parseDateToLocal } from '@/utils/safeDateUtils';
+import { transformDbRecordToClassEvent } from '@/services/utils/classEventMapper';
 import { addWeeks, startOfDay, isAfter, format } from 'date-fns';
 
 export const useSimplifiedTutorScheduler = () => {
@@ -33,34 +37,36 @@ export const useSimplifiedTutorScheduler = () => {
     queryKey: ['scheduled-classes', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
-      
+
       const { data, error } = await supabase
         .from('scheduled_classes')
-        .select(`
+        .select(
+          `
           *,
           student:profiles!scheduled_classes_student_id_fkey(first_name, last_name, email),
           tutor:profiles!scheduled_classes_tutor_id_fkey(first_name, last_name, email)
-        `)
+        `
+        )
         .eq('tutor_id', user.id)
         .neq('status', 'completed')
         .order('start_time', { ascending: true });
-      
+
       if (error) throw error;
-      
+
       return (data || []).map((record: any) => {
         const student = record.student || {};
         const tutor = record.tutor || {};
-        
-        const studentName = 
+
+        const studentName =
           student.first_name || student.last_name
             ? `${student.first_name || ''} ${student.last_name || ''}`.trim()
             : student.email || 'Unknown Student';
-            
+
         const tutorName =
           tutor.first_name || tutor.last_name
             ? `${tutor.first_name || ''} ${tutor.last_name || ''}`.trim()
             : tutor.email || 'Unknown Tutor';
-        
+
         return {
           id: record.id,
           title: record.title,
@@ -82,6 +88,25 @@ export const useSimplifiedTutorScheduler = () => {
       });
     },
     enabled: !!user?.id,
+  });
+
+  // Fetch logged class entries for calendar indicators
+  const { data: loggedClassData = [] } = useQuery({
+    queryKey: ['tutor-class-logs', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const { data, error } = await supabase
+        .from('class_logs')
+        .select('*')
+        .eq('tutor_user_id', user.id);
+      if (error) throw error;
+      return (data || []).map((record) => ({
+        ...transformDbRecordToClassEvent(record),
+        isCodeLog: true,
+      }));
+    },
+    enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000,
   });
 
   // Set up realtime subscriptions
@@ -111,35 +136,44 @@ export const useSimplifiedTutorScheduler = () => {
     setIsEditEventOpen(true);
   }, []);
 
-  const handleDeleteEvent = useCallback(async (eventId: string, isRecurring?: boolean): Promise<boolean> => {
-    if (!user?.id) {
-      throw new Error('User not authenticated');
-    }
+  const handleDeleteEvent = useCallback(
+    async (eventId: string, isRecurring?: boolean): Promise<boolean> => {
+      if (!user?.id) {
+        throw new Error('User not authenticated');
+      }
 
-    // Optimistically remove from local state immediately
-    const previousClasses = scheduledClasses;
-    setScheduledClasses(prev => prev.filter(c => c.id !== eventId));
+      // Optimistically remove from local state immediately
+      const previousClasses = scheduledClasses;
+      setScheduledClasses((prev) => prev.filter((c) => c.id !== eventId));
 
-    try {
-      const { error } = await supabase
-        .from('scheduled_classes')
-        .delete()
-        .eq('id', eventId)
-        .eq('tutor_id', user.id);
-      
-      if (error) throw error;
-      
-      queryClient.invalidateQueries({ queryKey: ['scheduled-classes', user.id] });
-      
-      toast.success(isRecurring ? 'All recurring classes deleted' : 'Class deleted successfully');
-      return true;
-    } catch (error) {
-      // Rollback on failure
-      setScheduledClasses(previousClasses);
-      log.error('Error deleting event:', error);
-      throw error;
-    }
-  }, [user?.id, scheduledClasses, queryClient]);
+      try {
+        const { error } = await supabase
+          .from('scheduled_classes')
+          .delete()
+          .eq('id', eventId)
+          .eq('tutor_id', user.id);
+
+        if (error) throw error;
+
+        queryClient.invalidateQueries({
+          queryKey: ['scheduled-classes', user.id],
+        });
+
+        toast.success(
+          isRecurring
+            ? 'All recurring classes deleted'
+            : 'Class deleted successfully'
+        );
+        return true;
+      } catch (error) {
+        // Rollback on failure
+        setScheduledClasses(previousClasses);
+        log.error('Error deleting event:', error);
+        throw error;
+      }
+    },
+    [user?.id, scheduledClasses, queryClient]
+  );
 
   const closeAllDialogs = useCallback(() => {
     setIsViewEventOpen(false);
@@ -153,70 +187,77 @@ export const useSimplifiedTutorScheduler = () => {
     queryClient.invalidateQueries({ queryKey: ['scheduled-classes'] });
   }, [refetch, queryClient]);
 
-  const handleCreateEventActual = useCallback(async (event: ClassEvent): Promise<boolean> => {
-    if (!user?.id) {
-      toast.error('User not authenticated');
-      return false;
-    }
+  const handleCreateEventActual = useCallback(
+    async (event: ClassEvent): Promise<boolean> => {
+      if (!user?.id) {
+        toast.error('User not authenticated');
+        return false;
+      }
 
-    try {
-      const baseClassData = {
-        title: event.title,
-        tutor_id: user.id,
-        student_id: event.studentId,
-        start_time: event.startTime,
-        end_time: event.endTime,
-        subject: event.subject,
-        zoom_link: event.zoomLink,
-        notes: event.notes,
-        relationship_id: event.relationshipId,
-      };
-
-      let success = false;
-
-      if (event.recurring && event.recurringUntil && event.date) {
-        const startDate = startOfDay(event.date as Date);
-        const endDate = event.recurringUntil as Date;
-        const dates: string[] = [];
-        for (let i = 0; i < 12; i++) {
-          const d = addWeeks(startDate, i);
-          if (isAfter(d, endDate)) break;
-          dates.push(formatClassEventDate(d));
-        }
-
-        const count = await createScheduledClassBatch(baseClassData, dates);
-        if (count > 0) {
-          const dayName = format(startDate, 'EEEE');
-          toast.success(`${count} class${count !== 1 ? 'es' : ''} scheduled (${dayName}s, ${format(startDate, 'MMM d')} – ${format(endDate, 'MMM d')})`);
-          success = true;
-        }
-      } else {
-        const classData = {
-          ...baseClassData,
-          date: event.date ? formatClassEventDate(event.date) : '',
+      try {
+        const baseClassData = {
+          title: event.title,
+          tutor_id: user.id,
+          student_id: event.studentId,
+          start_time: event.startTime,
+          end_time: event.endTime,
+          subject: event.subject,
+          zoom_link: event.zoomLink,
+          notes: event.notes,
+          relationship_id: event.relationshipId,
         };
-        const classId = await createScheduledClass(classData);
-        if (classId) {
-          toast.success('Class scheduled successfully');
-          success = true;
-        }
-      }
 
-      if (success) {
-        await Promise.all([
-          refetch(),
-          queryClient.invalidateQueries({ queryKey: ['scheduled-classes', user.id] }),
-        ]);
-        return true;
+        let success = false;
+
+        if (event.recurring && event.recurringUntil && event.date) {
+          const startDate = startOfDay(event.date as Date);
+          const endDate = event.recurringUntil as Date;
+          const dates: string[] = [];
+          for (let i = 0; i < 12; i++) {
+            const d = addWeeks(startDate, i);
+            if (isAfter(d, endDate)) break;
+            dates.push(formatClassEventDate(d));
+          }
+
+          const count = await createScheduledClassBatch(baseClassData, dates);
+          if (count > 0) {
+            const dayName = format(startDate, 'EEEE');
+            toast.success(
+              `${count} class${count !== 1 ? 'es' : ''} scheduled (${dayName}s, ${format(startDate, 'MMM d')} – ${format(endDate, 'MMM d')})`
+            );
+            success = true;
+          }
+        } else {
+          const classData = {
+            ...baseClassData,
+            date: event.date ? formatClassEventDate(event.date) : '',
+          };
+          const classId = await createScheduledClass(classData);
+          if (classId) {
+            toast.success('Class scheduled successfully');
+            success = true;
+          }
+        }
+
+        if (success) {
+          await Promise.all([
+            refetch(),
+            queryClient.invalidateQueries({
+              queryKey: ['scheduled-classes', user.id],
+            }),
+          ]);
+          return true;
+        }
+
+        return false;
+      } catch (error) {
+        log.error('Error creating event:', error);
+        toast.error('Failed to create class');
+        return false;
       }
-      
-      return false;
-    } catch (error) {
-      log.error('Error creating event:', error);
-      toast.error('Failed to create class');
-      return false;
-    }
-  }, [user?.id, refetch, queryClient]);
+    },
+    [user?.id, refetch, queryClient]
+  );
 
   const resetNewEventForm = useCallback(() => {}, []);
   const handleMarkMessageRead = useCallback(async () => {}, []);
@@ -241,54 +282,76 @@ export const useSimplifiedTutorScheduler = () => {
     enabled: !!user?.id,
   });
 
-  return useMemo(() => ({
-    scheduledClasses,
-    selectedEvent,
-    isViewEventOpen,
-    isAddEventOpen,
-    isEditEventOpen,
-    selectedDate,
-    setSelectedDate,
-    setIsAddEventOpen,
-    setIsViewEventOpen,
-    activeEventTab,
-    setActiveEventTab,
-    isEditMode,
-    setIsEditMode,
-    searchTerm,
-    setSearchTerm,
-    subjectFilter,
-    setSubjectFilter,
-    studentFilter,
-    setStudentFilter,
-    newEvent,
-    setNewEvent,
-    
-    filteredClasses: scheduledClasses,
-    allSubjects: [] as string[],
-    studentMessages: [] as any[],
-    studentUploads: [] as any[],
-    isLoading: false,
-    refetchClasses: refreshData,
-    currentUser,
-    
-    handleSelectEvent,
-    handleCreateEvent: handleCreateEventActual,
-    handleEditEvent: mockAsyncFunction,
-    handleDeleteEvent,
-    handleDuplicateEvent: resetNewEventForm,
-    resetNewEventForm,
-    handleMarkMessageRead,
-    handleDownloadFile,
-    getUnreadMessageCount,
-    refreshEvent,
-    closeAllDialogs,
-    refreshData,
-  }), [
-    scheduledClasses, selectedEvent, isViewEventOpen, isAddEventOpen, isEditEventOpen,
-    selectedDate, activeEventTab, isEditMode, searchTerm, subjectFilter, studentFilter,
-    newEvent, currentUser, refreshData, handleSelectEvent, handleCreateEventActual,
-    mockAsyncFunction, handleDeleteEvent, resetNewEventForm, handleMarkMessageRead,
-    handleDownloadFile, getUnreadMessageCount, refreshEvent, closeAllDialogs,
-  ]);
+  return useMemo(
+    () => ({
+      scheduledClasses,
+      selectedEvent,
+      isViewEventOpen,
+      isAddEventOpen,
+      isEditEventOpen,
+      selectedDate,
+      setSelectedDate,
+      setIsAddEventOpen,
+      setIsViewEventOpen,
+      activeEventTab,
+      setActiveEventTab,
+      isEditMode,
+      setIsEditMode,
+      searchTerm,
+      setSearchTerm,
+      subjectFilter,
+      setSubjectFilter,
+      studentFilter,
+      setStudentFilter,
+      newEvent,
+      setNewEvent,
+
+      filteredClasses: [...scheduledClasses, ...loggedClassData],
+      allSubjects: [] as string[],
+      studentMessages: [] as any[],
+      studentUploads: [] as any[],
+      isLoading: false,
+      refetchClasses: refreshData,
+      currentUser,
+
+      handleSelectEvent,
+      handleCreateEvent: handleCreateEventActual,
+      handleEditEvent: mockAsyncFunction,
+      handleDeleteEvent,
+      handleDuplicateEvent: resetNewEventForm,
+      resetNewEventForm,
+      handleMarkMessageRead,
+      handleDownloadFile,
+      getUnreadMessageCount,
+      refreshEvent,
+      closeAllDialogs,
+      refreshData,
+    }),
+    [
+      scheduledClasses,
+      selectedEvent,
+      isViewEventOpen,
+      isAddEventOpen,
+      isEditEventOpen,
+      selectedDate,
+      activeEventTab,
+      isEditMode,
+      searchTerm,
+      subjectFilter,
+      studentFilter,
+      newEvent,
+      currentUser,
+      refreshData,
+      handleSelectEvent,
+      handleCreateEventActual,
+      mockAsyncFunction,
+      handleDeleteEvent,
+      resetNewEventForm,
+      handleMarkMessageRead,
+      handleDownloadFile,
+      getUnreadMessageCount,
+      refreshEvent,
+      closeAllDialogs,
+    ]
+  );
 };
