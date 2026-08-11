@@ -86,12 +86,14 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { student_id, class_id, reason, credits_to_restore } =
-      await req.json();
+    const { student_id, class_id, reason } = await req.json();
 
-    if (!student_id) {
+    if (!student_id || !class_id) {
       return new Response(
-        JSON.stringify({ success: false, error: 'student_id is required' }),
+        JSON.stringify({
+          success: false,
+          error: 'student_id and class_id are required',
+        }),
         {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -99,87 +101,24 @@ Deno.serve(async (req) => {
       );
     }
 
-    const restoreAmount = Math.max(0.5, credits_to_restore || 1);
-
     console.log(
-      `Restoring ${restoreAmount} credit(s) for student ${student_id}, class ${class_id}, by ${user.id} (${profile.role})`
+      `Reversing debit for student ${student_id}, class ${class_id}, by ${user.id} (${profile.role})`
     );
 
-    // Verify there was a recent deduction for this class (within last 5 minutes)
-    if (class_id) {
-      const { data: recentDeduction, error: deductionError } =
-        await supabaseAdmin
-          .from('class_credits_ledger')
-          .select('id, created_at')
-          .eq('student_id', student_id)
-          .eq('related_class_id', class_id)
-          .eq('transaction_type', 'debit')
-          .gte('created_at', new Date(Date.now() - 5 * 60 * 1000).toISOString())
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-      if (deductionError) {
-        console.error('Error checking recent deduction:', deductionError);
+    // Atomic: checks class_logs first (never reverse a class that's actually
+    // logged), then locks the subscription and ties the reversal to the specific
+    // debit via reversed_debit_id — a retry of this same request can't double-restore.
+    const { data: rpcResult, error: rpcError } = await supabaseAdmin.rpc(
+      'reverse_class_debit',
+      {
+        p_student_id: student_id,
+        p_class_id: class_id,
+        p_reason: reason || 'Credit restored - class completion error recovery',
       }
+    );
 
-      if (!recentDeduction) {
-        console.warn(
-          `No recent deduction found for class ${class_id} - proceeding anyway for error recovery`
-        );
-      }
-    }
-
-    // Get the current balance from ledger
-    const { data: lastEntry, error: balanceError } = await supabaseAdmin
-      .from('class_credits_ledger')
-      .select('balance_after')
-      .eq('student_id', student_id)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (balanceError) {
-      console.error('Error getting balance:', balanceError);
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: 'Failed to get current balance',
-        }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
-    const currentBalance = lastEntry?.balance_after ?? 0;
-    const newBalance = currentBalance + restoreAmount;
-
-    // Get the student's subscription ID
-    const { data: subscription } = await supabaseAdmin
-      .from('student_subscriptions')
-      .select('id')
-      .eq('student_id', student_id)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    // Create the credit restoration entry in the ledger
-    const { error: insertError } = await supabaseAdmin
-      .from('class_credits_ledger')
-      .insert({
-        student_id,
-        amount: restoreAmount,
-        balance_after: newBalance,
-        transaction_type: 'credit',
-        reason: reason || 'Credit restored - class completion error recovery',
-        related_class_id: class_id || null,
-        subscription_id: subscription?.id || null,
-      });
-
-    if (insertError) {
-      console.error('Error inserting credit restoration:', insertError);
+    if (rpcError) {
+      console.error('reverse_class_debit RPC failed:', rpcError);
       return new Response(
         JSON.stringify({ success: false, error: 'Failed to restore credit' }),
         {
@@ -189,15 +128,25 @@ Deno.serve(async (req) => {
       );
     }
 
+    if (!rpcResult.success) {
+      // class_already_completed: the class really is logged, nothing to restore —
+      // not an error, just tell the caller so it can show a neutral message.
+      const status = rpcResult.error === 'class_already_completed' ? 200 : 404;
+      return new Response(JSON.stringify(rpcResult), {
+        status,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     console.log(
-      `Successfully restored ${restoreAmount} credit(s) for student ${student_id}. New balance: ${newBalance}`
+      `Restore result for student ${student_id}: idempotent=${rpcResult.idempotent}, new_balance=${rpcResult.new_balance}`
     );
 
     return new Response(
       JSON.stringify({
         success: true,
-        credits_restored: restoreAmount,
-        new_balance: newBalance,
+        idempotent: rpcResult.idempotent,
+        new_balance: rpcResult.new_balance,
         restored_by: user.id,
         restored_by_role: profile.role,
       }),

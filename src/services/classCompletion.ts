@@ -265,13 +265,21 @@ async function restoreCredit(
         body: {
           student_id: data.studentId,
           class_id: data.classId,
-          credits_to_restore: durationHours,
           reason: `Credit restored - atomic class completion failed for ${data.classNumber}`,
         },
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
       });
+
+    if (restoreResult?.error === 'class_already_completed') {
+      // The class actually did get logged server-side — the client just never
+      // saw the success response (timeout/dropped connection). The debit was
+      // correct and reverse_class_debit refused to touch it. Nothing is wrong.
+      log.info('Class was already completed — no restore needed');
+      toast.success('Class completed successfully');
+      return;
+    }
 
     if (restoreError || !restoreResult?.success) {
       log.error(

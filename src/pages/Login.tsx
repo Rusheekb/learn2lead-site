@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import NavBar from '@/components/NavBar';
 import AuthTabs from '@/components/auth/AuthTabs';
@@ -22,20 +21,30 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { signIn, signUp, signInWithOAuth, user, userRole } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [authError, setAuthError] = useState<string | null>(null);
 
   // Rate limit: 5 attempts per 2 minutes, 60s lockout
-  const signInLimiter = useRateLimiter({ maxAttempts: 5, windowMs: 120_000, lockoutMs: 60_000 });
-  const signUpLimiter = useRateLimiter({ maxAttempts: 3, windowMs: 120_000, lockoutMs: 90_000 });
+  const signInLimiter = useRateLimiter({
+    maxAttempts: 5,
+    windowMs: 120_000,
+    lockoutMs: 60_000,
+  });
+  const signUpLimiter = useRateLimiter({
+    maxAttempts: 3,
+    windowMs: 120_000,
+    lockoutMs: 90_000,
+  });
 
   // Check for OAuth error in URL parameters
   useEffect(() => {
     const queryParams = new URLSearchParams(window.location.search);
     const error = queryParams.get('error');
     const errorDescription = queryParams.get('error_description');
-    
+
     if (error) {
-      const errorMsg = errorDescription || 'An error occurred during authentication';
+      const errorMsg =
+        errorDescription || 'An error occurred during authentication';
       setAuthError(errorMsg);
       toast.error(errorMsg);
       addBreadcrumb({
@@ -52,18 +61,29 @@ const Login = () => {
   // Redirect if already logged in
   useEffect(() => {
     if (user && userRole) {
+      // Honor an explicit returnUrl (e.g. someone sent here from Pricing to buy
+      // hours) over the generic saved-route/dashboard default — only accept a
+      // same-origin relative path to avoid an open-redirect via this param.
+      const returnUrl = searchParams.get('returnUrl');
+      const isSafeReturnUrl =
+        !!returnUrl && returnUrl.startsWith('/') && !returnUrl.startsWith('//');
+
       const savedRoute = getSavedRoute(user.id);
-      
+
       const redirectPaths = {
         student: '/dashboard',
         tutor: '/tutor-dashboard',
         admin: '/admin-dashboard',
       };
 
-      const path = savedRoute || redirectPaths[userRole] || '/';
+      const path =
+        (isSafeReturnUrl ? returnUrl : null) ||
+        savedRoute ||
+        redirectPaths[userRole] ||
+        '/';
       navigate(path, { replace: true });
     }
-  }, [user, userRole, navigate]);
+  }, [user, userRole, navigate, searchParams]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,7 +99,11 @@ const Login = () => {
       const msg = `Too many sign-in attempts. Please wait ${signInLimiter.secondsUntilReset}s.`;
       setAuthError(msg);
       toast.error(msg);
-      addBreadcrumb({ category: 'auth', message: 'Sign-in rate limited', level: 'warning' });
+      addBreadcrumb({
+        category: 'auth',
+        message: 'Sign-in rate limited',
+        level: 'warning',
+      });
       return;
     }
 
@@ -102,7 +126,12 @@ const Login = () => {
     e.preventDefault();
     setAuthError(null);
 
-    const result = validateForm(signUpSchema, { firstName, lastName, email, password });
+    const result = validateForm(signUpSchema, {
+      firstName,
+      lastName,
+      email,
+      password,
+    });
     if (!result.success) {
       toast.error(result.firstError);
       return;
@@ -112,7 +141,11 @@ const Login = () => {
       const msg = `Too many sign-up attempts. Please wait ${signUpLimiter.secondsUntilReset}s.`;
       setAuthError(msg);
       toast.error(msg);
-      addBreadcrumb({ category: 'auth', message: 'Sign-up rate limited', level: 'warning' });
+      addBreadcrumb({
+        category: 'auth',
+        message: 'Sign-up rate limited',
+        level: 'warning',
+      });
       return;
     }
 
@@ -123,7 +156,9 @@ const Login = () => {
         first_name: result.data.firstName,
         last_name: result.data.lastName,
       });
-      toast.success('Account created! Please check your email for verification.');
+      toast.success(
+        'Account created! Please check your email for verification.'
+      );
     } catch (error) {
       log.error('Registration error:', error);
       if (error instanceof Error) {
@@ -138,7 +173,7 @@ const Login = () => {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     setAuthError(null);
-    
+
     try {
       await signInWithOAuth('google');
     } catch (error) {
@@ -155,7 +190,11 @@ const Login = () => {
     <div className="min-h-screen bg-background">
       <NavBar />
 
-      <main id="main-content" tabIndex={-1} className="container mx-auto px-4 pt-20 pb-10 focus:outline-none">
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="container mx-auto px-4 pt-20 pb-10 focus:outline-none"
+      >
         <div className="max-w-md mx-auto">
           <h1 className="text-3xl font-bold text-center mb-8 text-tutoring-blue">
             Welcome to Learn<span className="text-tutoring-teal">2</span>Lead
@@ -166,7 +205,7 @@ const Login = () => {
               <CardTitle className="text-center">Sign In or Register</CardTitle>
             </CardHeader>
             <CardContent>
-              <AuthTabs 
+              <AuthTabs
                 email={email}
                 setEmail={setEmail}
                 password={password}

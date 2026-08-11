@@ -26,47 +26,29 @@ export const STRIPE_MODE: 'test' | 'live' =
 export const isTestMode = STRIPE_MODE === 'test';
 
 const LIVE_PRICE_IDS = {
-  1: 'price_1T3VMD14Kl9WjCfljetZW63c',
-  2: 'price_1T3VME14Kl9WjCflQY8WEY97',
   4: 'price_1T20M714Kl9WjCflVbq3glKt',
   8: 'price_1T20M714Kl9WjCflDIKczcAX',
-  10: 'price_1T3VMF14Kl9WjCfl0q3uc13H',
+  // Created in the same original batch as the 4hr/8hr prices above (one second
+  // apart) but never wired in until now — a pre-existing gap, not new.
+  12: 'price_1T20M914Kl9WjCfl608OYEiB',
 } as const;
 
 const TEST_PRICE_IDS = {
-  1: 'price_1TEZwr14Kl9WjCflCJO1JuLU',
-  2: 'price_1TEZy714Kl9WjCfl7YUFnRM3',
   4: 'price_1TEZyQ14Kl9WjCflTtGqGEYL',
   8: 'price_1TEZyh14Kl9WjCflk6c1kecm',
-  10: 'price_1TEZyu14Kl9WjCfluumnEvC0',
+  12: 'price_1U2dWQ14Kl9WjCflWFNOL354',
 } as const;
 
 const priceIds = isTestMode ? TEST_PRICE_IDS : LIVE_PRICE_IDS;
 
 export const CREDIT_TIERS: CreditTier[] = [
   {
-    credits: 1,
-    priceId: priceIds[1],
-    total: 40,
-    perHour: 40,
-    label: '1 Hour',
-    savingsPercent: 0,
-  },
-  {
-    credits: 2,
-    priceId: priceIds[2],
-    total: 76,
-    perHour: 38,
-    label: '2 Hours',
-    savingsPercent: 5,
-  },
-  {
     credits: 4,
     priceId: priceIds[4],
     total: 140,
     perHour: 35,
     label: '4 Hours',
-    savingsPercent: 13,
+    savingsPercent: 0,
   },
   {
     credits: 8,
@@ -74,32 +56,32 @@ export const CREDIT_TIERS: CreditTier[] = [
     total: 240,
     perHour: 30,
     label: '8 Hours',
-    savingsPercent: 25,
+    savingsPercent: 14,
   },
   {
-    credits: 10,
-    priceId: priceIds[10],
-    total: 280,
-    perHour: 28,
-    label: '10 Hours',
-    savingsPercent: 30,
+    credits: 12,
+    priceId: priceIds[12],
+    total: 300,
+    perHour: 25,
+    label: '12 Hours',
+    savingsPercent: 29,
   },
 ];
 
 // Default selected tier (8 hours - best seller)
-export const DEFAULT_TIER_INDEX = 3;
+export const DEFAULT_TIER_INDEX = 1;
 
 // Legacy exports for backward compatibility
 export const STRIPE_PRICE_IDS = {
-  basic: CREDIT_TIERS[2].priceId,
-  standard: CREDIT_TIERS[3].priceId,
-  premium: CREDIT_TIERS[4].priceId,
+  basic: CREDIT_TIERS[0].priceId,
+  standard: CREDIT_TIERS[1].priceId,
+  premium: CREDIT_TIERS[2].priceId,
 } as const;
 
 export const STRIPE_PLAN_PRICES = {
   basic: 140,
   standard: 240,
-  premium: 280,
+  premium: 300,
 } as const;
 
 export type StripePlanKey = keyof typeof STRIPE_PRICE_IDS;

@@ -66,6 +66,7 @@ export type Database = {
           amount: number;
           balance_after: number;
           created_at: string | null;
+          dollar_amount: number | null;
           id: string;
           invoice_id: string | null;
           reason: string;
@@ -78,6 +79,7 @@ export type Database = {
           amount: number;
           balance_after: number;
           created_at?: string | null;
+          dollar_amount?: number | null;
           id?: string;
           invoice_id?: string | null;
           reason: string;
@@ -90,6 +92,7 @@ export type Database = {
           amount?: number;
           balance_after?: number;
           created_at?: string | null;
+          dollar_amount?: number | null;
           id?: string;
           invoice_id?: string | null;
           reason?: string;

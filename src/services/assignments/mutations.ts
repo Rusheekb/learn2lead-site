@@ -5,7 +5,9 @@ import { logger } from '@/lib/logger';
 
 const log = logger.create('assignments');
 
-async function resolveProfileIdFromTutorId(tutorId: string): Promise<string | null> {
+async function resolveProfileIdFromTutorId(
+  tutorId: string
+): Promise<string | null> {
   const { data: existing } = await supabase
     .from('profiles')
     .select('id')
@@ -28,7 +30,9 @@ async function resolveProfileIdFromTutorId(tutorId: string): Promise<string | nu
   return profile?.id ?? null;
 }
 
-async function resolveProfileIdFromStudentId(studentId: string): Promise<string | null> {
+async function resolveProfileIdFromStudentId(
+  studentId: string
+): Promise<string | null> {
   const { data: existing } = await supabase
     .from('profiles')
     .select('id')
@@ -61,16 +65,27 @@ export async function createAssignment(input: {
   const mappedStudentId = await resolveProfileIdFromStudentId(input.student_id);
 
   if (!mappedTutorId || !mappedStudentId) {
-    log.error('Mapping to profile IDs failed', undefined, { mappedTutorId, mappedStudentId, input });
+    log.error('Mapping to profile IDs failed', undefined, {
+      mappedTutorId,
+      mappedStudentId,
+      input,
+    });
     toast.error('Could not resolve selected users');
     throw new Error('Failed to resolve profile IDs for assignment');
   }
 
-  log.debug('Final assignment data', { tutor_id: mappedTutorId, student_id: mappedStudentId });
+  log.debug('Final assignment data', {
+    tutor_id: mappedTutorId,
+    student_id: mappedStudentId,
+  });
 
   const { data, error } = await supabase
     .from('tutor_student_assigned')
-    .insert({ tutor_id: mappedTutorId, student_id: mappedStudentId, active: true })
+    .insert({
+      tutor_id: mappedTutorId,
+      student_id: mappedStudentId,
+      active: true,
+    })
     .select()
     .single();
 
@@ -80,6 +95,21 @@ export async function createAssignment(input: {
   }
 
   toast.success('Tutor-student assignment created successfully');
+
+  // Best-effort: send email notifications to both tutor and student
+  supabase.auth.getSession().then(({ data: { session } }) => {
+    if (!session) return;
+    supabase.functions
+      .invoke('notify-assignment', {
+        body: {
+          tutor_profile_id: mappedTutorId,
+          student_profile_id: mappedStudentId,
+        },
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      })
+      .catch((e) => log.warn('notify-assignment failed (non-critical):', e));
+  });
+
   return data as TutorStudentAssignment;
 }
 

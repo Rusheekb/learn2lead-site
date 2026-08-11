@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Profile } from '@/hooks/useProfile';
 import { toast } from 'sonner';
-import { Copy, Video, CalendarDays } from 'lucide-react';
+import { Copy, Video, CalendarDays, CreditCard } from 'lucide-react';
 import { SubscriptionStatusCard } from '@/components/student/SubscriptionStatusCard';
 import { CreditHistory } from '@/components/student/CreditHistory';
 import { AutoRenewalSettings } from '@/components/student/AutoRenewalSettings';
@@ -17,6 +17,7 @@ import { getUserCalendarFeedUrl } from '@/utils/calendarUtils';
 import { copyToClipboard } from '@/utils/clipboardUtils';
 import { fields } from '@/lib/validation';
 import { logger } from '@/lib/logger';
+import { supabase } from '@/integrations/supabase/client';
 
 const log = logger.create('SettingsTab');
 
@@ -34,6 +35,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
   const [zoomLink, setZoomLink] = useState(profile.zoom_link ?? '');
   const [isSavingZoom, setIsSavingZoom] = useState(false);
   const [calendarFeedUrl, setCalendarFeedUrl] = useState<string | null>(null);
+  const [isOpeningPortal, setIsOpeningPortal] = useState(false);
 
   useEffect(() => {
     if (isTutor && profile.id) {
@@ -57,6 +59,36 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
       toast.error('Failed to save Zoom link');
     } finally {
       setIsSavingZoom(false);
+    }
+  };
+
+  const handleManagePaymentMethod = async () => {
+    setIsOpeningPortal(true);
+    try {
+      const { data, error } =
+        await supabase.functions.invoke('customer-portal');
+      if (error) throw error;
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('No portal URL returned');
+      }
+    } catch (err: any) {
+      log.error('Customer portal error:', err);
+      // FunctionsHttpError's context is the raw Response — read the body for
+      // the specific message the function set, rather than showing a generic
+      // "try again" for something that won't succeed on retry (e.g. no
+      // Stripe customer on file at all).
+      let message = 'Could not open payment portal. Please try again.';
+      try {
+        const body = await err?.context?.json?.();
+        if (body?.error) message = body.error;
+      } catch {
+        // Keep the generic message if the body can't be parsed
+      }
+      toast.error(message);
+    } finally {
+      setIsOpeningPortal(false);
     }
   };
 
@@ -164,6 +196,25 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
           <div className="p-6 space-y-4">
             <SubscriptionStatusCard />
             <AutoRenewalSettings />
+            <div className="flex items-center justify-between rounded-lg border p-4">
+              <div className="flex items-center gap-3">
+                <CreditCard className="h-4 w-4 text-muted-foreground shrink-0" />
+                <div>
+                  <p className="text-sm font-medium">Payment method</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Update or change the card used for auto-renewal
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleManagePaymentMethod}
+                disabled={isOpeningPortal}
+              >
+                {isOpeningPortal ? 'Opening…' : 'Manage'}
+              </Button>
+            </div>
             <CreditHistory />
           </div>
         </SettingsSection>

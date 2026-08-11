@@ -56,27 +56,83 @@ Deno.serve(async (req) => {
       throw new Error('User not authenticated or email not available');
     logStep('User authenticated', { userId: user.id, email: user.email });
 
-    // Try live Stripe first, fall back to test if no customer found
-    let stripe = liveKey
+    const liveStripe = liveKey
       ? new Stripe(liveKey, { apiVersion: '2025-08-27.basil' })
       : null;
-    let customers = stripe
-      ? await stripe.customers.list({ email: user.email, limit: 1 })
-      : { data: [] };
+    const testStripe = testKey
+      ? new Stripe(testKey, { apiVersion: '2025-08-27.basil' })
+      : null;
 
-    if (customers.data.length === 0 && testKey) {
-      logStep('Customer not found in live mode, trying test mode');
-      stripe = new Stripe(testKey, { apiVersion: '2025-08-27.basil' });
-      customers = await stripe.customers.list({ email: user.email, limit: 1 });
+    let stripe: Stripe | null = null;
+    let customerId: string | null = null;
+
+    // Prefer the customer ID we already have on file — faster and more
+    // reliable than an email search (email case differences, a customer
+    // later merged/deleted in Stripe, etc).
+    const { data: sub } = await supabaseClient
+      .from('student_subscriptions')
+      .select('stripe_customer_id')
+      .eq('student_id', user.id)
+      .in('status', ['active', 'trialing'])
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (sub?.stripe_customer_id) {
+      for (const candidate of [
+        { client: liveStripe, label: 'live' },
+        { client: testStripe, label: 'test' },
+      ]) {
+        if (!candidate.client) continue;
+        try {
+          const customer = await candidate.client.customers.retrieve(
+            sub.stripe_customer_id
+          );
+          if (!('deleted' in customer && customer.deleted)) {
+            stripe = candidate.client;
+            customerId = sub.stripe_customer_id;
+            logStep('Found Stripe customer via stored ID', {
+              customerId,
+              mode: candidate.label,
+            });
+            break;
+          }
+        } catch {
+          // Not found in this mode — try the next one, then fall back to email search below.
+        }
+      }
     }
 
-    if (!stripe || customers.data.length === 0) {
-      logStep('No Stripe customer found in live or test mode');
-      throw new Error('No Stripe customer found for this user');
+    // Fall back to an email search if the stored ID is missing, fake, or
+    // no longer exists in either mode.
+    if (!customerId) {
+      for (const candidate of [
+        { client: liveStripe, label: 'live' },
+        { client: testStripe, label: 'test' },
+      ]) {
+        if (!candidate.client) continue;
+        const customers = await candidate.client.customers.list({
+          email: user.email,
+          limit: 1,
+        });
+        if (customers.data.length > 0) {
+          stripe = candidate.client;
+          customerId = customers.data[0].id;
+          logStep('Found Stripe customer via email search', {
+            customerId,
+            mode: candidate.label,
+          });
+          break;
+        }
+      }
     }
 
-    const customerId = customers.data[0].id;
-    logStep('Found Stripe customer', { customerId });
+    if (!stripe || !customerId) {
+      logStep('No Stripe customer found via stored ID or email in either mode');
+      throw new Error(
+        "We couldn't find a payment method on file for your account yet. This usually means your hours were added manually rather than through a card purchase — buy hours from the Pricing page to set one up."
+      );
+    }
 
     // Return to dashboard instead of homepage for better UX
     const returnUrl = `${origin}/dashboard`;

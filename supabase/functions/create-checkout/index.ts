@@ -52,22 +52,52 @@ Deno.serve(async (req) => {
     const { priceId, referralCode } = await req.json();
     if (!priceId) throw new Error('Price ID is required');
 
-    // Determine if this is a test-mode price by checking against known test price IDs
-    const TEST_PRICE_IDS = [
-      'price_1TEZwr14Kl9WjCflCJO1JuLU',
-      'price_1TEZy714Kl9WjCfl7YUFnRM3',
-      'price_1TEZyQ14Kl9WjCflTtGqGEYL',
-      'price_1TEZyh14Kl9WjCflk6c1kecm',
-      'price_1TEZyu14Kl9WjCfluumnEvC0',
-    ];
-    const isTestMode = TEST_PRICE_IDS.includes(priceId);
-    const stripeKey = isTestMode
-      ? Deno.env.get('STRIPE_SECRET_KEY_TEST')
-      : Deno.env.get('STRIPE_SECRET_KEY');
+    // Don't rely on a manually-toggled STRIPE_MODE secret staying in sync with
+    // whichever mode the frontend happens to be sending (VITE_STRIPE_MODE) —
+    // that's exactly the kind of thing that silently drifts (this function's
+    // STRIPE_MODE secret was never actually set, so it was always defaulting
+    // to live and failing for any test-mode price ID sent from local dev).
+    // Instead, resolve the price ID against whichever key it actually belongs
+    // to — try live first (the common case for real traffic), fall back to
+    // test if Stripe reports the price doesn't exist under that key. Same
+    // resilience pattern already used in customer-portal.
+    const liveKey = Deno.env.get('STRIPE_SECRET_KEY');
+    const testKey = Deno.env.get('STRIPE_SECRET_KEY_TEST');
+    if (!liveKey && !testKey)
+      throw new Error('No Stripe secret key configured');
 
-    if (!stripeKey) {
+    let stripe: Stripe | null = null;
+    let isTestMode = false;
+    let customerId: string | undefined;
+
+    for (const candidate of [
+      { key: liveKey, isTest: false },
+      { key: testKey, isTest: true },
+    ]) {
+      if (!candidate.key) continue;
+      const candidateStripe = new Stripe(candidate.key, {
+        apiVersion: '2025-08-27.basil',
+      });
+      try {
+        // Cheap existence check before we commit to this key for the whole flow.
+        await candidateStripe.prices.retrieve(priceId);
+        stripe = candidateStripe;
+        isTestMode = candidate.isTest;
+        break;
+      } catch (priceError) {
+        logStep('Price not found under this key, trying next', {
+          isTest: candidate.isTest,
+          error:
+            priceError instanceof Error
+              ? priceError.message
+              : String(priceError),
+        });
+      }
+    }
+
+    if (!stripe) {
       throw new Error(
-        `Stripe ${isTestMode ? 'test' : 'live'} secret key is not configured`
+        `Price ${priceId} was not found in either live or test mode`
       );
     }
 
@@ -77,16 +107,11 @@ Deno.serve(async (req) => {
       referralCode: referralCode || 'none',
     });
 
-    const stripe = new Stripe(stripeKey, {
-      apiVersion: '2025-08-27.basil',
-    });
-
     // Check if customer exists
     const customers = await stripe.customers.list({
       email: user.email,
       limit: 1,
     });
-    let customerId;
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
       logStep('Existing customer found', { customerId });

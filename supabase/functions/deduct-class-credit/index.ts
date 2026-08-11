@@ -183,44 +183,10 @@ Deno.serve(async (req) => {
       creditsToDeduct,
     });
 
-    // Check for duplicate completion (idempotency)
-    const { data: existingDebit, error: debitCheckError } = await supabaseClient
-      .from('class_credits_ledger')
-      .select('id, balance_after, created_at')
-      .eq('related_class_id', class_id)
-      .eq('transaction_type', 'debit')
-      .maybeSingle();
-
-    if (debitCheckError) {
-      logStep('ERROR: Failed to check for existing debit', {
-        error: debitCheckError,
-      });
-    }
-
-    if (existingDebit) {
-      logStep('Class already completed (idempotent response)', {
-        transaction_id: existingDebit.id,
-        balance_after: existingDebit.balance_after,
-      });
-      return new Response(
-        JSON.stringify({
-          success: true,
-          credits_remaining: existingDebit.balance_after,
-          transaction_id: existingDebit.id,
-          idempotent: true,
-          message: `Class already completed. ${existingDebit.balance_after} hour${existingDebit.balance_after === 1 ? '' : 's'} remaining.`,
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200,
-        }
-      );
-    }
-
-    // Get active subscription with current credits
+    // Get active subscription (just the id/status — balance is read under lock below)
     const { data: subscription, error: subError } = await supabaseClient
       .from('student_subscriptions')
-      .select('id, credits_remaining, status')
+      .select('id, status')
       .eq('student_id', student_id)
       .in('status', ['active', 'trialing'])
       .single();
@@ -240,58 +206,79 @@ Deno.serve(async (req) => {
       );
     }
 
-    logStep('Subscription validated', {
-      subscription_id: subscription.id,
-      credits_before: subscription.credits_remaining,
-    });
+    logStep('Subscription validated', { subscription_id: subscription.id });
 
-    // BLOCK deduction if credits are insufficient
-    if (subscription.credits_remaining < creditsToDeduct) {
-      logStep('Insufficient credits, blocking deduction', {
-        credits: subscription.credits_remaining,
-        required: creditsToDeduct,
+    // Atomic: locks the subscription row, checks for an existing debit on this
+    // class_id, checks sufficient balance, and inserts the ledger row — all inside
+    // one transaction, so two concurrent completions can't both read a stale balance.
+    const { data: rpcResult, error: rpcError } = await supabaseClient.rpc(
+      'apply_credit_ledger_entry',
+      {
+        p_student_id: student_id,
+        p_subscription_id: subscription.id,
+        p_transaction_type: 'debit',
+        p_amount: -creditsToDeduct,
+        p_reason: `Class completed: ${class_title} (${creditsToDeduct}hr${creditsToDeduct === 1 ? '' : 's'})`,
+        p_related_class_id: class_id,
+      }
+    );
+
+    if (rpcError) {
+      logStep('ERROR: apply_credit_ledger_entry RPC failed', {
+        error: rpcError,
+      });
+      throw new Error('Failed to log credit transaction');
+    }
+
+    if (!rpcResult.success) {
+      if (rpcResult.error === 'insufficient_credits') {
+        logStep('Insufficient credits, blocking deduction', {
+          credits: rpcResult.current_balance,
+          required: creditsToDeduct,
+        });
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: `Insufficient hours. Need ${creditsToDeduct} but only ${rpcResult.current_balance} remaining. Please purchase more hours.`,
+            code: 'NO_CREDITS',
+          }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 402,
+          }
+        );
+      }
+
+      logStep('ERROR: unexpected ledger failure', { result: rpcResult });
+      throw new Error('Failed to log credit transaction');
+    }
+
+    if (rpcResult.idempotent) {
+      logStep('Class already completed (idempotent response)', {
+        transaction_id: rpcResult.ledger_id,
+        balance_after: rpcResult.new_balance,
       });
       return new Response(
         JSON.stringify({
-          success: false,
-          error: `Insufficient hours. Need ${creditsToDeduct} but only ${subscription.credits_remaining} remaining. Please purchase more hours.`,
-          code: 'NO_CREDITS',
+          success: true,
+          credits_remaining: rpcResult.new_balance,
+          transaction_id: rpcResult.ledger_id,
+          idempotent: true,
+          message: `Class already completed. ${rpcResult.new_balance} hour${rpcResult.new_balance === 1 ? '' : 's'} remaining.`,
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 402,
+          status: 200,
         }
       );
     }
 
-    const newBalance = subscription.credits_remaining - creditsToDeduct;
-    logStep('Calculated new balance', {
-      credits_before: subscription.credits_remaining,
+    const newBalance = rpcResult.new_balance;
+    const ledgerEntry = { id: rpcResult.ledger_id };
+    logStep('Transaction logged', {
+      transaction_id: ledgerEntry.id,
       credits_after: newBalance,
-      deducted: creditsToDeduct,
     });
-
-    // Log transaction in ledger (trigger will auto-sync subscription table)
-    const { data: ledgerEntry, error: ledgerError } = await supabaseClient
-      .from('class_credits_ledger')
-      .insert({
-        student_id,
-        subscription_id: subscription.id,
-        transaction_type: 'debit',
-        amount: -creditsToDeduct,
-        balance_after: newBalance,
-        reason: `Class completed: ${class_title} (${creditsToDeduct}hr${creditsToDeduct === 1 ? '' : 's'})`,
-        related_class_id: class_id,
-      })
-      .select('id')
-      .single();
-
-    if (ledgerError) {
-      logStep('ERROR: Failed to log transaction', { error: ledgerError });
-      throw new Error('Failed to log credit transaction');
-    }
-
-    logStep('Transaction logged', { transaction_id: ledgerEntry.id });
 
     let message = '';
     if (newBalance === 0) {

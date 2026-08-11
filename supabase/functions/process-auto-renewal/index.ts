@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
 
     logStep('Processing auto-renewal', { student_id, renewal_pack });
 
-    // Get auto-renewal settings with cooldown check
+    // Get auto-renewal settings first (read-only, to know renewal_pack/threshold/etc)
     const { data: settings, error: settingsError } = await supabaseClient
       .from('auto_renewal_settings')
       .select('*')
@@ -74,36 +74,58 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Cooldown check - don't re-trigger within 1 hour
-    if (settings.last_renewal_at) {
-      const lastRenewal = new Date(settings.last_renewal_at);
-      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-      if (lastRenewal > oneHourAgo) {
-        logStep('Cooldown active, skipping', {
-          last_renewal_at: settings.last_renewal_at,
-        });
-        return new Response(
-          JSON.stringify({ success: false, reason: 'cooldown' }),
-          {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 200,
-          }
-        );
-      }
+    // Atomic claim: a plain UPDATE ... WHERE ... RETURNING is a single statement,
+    // so Postgres guarantees only one concurrent caller can win this row. This
+    // replaces the old "SELECT last_renewal_at, check in app code, write it later"
+    // pattern — which had a real race: two classes completing back-to-back could
+    // both pass the cooldown check before either one wrote the timestamp, resulting
+    // in the student's card being charged twice for the same renewal event. Setting
+    // last_renewal_at now (before the charge even runs) also means a failed attempt
+    // still starts the cooldown, so a bad card can't be hammered on every subsequent
+    // class completion.
+    const claimedAt = new Date().toISOString();
+    const oneHourAgoIso = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const { data: claimed, error: claimError } = await supabaseClient
+      .from('auto_renewal_settings')
+      .update({ last_renewal_at: claimedAt })
+      .eq('student_id', student_id)
+      .eq('enabled', true)
+      .or(`last_renewal_at.is.null,last_renewal_at.lt.${oneHourAgoIso}`)
+      .select('id')
+      .maybeSingle();
+
+    if (claimError) {
+      logStep('ERROR: Failed to claim renewal slot', { error: claimError });
+      throw new Error('Failed to claim renewal slot');
     }
 
-    // Get the plan details
-    // UI shows: basic=4h, standard=8h, premium=10h — must match subscription_plans.name exactly.
+    if (!claimed) {
+      logStep('Cooldown active or already claimed, skipping', {
+        last_renewal_at: settings.last_renewal_at,
+      });
+      return new Response(
+        JSON.stringify({ success: false, reason: 'cooldown' }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      );
+    }
+
+    // Get the plan details. renewal_pack ('basic'|'standard'|'premium') maps to the
+    // exact same subscription_plans rows customers see when buying a pack manually
+    // (Basic Plan/Standard Plan/Premium Plan = 4/8/12 hours) — exact match, not a
+    // fuzzy ILIKE, so a renamed plan fails loudly instead of silently matching nothing.
     const packMap: Record<string, string> = {
-      basic: '4 Credit Pack',
-      standard: '8 Credit Pack',
-      premium: '10 Credit Pack',
+      basic: 'Basic Plan',
+      standard: 'Standard Plan',
+      premium: 'Premium Plan',
     };
 
     const { data: plan, error: planError } = await supabaseClient
       .from('subscription_plans')
       .select('*')
-      .ilike('name', packMap[renewal_pack] || '8 Credit Pack')
+      .eq('name', packMap[renewal_pack] || 'Standard Plan')
       .eq('active', true)
       .single();
 
@@ -214,44 +236,56 @@ Deno.serve(async (req) => {
       customer: stripeCustomerId,
     });
 
-    // Create and confirm the PaymentIntent off_session
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(plan.monthly_price * 100),
-      currency: 'usd',
-      customer: stripeCustomerId,
-      payment_method:
-        typeof defaultPaymentMethod === 'string'
-          ? defaultPaymentMethod
-          : defaultPaymentMethod.id,
-      off_session: true,
-      confirm: true,
-      description: `Auto-renewal: ${plan.name}`,
-      metadata: {
-        user_id: student_id,
-        auto_renewal: 'true',
-        plan_name: plan.name,
+    // Create and confirm the PaymentIntent off_session. Idempotency key is tied to
+    // the claim we just won above — if this function is invoked twice for the same
+    // claimed window (a retry after a timeout, a duplicate trigger), Stripe itself
+    // de-dupes the charge instead of creating two PaymentIntents for one renewal.
+    const paymentIntent = await stripe.paymentIntents.create(
+      {
+        amount: Math.round(plan.monthly_price * 100),
+        currency: 'usd',
+        customer: stripeCustomerId,
+        payment_method:
+          typeof defaultPaymentMethod === 'string'
+            ? defaultPaymentMethod
+            : defaultPaymentMethod.id,
+        off_session: true,
+        confirm: true,
+        description: `Auto-renewal: ${plan.name}`,
+        metadata: {
+          user_id: student_id,
+          auto_renewal: 'true',
+          plan_name: plan.name,
+        },
       },
-    });
+      { idempotencyKey: `auto-renewal-${student_id}-${claimedAt}` }
+    );
 
     logStep('PaymentIntent result', {
       status: paymentIntent.status,
       id: paymentIntent.id,
     });
 
-    // SCA / 3D Secure: card requires additional authentication off-session
+    // SCA / 3D Secure: card requires additional authentication off-session. This can
+    // never succeed without the customer present to authenticate, so retrying it
+    // automatically on every future threshold-crossing would just fail silently
+    // forever — auto-disable instead, matching how real dunning flows eventually
+    // stop and hand control back to the customer.
     if (paymentIntent.status === 'requires_action') {
       const errorMsg =
-        'Your card requires additional authentication (3D Secure). Please make a manual purchase to re-save your card.';
-      logStep('PaymentIntent requires SCA action', { id: paymentIntent.id });
+        'Your card requires additional authentication (3D Secure) and auto-renewal has been turned off. Please make a manual purchase to re-save your card, then re-enable auto-renewal.';
+      logStep('PaymentIntent requires SCA action — disabling auto-renewal', {
+        id: paymentIntent.id,
+      });
 
       await supabaseClient
         .from('auto_renewal_settings')
-        .update({ last_renewal_error: errorMsg })
+        .update({ last_renewal_error: errorMsg, enabled: false })
         .eq('student_id', student_id);
 
       await supabaseClient.from('notifications').insert({
         user_id: student_id,
-        message: `Auto-renewal requires card authentication. Please visit the pricing page to complete a manual purchase and update your saved payment method.`,
+        message: `Auto-renewal requires card authentication and has been turned off. Please visit the pricing page to complete a manual purchase and update your saved payment method, then re-enable auto-renewal in Settings.`,
         type: 'auto_renewal_failed',
       });
 
@@ -279,28 +313,41 @@ Deno.serve(async (req) => {
     }
 
     if (paymentIntent.status === 'succeeded') {
-      // Get current subscription and balance
+      // Get current subscription (balance is read under lock inside the RPC)
       const { data: existingSub } = await supabaseClient
         .from('student_subscriptions')
-        .select('id, credits_remaining')
+        .select('id')
         .eq('student_id', student_id)
         .in('status', ['active', 'trialing'])
         .maybeSingle();
 
       if (existingSub) {
-        const newBalance =
-          existingSub.credits_remaining + plan.classes_per_month;
+        // Atomic: row-locks the subscription and no-ops if this paymentIntent was
+        // already processed, so a retry/duplicate call can't double-credit.
+        const { data: rpcResult, error: rpcError } = await supabaseClient.rpc(
+          'apply_credit_ledger_entry',
+          {
+            p_student_id: student_id,
+            p_subscription_id: existingSub.id,
+            p_transaction_type: 'credit',
+            p_amount: plan.classes_per_month,
+            p_reason: `Auto-renewal: ${plan.name}`,
+            p_invoice_id: paymentIntent.id,
+            p_dollar_amount: plan.monthly_price,
+          }
+        );
 
-        await supabaseClient.from('class_credits_ledger').insert({
-          student_id,
-          subscription_id: existingSub.id,
-          transaction_type: 'credit',
-          amount: plan.classes_per_month,
-          balance_after: newBalance,
-          reason: `Auto-renewal: ${plan.name}`,
-          invoice_id: paymentIntent.id,
-        });
+        if (rpcError || !rpcResult?.success) {
+          logStep('ERROR: auto-renewal ledger write failed', {
+            error: rpcError,
+            result: rpcResult,
+          });
+          throw (
+            rpcError || new Error('Failed to allocate auto-renewal credits')
+          );
+        }
 
+        const newBalance = rpcResult.new_balance;
         logStep('Credits allocated via auto-renewal', { newBalance });
 
         // Update settings
