@@ -25,3 +25,6 @@ dist-ssr
 
 # Local environment variables
 .env.local
+
+# Supabase CLI local runtime cache (machine-specific, not project state)
+supabase/.temp/

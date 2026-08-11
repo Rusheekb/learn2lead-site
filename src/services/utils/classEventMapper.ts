@@ -35,6 +35,8 @@ interface DbRecord {
   student_payment_date?: string | Date | null;
   tutor_payment_date?: string | Date | null;
   'Additional Info'?: string | null;
+  disputed?: boolean | null;
+  dispute_reason?: string | null;
 }
 
 export const transformDbRecordToClassEvent = (record: unknown): ClassEvent => {
@@ -108,6 +110,8 @@ export const transformDbRecordToClassEvent = (record: unknown): ClassEvent => {
       tutorPayment: tutorPayment as PaymentStatus,
       recurring: false,
       materials: [],
+      disputed: !!dbRecord.disputed,
+      disputeReason: dbRecord.dispute_reason || null,
     };
   } catch (error) {
     log.error('Error transforming record', error, { recordId: dbRecord.id });

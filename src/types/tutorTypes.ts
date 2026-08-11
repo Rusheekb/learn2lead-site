@@ -48,6 +48,8 @@ export interface ClassEvent extends BaseEvent {
   studentPayment?: PaymentStatus;
   tutorPayment?: PaymentStatus;
   isCodeLog?: boolean;
+  disputed?: boolean;
+  disputeReason?: string | null;
 }
 
 // Database class log record

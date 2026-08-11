@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -28,6 +29,10 @@ interface CompletedClassActionsProps {
   onUpdate: () => void;
 }
 
+/** Round to nearest 0.5, minimum 0.5 — mirrors deduct-class-credit's server-side rounding */
+const roundToHalfHour = (hours: number): number =>
+  Math.max(0.5, Math.round(hours * 2) / 2);
+
 const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
   classEvent,
   onUpdate,
@@ -42,6 +47,38 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
   const [content, setContent] = useState(classEvent.content || '');
   const [homework, setHomework] = useState(classEvent.homework || '');
   const [confirmChecked, setConfirmChecked] = useState(false);
+
+  // The class was scheduled for this long, based on its start/end time — this is
+  // the *plan*, not necessarily what actually happened. Sessions routinely run
+  // long or short in practice, so the tutor can correct it below at logging time
+  // rather than being locked into whatever was originally booked.
+  const scheduledDuration = useMemo(() => {
+    return (
+      classEvent.duration ||
+      (() => {
+        if (classEvent.startTime && classEvent.endTime) {
+          const start = new Date(`2000-01-01T${classEvent.startTime}`);
+          const end = new Date(`2000-01-01T${classEvent.endTime}`);
+          return (
+            Math.round(
+              ((end.getTime() - start.getTime()) / (1000 * 60 * 60)) * 100
+            ) / 100
+          );
+        }
+        return 1;
+      })()
+    );
+  }, [classEvent.duration, classEvent.startTime, classEvent.endTime]);
+
+  const [hours, setHours] = useState<number>(scheduledDuration);
+
+  useEffect(() => {
+    if (isDialogOpen) {
+      setHours(scheduledDuration);
+    }
+  }, [isDialogOpen, scheduledDuration]);
+
+  const hoursDeviatesSignificantly = Math.abs(hours - scheduledDuration) > 1;
 
   // Use stable completion status hook to prevent flashing
   const {
@@ -69,20 +106,7 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
     setIsCompleting(true);
     setIsDialogOpen(false);
 
-    const duration =
-      classEvent.duration ||
-      (() => {
-        if (classEvent.startTime && classEvent.endTime) {
-          const start = new Date(`2000-01-01T${classEvent.startTime}`);
-          const end = new Date(`2000-01-01T${classEvent.endTime}`);
-          return (
-            Math.round(
-              ((end.getTime() - start.getTime()) / (1000 * 60 * 60)) * 100
-            ) / 100
-          );
-        }
-        return 1;
-      })();
+    const duration = roundToHalfHour(hours);
 
     try {
       // Get the current user's profile to ensure name matches RLS policy
@@ -223,10 +247,12 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
     classEvent,
     content,
     homework,
+    hours,
     queryClient,
     onUpdate,
     optimisticDeductCredits,
     restoreOptimisticCredits,
+    setIsCompleted,
   ]);
 
   // If class is being removed or already completed, don't render anything
@@ -298,6 +324,43 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
                   {parseDateToLocal(classEvent.date).toLocaleDateString()}
                 </div>
               </div>
+            </div>
+
+            <div>
+              <Label htmlFor="hours">
+                Hours taught *{' '}
+                <span className="font-normal text-muted-foreground">
+                  (scheduled: {scheduledDuration})
+                </span>
+              </Label>
+              <Input
+                id="hours"
+                type="number"
+                min={0.5}
+                step={0.5}
+                value={hours}
+                onChange={(e) => {
+                  const parsed = parseFloat(e.target.value);
+                  setHours(Number.isFinite(parsed) ? parsed : 0.5);
+                }}
+                onBlur={() => setHours((h) => roundToHalfHour(h))}
+                className="w-32"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Credits are deducted based on this number, in half-hour
+                increments. If the session ran longer or shorter than scheduled,
+                correct it here.
+              </p>
+              {hoursDeviatesSignificantly && (
+                <div className="mt-2 flex items-start gap-2 rounded-md bg-amber-50 border border-amber-200 dark:bg-amber-950/30 dark:border-amber-800 px-3 py-2">
+                  <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                  <p className="text-xs text-amber-800 dark:text-amber-200">
+                    This is significantly different from the scheduled{' '}
+                    {scheduledDuration} hour{scheduledDuration === 1 ? '' : 's'}{' '}
+                    — double check before saving.
+                  </p>
+                </div>
+              )}
             </div>
 
             <div>

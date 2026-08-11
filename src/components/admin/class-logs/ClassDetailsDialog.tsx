@@ -99,12 +99,12 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
       return String(date);
     }
   };
-  
+
   const getFilenameFromUrl = (url: string) => {
     const parts = url.split('/');
     const filename = parts[parts.length - 1].split('?')[0];
     const decodedFilename = decodeURIComponent(filename);
-    const matches = decodedFilename.match(/[^\/]+\.[^\/\.]+$/);
+    const matches = decodedFilename.match(/[^/]+\.[^/.]+$/);
     return matches ? matches[0] : decodedFilename;
   };
 
@@ -132,23 +132,37 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
               <TabsContent value="details" className="space-y-4 pt-4">
                 <div className="space-y-3">
                   <div>
-                    <h4 className="text-sm font-medium text-muted-foreground">Subject</h4>
+                    <h4 className="text-sm font-medium text-muted-foreground">
+                      Subject
+                    </h4>
                     <p className="text-foreground">{selectedClass.subject}</p>
                   </div>
                   <div>
-                    <h4 className="text-sm font-medium text-muted-foreground">Tutor</h4>
+                    <h4 className="text-sm font-medium text-muted-foreground">
+                      Tutor
+                    </h4>
                     <p className="text-foreground">{selectedClass.tutorName}</p>
                   </div>
                   <div>
-                    <h4 className="text-sm font-medium text-muted-foreground">Student</h4>
-                    <p className="text-foreground">{selectedClass.studentName}</p>
+                    <h4 className="text-sm font-medium text-muted-foreground">
+                      Student
+                    </h4>
+                    <p className="text-foreground">
+                      {selectedClass.studentName}
+                    </p>
                   </div>
                   <div>
-                    <h4 className="text-sm font-medium text-muted-foreground">Date</h4>
-                    <p className="text-foreground">{formatDate(selectedClass.date)}</p>
+                    <h4 className="text-sm font-medium text-muted-foreground">
+                      Date
+                    </h4>
+                    <p className="text-foreground">
+                      {formatDate(selectedClass.date)}
+                    </p>
                   </div>
                   <div>
-                    <h4 className="text-sm font-medium text-muted-foreground">Time</h4>
+                    <h4 className="text-sm font-medium text-muted-foreground">
+                      Time
+                    </h4>
                     <p className="text-foreground">
                       {formatTime(selectedClass.startTime)} -{' '}
                       {formatTime(selectedClass.endTime)}
@@ -158,7 +172,9 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
 
                 {selectedClass.zoomLink && (
                   <div>
-                    <h4 className="text-sm font-medium text-muted-foreground">Zoom Link</h4>
+                    <h4 className="text-sm font-medium text-muted-foreground">
+                      Zoom Link
+                    </h4>
                     <a
                       href={selectedClass.zoomLink}
                       target="_blank"
@@ -171,14 +187,19 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
                 )}
 
                 <div>
-                  <h4 className="text-sm font-medium text-muted-foreground">Content Covered</h4>
+                  <h4 className="text-sm font-medium text-muted-foreground">
+                    Content Covered
+                  </h4>
                   <p className="mt-1 text-foreground whitespace-pre-wrap">
-                    {selectedClass.content || 'No content recorded for this class.'}
+                    {selectedClass.content ||
+                      'No content recorded for this class.'}
                   </p>
                 </div>
 
                 <div>
-                  <h4 className="text-sm font-medium text-muted-foreground">Homework / Follow-up</h4>
+                  <h4 className="text-sm font-medium text-muted-foreground">
+                    Homework / Follow-up
+                  </h4>
                   <p className="mt-1 text-foreground whitespace-pre-wrap">
                     {selectedClass.homework || 'No homework assigned.'}
                   </p>
@@ -186,31 +207,59 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
 
                 {selectedClass.notes && (
                   <div>
-                    <h4 className="text-sm font-medium text-muted-foreground">Additional Notes</h4>
+                    <h4 className="text-sm font-medium text-muted-foreground">
+                      Additional Notes
+                    </h4>
                     <p className="mt-1 text-foreground whitespace-pre-wrap">
                       {selectedClass.notes}
                     </p>
+                  </div>
+                )}
+
+                {selectedClass.disputed && (
+                  <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Badge variant="destructive">Reported by student</Badge>
+                    </div>
+                    {selectedClass.disputeReason && (
+                      <p className="text-sm text-foreground whitespace-pre-wrap">
+                        {selectedClass.disputeReason}
+                      </p>
+                    )}
                   </div>
                 )}
               </TabsContent>
 
               <TabsContent value="payments" className="space-y-6 pt-4">
                 <div className="flex items-center gap-2">
-                  <h4 className="text-sm font-medium text-muted-foreground">Payment Method:</h4>
+                  <h4 className="text-sm font-medium text-muted-foreground">
+                    Payment Method:
+                  </h4>
                   <Badge variant={isStripe ? 'default' : 'secondary'}>
                     {isStripe ? 'Stripe' : 'Zelle'}
                   </Badge>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium text-muted-foreground">Costs</span>
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Costs
+                  </span>
                   {editingCosts ? (
-                    <Button size="sm" variant="default" onClick={handleSaveCosts} disabled={savingCosts}>
+                    <Button
+                      size="sm"
+                      variant="default"
+                      onClick={handleSaveCosts}
+                      disabled={savingCosts}
+                    >
                       <Save className="h-3 w-3 mr-1" />
                       {savingCosts ? 'Saving…' : 'Save'}
                     </Button>
                   ) : (
-                    <Button size="sm" variant="ghost" onClick={() => setEditingCosts(true)}>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setEditingCosts(true)}
+                    >
                       <Pencil className="h-3 w-3 mr-1" />
                       Edit
                     </Button>
@@ -219,7 +268,9 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-3 rounded-lg border border-border">
-                    <div className="text-sm text-muted-foreground">Class Cost</div>
+                    <div className="text-sm text-muted-foreground">
+                      Class Cost
+                    </div>
                     {editingCosts ? (
                       <div className="flex items-center gap-1 mt-1">
                         <span className="text-lg font-bold">$</span>
@@ -233,11 +284,15 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
                         />
                       </div>
                     ) : (
-                      <div className="text-xl font-bold">${parseFloat(classCost).toFixed(2)}</div>
+                      <div className="text-xl font-bold">
+                        ${parseFloat(classCost).toFixed(2)}
+                      </div>
                     )}
                   </div>
                   <div className="p-3 rounded-lg border border-border">
-                    <div className="text-sm text-muted-foreground">Tutor Cost</div>
+                    <div className="text-sm text-muted-foreground">
+                      Tutor Cost
+                    </div>
                     {editingCosts ? (
                       <div className="flex items-center gap-1 mt-1">
                         <span className="text-lg font-bold">$</span>
@@ -251,7 +306,9 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
                         />
                       </div>
                     ) : (
-                      <div className="text-xl font-bold">${parseFloat(tutorCost).toFixed(2)}</div>
+                      <div className="text-xl font-bold">
+                        ${parseFloat(tutorCost).toFixed(2)}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -260,14 +317,18 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
                   <div className="flex items-center justify-between">
                     <h4 className="font-medium">Student Payment</h4>
                     <div className="flex items-center gap-2">
-                      <div className={`w-3 h-3 rounded-full ${studentPaid ? 'bg-emerald-500' : 'bg-destructive'}`} />
+                      <div
+                        className={`w-3 h-3 rounded-full ${studentPaid ? 'bg-emerald-500' : 'bg-destructive'}`}
+                      />
                       <span className="text-sm font-medium">
                         {studentPaid ? 'Paid' : 'Unpaid'}
                       </span>
                     </div>
                   </div>
                   {isStripe ? (
-                    <p className="text-sm text-muted-foreground">Managed by Stripe — no manual action needed.</p>
+                    <p className="text-sm text-muted-foreground">
+                      Managed by Stripe — no manual action needed.
+                    </p>
                   ) : (
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">
@@ -279,7 +340,12 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
                         <Button
                           size="sm"
                           variant={studentPaid ? 'outline' : 'default'}
-                          onClick={() => onToggleStudentPayment(selectedClass.id, studentPaid)}
+                          onClick={() =>
+                            onToggleStudentPayment(
+                              selectedClass.id,
+                              studentPaid
+                            )
+                          }
                         >
                           {studentPaid ? 'Mark Unpaid' : 'Mark Paid'}
                         </Button>
@@ -292,7 +358,9 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
                   <div className="flex items-center justify-between">
                     <h4 className="font-medium">Tutor Payment</h4>
                     <div className="flex items-center gap-2">
-                      <div className={`w-3 h-3 rounded-full ${tutorPaid ? 'bg-emerald-500' : 'bg-destructive'}`} />
+                      <div
+                        className={`w-3 h-3 rounded-full ${tutorPaid ? 'bg-emerald-500' : 'bg-destructive'}`}
+                      />
                       <span className="text-sm font-medium">
                         {tutorPaid ? 'Paid' : 'Unpaid'}
                       </span>
@@ -308,7 +376,9 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
                       <Button
                         size="sm"
                         variant={tutorPaid ? 'outline' : 'default'}
-                        onClick={() => onToggleTutorPayment(selectedClass.id, tutorPaid)}
+                        onClick={() =>
+                          onToggleTutorPayment(selectedClass.id, tutorPaid)
+                        }
                       >
                         {tutorPaid ? 'Mark Unpaid' : 'Mark Paid'}
                       </Button>
@@ -319,25 +389,35 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
 
               <TabsContent value="materials" className="space-y-4 pt-4">
                 <div>
-                  <h4 className="text-sm font-medium text-muted-foreground">Class Materials</h4>
-                  {selectedClass.materialsUrl && selectedClass.materialsUrl.length > 0 ? (
+                  <h4 className="text-sm font-medium text-muted-foreground">
+                    Class Materials
+                  </h4>
+                  {selectedClass.materialsUrl &&
+                  selectedClass.materialsUrl.length > 0 ? (
                     <ul className="mt-2 space-y-2">
-                      {selectedClass.materialsUrl.map((url: string, index: number) => (
-                        <li key={index} className="p-2 border border-border rounded-md">
-                          <a
-                            href={url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-primary hover:underline flex items-center gap-1"
+                      {selectedClass.materialsUrl.map(
+                        (url: string, index: number) => (
+                          <li
+                            key={index}
+                            className="p-2 border border-border rounded-md"
                           >
-                            <span>{getFilenameFromUrl(url)}</span>
-                            <ExternalLink className="h-3 w-3" />
-                          </a>
-                        </li>
-                      ))}
+                            <a
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-primary hover:underline flex items-center gap-1"
+                            >
+                              <span>{getFilenameFromUrl(url)}</span>
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
+                          </li>
+                        )
+                      )}
                     </ul>
                   ) : (
-                    <p className="text-muted-foreground mt-2">No materials uploaded for this class.</p>
+                    <p className="text-muted-foreground mt-2">
+                      No materials uploaded for this class.
+                    </p>
                   )}
                 </div>
               </TabsContent>

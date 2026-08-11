@@ -15,6 +15,7 @@ import {
   Star,
   AlertCircle,
   RefreshCw,
+  Flag,
 } from 'lucide-react';
 import {
   Dialog,
@@ -49,6 +50,8 @@ interface ClassHistoryItem {
   'Class ID': string | null;
   student_rating: number | null;
   student_feedback: string | null;
+  disputed: boolean | null;
+  dispute_reason: string | null;
 }
 
 interface ClassHistoryProps {
@@ -126,6 +129,13 @@ const ClassHistory: React.FC<ClassHistoryProps> = memo(
       Record<string, PendingFeedback>
     >({});
     const [savingRatingId, setSavingRatingId] = useState<string | null>(null);
+    const [pendingDisputeId, setPendingDisputeId] = useState<string | null>(
+      null
+    );
+    const [disputeReason, setDisputeReason] = useState('');
+    const [submittingDisputeId, setSubmittingDisputeId] = useState<
+      string | null
+    >(null);
 
     const {
       data: result,
@@ -199,6 +209,49 @@ const ClassHistory: React.FC<ClassHistoryProps> = memo(
         toast.error('Failed to save feedback');
       } finally {
         setSavingRatingId(null);
+      }
+    };
+
+    const handleSubmitDispute = async (classId: string) => {
+      if (!disputeReason.trim()) return;
+      setSubmittingDisputeId(classId);
+      try {
+        const { error } = await supabase
+          .from('class_logs')
+          .update({ disputed: true, dispute_reason: disputeReason.trim() })
+          .eq('id', classId);
+        if (error) throw error;
+        toast.success('Reported — an admin will review this class');
+        queryClient.invalidateQueries({
+          queryKey: ['classHistory', user?.id, userRole],
+        });
+        setPendingDisputeId(null);
+        setDisputeReason('');
+      } catch (err) {
+        log.error('Error submitting dispute', err);
+        toast.error('Failed to submit report');
+      } finally {
+        setSubmittingDisputeId(null);
+      }
+    };
+
+    const handleWithdrawDispute = async (classId: string) => {
+      setSubmittingDisputeId(classId);
+      try {
+        const { error } = await supabase
+          .from('class_logs')
+          .update({ disputed: false, dispute_reason: null })
+          .eq('id', classId);
+        if (error) throw error;
+        toast.success('Report withdrawn');
+        queryClient.invalidateQueries({
+          queryKey: ['classHistory', user?.id, userRole],
+        });
+      } catch (err) {
+        log.error('Error withdrawing dispute', err);
+        toast.error('Failed to withdraw report');
+      } finally {
+        setSubmittingDisputeId(null);
       }
     };
 
@@ -317,6 +370,16 @@ const ClassHistory: React.FC<ClassHistoryProps> = memo(
                               {classItem.student_rating}/5
                             </span>
                           )}
+                          {(userRole === 'tutor' || userRole === 'admin') &&
+                            classItem.disputed && (
+                              <Badge
+                                variant="destructive"
+                                className="text-xs gap-1"
+                              >
+                                <Flag className="h-3 w-3" />
+                                Reported
+                              </Badge>
+                            )}
                         </div>
                       </div>
                       {(userRole === 'tutor' || userRole === 'admin') && (
@@ -488,6 +551,116 @@ const ClassHistory: React.FC<ClassHistoryProps> = memo(
                             )}
                           </div>
                         )}
+
+                        {/* Report a problem — students only, independent of rating */}
+                        {userRole === 'student' && (
+                          <div
+                            className="pt-2 border-t"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {classItem.disputed ? (
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <Badge
+                                  variant="destructive"
+                                  className="text-xs gap-1"
+                                >
+                                  <Flag className="h-3 w-3" />
+                                  Reported
+                                </Badge>
+                                {classItem.dispute_reason && (
+                                  <span className="text-xs text-muted-foreground italic truncate max-w-[240px]">
+                                    "{classItem.dispute_reason}"
+                                  </span>
+                                )}
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-5 text-xs px-2"
+                                  onClick={() =>
+                                    handleWithdrawDispute(classItem.id)
+                                  }
+                                  disabled={
+                                    submittingDisputeId === classItem.id
+                                  }
+                                >
+                                  Withdraw
+                                </Button>
+                              </div>
+                            ) : pendingDisputeId === classItem.id ? (
+                              <div className="space-y-2">
+                                <p className="text-xs font-medium text-muted-foreground">
+                                  What's wrong with this class log?
+                                </p>
+                                <Textarea
+                                  placeholder="E.g. the hours logged don't match what actually happened, wrong subject, session didn't occur..."
+                                  value={disputeReason}
+                                  onChange={(e) =>
+                                    setDisputeReason(e.target.value)
+                                  }
+                                  rows={2}
+                                  className="text-sm"
+                                />
+                                <div className="flex gap-2">
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={() =>
+                                      handleSubmitDispute(classItem.id)
+                                    }
+                                    disabled={
+                                      !disputeReason.trim() ||
+                                      submittingDisputeId === classItem.id
+                                    }
+                                  >
+                                    {submittingDisputeId === classItem.id && (
+                                      <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                                    )}
+                                    Submit Report
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => {
+                                      setPendingDisputeId(null);
+                                      setDisputeReason('');
+                                    }}
+                                  >
+                                    Cancel
+                                  </Button>
+                                </div>
+                              </div>
+                            ) : (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 text-xs px-2 text-muted-foreground gap-1"
+                                onClick={() => {
+                                  setPendingDisputeId(classItem.id);
+                                  setDisputeReason('');
+                                }}
+                              >
+                                <Flag className="h-3 w-3" />
+                                Report a Problem
+                              </Button>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Tutor/admin view: show the dispute reason if reported */}
+                        {(userRole === 'tutor' || userRole === 'admin') &&
+                          classItem.disputed && (
+                            <div className="pt-2 border-t">
+                              <p className="text-xs font-medium text-destructive mb-1 flex items-center gap-1">
+                                <Flag className="h-3 w-3" />
+                                Reported by student
+                              </p>
+                              {classItem.dispute_reason && (
+                                <p className="text-sm text-muted-foreground italic">
+                                  "{classItem.dispute_reason}"
+                                </p>
+                              )}
+                            </div>
+                          )}
 
                         {/* Tutor view: show student rating if exists */}
                         {userRole === 'tutor' && hasRating && (
