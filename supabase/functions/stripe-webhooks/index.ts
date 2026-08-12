@@ -189,6 +189,12 @@ Deno.serve(async (req) => {
         break;
       }
 
+      case 'charge.refunded': {
+        const charge = event.data.object as Stripe.Charge;
+        await handleChargeRefunded(stripe, supabaseClient, charge);
+        break;
+      }
+
       default:
         logStep('Unhandled event type', { type: event.type });
     }
@@ -602,6 +608,270 @@ async function allocateCreditsFromCheckout(
         plan.classes_per_month
       );
     }
+  }
+}
+
+// ─── charge.refunded ───────────────────────────────────────────────────────────
+// Claws back credits proportionally when a credit-pack purchase is refunded, in
+// full or in part. Allows the resulting balance to go negative if hours were
+// already used before the refund — surfaced via the existing overdrawn UI
+// rather than silently capped at zero, so nothing about the account's real
+// state is hidden.
+async function handleChargeRefunded(
+  stripe: Stripe,
+  supabaseClient: any,
+  charge: Stripe.Charge
+) {
+  const paymentIntentId =
+    typeof charge.payment_intent === 'string'
+      ? charge.payment_intent
+      : charge.payment_intent?.id;
+
+  if (!paymentIntentId) {
+    logStep('charge.refunded: no payment_intent on charge, skipping', {
+      chargeId: charge.id,
+    });
+    return;
+  }
+
+  // The most recently created refund is what triggered this event — use its
+  // own amount (not the cumulative charge.amount_refunded) so that multiple
+  // partial refunds on the same charge each deduct only their own increment,
+  // and its own id as the idempotency key so a retried webhook delivery
+  // can't double-deduct.
+  const latestRefund = charge.refunds?.data?.[0];
+  if (!latestRefund) {
+    logStep('charge.refunded: no refund object on charge, skipping', {
+      chargeId: charge.id,
+    });
+    return;
+  }
+
+  logStep('Processing refund', {
+    chargeId: charge.id,
+    refundId: latestRefund.id,
+    refundAmount: latestRefund.amount,
+    chargeAmount: charge.amount,
+  });
+
+  const sessions = await stripe.checkout.sessions.list({
+    payment_intent: paymentIntentId,
+    limit: 1,
+  });
+  const session = sessions.data[0];
+
+  if (!session) {
+    logStep(
+      'charge.refunded: no checkout session found for payment_intent — not a credit-pack purchase, skipping',
+      { paymentIntentId }
+    );
+    return;
+  }
+
+  // The original credit grant for this purchase — its `amount` is exactly
+  // how many hours were added, which is what we're proportionally reversing.
+  const { data: originalEntry, error: originalError } = await supabaseClient
+    .from('class_credits_ledger')
+    .select('student_id, subscription_id, amount')
+    .eq('invoice_id', session.id)
+    .eq('transaction_type', 'credit')
+    .maybeSingle();
+
+  if (originalError || !originalEntry) {
+    logStep(
+      'charge.refunded: no original credit entry found for session, skipping',
+      { sessionId: session.id, error: originalError?.message }
+    );
+    return;
+  }
+
+  if (!charge.amount || charge.amount <= 0) {
+    logStep('charge.refunded: charge has no positive amount, skipping', {
+      chargeId: charge.id,
+    });
+    return;
+  }
+
+  const refundFraction = latestRefund.amount / charge.amount;
+  const creditsToDeduct =
+    Math.round(originalEntry.amount * refundFraction * 100) / 100;
+
+  if (creditsToDeduct <= 0) {
+    logStep('charge.refunded: computed zero credits to deduct, skipping', {
+      refundFraction,
+      originalAmount: originalEntry.amount,
+    });
+    return;
+  }
+
+  // Same atomic, idempotent path everything else uses — row-locks the
+  // subscription and no-ops if this refund id was already processed.
+  const { data: rpcResult, error: rpcError } = await supabaseClient.rpc(
+    'apply_credit_ledger_entry',
+    {
+      p_student_id: originalEntry.student_id,
+      p_subscription_id: originalEntry.subscription_id,
+      p_transaction_type: 'debit',
+      p_amount: -creditsToDeduct,
+      p_reason: `Refund processed - $${(latestRefund.amount / 100).toFixed(2)} refunded`,
+      p_invoice_id: latestRefund.id,
+      p_dollar_amount: latestRefund.amount / 100,
+      p_allow_negative: true,
+    }
+  );
+
+  if (rpcError || !rpcResult?.success) {
+    logStep('charge.refunded: failed to deduct credits', {
+      error: rpcError,
+      result: rpcResult,
+    });
+    throw rpcError || new Error('Failed to deduct credits for refund');
+  }
+
+  if (rpcResult.idempotent) {
+    logStep('charge.refunded: refund already processed, no action needed', {
+      refundId: latestRefund.id,
+    });
+    return;
+  }
+
+  logStep('charge.refunded: credits deducted', {
+    creditsDeducted: creditsToDeduct,
+    newBalance: rpcResult.new_balance,
+  });
+
+  await supabaseClient.from('notifications').insert({
+    user_id: originalEntry.student_id,
+    message: `${creditsToDeduct} hour${creditsToDeduct === 1 ? '' : 's'} removed from your balance following a $${(latestRefund.amount / 100).toFixed(2)} refund.`,
+    type: 'refund_processed',
+  });
+
+  await sendRefundNotificationEmail(
+    supabaseClient,
+    originalEntry.student_id,
+    creditsToDeduct,
+    latestRefund.amount / 100,
+    rpcResult.new_balance
+  );
+
+  if (rpcResult.new_balance < 0) {
+    await sendAdminOverdrawnRefundAlert(
+      supabaseClient,
+      originalEntry.student_id,
+      rpcResult.new_balance
+    );
+  }
+}
+
+// ─── sendRefundNotificationEmail ────────────────────────────────────────────────
+async function sendRefundNotificationEmail(
+  supabaseClient: any,
+  studentId: string,
+  creditsDeducted: number,
+  refundAmount: number,
+  newBalance: number
+) {
+  try {
+    const resendApiKey = Deno.env.get('RESEND_API_KEY');
+    if (!resendApiKey) {
+      logStep('Skipping refund email - RESEND_API_KEY not configured');
+      return;
+    }
+
+    const { data: profile } = await supabaseClient
+      .from('profiles')
+      .select('email, first_name, last_name')
+      .eq('id', studentId)
+      .single();
+
+    if (!profile?.email) return;
+
+    const studentName = profile.first_name
+      ? `${profile.first_name} ${profile.last_name || ''}`.trim()
+      : 'Valued Student';
+
+    const balanceLine =
+      newBalance < 0
+        ? `<p style="margin:0;font-weight:bold;color:#dc2626;">Your balance is now ${Math.abs(newBalance)} hour${Math.abs(newBalance) === 1 ? '' : 's'} overdrawn.</p>`
+        : `<p style="margin:0;font-weight:bold;">Remaining balance: ${newBalance} hour${newBalance === 1 ? '' : 's'}</p>`;
+
+    const resend = new Resend(resendApiKey);
+    await resend.emails.send({
+      from: 'Learn2Lead <noreply@learn2lead.page>',
+      to: [profile.email],
+      subject: 'Refund Processed - Balance Updated',
+      html: `
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+          <h2 style="color:#1a1a2e;">Refund Processed</h2>
+          <p>Hi ${studentName},</p>
+          <p>A refund of $${refundAmount.toFixed(2)} has been processed for your account, and your hours balance has been adjusted accordingly.</p>
+          <div style="background:#f8f9fa;border-radius:8px;padding:16px;margin:16px 0;">
+            <p style="margin:0 0 8px 0;">Hours removed: <strong>${creditsDeducted}</strong></p>
+            ${balanceLine}
+          </div>
+          <p style="font-size:14px;color:#666;">If you have any questions about this refund, please contact your admin.</p>
+          <p><strong>The Learn2Lead Team</strong></p>
+        </div>`,
+    });
+
+    logStep('Refund notification email sent', { email: profile.email });
+  } catch (error) {
+    logStep('WARNING: Failed to send refund notification email', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
+// ─── sendAdminOverdrawnRefundAlert ──────────────────────────────────────────────
+// Only fires when a refund pushes the balance negative — the student already
+// used hours that were just refunded, so an admin needs to follow up.
+async function sendAdminOverdrawnRefundAlert(
+  supabaseClient: any,
+  studentId: string,
+  newBalance: number
+) {
+  try {
+    const resendApiKey = Deno.env.get('RESEND_API_KEY');
+    if (!resendApiKey) return;
+
+    const { data: student } = await supabaseClient
+      .from('profiles')
+      .select('email, first_name, last_name')
+      .eq('id', studentId)
+      .single();
+
+    const { data: admins } = await supabaseClient
+      .from('profiles')
+      .select('email')
+      .eq('role', 'admin');
+
+    if (!admins || admins.length === 0) return;
+
+    const studentLabel = student
+      ? `${student.first_name || ''} ${student.last_name || ''}`.trim() ||
+        student.email
+      : studentId;
+
+    const resend = new Resend(resendApiKey);
+    await resend.emails.send({
+      from: 'Learn2Lead <noreply@learn2lead.page>',
+      to: admins.map((a: { email: string }) => a.email),
+      subject: `Refund pushed ${studentLabel} into a negative hours balance`,
+      html: `
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+          <h2 style="color:#dc2626;">Refund Resulted in Overdrawn Balance</h2>
+          <p>A refund was processed for <strong>${studentLabel}</strong>, and they had already used more hours than the refunded amount covers.</p>
+          <p style="font-weight:bold;">New balance: ${newBalance} hours (overdrawn)</p>
+          <p>This may need manual follow-up depending on the situation.</p>
+          <p><strong>The Learn2Lead System</strong></p>
+        </div>`,
+    });
+
+    logStep('Admin overdrawn-refund alert sent', { studentId, newBalance });
+  } catch (error) {
+    logStep('WARNING: Failed to send admin overdrawn-refund alert', {
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 }
 
