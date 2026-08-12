@@ -184,7 +184,7 @@ Deno.serve(async (req) => {
     for (const admin of admins) {
       try {
         await resend.emails.send({
-          from: 'Learn2Lead <noreply@learn2lead.com>',
+          from: 'Learn2Lead <noreply@learn2lead.page>',
           to: admin.email,
           subject: `Admin Digest — ${zeroCredit.length} urgent · ${atRisk.length} at-risk · $${totalTutorOwed.toFixed(2)} owed`,
           html,

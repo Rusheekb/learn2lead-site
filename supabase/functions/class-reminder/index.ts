@@ -62,7 +62,7 @@ async function sendStudentReminder(cls: ScheduledClass): Promise<void> {
     : '';
 
   await resend.emails.send({
-    from: 'Learn2Lead <noreply@learn2lead.com>',
+    from: 'Learn2Lead <noreply@learn2lead.page>',
     to: cls.student_email,
     subject: `Reminder: ${cls.subject} session tomorrow at ${timeStr}`,
     html: `
@@ -92,7 +92,7 @@ async function sendTutorReminder(cls: ScheduledClass): Promise<void> {
   const timeStr = formatClassTime(cls.class_start);
 
   await resend.emails.send({
-    from: 'Learn2Lead <noreply@learn2lead.com>',
+    from: 'Learn2Lead <noreply@learn2lead.page>',
     to: cls.tutor_email,
     subject: `Reminder: session with ${cls.student_name} tomorrow at ${timeStr}`,
     html: `
