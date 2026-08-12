@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { addBreadcrumb, captureException } from '@/lib/sentry';
@@ -52,8 +51,8 @@ export const signInWithEmail = async (email: string, password: string) => {
  * with default role 'student'.
  */
 export const signUpWithEmail = async (
-  email: string, 
-  password: string, 
+  email: string,
+  password: string,
   userData?: { first_name?: string; last_name?: string }
 ) => {
   addBreadcrumb({
@@ -69,8 +68,8 @@ export const signUpWithEmail = async (
         email,
         password,
         options: {
-          data: userData || {}
-        }
+          data: userData || {},
+        },
       }
     );
     if (signupError) {
@@ -102,15 +101,15 @@ export const signUpWithEmail = async (
       if (!existingProfile) {
         // Insert profile for this user, always default to 'student'
         const role = 'student';
-        const { error: insertError } = await supabase
-          .from('profiles')
-          .insert([{ 
-            id: user.id, 
-            email: user.email, 
+        const { error: insertError } = await supabase.from('profiles').insert([
+          {
+            id: user.id,
+            email: user.email,
             role,
             first_name: userData?.first_name || '',
-            last_name: userData?.last_name || ''
-          }]);
+            last_name: userData?.last_name || '',
+          },
+        ]);
         if (insertError) {
           addBreadcrumb({
             category: 'auth',
@@ -131,7 +130,9 @@ export const signUpWithEmail = async (
     }
 
     toast.success(
-      'Signed up successfully! Please check your email for verification.'
+      user?.email_confirmed_at
+        ? 'Account created! You can now log in.'
+        : 'Signed up successfully! Please check your email for verification.'
     );
   } catch (error) {
     log.error('Error signing up', error);
@@ -197,8 +198,10 @@ export const signOut = async () => {
   });
 
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
     if (session) {
       const { error } = await supabase.auth.signOut();
       if (error) {
