@@ -152,13 +152,13 @@ const Login = () => {
     setIsLoading(true);
 
     try {
+      // signUp already shows the correct success toast (it knows whether
+      // email confirmation is actually required) — showing another one
+      // here would just stack a second, possibly-wrong message on top.
       await signUp(result.data.email, result.data.password, {
         first_name: result.data.firstName,
         last_name: result.data.lastName,
       });
-      toast.success(
-        'Account created! Please check your email for verification.'
-      );
     } catch (error) {
       log.error('Registration error:', error);
       if (error instanceof Error) {
