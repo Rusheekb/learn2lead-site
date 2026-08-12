@@ -9,7 +9,11 @@ import { StudentUpload } from '@/types/classTypes';
 import { StudentContent } from '@/components/shared/StudentContent';
 import CalendarLinks from '@/components/shared/CalendarLinks';
 import CompletedClassActions from '@/components/tutor/CompletedClassActions';
-import { uploadMaterial, addMaterialToClass, removeMaterialFromClass } from '@/services/materialsService';
+import {
+  uploadMaterial,
+  addMaterialToClass,
+  removeMaterialFromClass,
+} from '@/services/materialsService';
 import { toast } from 'sonner';
 import { parseDateToLocal } from '@/utils/safeDateUtils';
 import { logger } from '@/lib/logger';
@@ -67,9 +71,12 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
 
   const handleRemoveMaterial = async (materialUrl: string) => {
     if (!selectedEvent.id) return;
-    
+
     try {
-      const success = await removeMaterialFromClass(selectedEvent.id, materialUrl);
+      const success = await removeMaterialFromClass(
+        selectedEvent.id,
+        materialUrl
+      );
       if (success && refreshEvent) {
         await refreshEvent();
       }
@@ -86,18 +93,18 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
     // Decode URI components
     const decodedFilename = decodeURIComponent(filename);
     // Get everything after the last slash and before any query params
-    const matches = decodedFilename.match(/[^\/]+\.[^\/\.]+$/);
+    const matches = decodedFilename.match(/[^/]+\.[^/.]+$/);
     return matches ? matches[0] : decodedFilename;
   };
 
   return (
     <div className="space-y-4">
       {/* Class Completion Actions */}
-      <CompletedClassActions 
-        classEvent={selectedEvent} 
-        onUpdate={refreshEvent ? () => refreshEvent() : () => {}} 
+      <CompletedClassActions
+        classEvent={selectedEvent}
+        onUpdate={refreshEvent ? () => refreshEvent() : () => {}}
       />
-      
+
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-3 bg-white">
           <TabsTrigger value="details">Class Details</TabsTrigger>
@@ -105,129 +112,142 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
           <TabsTrigger value="student-content">Student Content</TabsTrigger>
         </TabsList>
 
-      <TabsContent value="details" className="space-y-4 pt-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <h4 className="text-sm font-medium text-gray-500">Student</h4>
-            <p>{selectedEvent.studentName}</p>
-          </div>
-          <div>
-            <h4 className="text-sm font-medium text-gray-500">Subject</h4>
-            <p>{selectedEvent.subject}</p>
-          </div>
-          <div>
-            <h4 className="text-sm font-medium text-gray-500">Date</h4>
-            <p>
-              {parseDateToLocal(selectedEvent.date).toLocaleDateString()}
-            </p>
-          </div>
-          <div>
-            <h4 className="text-sm font-medium text-gray-500">Time</h4>
-            <p>
-              {selectedEvent.startTime} - {selectedEvent.endTime}
-            </p>
-          </div>
-        </div>
-
-        <div>
-          <h4 className="text-sm font-medium text-gray-500">Zoom Link</h4>
-          <a
-            href={selectedEvent.zoomLink || '#'}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-tutoring-blue hover:underline flex items-center"
-          >
-            <Video className="h-4 w-4 mr-1" />
-            <span>Join Meeting</span>
-          </a>
-        </div>
-
-        {/* Add Calendar Integration Section - only if date/time fields are valid */}
-        {selectedEvent.date && selectedEvent.startTime && selectedEvent.endTime && (
-          <div>
-            <h4 className="text-sm font-medium text-gray-500">Calendar Integration</h4>
-            <div className="mt-2">
-              <CalendarLinks classEvent={selectedEvent} />
+        <TabsContent value="details" className="space-y-4 pt-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <h4 className="text-sm font-medium text-gray-500">Student</h4>
+              <p>{selectedEvent.studentName}</p>
             </div>
-          </div>
-        )}
-
-        {selectedEvent.notes && (
-          <div>
-            <h4 className="text-sm font-medium text-gray-500">Notes</h4>
-            <p className="text-gray-700">{selectedEvent.notes}</p>
-          </div>
-        )}
-      </TabsContent>
-
-      <TabsContent value="materials" className="space-y-4 pt-4">
-        <div className="space-y-4">
-          <div>
-            <h4 className="text-sm font-medium text-gray-500 mb-2">Upload Materials</h4>
-            <div className="flex space-x-2">
-              <Input 
-                type="file" 
-                onChange={handleFileChange}
-                accept=".pdf,.ppt,.pptx,.doc,.docx,.xls,.xlsx"
-              />
-              <Button 
-                onClick={handleUpload} 
-                disabled={!selectedFile || isUploading}
-                size="sm"
-              >
-                {isUploading ? 'Uploading...' : 'Upload'}
-                {!isUploading && <Upload className="ml-1 h-4 w-4" />}
-              </Button>
+            <div>
+              <h4 className="text-sm font-medium text-gray-500">Subject</h4>
+              <p>{selectedEvent.subject}</p>
             </div>
-            {selectedFile && (
-              <p className="text-xs text-gray-500 mt-1">
-                Selected: {selectedFile.name} ({Math.round(selectedFile.size / 1024)} KB)
+            <div>
+              <h4 className="text-sm font-medium text-gray-500">Date</h4>
+              <p>{parseDateToLocal(selectedEvent.date).toLocaleDateString()}</p>
+            </div>
+            <div>
+              <h4 className="text-sm font-medium text-gray-500">Time</h4>
+              <p>
+                {selectedEvent.startTime} - {selectedEvent.endTime}
               </p>
-            )}
+            </div>
           </div>
-          
-          <Separator />
-          
-          <div>
-            <h4 className="text-sm font-medium text-gray-500 mb-2">Class Materials</h4>
-            {selectedEvent.materialsUrl && selectedEvent.materialsUrl.length > 0 ? (
-              <ul className="space-y-2">
-                {selectedEvent.materialsUrl.map((url, index) => (
-                  <li key={index} className="flex items-center justify-between p-2 border rounded-md">
-                    <a
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-tutoring-blue hover:underline flex items-center"
-                    >
-                      <FileText className="h-4 w-4 mr-2" />
-                      <span>{getFilenameFromUrl(url || '')}</span>
-                    </a>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      onClick={() => handleRemoveMaterial(url)}
-                    >
-                      <Trash2 className="h-4 w-4 text-red-500" />
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-gray-500">No materials uploaded for this class.</p>
-            )}
-          </div>
-        </div>
-      </TabsContent>
 
-      <TabsContent value="student-content" className="space-y-4 pt-4">
-        <StudentContent
-          classId={selectedEvent.id}
-          uploads={studentUploads}
-          onDownload={onDownloadFile}
-          onView={onViewFile}
-        />
-      </TabsContent>
+          <div>
+            <h4 className="text-sm font-medium text-gray-500">Zoom Link</h4>
+            <a
+              href={selectedEvent.zoomLink || '#'}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-tutoring-blue hover:underline flex items-center"
+            >
+              <Video className="h-4 w-4 mr-1" />
+              <span>Join Meeting</span>
+            </a>
+          </div>
+
+          {/* Add Calendar Integration Section - only if date/time fields are valid */}
+          {selectedEvent.date &&
+            selectedEvent.startTime &&
+            selectedEvent.endTime && (
+              <div>
+                <h4 className="text-sm font-medium text-gray-500">
+                  Calendar Integration
+                </h4>
+                <div className="mt-2">
+                  <CalendarLinks classEvent={selectedEvent} />
+                </div>
+              </div>
+            )}
+
+          {selectedEvent.notes && (
+            <div>
+              <h4 className="text-sm font-medium text-gray-500">Notes</h4>
+              <p className="text-gray-700">{selectedEvent.notes}</p>
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="materials" className="space-y-4 pt-4">
+          <div className="space-y-4">
+            <div>
+              <h4 className="text-sm font-medium text-gray-500 mb-2">
+                Upload Materials
+              </h4>
+              <div className="flex space-x-2">
+                <Input
+                  type="file"
+                  onChange={handleFileChange}
+                  accept=".pdf,.ppt,.pptx,.doc,.docx,.xls,.xlsx"
+                />
+                <Button
+                  onClick={handleUpload}
+                  disabled={!selectedFile || isUploading}
+                  size="sm"
+                >
+                  {isUploading ? 'Uploading...' : 'Upload'}
+                  {!isUploading && <Upload className="ml-1 h-4 w-4" />}
+                </Button>
+              </div>
+              {selectedFile && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Selected: {selectedFile.name} (
+                  {Math.round(selectedFile.size / 1024)} KB)
+                </p>
+              )}
+            </div>
+
+            <Separator />
+
+            <div>
+              <h4 className="text-sm font-medium text-gray-500 mb-2">
+                Class Materials
+              </h4>
+              {selectedEvent.materialsUrl &&
+              selectedEvent.materialsUrl.length > 0 ? (
+                <ul className="space-y-2">
+                  {selectedEvent.materialsUrl.map((url, index) => (
+                    <li
+                      key={index}
+                      className="flex items-center justify-between p-2 border rounded-md"
+                    >
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-tutoring-blue hover:underline flex items-center"
+                      >
+                        <FileText className="h-4 w-4 mr-2" />
+                        <span>{getFilenameFromUrl(url || '')}</span>
+                      </a>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveMaterial(url)}
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-gray-500">
+                  No materials uploaded for this class.
+                </p>
+              )}
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="student-content" className="space-y-4 pt-4">
+          <StudentContent
+            classId={selectedEvent.id}
+            uploads={studentUploads}
+            onDownload={onDownloadFile}
+            onView={onViewFile}
+          />
+        </TabsContent>
       </Tabs>
     </div>
   );

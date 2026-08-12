@@ -30,17 +30,13 @@ const DEFAULT_CONFIG: FileValidationConfig = {
     'image/jpeg',
     'image/png',
     'image/gif',
-    'image/webp'
+    'image/webp',
   ],
   maxFilesPerUser: 100,
-  scanForMalware: true
+  scanForMalware: true,
 };
 
-const MALICIOUS_SIGNATURES = [
-  'MZ',
-  '4D5A',
-  'PK\x03\x04',
-];
+const MALICIOUS_SIGNATURES = ['MZ', '4D5A', 'PK\x03\x04'];
 
 export class FileValidationService {
   private config: FileValidationConfig;
@@ -49,16 +45,21 @@ export class FileValidationService {
     this.config = { ...DEFAULT_CONFIG, ...config };
   }
 
-  async validateFile(file: File, userId: string): Promise<FileValidationResult> {
+  async validateFile(
+    file: File,
+    userId: string
+  ): Promise<FileValidationResult> {
     const result: FileValidationResult = {
       isValid: true,
       errors: [],
-      warnings: []
+      warnings: [],
     };
 
     if (file.size > this.config.maxFileSize) {
       result.isValid = false;
-      result.errors.push(`File size ${this.formatFileSize(file.size)} exceeds maximum allowed size of ${this.formatFileSize(this.config.maxFileSize)}`);
+      result.errors.push(
+        `File size ${this.formatFileSize(file.size)} exceeds maximum allowed size of ${this.formatFileSize(this.config.maxFileSize)}`
+      );
     }
 
     if (!this.config.allowedMimeTypes.includes(file.type)) {
@@ -68,7 +69,9 @@ export class FileValidationService {
 
     const sanitizedName = this.sanitizeFileName(file.name);
     if (sanitizedName !== file.name) {
-      result.warnings.push('File name contains potentially unsafe characters and will be sanitized');
+      result.warnings.push(
+        'File name contains potentially unsafe characters and will be sanitized'
+      );
     }
 
     if (this.config.scanForMalware) {
@@ -82,7 +85,9 @@ export class FileValidationService {
     const userFileCount = await this.getUserFileCount(userId);
     if (userFileCount >= this.config.maxFilesPerUser) {
       result.isValid = false;
-      result.errors.push(`User has reached maximum file limit of ${this.config.maxFilesPerUser} files`);
+      result.errors.push(
+        `User has reached maximum file limit of ${this.config.maxFilesPerUser} files`
+      );
     }
 
     await this.logValidation(file, userId, result);
@@ -90,22 +95,24 @@ export class FileValidationService {
     return result;
   }
 
-  private async scanFileContent(file: File): Promise<{ isValid: boolean; errors: string[] }> {
+  private async scanFileContent(
+    file: File
+  ): Promise<{ isValid: boolean; errors: string[] }> {
     return new Promise((resolve) => {
       const reader = new FileReader();
-      
+
       reader.onload = () => {
         const arrayBuffer = reader.result as ArrayBuffer;
         const bytes = new Uint8Array(arrayBuffer);
         const header = Array.from(bytes.slice(0, 100))
-          .map(b => b.toString(16).padStart(2, '0'))
+          .map((b) => b.toString(16).padStart(2, '0'))
           .join('');
 
         for (const signature of MALICIOUS_SIGNATURES) {
           if (header.includes(signature.toLowerCase())) {
             resolve({
               isValid: false,
-              errors: ['File contains potentially malicious content']
+              errors: ['File contains potentially malicious content'],
             });
             return;
           }
@@ -115,16 +122,18 @@ export class FileValidationService {
           /javascript:/gi,
           /<script/gi,
           /eval\(/gi,
-          /document\.cookie/gi
+          /document\.cookie/gi,
         ];
 
-        const fileContent = new TextDecoder('utf-8', { fatal: false }).decode(bytes.slice(0, 1000));
-        
+        const fileContent = new TextDecoder('utf-8', { fatal: false }).decode(
+          bytes.slice(0, 1000)
+        );
+
         for (const pattern of suspiciousPatterns) {
           if (pattern.test(fileContent)) {
             resolve({
               isValid: false,
-              errors: ['File contains potentially malicious script content']
+              errors: ['File contains potentially malicious script content'],
             });
             return;
           }
@@ -136,7 +145,7 @@ export class FileValidationService {
       reader.onerror = () => {
         resolve({
           isValid: false,
-          errors: ['Failed to read file content for security scan']
+          errors: ['Failed to read file content for security scan'],
         });
       };
 
@@ -146,22 +155,25 @@ export class FileValidationService {
   }
 
   private sanitizeFileName(fileName: string): string {
-    return fileName
-      .replace(/[<>:"/\\|?*\x00-\x1f]/g, '_')
-      .replace(/^\.*/, '')
-      .substring(0, 255);
+    return (
+      fileName
+        // eslint-disable-next-line no-control-regex -- intentionally stripping control chars from filenames
+        .replace(/[<>:"/\\|?*\x00-\x1f]/g, '_')
+        .replace(/^\.*/, '')
+        .substring(0, 255)
+    );
   }
 
   private formatFileSize(bytes: number): string {
     const units = ['B', 'KB', 'MB', 'GB'];
     let size = bytes;
     let unitIndex = 0;
-    
+
     while (size >= 1024 && unitIndex < units.length - 1) {
       size /= 1024;
       unitIndex++;
     }
-    
+
     return `${Math.round(size * 100) / 100} ${units[unitIndex]}`;
   }
 
@@ -185,8 +197,8 @@ export class FileValidationService {
   }
 
   private async logValidation(
-    file: File, 
-    userId: string, 
+    file: File,
+    userId: string,
     result: FileValidationResult
   ): Promise<void> {
     try {
@@ -196,10 +208,14 @@ export class FileValidationService {
         errors: result.errors,
         warnings: result.warnings,
         fileType: file.type,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
 
-      log.warn('File validation result', { fileName: file.name, status, details });
+      log.warn('File validation result', {
+        fileName: file.name,
+        status,
+        details,
+      });
     } catch (error) {
       log.error('Failed to log file validation', error);
     }
@@ -210,7 +226,7 @@ export class FileValidationService {
     const timestamp = Date.now();
     const random = Math.random().toString(36).substring(2, 15);
     const extension = sanitized.split('.').pop() || '';
-    
+
     return `${userId}/${timestamp}_${random}.${extension}`;
   }
 }

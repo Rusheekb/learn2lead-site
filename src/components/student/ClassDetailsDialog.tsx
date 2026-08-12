@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Dialog,
@@ -32,7 +31,7 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
   isOpen,
   setIsOpen,
   selectedClass,
-  activeTab = "details",
+  activeTab = 'details',
   setActiveTab = () => {},
   studentUploads = [],
   studentMessages = [],
@@ -50,7 +49,7 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
     notes: selectedClass.notes || null,
     // Ensure these are properly cast to the expected enum types
     status: (selectedClass.status as ClassStatus) || 'scheduled',
-    attendance: (selectedClass.attendance as AttendanceStatus) || 'pending'
+    attendance: (selectedClass.attendance as AttendanceStatus) || 'pending',
   };
 
   // Helper function to get filename from URL
@@ -60,7 +59,7 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
     // Decode URI components
     const decodedFilename = decodeURIComponent(filename);
     // Get everything after the last slash and before any query params
-    const matches = decodedFilename.match(/[^\/]+\.[^\/\.]+$/);
+    const matches = decodedFilename.match(/[^/]+\.[^/.]+$/);
     return matches ? matches[0] : decodedFilename;
   };
 
@@ -116,7 +115,9 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
 
             {/* Add Calendar Integration Section */}
             <div>
-              <h4 className="text-sm font-medium text-gray-500">Calendar Integration</h4>
+              <h4 className="text-sm font-medium text-gray-500">
+                Calendar Integration
+              </h4>
               <div className="mt-2">
                 <CalendarLinks classEvent={classEventFormat} />
               </div>
@@ -132,11 +133,17 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
 
           <TabsContent value="materials" className="space-y-4 pt-4">
             <div>
-              <h4 className="text-sm font-medium text-gray-500">Class Materials</h4>
-              {selectedClass.materialsUrl && selectedClass.materialsUrl.length > 0 ? (
+              <h4 className="text-sm font-medium text-gray-500">
+                Class Materials
+              </h4>
+              {selectedClass.materialsUrl &&
+              selectedClass.materialsUrl.length > 0 ? (
                 <ul className="mt-2 space-y-2">
                   {selectedClass.materialsUrl.map((url, index) => (
-                    <li key={index} className="flex items-center p-2 border rounded-md">
+                    <li
+                      key={index}
+                      className="flex items-center p-2 border rounded-md"
+                    >
                       <FileText className="h-4 w-4 mr-2 text-tutoring-blue" />
                       <a
                         href={url}
@@ -151,7 +158,9 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
                   ))}
                 </ul>
               ) : (
-                <p className="text-gray-500 mt-2">No materials uploaded for this class.</p>
+                <p className="text-gray-500 mt-2">
+                  No materials uploaded for this class.
+                </p>
               )}
             </div>
           </TabsContent>

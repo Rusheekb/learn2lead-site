@@ -9,7 +9,10 @@ export const updatePaymentDate = async (
   field: 'student_payment_date' | 'tutor_payment_date',
   date: Date | null
 ): Promise<boolean> => {
-  const record: Record<string, string | null> = {
+  const record: {
+    student_payment_date?: string | null;
+    tutor_payment_date?: string | null;
+  } = {
     [field]: date ? format(date, 'yyyy-MM-dd') : null,
   };
 

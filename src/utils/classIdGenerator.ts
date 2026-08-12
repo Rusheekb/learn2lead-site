@@ -1,7 +1,7 @@
 /**
  * Generates a unique alphanumeric class ID in the format:
  * {student_initials}-{tutor_initials}-{YYYYMMDD}-{sequence}
- * 
+ *
  * Example: SM-JD-20241119-1
  */
 
@@ -18,16 +18,16 @@ interface ClassIdParams {
 export function getInitials(name: string): string {
   const cleaned = name.trim();
   const parts = cleaned.split(/\s+/);
-  
+
   if (parts.length === 1) {
     // Single name - take first two letters
     return cleaned.substring(0, 2).toUpperCase();
   }
-  
+
   // Take first letter of first name and first letter of last name
   const firstInitial = parts[0][0] || '';
   const lastInitial = parts[parts.length - 1][0] || '';
-  
+
   return (firstInitial + lastInitial).toUpperCase();
 }
 
@@ -35,11 +35,24 @@ export function getInitials(name: string): string {
  * Formats date as YYYYMMDD
  */
 export function formatDateForId(date: Date | string): string {
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  // A bare 'YYYY-MM-DD' string parses as UTC midnight per the ECMA-262 date
+  // string spec, but getFullYear()/getMonth()/getDate() read local time —
+  // in timezones behind UTC this silently shifts the date back a day.
+  // Parse date-only strings as local time explicitly to avoid that.
+  let dateObj: Date;
+  if (typeof date === 'string') {
+    const match = date.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    dateObj = match
+      ? new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
+      : new Date(date);
+  } else {
+    dateObj = date;
+  }
+
   const year = dateObj.getFullYear();
   const month = String(dateObj.getMonth() + 1).padStart(2, '0');
   const day = String(dateObj.getDate()).padStart(2, '0');
-  
+
   return `${year}${month}${day}`;
 }
 
@@ -50,7 +63,7 @@ function generateBaseId(params: ClassIdParams): string {
   const studentInitials = getInitials(params.studentName);
   const tutorInitials = getInitials(params.tutorName);
   const formattedDate = formatDateForId(params.date);
-  
+
   return `${studentInitials}-${tutorInitials}-${formattedDate}`;
 }
 
@@ -58,28 +71,30 @@ function generateBaseId(params: ClassIdParams): string {
  * Determines the next sequence number for a given base ID
  */
 function getNextSequence(baseId: string, existingIds: string[]): number {
-  const pattern = new RegExp(`^${baseId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}-(\\d+)$`);
-  
+  const pattern = new RegExp(
+    `^${baseId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}-(\\d+)$`
+  );
+
   const sequences = existingIds
-    .map(id => {
+    .map((id) => {
       const match = id.match(pattern);
       return match ? parseInt(match[1], 10) : 0;
     })
-    .filter(seq => seq > 0);
-  
+    .filter((seq) => seq > 0);
+
   return sequences.length > 0 ? Math.max(...sequences) + 1 : 1;
 }
 
 /**
  * Generates a unique class ID
- * 
+ *
  * @param params - Parameters including student name, tutor name, date, and optional existing IDs
  * @returns A unique class ID in the format: XX-YY-YYYYMMDD-N
  */
 export function generateClassId(params: ClassIdParams): string {
   const baseId = generateBaseId(params);
   const sequence = getNextSequence(baseId, params.existingIds || []);
-  
+
   return `${baseId}-${sequence}`;
 }
 
@@ -104,7 +119,7 @@ export function parseClassId(id: string): {
   if (!isValidClassId(id)) {
     return null;
   }
-  
+
   const parts = id.split('-');
   return {
     studentInitials: parts[0],

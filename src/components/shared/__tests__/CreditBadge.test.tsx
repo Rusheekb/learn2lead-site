@@ -9,59 +9,61 @@ describe('CreditBadge', () => {
 
   it('shows badge for zero credits', () => {
     render(<CreditBadge credits={0} />);
-    expect(screen.getByText('0 classes remaining')).toBeInTheDocument();
+    expect(screen.getByText('0 hours remaining')).toBeInTheDocument();
   });
 
   it('shows badge for negative credits', () => {
     render(<CreditBadge credits={-3} />);
-    expect(screen.getByText(/3 classes overdrawn/)).toBeInTheDocument();
+    expect(screen.getByText(/3 hours overdrawn/)).toBeInTheDocument();
   });
 
   it('shows badge for low credits (1-2)', () => {
     render(<CreditBadge credits={2} />);
-    expect(screen.getByText('2 classes remaining')).toBeInTheDocument();
+    expect(screen.getByText('2 hours remaining')).toBeInTheDocument();
   });
 
   it('shows badge for normal credits (3+)', () => {
     render(<CreditBadge credits={5} />);
-    expect(screen.getByText('5 classes remaining')).toBeInTheDocument();
+    expect(screen.getByText('5 hours remaining')).toBeInTheDocument();
   });
 
   it('calculates and displays amount owed for negative credits', () => {
     render(<CreditBadge credits={-3} pricePerClass={20} />);
-    expect(screen.getByText(/3 classes overdrawn \(\$60 owed\)/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/3 hours overdrawn \(\$60 owed\)/)
+    ).toBeInTheDocument();
   });
 
   it('hides amount when hideAmount prop is true', () => {
     render(<CreditBadge credits={-3} pricePerClass={20} hideAmount />);
-    expect(screen.getByText('3 classes overdrawn')).toBeInTheDocument();
+    expect(screen.getByText('3 hours overdrawn')).toBeInTheDocument();
     expect(screen.queryByText(/\$60/)).not.toBeInTheDocument();
   });
 
   it('does not show amount owed without pricePerClass', () => {
     render(<CreditBadge credits={-3} />);
-    expect(screen.getByText('3 classes overdrawn')).toBeInTheDocument();
+    expect(screen.getByText('3 hours overdrawn')).toBeInTheDocument();
     expect(screen.queryByText(/owed/)).not.toBeInTheDocument();
   });
 
-  it('pluralizes "class" correctly for 1 credit', () => {
+  it('pluralizes "hour" correctly for 1 credit', () => {
     render(<CreditBadge credits={1} />);
-    expect(screen.getByText('1 class remaining')).toBeInTheDocument();
+    expect(screen.getByText('1 hour remaining')).toBeInTheDocument();
   });
 
-  it('pluralizes "classes" correctly for multiple credits', () => {
+  it('pluralizes "hours" correctly for multiple credits', () => {
     render(<CreditBadge credits={5} />);
-    expect(screen.getByText('5 classes remaining')).toBeInTheDocument();
+    expect(screen.getByText('5 hours remaining')).toBeInTheDocument();
   });
 
-  it('pluralizes correctly for 1 class overdrawn', () => {
+  it('pluralizes correctly for 1 hour overdrawn', () => {
     render(<CreditBadge credits={-1} />);
-    expect(screen.getByText('1 class overdrawn')).toBeInTheDocument();
+    expect(screen.getByText('1 hour overdrawn')).toBeInTheDocument();
   });
 
   it('applies custom className', () => {
     render(<CreditBadge credits={5} className="custom-class" />);
-    const badge = screen.getByText('5 classes remaining').closest('div');
+    const badge = screen.getByText('5 hours remaining').closest('div');
     expect(badge).toHaveClass('custom-class');
   });
 

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { ClassEvent } from '@/types/tutorTypes';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { TablesUpdate } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { transformDbRecordToClassEvent } from '@/services/utils/classEventMapper';
 import {
@@ -330,7 +331,7 @@ export const useClassLogs = () => {
       classEvent: Partial<ClassEvent>;
     }) => {
       const { id, classEvent } = params;
-      const dbUpdates: Record<string, any> = {};
+      const dbUpdates: TablesUpdate<'class_logs'> = {};
       if (classEvent.title !== undefined)
         dbUpdates['Class Number'] = classEvent.title;
       if (classEvent.tutorName !== undefined)

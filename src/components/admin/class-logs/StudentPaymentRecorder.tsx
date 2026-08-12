@@ -27,6 +27,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { TablesInsert } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { addBreadcrumb, captureException } from '@/lib/sentry';
@@ -202,7 +203,7 @@ const StudentPaymentRecorder: React.FC<StudentPaymentRecorderProps> = ({
           .maybeSingle();
 
         const currentBalance = latest?.balance_after ?? currentCredits ?? 0;
-        const ledgerRow: Record<string, unknown> = {
+        const ledgerRow: TablesInsert<'class_credits_ledger'> = {
           student_id: profileId,
           transaction_type: 'credit',
           amount: calculations.creditsToAdd,

@@ -7,7 +7,9 @@ export interface ValidationError {
 }
 
 export class ClassValidator {
-  static validateClassCreation(classData: Partial<ClassEvent>): ValidationError[] {
+  static validateClassCreation(
+    classData: Partial<ClassEvent>
+  ): ValidationError[] {
     const errors: ValidationError[] = [];
 
     // Required field validation
@@ -20,11 +22,17 @@ export class ClassValidator {
     }
 
     if (!classData.studentId) {
-      errors.push({ field: 'studentId', message: 'Student selection is required' });
+      errors.push({
+        field: 'studentId',
+        message: 'Student selection is required',
+      });
     }
 
     if (!classData.relationshipId) {
-      errors.push({ field: 'relationshipId', message: 'Valid student relationship is required' });
+      errors.push({
+        field: 'relationshipId',
+        message: 'Valid student relationship is required',
+      });
     }
 
     if (!classData.startTime) {
@@ -37,7 +45,10 @@ export class ClassValidator {
 
     // Date validation
     if (classData.date) {
-      const classDate = classData.date instanceof Date ? classData.date : new Date(classData.date);
+      const classDate =
+        classData.date instanceof Date
+          ? classData.date
+          : new Date(classData.date);
       if (!isValid(classDate)) {
         errors.push({ field: 'date', message: 'Invalid date' });
       }
@@ -50,11 +61,14 @@ export class ClassValidator {
       try {
         const startTime = parse(classData.startTime, 'HH:mm', new Date());
         const endTime = parse(classData.endTime, 'HH:mm', new Date());
-        
+
         if (!isValid(startTime) || !isValid(endTime)) {
           errors.push({ field: 'time', message: 'Invalid time format' });
         } else if (endTime <= startTime) {
-          errors.push({ field: 'endTime', message: 'End time must be after start time' });
+          errors.push({
+            field: 'endTime',
+            message: 'End time must be after start time',
+          });
         }
       } catch (error) {
         errors.push({ field: 'time', message: 'Invalid time format' });
@@ -73,23 +87,39 @@ export class ClassValidator {
     return errors;
   }
 
-  static validateClassCompletion(classData: Partial<ClassEvent>, content: string): ValidationError[] {
+  static validateClassCompletion(
+    classData: Partial<ClassEvent>,
+    content: string
+  ): ValidationError[] {
     const errors: ValidationError[] = [];
 
     if (!content?.trim()) {
-      errors.push({ field: 'content', message: 'Class content description is required' });
+      errors.push({
+        field: 'content',
+        message: 'Class content description is required',
+      });
     }
 
     if (content && content.trim().length < 10) {
-      errors.push({ field: 'content', message: 'Please provide a more detailed description (at least 10 characters)' });
+      errors.push({
+        field: 'content',
+        message:
+          'Please provide a more detailed description (at least 10 characters)',
+      });
     }
 
     if (!classData.tutorId) {
-      errors.push({ field: 'tutorId', message: 'Tutor information is missing' });
+      errors.push({
+        field: 'tutorId',
+        message: 'Tutor information is missing',
+      });
     }
 
     if (!classData.studentId) {
-      errors.push({ field: 'studentId', message: 'Student information is missing' });
+      errors.push({
+        field: 'studentId',
+        message: 'Student information is missing',
+      });
     }
 
     return errors;
@@ -104,20 +134,22 @@ export class ClassValidator {
 
     // Use the same validation as creation for the editable fields
     const creationErrors = this.validateClassCreation(classData);
-    
+
     // Filter out errors for fields that might not be present during edit
-    return creationErrors.filter(error => 
-      !['studentId', 'relationshipId'].includes(error.field)
+    const filteredCreationErrors = creationErrors.filter(
+      (error) => !['studentId', 'relationshipId'].includes(error.field)
     );
+
+    return [...errors, ...filteredCreationErrors];
   }
 
   static formatValidationErrors(errors: ValidationError[]): string {
     if (errors.length === 0) return '';
-    
+
     if (errors.length === 1) {
       return errors[0].message;
     }
-    
-    return `Please fix the following issues:\n${errors.map(e => `• ${e.message}`).join('\n')}`;
+
+    return `Please fix the following issues:\n${errors.map((e) => `• ${e.message}`).join('\n')}`;
   }
 }

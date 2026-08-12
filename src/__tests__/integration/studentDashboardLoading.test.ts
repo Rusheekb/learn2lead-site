@@ -3,6 +3,8 @@
  * Validates subscription check, class fetching, and credit display
  */
 
+import { supabase } from '@/integrations/supabase/client';
+
 const mockFunctionsInvoke = jest.fn();
 const mockFrom = jest.fn();
 const mockRpc = jest.fn();
@@ -131,22 +133,20 @@ describe('Student Dashboard Loading', () => {
         avatar_url: null,
       });
 
-      const { supabase } = require('@/integrations/supabase/client');
       const result = await supabase
         .from('profiles')
         .select()
         .eq('id', 'student-123')
         .single();
 
-      expect(result.data.role).toBe('student');
-      expect(result.data.email).toBe('student@test.com');
+      expect(result.data!.role).toBe('student');
+      expect(result.data!.email).toBe('student@test.com');
       expect(result.error).toBeNull();
     });
 
     it('should handle missing profile', async () => {
       setQueryResponse('profiles', null, { message: 'Row not found' });
 
-      const { supabase } = require('@/integrations/supabase/client');
       const result = await supabase
         .from('profiles')
         .select()
@@ -181,7 +181,6 @@ describe('Student Dashboard Loading', () => {
 
       setQueryResponse('class_logs', mockLogs);
 
-      const { supabase } = require('@/integrations/supabase/client');
       const result = await supabase
         .from('class_logs')
         .select()
@@ -189,14 +188,13 @@ describe('Student Dashboard Loading', () => {
         .order('Date', { ascending: false });
 
       expect(result.data).toHaveLength(2);
-      expect(result.data[0].Subject).toBe('Math');
+      expect(result.data![0].Subject).toBe('Math');
       expect(mockFrom).toHaveBeenCalledWith('class_logs');
     });
 
     it('should return empty array when no class history exists', async () => {
       setQueryResponse('class_logs', []);
 
-      const { supabase } = require('@/integrations/supabase/client');
       const result = await supabase
         .from('class_logs')
         .select()
@@ -224,7 +222,6 @@ describe('Student Dashboard Loading', () => {
 
       setQueryResponse('scheduled_classes', mockClasses);
 
-      const { supabase } = require('@/integrations/supabase/client');
       const result = await supabase
         .from('scheduled_classes')
         .select()
@@ -232,7 +229,7 @@ describe('Student Dashboard Loading', () => {
         .order('date', { ascending: true });
 
       expect(result.data).toHaveLength(1);
-      expect(result.data[0].status).toBe('scheduled');
+      expect(result.data![0].status).toBe('scheduled');
     });
   });
 
@@ -245,7 +242,6 @@ describe('Student Dashboard Loading', () => {
         return Promise.resolve({ data: null, error: null });
       });
 
-      const { supabase } = require('@/integrations/supabase/client');
       const result = await supabase.rpc('get_student_credit_balance', {
         p_student_id: 'student-123',
       });

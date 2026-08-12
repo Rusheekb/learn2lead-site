@@ -20,7 +20,7 @@ describe('SimpleCreditsCounter', () => {
     });
 
     const { container } = render(<SimpleCreditsCounter />);
-    
+
     // Skeleton should have animate-pulse class
     const skeleton = container.querySelector('[class*="animate-pulse"]');
     expect(skeleton).toBeInTheDocument();
@@ -34,20 +34,20 @@ describe('SimpleCreditsCounter', () => {
     });
 
     render(<SimpleCreditsCounter />);
-    
-    expect(screen.getByText('8 classes remaining')).toBeInTheDocument();
+
+    expect(screen.getByText('8 hours remaining')).toBeInTheDocument();
   });
 
-  it('shows Credits Available label', () => {
+  it('shows Hours Available label', () => {
     mockUseSubscription.mockReturnValue({
       creditsRemaining: 5,
-      pricePerClass: 17.50,
+      pricePerClass: 17.5,
       isLoading: false,
     });
 
     render(<SimpleCreditsCounter />);
-    
-    expect(screen.getByText('Credits Available')).toBeInTheDocument();
+
+    expect(screen.getByText('Hours Available')).toBeInTheDocument();
   });
 
   it('hides amount in CreditBadge (student privacy)', () => {
@@ -58,9 +58,9 @@ describe('SimpleCreditsCounter', () => {
     });
 
     render(<SimpleCreditsCounter />);
-    
+
     // Should show overdrawn but NOT the dollar amount
-    expect(screen.getByText('3 classes overdrawn')).toBeInTheDocument();
+    expect(screen.getByText('3 hours overdrawn')).toBeInTheDocument();
     expect(screen.queryByText(/\$60/)).not.toBeInTheDocument();
   });
 
@@ -72,8 +72,8 @@ describe('SimpleCreditsCounter', () => {
     });
 
     render(<SimpleCreditsCounter />);
-    
-    expect(screen.getByText('0 classes remaining')).toBeInTheDocument();
+
+    expect(screen.getByText('0 hours remaining')).toBeInTheDocument();
   });
 
   it('handles null credits when not loading', () => {
@@ -84,8 +84,8 @@ describe('SimpleCreditsCounter', () => {
     });
 
     render(<SimpleCreditsCounter />);
-    
+
     // CreditBadge returns null for null credits, so just check the label exists
-    expect(screen.getByText('Credits Available')).toBeInTheDocument();
+    expect(screen.getByText('Hours Available')).toBeInTheDocument();
   });
 });

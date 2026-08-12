@@ -10,21 +10,42 @@ interface CreditBadgeProps {
   hideAmount?: boolean;
 }
 
-export const CreditBadge: React.FC<CreditBadgeProps> = ({ credits, className }) => {
+export const CreditBadge: React.FC<CreditBadgeProps> = ({
+  credits,
+  pricePerClass,
+  className,
+  hideAmount,
+}) => {
   if (credits === null) return null;
 
+  const isOverdrawn = credits < 0;
+
   const getVariant = () => {
-    if (credits === 0) return 'destructive';
+    if (isOverdrawn || credits === 0) return 'destructive';
     if (credits < 3) return 'secondary';
     return 'default';
   };
 
-  const displayCredits = Number.isInteger(credits) ? credits : credits.toFixed(1);
+  const displayCredits = Number.isInteger(Math.abs(credits))
+    ? Math.abs(credits)
+    : Math.abs(credits).toFixed(1);
+  const hourLabel = Math.abs(credits) === 1 ? 'hour' : 'hours';
+
+  const amountOwed =
+    isOverdrawn && !hideAmount && pricePerClass != null
+      ? ` ($${(Math.abs(credits) * pricePerClass).toFixed(0)} owed)`
+      : '';
 
   return (
-    <Badge variant={getVariant()} className={cn('flex items-center gap-1.5', className)}>
+    <Badge
+      variant={getVariant()}
+      className={cn('flex items-center gap-1.5', className)}
+    >
       <CreditCard className="h-3.5 w-3.5" />
-      <span>{displayCredits} {credits === 1 ? 'hour' : 'hours'} remaining</span>
+      <span>
+        {displayCredits} {hourLabel} {isOverdrawn ? 'overdrawn' : 'remaining'}
+        {amountOwed}
+      </span>
     </Badge>
   );
 };

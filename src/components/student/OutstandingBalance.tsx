@@ -9,7 +9,7 @@ const OutstandingBalance: React.FC = () => {
   const { creditsRemaining, isLoading } = useSubscription();
 
   // Only show when fully loaded and student has no hours left
-  if (isLoading || creditsRemaining > 0) return null;
+  if (isLoading || (creditsRemaining ?? 0) > 0) return null;
 
   return (
     <Card className="border-destructive/50 bg-destructive/5 mb-6">

@@ -84,7 +84,7 @@ const WebhookEventLog: React.FC = () => {
     queryKey: ['webhook-events', statusFilter, page],
     queryFn: async () => {
       let q = supabase
-        .from('stripe_webhook_events' as any)
+        .from('stripe_webhook_events')
         .select('*', { count: 'exact' })
         .order('created_at', { ascending: false })
         .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);

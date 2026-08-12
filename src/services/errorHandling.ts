@@ -28,21 +28,21 @@ export class ErrorHandler {
             type: 'permission',
             message: 'Access denied - insufficient permissions',
             code: error.code,
-            userMessage: 'You don\'t have permission to perform this action'
+            userMessage: "You don't have permission to perform this action",
           };
         case 'PGRST301':
           return {
             type: 'validation',
             message: 'Invalid input data',
             code: error.code,
-            userMessage: 'Please check your input and try again'
+            userMessage: 'Please check your input and try again',
           };
         default:
           return {
             type: 'server',
             message: error.message || 'Database error',
             code: error.code,
-            userMessage: 'A server error occurred. Please try again'
+            userMessage: 'A server error occurred. Please try again',
           };
       }
     }
@@ -52,25 +52,31 @@ export class ErrorHandler {
       return {
         type: 'auth',
         message: error.message,
-        userMessage: 'Authentication required. Please log in again'
+        userMessage: 'Authentication required. Please log in again',
       };
     }
 
     // Handle network errors
-    if (error?.message?.includes('fetch') || error?.message?.includes('network')) {
+    if (
+      error?.message?.includes('fetch') ||
+      error?.message?.includes('network')
+    ) {
       return {
         type: 'network',
         message: error.message,
-        userMessage: 'Network error. Please check your connection'
+        userMessage: 'Network error. Please check your connection',
       };
     }
 
     // Handle validation errors
-    if (error?.message?.includes('required') || error?.message?.includes('invalid')) {
+    if (
+      error?.message?.includes('required') ||
+      error?.message?.includes('invalid')
+    ) {
       return {
         type: 'validation',
         message: error.message,
-        userMessage: 'Please check your input and try again'
+        userMessage: 'Please check your input and try again',
       };
     }
 
@@ -78,11 +84,15 @@ export class ErrorHandler {
     return {
       type: 'unknown',
       message: error?.message || String(error),
-      userMessage: 'An unexpected error occurred. Please try again'
+      userMessage: 'An unexpected error occurred. Please try again',
     };
   }
 
-  static logError(appError: AppError, context?: string, originalError?: unknown): void {
+  static logError(
+    appError: AppError,
+    context?: string,
+    originalError?: unknown
+  ): void {
     const errorData = {
       type: appError.type,
       message: appError.message,
@@ -90,15 +100,22 @@ export class ErrorHandler {
       details: appError.details,
       context: context || 'Unknown',
       timestamp: new Date().toISOString(),
-      url: typeof window !== 'undefined' ? window.location.href : undefined
+      url: typeof window !== 'undefined' ? window.location.href : undefined,
     };
 
     if (import.meta.env.DEV) {
-      log.error(`[${appError.type.toUpperCase()}] ${context || 'Unknown context'}`, originalError, errorData);
+      log.error(
+        `[${appError.type.toUpperCase()}] ${context || 'Unknown context'}`,
+        originalError,
+        errorData
+      );
     }
-    
+
     // In production, route through Sentry
-    if (import.meta.env.PROD && (appError.type === 'server' || appError.type === 'unknown')) {
+    if (
+      import.meta.env.PROD &&
+      (appError.type === 'server' || appError.type === 'unknown')
+    ) {
       if (originalError instanceof Error) {
         Sentry.captureException(originalError, { extra: errorData });
       } else {
@@ -112,18 +129,18 @@ export class ErrorHandler {
 
   static showUserMessage(error: AppError): void {
     const message = error.userMessage || error.message;
-    
+
     switch (error.type) {
       case 'validation':
         toast.error(message, { duration: 4000 });
         break;
       case 'auth':
-        toast.error(message, { 
+        toast.error(message, {
           duration: 6000,
           action: {
             label: 'Login',
-            onClick: () => window.location.href = '/login'
-          }
+            onClick: () => (window.location.href = '/login'),
+          },
         });
         break;
       case 'permission':
@@ -134,8 +151,8 @@ export class ErrorHandler {
           duration: 5000,
           action: {
             label: 'Retry',
-            onClick: () => window.location.reload()
-          }
+            onClick: () => window.location.reload(),
+          },
         });
         break;
       default:
@@ -143,26 +160,24 @@ export class ErrorHandler {
     }
   }
 
-  static createRetryWrapper<T>(
+  static async createRetryWrapper<T>(
     operation: () => Promise<T>,
     maxRetries: number = 3,
     delay: number = 1000
   ): Promise<T> {
-    return new Promise(async (resolve, reject) => {
-      for (let i = 0; i < maxRetries; i++) {
-        try {
-          const result = await operation();
-          resolve(result);
-          return;
-        } catch (error) {
-          if (i === maxRetries - 1) {
-            reject(error);
-            return;
-          }
-          
-          await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
+    let lastError: unknown;
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        return await operation();
+      } catch (error) {
+        lastError = error;
+        if (i === maxRetries - 1) {
+          throw error;
         }
+
+        await new Promise((resolve) => setTimeout(resolve, delay * (i + 1)));
       }
-    });
+    }
+    throw lastError;
   }
 }

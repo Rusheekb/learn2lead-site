@@ -1,70 +1,27 @@
 /**
  * Integration tests for the complete class completion flow
- * E2E-style tests simulating real user interactions
+ * Exercises completeClass end-to-end against a mocked Supabase client,
+ * focusing on call shapes (auth headers, RPC payload) rather than the
+ * message-by-message coverage already handled in classCompletion.test.ts.
  */
 
-import { completeClass, CompleteClassData } from '@/services/classCompletion';
-
-// Mock the entire supabase client
 const mockFunctionsInvoke = jest.fn();
 const mockAuthGetSession = jest.fn();
-const mockFrom = jest.fn();
-
-// Track database operations for assertions
-const dbOperations: {
-  select: string[];
-  insert: unknown[];
-  delete: string[];
-} = {
-  select: [],
-  insert: [],
-  delete: [],
-};
+const mockRpc = jest.fn();
 
 jest.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    from: (table: string) => {
-      mockFrom(table);
-      return {
-        select: (cols: string) => {
-          dbOperations.select.push(`${table}:${cols}`);
-          return {
-            eq: () => ({
-              maybeSingle: jest.fn().mockImplementation(() => {
-                // Check if we're looking for scheduled_classes or class_logs
-                if (table === 'scheduled_classes') {
-                  return Promise.resolve({ data: { id: 'class-123' }, error: null });
-                }
-                if (table === 'class_logs') {
-                  return Promise.resolve({ data: null, error: null }); // No existing log
-                }
-                return Promise.resolve({ data: null, error: null });
-              }),
-            }),
-          };
-        },
-        insert: (data: unknown) => {
-          dbOperations.insert.push(data);
-          return Promise.resolve({ error: null });
-        },
-        delete: () => ({
-          eq: () => {
-            dbOperations.delete.push(table);
-            return Promise.resolve({ error: null });
-          },
-        }),
-      };
-    },
     functions: {
       invoke: mockFunctionsInvoke,
     },
     auth: {
       getSession: mockAuthGetSession,
     },
+    rpc: mockRpc,
+    from: () => ({ insert: jest.fn().mockResolvedValue({ error: null }) }),
   },
 }));
 
-// Mock sonner toast
 const toastCalls: { type: string; message: string; options?: unknown }[] = [];
 jest.mock('sonner', () => ({
   toast: {
@@ -76,6 +33,8 @@ jest.mock('sonner', () => ({
     },
   },
 }));
+
+import { completeClass, CompleteClassData } from '@/services/classCompletion';
 
 describe('Class Completion Flow Integration', () => {
   const classData: CompleteClassData = {
@@ -89,7 +48,7 @@ describe('Class Completion Flow Integration', () => {
     date: '2024-12-15',
     day: 'Sunday',
     timeCst: '14:00-15:00',
-    timeHrs: '1.0',
+    timeHrs: '1.5',
     subject: 'Math',
     content: 'Covered quadratic equations and factoring',
     hw: 'Complete worksheet problems 1-20',
@@ -99,11 +58,7 @@ describe('Class Completion Flow Integration', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     toastCalls.length = 0;
-    dbOperations.select = [];
-    dbOperations.insert = [];
-    dbOperations.delete = [];
 
-    // Default authenticated session
     mockAuthGetSession.mockResolvedValue({
       data: {
         session: {
@@ -112,11 +67,11 @@ describe('Class Completion Flow Integration', () => {
         },
       },
     });
+    mockRpc.mockResolvedValue({ data: { success: true }, error: null });
   });
 
   describe('Happy Path - Complete Class Flow', () => {
-    it('completes full flow: verify → deduct → log → delete → toast', async () => {
-      // Setup: credit deduction succeeds with 7 remaining
+    it('completes full flow: auth -> deduct -> atomic RPC -> toast', async () => {
       mockFunctionsInvoke.mockResolvedValueOnce({
         data: { success: true, credits_remaining: 7 },
         error: null,
@@ -124,100 +79,31 @@ describe('Class Completion Flow Integration', () => {
 
       const result = await completeClass(classData);
 
-      // Verify success
       expect(result).toBe(true);
-
-      // Verify deduct-class-credit was called with correct params
       expect(mockFunctionsInvoke).toHaveBeenCalledWith(
         'deduct-class-credit',
         expect.objectContaining({
           body: expect.objectContaining({
             student_id: 'student-456',
             class_id: 'class-123',
+            duration_hours: 1.5,
           }),
         })
       );
+      expect(mockRpc).toHaveBeenCalledWith(
+        'complete_class_atomic',
+        expect.objectContaining({
+          p_class_id: 'class-123',
+          p_tutor_name: 'John Doe',
+          p_student_name: 'Sarah Miller',
+        })
+      );
 
-      // Verify success toast
-      const successToast = toastCalls.find(t => t.type === 'success');
-      expect(successToast).toBeDefined();
-      expect(successToast?.message).toContain('7 classes remaining');
+      const successToast = toastCalls.find((t) => t.type === 'success');
+      expect(successToast?.message).toContain('7 hours remaining');
     });
 
-    it('handles zero credits remaining with pricing CTA', async () => {
-      mockFunctionsInvoke.mockResolvedValueOnce({
-        data: { success: true, credits_remaining: 0 },
-        error: null,
-      });
-
-      const result = await completeClass(classData);
-
-      expect(result).toBe(true);
-      
-      const successToast = toastCalls.find(t => t.type === 'success');
-      expect(successToast?.message).toContain('No credits remaining');
-      expect(successToast?.options).toHaveProperty('action');
-    });
-
-    it('handles low credits (1-2) with warning', async () => {
-      mockFunctionsInvoke.mockResolvedValueOnce({
-        data: { success: true, credits_remaining: 1 },
-        error: null,
-      });
-
-      const result = await completeClass(classData);
-
-      expect(result).toBe(true);
-      
-      const successToast = toastCalls.find(t => t.type === 'success');
-      expect(successToast?.message).toContain('1 class remaining');
-      expect((successToast?.options as { description?: string })?.description).toContain('running low');
-    });
-  });
-
-  describe('Subscription Required Flow', () => {
-    it('shows subscription required message with pricing link', async () => {
-      mockFunctionsInvoke.mockResolvedValueOnce({
-        data: { success: false, code: 'NO_SUBSCRIPTION' },
-        error: null,
-      });
-
-      const result = await completeClass(classData);
-
-      expect(result).toBe(false);
-
-      const errorToast = toastCalls.find(t => t.type === 'error');
-      expect(errorToast?.message).toContain('no active subscription');
-      expect(errorToast?.options).toHaveProperty('action');
-    });
-  });
-
-  describe('Error Recovery Flow', () => {
-    it('restores credit when log creation fails and shows appropriate message', async () => {
-      // Credit deduction succeeds
-      mockFunctionsInvoke.mockResolvedValueOnce({
-        data: { success: true, credits_remaining: 5 },
-        error: null,
-      });
-
-      // Simulate log insert failure by mocking the insert to fail
-      // Note: This test relies on the mock implementation
-      // In a real scenario, we'd have more granular control
-
-      // Credit restoration succeeds
-      mockFunctionsInvoke.mockResolvedValueOnce({
-        data: { success: true, new_balance: 6 },
-        error: null,
-      });
-
-      // The test validates the flow logic exists
-      // Full integration would require more sophisticated mocking
-      expect(mockFunctionsInvoke).toBeDefined();
-    });
-  });
-
-  describe('Data Integrity Checks', () => {
-    it('calls deduct-class-credit with correct authorization header', async () => {
+    it('sends the tutor access token as a bearer header on the deduction call', async () => {
       mockFunctionsInvoke.mockResolvedValueOnce({
         data: { success: true, credits_remaining: 5 },
         error: null,
@@ -235,7 +121,7 @@ describe('Class Completion Flow Integration', () => {
       );
     });
 
-    it('includes class number in deduction request', async () => {
+    it('passes the class number through as class_title in the deduction request', async () => {
       mockFunctionsInvoke.mockResolvedValueOnce({
         data: { success: true, credits_remaining: 5 },
         error: null,
@@ -254,29 +140,48 @@ describe('Class Completion Flow Integration', () => {
     });
   });
 
-  describe('Pluralization and Display', () => {
-    it('uses singular "class" for 1 credit remaining', async () => {
+  describe('Subscription Required Flow', () => {
+    it('shows subscription required message and never reaches the atomic RPC', async () => {
       mockFunctionsInvoke.mockResolvedValueOnce({
-        data: { success: true, credits_remaining: 1 },
+        data: { success: false, code: 'NO_SUBSCRIPTION' },
         error: null,
       });
 
-      await completeClass(classData);
+      const result = await completeClass(classData);
 
-      const successToast = toastCalls.find(t => t.type === 'success');
-      expect(successToast?.message).toMatch(/1 class remaining/);
+      expect(result).toBe(false);
+      const errorToast = toastCalls.find((t) => t.type === 'error');
+      expect(errorToast?.message).toContain('no active subscription');
+      expect(errorToast?.options).toHaveProperty('action');
+      expect(mockRpc).not.toHaveBeenCalled();
     });
+  });
 
-    it('uses plural "classes" for multiple credits', async () => {
+  describe('Error Recovery Flow', () => {
+    it('invokes restore-class-credit when the atomic RPC fails after a successful deduction', async () => {
       mockFunctionsInvoke.mockResolvedValueOnce({
         data: { success: true, credits_remaining: 5 },
         error: null,
       });
+      mockRpc.mockResolvedValueOnce({
+        data: null,
+        error: new Error('network blip'),
+      });
+      mockFunctionsInvoke.mockResolvedValueOnce({
+        data: { success: true, new_balance: 6 },
+        error: null,
+      });
 
-      await completeClass(classData);
+      const result = await completeClass(classData);
 
-      const successToast = toastCalls.find(t => t.type === 'success');
-      expect(successToast?.message).toMatch(/5 classes remaining/);
+      expect(result).toBe(false);
+      expect(mockFunctionsInvoke).toHaveBeenNthCalledWith(
+        2,
+        'restore-class-credit',
+        expect.objectContaining({
+          body: expect.objectContaining({ class_id: 'class-123' }),
+        })
+      );
     });
   });
 });
