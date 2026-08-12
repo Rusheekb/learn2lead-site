@@ -202,7 +202,7 @@ Deno.serve(async (req) => {
 
       try {
         await resend.emails.send({
-          from: 'Learn2Lead <noreply@learn2lead.com>',
+          from: 'Learn2Lead <noreply@learn2lead.page>',
           to: student.email,
           subject: `Your Weekly Learn2Lead Digest — ${today.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`,
           html,

@@ -1,9 +1,13 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@2.0.0";
-import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
-import { getRateLimitKey, checkRateLimit, rateLimitResponse } from "../_shared/rateLimiter.ts";
+import { serve } from 'https://deno.land/std@0.190.0/http/server.ts';
+import { Resend } from 'npm:resend@2.0.0';
+import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
+import {
+  getRateLimitKey,
+  checkRateLimit,
+  rateLimitResponse,
+} from '../_shared/rateLimiter.ts';
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
 
 interface ContactEmailRequest {
   name: string;
@@ -32,35 +36,50 @@ const handler = async (req: Request): Promise<Response> => {
 
   // Rate limiting
   const rateLimitKey = getRateLimitKey(req, 'send-contact-email');
-  const { limited, retryAfterMs } = checkRateLimit(rateLimitKey, { maxRequests: 5, windowMs: 3_600_000 });
+  const { limited, retryAfterMs } = checkRateLimit(rateLimitKey, {
+    maxRequests: 5,
+    windowMs: 3_600_000,
+  });
   if (limited) return rateLimitResponse(retryAfterMs!, corsHeaders);
 
   try {
-    const { name, email, subject, message }: ContactEmailRequest = await req.json();
+    const { name, email, subject, message }: ContactEmailRequest =
+      await req.json();
 
     // Validate required fields
     if (!name || !email || !subject || !message) {
       return new Response(
-        JSON.stringify({ error: "All fields are required" }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        JSON.stringify({ error: 'All fields are required' }),
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders },
+        }
       );
     }
 
     // Validate input lengths
-    if (name.length > 100 || email.length > 255 || subject.length > 200 || message.length > 5000) {
+    if (
+      name.length > 100 ||
+      email.length > 255 ||
+      subject.length > 200 ||
+      message.length > 5000
+    ) {
       return new Response(
-        JSON.stringify({ error: "Input exceeds maximum allowed length" }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+        JSON.stringify({ error: 'Input exceeds maximum allowed length' }),
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json', ...corsHeaders },
+        }
       );
     }
 
     // Basic email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      return new Response(
-        JSON.stringify({ error: "Invalid email address" }),
-        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
+      return new Response(JSON.stringify({ error: 'Invalid email address' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      });
     }
 
     // Sanitize all user inputs
@@ -71,8 +90,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send notification email to Learn2Lead
     const notificationResponse = await resend.emails.send({
-      from: "Learn2Lead <noreply@learn2lead.com>",
-      to: ["learn2leadtutoring@gmail.com"],
+      from: 'Learn2Lead <noreply@learn2lead.page>',
+      to: ['learn2leadtutoring@gmail.com'],
       replyTo: email,
       subject: `Contact Form: ${subject}`,
       html: `
@@ -90,13 +109,13 @@ const handler = async (req: Request): Promise<Response> => {
       `,
     });
 
-    console.log("Contact notification email sent:", notificationResponse);
+    console.log('Contact notification email sent:', notificationResponse);
 
     // Send confirmation email to the user
     const confirmationResponse = await resend.emails.send({
-      from: "Learn2Lead <noreply@learn2lead.com>",
+      from: 'Learn2Lead <noreply@learn2lead.page>',
       to: [email],
-      subject: "We received your message - Learn2Lead",
+      subject: 'We received your message - Learn2Lead',
       html: `
         <h2>Thank you for contacting us, ${safeName}!</h2>
         <p>We have received your message and will get back to you as soon as possible, typically within 24-48 hours.</p>
@@ -112,17 +131,25 @@ const handler = async (req: Request): Promise<Response> => {
       `,
     });
 
-    console.log("Confirmation email sent:", confirmationResponse);
+    console.log('Confirmation email sent:', confirmationResponse);
 
     return new Response(
-      JSON.stringify({ success: true, message: "Emails sent successfully" }),
-      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      JSON.stringify({ success: true, message: 'Emails sent successfully' }),
+      {
+        status: 200,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      }
     );
   } catch (error: any) {
-    console.error("Error in send-contact-email function:", error);
+    console.error('Error in send-contact-email function:', error);
     return new Response(
-      JSON.stringify({ error: "An unexpected error occurred. Please try again later." }),
-      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      JSON.stringify({
+        error: 'An unexpected error occurred. Please try again later.',
+      }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json', ...corsHeaders },
+      }
     );
   }
 };

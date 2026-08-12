@@ -479,7 +479,7 @@ async function generateReportForStudent(
     );
 
     const emailResult = await resend.emails.send({
-      from: 'Learn2Lead <onboarding@resend.dev>',
+      from: 'Learn2Lead <noreply@learn2lead.page>',
       to: [recipientEmail],
       subject: `${testEmail ? '[TEST] ' : ''}Your Quarterly Progress Report - ${quarterLabel}`,
       html: htmlContent,

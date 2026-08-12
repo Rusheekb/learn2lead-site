@@ -217,7 +217,7 @@ async function sendReminderEmail(
         : `Your tutor ${classInfo.tutor_name} will be teaching this session.`;
 
     const result = await resend.emails.send({
-      from: 'Learn2Lead <noreply@learn2lead.com>',
+      from: 'Learn2Lead <noreply@learn2lead.page>',
       to: recipientEmail,
       subject: `Upcoming Class Reminder: ${classInfo.title} - Starting in 1 hour`,
       html: `

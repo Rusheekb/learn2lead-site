@@ -487,7 +487,7 @@ async function sendAutoRenewalEmail(
 
     if (success) {
       await resend.emails.send({
-        from: 'Learn2Lead <noreply@learn2lead.com>',
+        from: 'Learn2Lead <noreply@learn2lead.page>',
         to: [profile.email],
         subject: 'Auto-Renewal: Credits Added!',
         html: `
@@ -510,7 +510,7 @@ async function sendAutoRenewalEmail(
       });
     } else {
       await resend.emails.send({
-        from: 'Learn2Lead <noreply@learn2lead.com>',
+        from: 'Learn2Lead <noreply@learn2lead.page>',
         to: [profile.email],
         subject: 'Auto-Renewal Failed — Action Required',
         html: `

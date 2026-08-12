@@ -135,7 +135,7 @@ Deno.serve(async (req) => {
       if (tutor.notify_class_reminders !== false) {
         try {
           await resend.emails.send({
-            from: 'Learn2Lead <noreply@learn2lead.com>',
+            from: 'Learn2Lead <noreply@learn2lead.page>',
             to: tutor.email,
             subject: `Tomorrow: ${cls.title} with ${studentName}`,
             html: buildEmailHtml(tutorName, 'tutor'),
@@ -153,7 +153,7 @@ Deno.serve(async (req) => {
       if (student.notify_class_reminders !== false) {
         try {
           await resend.emails.send({
-            from: 'Learn2Lead <noreply@learn2lead.com>',
+            from: 'Learn2Lead <noreply@learn2lead.page>',
             to: student.email,
             subject: `Tomorrow: ${cls.title} with ${tutorName}`,
             html: buildEmailHtml(studentName, 'student'),

@@ -84,7 +84,7 @@ Deno.serve(async (req) => {
 
     // Email to tutor
     const tutorEmail = resend.emails.send({
-      from: 'Learn2Lead <noreply@learn2lead.com>',
+      from: 'Learn2Lead <noreply@learn2lead.page>',
       to: [tutor.email],
       subject: `New Student Assigned: ${studentName}`,
       html: `
@@ -109,7 +109,7 @@ Deno.serve(async (req) => {
 
     // Email to student
     const studentEmail = resend.emails.send({
-      from: 'Learn2Lead <noreply@learn2lead.com>',
+      from: 'Learn2Lead <noreply@learn2lead.page>',
       to: [student.email],
       subject: `Meet Your Tutor: ${tutorName}`,
       html: `

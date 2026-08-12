@@ -283,7 +283,7 @@ async function handleAutoRenewalPaymentFailed(
 
     const resend = new Resend(resendApiKey);
     await resend.emails.send({
-      from: 'Learn2Lead <noreply@learn2lead.com>',
+      from: 'Learn2Lead <noreply@learn2lead.page>',
       to: [profile.email],
       subject: 'Action Required: Auto-Renewal Failed',
       html: `
@@ -750,7 +750,7 @@ async function sendPurchaseConfirmationEmail(
 
     const resend = new Resend(resendApiKey);
     await resend.emails.send({
-      from: 'Learn2Lead <noreply@learn2lead.com>',
+      from: 'Learn2Lead <noreply@learn2lead.page>',
       to: [customerEmail],
       subject: 'Your Credit Pack Purchase Confirmation',
       html: `
@@ -810,7 +810,7 @@ async function sendAdminNewStudentAlert(
     const adminEmails = admins.map((a: { email: string }) => a.email);
 
     await resend.emails.send({
-      from: 'Learn2Lead <noreply@learn2lead.com>',
+      from: 'Learn2Lead <noreply@learn2lead.page>',
       to: adminEmails,
       subject: `New Student: ${studentEmail} just purchased ${creditsPurchased} hours`,
       html: `

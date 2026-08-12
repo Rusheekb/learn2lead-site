@@ -40,7 +40,7 @@ async function sendCompletionEmail(
 
   try {
     await resend.emails.send({
-      from: 'Learn2Lead <noreply@learn2lead.com>',
+      from: 'Learn2Lead <noreply@learn2lead.page>',
       to: studentEmail,
       subject: `Class Completed: ${classTitle}`,
       html: `
@@ -78,7 +78,7 @@ async function sendLowCreditWarning(
 ) {
   try {
     await resend.emails.send({
-      from: 'Learn2Lead <noreply@learn2lead.com>',
+      from: 'Learn2Lead <noreply@learn2lead.page>',
       to: studentEmail,
       subject: `⚠️ Low Credit Balance: ${creditsRemaining} hour${creditsRemaining !== 1 ? 's' : ''} remaining`,
       html: `
