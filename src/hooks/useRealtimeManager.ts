@@ -61,7 +61,7 @@ export const useRealtimeManager = ({
           (
             payload: RealtimePostgresChangesPayload<Tables<'scheduled_classes'>>
           ) => {
-            handleScheduledClassUpdate(payload, setClasses);
+            void handleScheduledClassUpdate(payload, setClasses);
           }
         )
         .subscribe();
@@ -126,22 +126,89 @@ export const useRealtimeManager = ({
   }, [userId, userRole, setClasses, setStudents, setTutors, setContentShares]);
 };
 
+// postgres_changes payloads carry the raw table row (snake_case columns,
+// no joined student/tutor names) — never assignable to ClassEvent directly.
+// Re-fetch and map the single row the same way the initial list query does,
+// so realtime-driven updates render identically to a normal refetch.
+const fetchAndMapScheduledClass = async (
+  id: string
+): Promise<ClassEvent | null> => {
+  const { data: record, error } = await supabase
+    .from('scheduled_classes')
+    .select(
+      `
+      *,
+      student:profiles!scheduled_classes_student_id_fkey(first_name, last_name, email),
+      tutor:profiles!scheduled_classes_tutor_id_fkey(first_name, last_name, email)
+    `
+    )
+    .eq('id', id)
+    .maybeSingle();
+
+  if (error || !record) return null;
+
+  const student = (record as any).student || {};
+  const tutor = (record as any).tutor || {};
+
+  const studentName =
+    student.first_name || student.last_name
+      ? `${student.first_name || ''} ${student.last_name || ''}`.trim()
+      : student.email || 'Unknown Student';
+
+  const tutorName =
+    tutor.first_name || tutor.last_name
+      ? `${tutor.first_name || ''} ${tutor.last_name || ''}`.trim()
+      : tutor.email || 'Unknown Tutor';
+
+  return {
+    id: record.id,
+    title: record.title,
+    date: record.date,
+    startTime: record.start_time?.substring(0, 5) || '00:00',
+    endTime: record.end_time?.substring(0, 5) || '00:00',
+    subject: record.subject || '',
+    studentId: record.student_id,
+    studentName,
+    tutorId: record.tutor_id,
+    tutorName,
+    zoomLink: record.zoom_link,
+    notes: record.notes,
+    status: record.status,
+    attendance: record.attendance,
+    materialsUrl: record.materials_url || [],
+    relationshipId: record.relationship_id,
+  } as unknown as ClassEvent;
+};
+
 // Handles scheduled_classes realtime events.
 // DELETE fires for both class completion (RPC) and manual deletes — no toast either way;
 // completion already shows its own success toast from classCompletion.ts.
-const handleScheduledClassUpdate = (
+const handleScheduledClassUpdate = async (
   payload: RealtimePostgresChangesPayload<Record<string, unknown>>,
   setClasses: React.Dispatch<React.SetStateAction<ClassEvent[]>>
 ) => {
   const { eventType, new: newData, old: oldData } = payload;
 
   if (eventType === 'INSERT') {
-    setClasses((prev) => [...prev, newData as unknown as ClassEvent]);
+    const id = (newData as { id?: string })?.id;
+    if (!id) return;
+    const mapped = await fetchAndMapScheduledClass(id);
+    if (!mapped) return;
+    // Upsert by id — the direct-action refetch that already ran for a
+    // self-triggered create can beat or lose the race against this event.
+    setClasses((prev) =>
+      prev.some((cls) => cls.id === mapped.id)
+        ? prev.map((cls) => (cls.id === mapped.id ? mapped : cls))
+        : [...prev, mapped]
+    );
     toast.success('New class added');
   } else if (eventType === 'UPDATE') {
-    const updated = newData as unknown as ClassEvent;
+    const id = (newData as { id?: string })?.id;
+    if (!id) return;
+    const mapped = await fetchAndMapScheduledClass(id);
+    if (!mapped) return;
     setClasses((prev) =>
-      prev.map((cls) => (cls.id === updated.id ? updated : cls))
+      prev.map((cls) => (cls.id === mapped.id ? mapped : cls))
     );
   } else if (eventType === 'DELETE') {
     const removed = oldData as unknown as ClassEvent;

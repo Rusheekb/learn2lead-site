@@ -239,7 +239,8 @@ const EventRow: React.FC<EventRowProps> = memo(
               {event.subject}
             </p>
             <p className="text-xs sm:text-sm text-muted-foreground">
-              {event.startTime} - {event.endTime} • {event.studentName}
+              {event.startTime} - {event.endTime} •{' '}
+              {userRole === 'student' ? event.tutorName : event.studentName}
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">

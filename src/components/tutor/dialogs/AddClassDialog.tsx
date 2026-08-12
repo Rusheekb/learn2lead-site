@@ -1,7 +1,14 @@
-
 import React, { useState, useEffect, useRef } from 'react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { format, addHours, addWeeks, setMinutes, setHours, startOfDay, isAfter } from 'date-fns';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import {
+  format,
+  addHours,
+  addWeeks,
+  setMinutes,
+  setHours,
+  startOfDay,
+  isAfter,
+} from 'date-fns';
 import { ClassEvent } from '@/types/tutorTypes';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
@@ -39,7 +46,7 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
   setNewEvent,
   onCreateEvent,
   onCancel,
-  currentUser
+  currentUser,
 }) => {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
@@ -48,30 +55,30 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
   const [studentCredits, setStudentCredits] = useState<number | null>(null);
   const [isCheckingCredits, setIsCheckingCredits] = useState(false);
   const initializedRef = useRef(false);
-  
+
   // Set default values when dialog opens (only once)
   useEffect(() => {
     if (!isOpen || !user?.id) return;
-    
+
     // Only initialize once per dialog open
     if (initializedRef.current) return;
-    
+
     // Set next hour as default time
     const now = new Date();
     const nextHour = setMinutes(setHours(now, now.getHours() + 1), 0);
-    
+
     // Create tutor name from profile
     const tutorId = user.id;
-    const tutorDisplayName = currentUser?.first_name 
-      ? `${currentUser.first_name} ${currentUser.last_name || ''}`.trim() 
+    const tutorDisplayName = currentUser?.first_name
+      ? `${currentUser.first_name} ${currentUser.last_name || ''}`.trim()
       : 'Current Tutor';
-      
+
     setNewEvent((prev: any) => {
       // Only set defaults if values are not already present
       if (prev.tutorId && prev.date && prev.startTime) {
         return prev; // Already initialized
       }
-      
+
       const baseDate = prev.date || nextHour;
       return {
         ...prev, // Preserve any existing values
@@ -90,40 +97,47 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
         relationshipId: prev.relationshipId || '',
       };
     });
-    
+
     // Load relationships and students data
     const loadRelationshipsAndStudents = async () => {
       if (!user?.id) return;
-      
+
       setIsLoading(true);
       try {
         // Query tutor_student_relationships using the new function
-        const { data: relationshipData, error } = await supabase.rpc('get_tutor_student_relationships', {
-          tutor_uuid: user.id
-        });
-        
+        const { data: relationshipData, error } = await supabase.rpc(
+          'get_tutor_student_relationships',
+          {
+            tutor_uuid: user.id,
+          }
+        );
+
         if (error) {
           log.error('Error loading student relationships:', error);
           toast.error(`Failed to load student list: ${error.message}`);
           return;
         }
-        
+
         if (!relationshipData || relationshipData.length === 0) {
           log.debug('No student relationships found for tutor');
           return;
         }
-        
+
         log.debug('Found relationships', { count: relationshipData.length });
-        
+
         // Convert to format needed for dropdown
-        const options: StudentOption[] = (relationshipData as any[]).map((rel: any) => ({
-          id: rel.student_id,
-          name: rel.student_name || `Student (${rel.student_id?.substring(0, 8)}...)`,
-          relationshipId: rel.relationship_id // Use the actual relationship ID
-        }));
-        
+        const options: StudentOption[] = (relationshipData as any[]).map(
+          (rel: any) => ({
+            id: rel.student_id,
+            name:
+              rel.student_name ||
+              `Student (${rel.student_id?.substring(0, 8)}...)`,
+            relationshipId: rel.relationship_id, // Use the actual relationship ID
+          })
+        );
+
         log.debug('Converted student options', { count: options.length });
-        
+
         setStudentOptions(options);
       } catch (err: any) {
         log.error('Error loading student relationships:', err);
@@ -132,38 +146,43 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
         setIsLoading(false);
       }
     };
-    
+
     loadRelationshipsAndStudents();
     initializedRef.current = true;
   }, [isOpen, user?.id]);
-  
+
   // Reset initialization flag when dialog closes
   useEffect(() => {
     if (!isOpen) {
       initializedRef.current = false;
     }
   }, [isOpen]);
-  
+
   // Handle student selection to update both studentId and relationshipId
   const handleStudentChange = async (studentId: string) => {
-    const selectedStudent = studentOptions.find(s => s.id === studentId);
-    
+    const selectedStudent = studentOptions.find((s) => s.id === studentId);
+
     if (selectedStudent) {
       setNewEvent({
         ...newEvent,
         studentId: selectedStudent.id,
         studentName: selectedStudent.name,
-        relationshipId: selectedStudent.relationshipId
+        relationshipId: selectedStudent.relationshipId,
       });
-      log.debug(`Selected student ${selectedStudent.name} with relationship ID ${selectedStudent.relationshipId}`);
-      
+      log.debug(
+        `Selected student ${selectedStudent.name} with relationship ID ${selectedStudent.relationshipId}`
+      );
+
       // Fetch credit balance
       setIsCheckingCredits(true);
       setStudentCredits(null);
       try {
-        const { data, error } = await supabase.rpc('get_student_credit_balance', {
-          p_student_id: studentId
-        });
+        const { data, error } = await supabase.rpc(
+          'get_student_credit_balance',
+          {
+            p_student_id: studentId,
+          }
+        );
         if (error) {
           log.error('Error checking credit balance:', error);
           toast.error('Could not check student credit balance');
@@ -180,7 +199,7 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
         ...newEvent,
         studentId: '',
         studentName: '',
-        relationshipId: ''
+        relationshipId: '',
       });
       setStudentCredits(null);
     }
@@ -188,7 +207,8 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
 
   // Calculate number of recurring classes
   const getRecurringClassCount = (): number => {
-    if (!newEvent.recurring || !newEvent.date || !newEvent.recurringUntil) return 1;
+    if (!newEvent.recurring || !newEvent.date || !newEvent.recurringUntil)
+      return 1;
     const startDate = startOfDay(newEvent.date as Date);
     const endDate = newEvent.recurringUntil as Date;
     let count = 0;
@@ -204,14 +224,14 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
 
   const handleSubmit = async () => {
     if (isSubmitting) return;
-    
+
     // Validate the form data
     const validationErrors = ClassValidator.validateClassCreation(newEvent);
     if (validationErrors.length > 0) {
       toast.error(ClassValidator.formatValidationErrors(validationErrors));
       return;
     }
-    
+
     setIsSubmitting(true);
     try {
       const result = await onCreateEvent(newEvent as ClassEvent);
@@ -231,13 +251,26 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="max-w-3xl max-h-[90vh] px-4 sm:px-8 bg-white text-gray-900 border" aria-labelledby="add-class-title" aria-describedby="add-class-desc">
+      <DialogContent
+        className="max-w-3xl max-h-[90vh] px-4 sm:px-8 bg-white text-gray-900 border"
+        aria-labelledby="add-class-title"
+        aria-describedby="add-class-desc"
+      >
         <div className="flex flex-col h-full max-h-[calc(90vh-4rem)]">
-          <h2 id="add-class-title" className="text-lg font-semibold py-2 flex-shrink-0">Schedule New Class</h2>
-          <p id="add-class-desc" className="sr-only">Fill in the details below to schedule a new tutoring class session.</p>
-          
+          <DialogTitle
+            id="add-class-title"
+            className="text-lg font-semibold py-2 flex-shrink-0"
+          >
+            Schedule New Class
+          </DialogTitle>
+          <p id="add-class-desc" className="sr-only">
+            Fill in the details below to schedule a new tutoring class session.
+          </p>
+
           {isLoading ? (
-            <div className="py-8 sm:py-12 text-center text-lg">Loading student data...</div>
+            <div className="py-8 sm:py-12 text-center text-lg">
+              Loading student data...
+            </div>
           ) : (
             <>
               {/* Credit Warning Banners */}
@@ -245,26 +278,41 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
                 <Alert variant="destructive" className="mb-4">
                   <AlertTriangle className="h-4 w-4" />
                   <AlertDescription>
-                    This student has <strong>no credits remaining</strong>. They need to purchase credits before a class can be scheduled.
+                    This student has <strong>no credits remaining</strong>. They
+                    need to purchase credits before a class can be scheduled.
                   </AlertDescription>
                 </Alert>
               )}
-              {studentCredits !== null && studentCredits > 0 && studentCredits < classCount && (
-                <Alert className="mb-4 border-amber-500/50 text-amber-700 [&>svg]:text-amber-600">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>
-                    This student has <strong>{studentCredits} credit{studentCredits === 1 ? '' : 's'}</strong> but scheduling {classCount} classes requires {classCount} credits.
-                  </AlertDescription>
-                </Alert>
-              )}
-              {studentCredits !== null && studentCredits > 0 && studentCredits >= classCount && studentCredits <= 2 && (
-                <Alert className="mb-4 border-amber-500/50 text-amber-700 [&>svg]:text-amber-600">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>
-                    This student only has <strong>{studentCredits} credit{studentCredits === 1 ? '' : 's'}</strong> remaining.
-                  </AlertDescription>
-                </Alert>
-              )}
+              {studentCredits !== null &&
+                studentCredits > 0 &&
+                studentCredits < classCount && (
+                  <Alert className="mb-4 border-amber-500/50 text-amber-700 [&>svg]:text-amber-600">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      This student has{' '}
+                      <strong>
+                        {studentCredits} credit{studentCredits === 1 ? '' : 's'}
+                      </strong>{' '}
+                      but scheduling {classCount} classes requires {classCount}{' '}
+                      credits.
+                    </AlertDescription>
+                  </Alert>
+                )}
+              {studentCredits !== null &&
+                studentCredits > 0 &&
+                studentCredits >= classCount &&
+                studentCredits <= 2 && (
+                  <Alert className="mb-4 border-amber-500/50 text-amber-700 [&>svg]:text-amber-600">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      This student only has{' '}
+                      <strong>
+                        {studentCredits} credit{studentCredits === 1 ? '' : 's'}
+                      </strong>{' '}
+                      remaining.
+                    </AlertDescription>
+                  </Alert>
+                )}
 
               {/* Scrollable Form Area */}
               <div className="flex-1 overflow-y-auto py-4 px-1">
@@ -275,15 +323,23 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
                   onStudentSelect={handleStudentChange}
                 />
               </div>
-              
+
               {/* Fixed Footer - Outside scroll container */}
               <div className="flex-shrink-0 flex justify-end space-x-2 pt-4 border-t bg-white">
-                <Button variant="outline" onClick={handleCancel}>Cancel</Button>
-                <Button 
-                  onClick={handleSubmit} 
-                  disabled={isSubmitting || isCheckingCredits || studentCredits === 0}
+                <Button variant="outline" onClick={handleCancel}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSubmit}
+                  disabled={
+                    isSubmitting || isCheckingCredits || studentCredits === 0
+                  }
                 >
-                  {isCheckingCredits ? 'Checking credits...' : isSubmitting ? 'Creating...' : 'Schedule Class'}
+                  {isCheckingCredits
+                    ? 'Checking credits...'
+                    : isSubmitting
+                      ? 'Creating...'
+                      : 'Schedule Class'}
                 </Button>
               </div>
             </>

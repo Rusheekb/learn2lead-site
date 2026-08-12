@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import {
@@ -38,45 +37,54 @@ export const fetchScheduledClasses = async (
       return [];
     }
 
-    const tutorIds = [...new Set(data.map(cls => cls.tutor_id).filter(Boolean))];
-    const studentIds = [...new Set(data.map(cls => cls.student_id).filter(Boolean))];
+    const tutorIds = [
+      ...new Set(data.map((cls) => cls.tutor_id).filter(Boolean)),
+    ];
+    const studentIds = [
+      ...new Set(data.map((cls) => cls.student_id).filter(Boolean)),
+    ];
 
     const [tutorProfilesResponse, studentProfilesResponse] = await Promise.all([
       supabase
         .from('profiles')
-        .select('id, first_name, last_name')
+        .select('id, first_name, last_name, email')
         .in('id', tutorIds),
       supabase
         .from('profiles')
-        .select('id, first_name, last_name')
-        .in('id', studentIds)
+        .select('id, first_name, last_name, email')
+        .in('id', studentIds),
     ]);
 
     const tutorProfileMap = new Map(
-      (tutorProfilesResponse.data || []).map(profile => [
+      (tutorProfilesResponse.data || []).map((profile) => [
         profile.id,
-        `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Unknown Tutor'
+        `${profile.first_name || ''} ${profile.last_name || ''}`.trim() ||
+          profile.email ||
+          'Unknown Tutor',
       ])
     );
 
     const studentProfileMap = new Map(
-      (studentProfilesResponse.data || []).map(profile => [
+      (studentProfilesResponse.data || []).map((profile) => [
         profile.id,
-        `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Unknown Student'
+        `${profile.first_name || ''} ${profile.last_name || ''}`.trim() ||
+          profile.email ||
+          'Unknown Student',
       ])
     );
 
     const classEvents: ClassEvent[] = data.map((cls) => {
       const tutorName = tutorProfileMap.get(cls.tutor_id) || 'Unknown Tutor';
-      const studentName = studentProfileMap.get(cls.student_id) || 'Unknown Student';
-      
+      const studentName =
+        studentProfileMap.get(cls.student_id) || 'Unknown Student';
+
       const status = cls.status || 'scheduled';
       const attendance = cls.attendance || 'pending';
-      
+
       const dateObj = cls.date
         ? parse(cls.date, 'yyyy-MM-dd', new Date())
         : new Date();
-      
+
       return {
         id: cls.id || '',
         title: cls.title || '',
@@ -89,7 +97,9 @@ export const fetchScheduledClasses = async (
         zoomLink: cls.zoom_link || '',
         notes: cls.notes || '',
         status: isValidClassStatus(status) ? status : 'scheduled',
-        attendance: isValidAttendanceStatus(attendance) ? attendance : 'pending',
+        attendance: isValidAttendanceStatus(attendance)
+          ? attendance
+          : 'pending',
         studentId: cls.student_id || '',
         tutorId: cls.tutor_id || '',
         relationshipId: cls.relationship_id || '',
