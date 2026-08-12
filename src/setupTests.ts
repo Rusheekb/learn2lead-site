@@ -47,30 +47,22 @@ jest.mock('./integrations/supabase/client', () => ({
 }));
 
 // Export mocks for test customization
-export { mockFunctionsInvoke, mockAuthGetSession, mockAuthGetUser, mockAuthRefreshSession };
+export {
+  mockFunctionsInvoke,
+  mockAuthGetSession,
+  mockAuthGetUser,
+  mockAuthRefreshSession,
+};
 
-// Mock the i18next
-jest.mock('react-i18next', () => ({
-  useTranslation: () => ({
-    t: (key: string) => key,
-    i18n: {
-      changeLanguage: jest.fn(),
-    },
-  }),
-  Trans: ({ children }: { children: React.ReactNode }) => children,
-  initReactI18next: {
-    type: '3rdParty',
-    init: () => {},
-  },
-  I18nextProvider: ({ children }: { children: React.ReactNode }) => children,
-}));
-
-// Mock window navigation
-Object.defineProperty(window, 'navigator', {
-  value: {
-    language: 'en-US',
-  },
-  writable: true,
+// Override navigator.language only, on the real navigator object — jsdom
+// defines userAgent (and others) as prototype getters, so both replacing
+// `window.navigator` wholesale and spreading it (`{...window.navigator}`,
+// which only copies own enumerable properties) lose userAgent. react-dom
+// reads navigator.userAgent at import time for its devtools-detection check
+// and crashes on undefined if it's missing.
+Object.defineProperty(window.navigator, 'language', {
+  value: 'en-US',
+  configurable: true,
 });
 
 // Mock document.documentElement.classList for theme testing
@@ -118,7 +110,7 @@ beforeAll(() => {
     }
     originalConsoleError(...args);
   };
-  
+
   console.warn = (...args: unknown[]) => {
     const message = args[0];
     if (

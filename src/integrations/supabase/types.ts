@@ -14,6 +14,47 @@ export type Database = {
   };
   public: {
     Tables: {
+      admin_activity_log: {
+        Row: {
+          action_type: string;
+          admin_id: string;
+          created_at: string;
+          description: string;
+          entity_id: string | null;
+          entity_type: string | null;
+          id: string;
+          metadata: Json | null;
+        };
+        Insert: {
+          action_type: string;
+          admin_id: string;
+          created_at?: string;
+          description: string;
+          entity_id?: string | null;
+          entity_type?: string | null;
+          id?: string;
+          metadata?: Json | null;
+        };
+        Update: {
+          action_type?: string;
+          admin_id?: string;
+          created_at?: string;
+          description?: string;
+          entity_id?: string | null;
+          entity_type?: string | null;
+          id?: string;
+          metadata?: Json | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'admin_activity_log_admin_id_fkey';
+            columns: ['admin_id'];
+            isOneToOne: false;
+            referencedRelation: 'profiles';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       auto_renewal_settings: {
         Row: {
           created_at: string;
@@ -61,6 +102,51 @@ export type Database = {
           },
         ];
       };
+      class_cancellations: {
+        Row: {
+          cancelled_at: string;
+          cancelled_by: string | null;
+          class_date: string | null;
+          class_start: string | null;
+          id: string;
+          notes: string | null;
+          scheduled_class_id: string;
+          student_id: string | null;
+          subject: string | null;
+          title: string | null;
+          tutor_id: string | null;
+          zoom_link: string | null;
+        };
+        Insert: {
+          cancelled_at?: string;
+          cancelled_by?: string | null;
+          class_date?: string | null;
+          class_start?: string | null;
+          id?: string;
+          notes?: string | null;
+          scheduled_class_id: string;
+          student_id?: string | null;
+          subject?: string | null;
+          title?: string | null;
+          tutor_id?: string | null;
+          zoom_link?: string | null;
+        };
+        Update: {
+          cancelled_at?: string;
+          cancelled_by?: string | null;
+          class_date?: string | null;
+          class_start?: string | null;
+          id?: string;
+          notes?: string | null;
+          scheduled_class_id?: string;
+          student_id?: string | null;
+          subject?: string | null;
+          title?: string | null;
+          tutor_id?: string | null;
+          zoom_link?: string | null;
+        };
+        Relationships: [];
+      };
       class_credits_ledger: {
         Row: {
           amount: number;
@@ -71,6 +157,7 @@ export type Database = {
           invoice_id: string | null;
           reason: string;
           related_class_id: string | null;
+          reversed_debit_id: string | null;
           student_id: string;
           subscription_id: string | null;
           transaction_type: string;
@@ -84,6 +171,7 @@ export type Database = {
           invoice_id?: string | null;
           reason: string;
           related_class_id?: string | null;
+          reversed_debit_id?: string | null;
           student_id: string;
           subscription_id?: string | null;
           transaction_type: string;
@@ -97,11 +185,19 @@ export type Database = {
           invoice_id?: string | null;
           reason?: string;
           related_class_id?: string | null;
+          reversed_debit_id?: string | null;
           student_id?: string;
           subscription_id?: string | null;
           transaction_type?: string;
         };
         Relationships: [
+          {
+            foreignKeyName: 'class_credits_ledger_reversed_debit_id_fkey';
+            columns: ['reversed_debit_id'];
+            isOneToOne: false;
+            referencedRelation: 'class_credits_ledger';
+            referencedColumns: ['id'];
+          },
           {
             foreignKeyName: 'class_credits_ledger_subscription_id_fkey';
             columns: ['subscription_id'];
@@ -132,7 +228,9 @@ export type Database = {
           HW: string | null;
           id: string;
           'Student Name': string | null;
+          student_feedback: string | null;
           student_payment_date: string | null;
+          student_rating: number | null;
           student_user_id: string | null;
           Subject: string | null;
           'Time (CST)': string | null;
@@ -159,7 +257,9 @@ export type Database = {
           HW?: string | null;
           id?: string;
           'Student Name'?: string | null;
+          student_feedback?: string | null;
           student_payment_date?: string | null;
+          student_rating?: number | null;
           student_user_id?: string | null;
           Subject?: string | null;
           'Time (CST)'?: string | null;
@@ -186,7 +286,9 @@ export type Database = {
           HW?: string | null;
           id?: string;
           'Student Name'?: string | null;
+          student_feedback?: string | null;
           student_payment_date?: string | null;
+          student_rating?: number | null;
           student_user_id?: string | null;
           Subject?: string | null;
           'Time (CST)'?: string | null;
@@ -644,6 +746,39 @@ export type Database = {
           },
         ];
       };
+      stripe_webhook_events: {
+        Row: {
+          created_at: string;
+          error_message: string | null;
+          event_type: string;
+          id: string;
+          is_test_event: boolean;
+          status: string;
+          stripe_event_id: string;
+          updated_at: string;
+        };
+        Insert: {
+          created_at?: string;
+          error_message?: string | null;
+          event_type: string;
+          id?: string;
+          is_test_event?: boolean;
+          status?: string;
+          stripe_event_id: string;
+          updated_at?: string;
+        };
+        Update: {
+          created_at?: string;
+          error_message?: string | null;
+          event_type?: string;
+          id?: string;
+          is_test_event?: boolean;
+          status?: string;
+          stripe_event_id?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       student_notes: {
         Row: {
           content: string;
@@ -745,6 +880,7 @@ export type Database = {
           payment_method: string | null;
           payment_status: string;
           prepaid_balance: number | null;
+          prepaid_class_count: number;
           primary_goal: Database['public']['Enums']['student_goal'] | null;
           session_structure_pref:
             | Database['public']['Enums']['session_structure']
@@ -771,6 +907,7 @@ export type Database = {
           payment_method?: string | null;
           payment_status?: string;
           prepaid_balance?: number | null;
+          prepaid_class_count?: number;
           primary_goal?: Database['public']['Enums']['student_goal'] | null;
           session_structure_pref?:
             | Database['public']['Enums']['session_structure']
@@ -797,6 +934,7 @@ export type Database = {
           payment_method?: string | null;
           payment_status?: string;
           prepaid_balance?: number | null;
+          prepaid_class_count?: number;
           primary_goal?: Database['public']['Enums']['student_goal'] | null;
           session_structure_pref?:
             | Database['public']['Enums']['session_structure']
@@ -847,6 +985,39 @@ export type Database = {
           price_per_class?: number;
           stripe_price_id?: string;
           stripe_product_id?: string;
+        };
+        Relationships: [];
+      };
+      tutor_payroll_runs: {
+        Row: {
+          amount_paid: number;
+          class_count: number;
+          class_ids: string[];
+          created_at: string | null;
+          id: string;
+          paid_at: string;
+          tutor_name: string;
+          tutor_user_id: string | null;
+        };
+        Insert: {
+          amount_paid: number;
+          class_count: number;
+          class_ids: string[];
+          created_at?: string | null;
+          id?: string;
+          paid_at?: string;
+          tutor_name: string;
+          tutor_user_id?: string | null;
+        };
+        Update: {
+          amount_paid?: number;
+          class_count?: number;
+          class_ids?: string[];
+          created_at?: string | null;
+          id?: string;
+          paid_at?: string;
+          tutor_name?: string;
+          tutor_user_id?: string | null;
         };
         Relationships: [];
       };
@@ -1003,6 +1174,20 @@ export type Database = {
       };
     };
     Functions: {
+      apply_credit_ledger_entry: {
+        Args: {
+          p_allow_negative?: boolean;
+          p_amount: number;
+          p_dollar_amount?: number;
+          p_invoice_id?: string;
+          p_reason: string;
+          p_related_class_id?: string;
+          p_student_id: string;
+          p_subscription_id: string;
+          p_transaction_type: string;
+        };
+        Returns: Json;
+      };
       check_upcoming_classes: { Args: never; Returns: undefined };
       complete_class_atomic: {
         Args: {
@@ -1026,6 +1211,31 @@ export type Database = {
         Returns: Json;
       };
       generate_class_notifications: { Args: never; Returns: undefined };
+      get_admin_student_overview: {
+        Args: never;
+        Returns: {
+          active: boolean;
+          class_rate: number;
+          credits_remaining: number;
+          email: string;
+          last_class_date: string;
+          name: string;
+          next_class_date: string;
+          profile_id: string;
+          student_id: string;
+        }[];
+      };
+      get_at_risk_students: {
+        Args: never;
+        Returns: {
+          credits_remaining: number;
+          days_since_class: number;
+          email: string;
+          last_class_date: string;
+          profile_id: string;
+          student_name: string;
+        }[];
+      };
       get_auth_user_display_name: { Args: never; Returns: string };
       get_auth_user_email: { Args: never; Returns: string };
       get_auth_user_role: { Args: never; Returns: string };
@@ -1034,6 +1244,16 @@ export type Database = {
         Returns: Json;
       };
       get_ics_feed: { Args: { feed_id: string }; Returns: string };
+      get_my_payroll_history: {
+        Args: never;
+        Returns: {
+          amount_paid: number;
+          class_count: number;
+          created_at: string;
+          id: string;
+          paid_at: string;
+        }[];
+      };
       get_referral_usage_stats: {
         Args: { p_user_id: string };
         Returns: {
@@ -1064,6 +1284,52 @@ export type Database = {
       get_student_credit_balance: {
         Args: { p_student_id: string };
         Returns: number;
+      };
+      get_student_unpaid_summary: {
+        Args: never;
+        Returns: {
+          class_ids: string[];
+          class_rate: number;
+          last_payment_date: string;
+          student_name: string;
+          total_owed: number;
+          unpaid_count: number;
+        }[];
+      };
+      get_students_credit_summary: {
+        Args: never;
+        Returns: {
+          class_rate: number;
+          credits: number;
+          last_class_date: string;
+          profile_id: string;
+          student_name: string;
+        }[];
+      };
+      get_tomorrow_scheduled_classes: {
+        Args: never;
+        Returns: {
+          class_date: string;
+          class_id: string;
+          class_start: string;
+          student_email: string;
+          student_name: string;
+          student_notify_reminders: boolean;
+          subject: string;
+          title: string;
+          tutor_email: string;
+          tutor_name: string;
+          tutor_notify_reminders: boolean;
+          zoom_link: string;
+        }[];
+      };
+      get_tutor_ratings: {
+        Args: never;
+        Returns: {
+          avg_rating: number;
+          rating_count: number;
+          tutor_name: string;
+        }[];
       };
       get_tutor_student_relationships: {
         Args: { tutor_uuid: string };
@@ -1103,8 +1369,29 @@ export type Database = {
           tutor_name: string;
         }[];
       };
-      get_tutor_unpaid_summary: { Args: never; Returns: Json };
+      get_tutor_unpaid_summary: {
+        Args: never;
+        Returns: {
+          class_ids: string[];
+          last_payment_date: string;
+          total_owed: number;
+          tutor_name: string;
+          tutor_user_id: string;
+          unpaid_count: number;
+        }[];
+      };
       get_user_calendar_events: { Args: { user_id: string }; Returns: string };
+      get_zero_credit_upcoming_students: {
+        Args: never;
+        Returns: {
+          credits_remaining: number;
+          email: string;
+          next_class_date: string;
+          next_class_title: string;
+          profile_id: string;
+          student_name: string;
+        }[];
+      };
       handle_rest_get_ics: { Args: { request: Json }; Returns: Json };
       log_critical_security_event: {
         Args: { details?: Json; event_type: string; user_id: string };
@@ -1119,6 +1406,10 @@ export type Database = {
         Returns: Json;
       };
       require_admin_access: { Args: never; Returns: undefined };
+      reverse_class_debit: {
+        Args: { p_class_id: string; p_reason: string; p_student_id: string };
+        Returns: Json;
+      };
       sync_user_roles: { Args: never; Returns: Json };
       validate_file_access_permissions: {
         Args: { file_path: string; requested_by?: string };

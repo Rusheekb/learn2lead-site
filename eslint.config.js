@@ -91,4 +91,16 @@ export default [
       '@typescript-eslint/no-empty-object-type': 'off',
     },
   },
+
+  // 5) Node CommonJS scripts (not covered by the src/ block above, but
+  // still linted by lint-staged on commit)
+  {
+    files: ['scripts/**/*.js'],
+    languageOptions: {
+      sourceType: 'commonjs',
+      globals: {
+        ...globals.node,
+      },
+    },
+  },
 ];

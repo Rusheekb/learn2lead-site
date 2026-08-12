@@ -1,4 +1,3 @@
-
 export default {
   preset: 'ts-jest',
   testEnvironment: 'jsdom',
@@ -7,19 +6,11 @@ export default {
     '^@/(.*)$': '<rootDir>/src/$1',
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
   },
-  testMatch: ['**/__tests__/**/*.ts?(x)', '**/?(*.)+(spec|test).ts?(x)'],
+  testMatch: ['**/?(*.)+(spec|test).ts?(x)'],
   transform: {
-    '^.+\\.tsx?$': ['ts-jest', {
-      tsconfig: {
-        jsx: 'react-jsx',
-        esModuleInterop: true,
-        allowSyntheticDefaultImports: true,
-      },
-    }],
+    '^.+\\.tsx?$': '<rootDir>/jest.importMetaEnvTransform.cjs',
   },
-  transformIgnorePatterns: [
-    'node_modules/(?!(.*\\.mjs$|@testing-library))',
-  ],
+  transformIgnorePatterns: ['node_modules/(?!(.*\\.mjs$|@testing-library))'],
   coverageThreshold: {
     global: {
       branches: 50,
@@ -29,4 +20,3 @@ export default {
     },
   },
 };
-

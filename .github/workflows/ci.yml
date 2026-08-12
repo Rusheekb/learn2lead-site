@@ -28,7 +28,7 @@ jobs:
         run: npm run type-check
 
       - name: Check formatting
-        run: npm run format -- --check
+        run: npm run check-format
 
   test:
     runs-on: ubuntu-latest
