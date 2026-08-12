@@ -15,7 +15,7 @@ const faqs = [
   {
     question: 'How are tutoring sessions conducted?',
     answer:
-      'All sessions are conducted online via video conferencing, making it convenient for students to learn from anywhere. Each session is one-on-one with a dedicated tutor who focuses entirely on your child\'s learning needs.',
+      "All sessions are conducted online via video conferencing, making it convenient for students to learn from anywhere. Each session is one-on-one with a dedicated tutor who focuses entirely on your child's learning needs.",
   },
   {
     question: 'How do you match students with tutors?',
@@ -25,15 +25,15 @@ const faqs = [
   {
     question: 'What is your pricing structure?',
     answer:
-      'We offer flexible subscription plans starting from 4 classes per month. Each plan includes personalized 1-on-1 sessions, progress tracking, and access to learning materials. Visit our pricing page for detailed plan information.',
+      'We offer simple, one-time credit packs — no subscriptions or recurring commitments. Choose from 4, 8, or 12-hour packs and use them whenever your schedule allows. Visit our pricing page for detailed plan information.',
   },
   {
-    question: 'Can I pause or cancel my subscription?',
+    question: 'Do unused hours expire?',
     answer:
-      'Yes! We understand that schedules can change. You can pause your subscription for up to 90 days for vacations or breaks, and you can cancel anytime. Unused credits carry over month to month within your subscription period.',
+      "No — there's no subscription to cancel. Hours you purchase are yours until you use them, with no expiration date. Need more? You can buy another pack anytime.",
   },
   {
-    question: 'How do I track my child\'s progress?',
+    question: "How do I track my child's progress?",
     answer:
       'Parents and students have access to a personalized dashboard that shows completed sessions, upcoming classes, homework assignments, and detailed progress reports. Tutors also provide regular feedback after each session.',
   },
@@ -75,10 +75,17 @@ const FAQ = () => {
   }, []);
 
   return (
-    <section id="faq" aria-labelledby="faq-heading" className="py-16 bg-background">
+    <section
+      id="faq"
+      aria-labelledby="faq-heading"
+      className="py-16 bg-background"
+    >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h2 id="faq-heading" className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+          <h2
+            id="faq-heading"
+            className="text-3xl md:text-4xl font-bold text-foreground mb-4"
+          >
             Frequently Asked Questions
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
