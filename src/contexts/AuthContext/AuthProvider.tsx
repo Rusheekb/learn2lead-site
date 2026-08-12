@@ -1,12 +1,16 @@
 import React, { createContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { signInWithEmail, signUpWithEmail, signOut, signInWithProvider } from '@/utils/authActions';
+import {
+  signInWithEmail,
+  signUpWithEmail,
+  signOut,
+  signInWithProvider,
+} from '@/utils/authActions';
 import { fetchUserRole } from '@/hooks/useUserRole';
 import { getDashboardPath } from '@/utils/authNavigation';
 import { useAuthState } from '@/hooks/useAuthState';
 import { createStudent } from '@/services/students/studentService';
-import { createTutor } from '@/services/tutors/tutorService';
 import { toast } from 'sonner';
 import { AuthContextType } from '@/types/auth';
 import { getSavedRoute, clearSavedRoute } from '@/hooks/useRoutePersistence';
@@ -16,7 +20,9 @@ import { logger } from '@/lib/logger';
 
 const log = logger.create('AuthProvider');
 
-export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(
+  undefined
+);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
@@ -40,7 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (event === 'SIGNED_IN' && currentSession?.user) {
         const u = currentSession.user;
-        
+
         // Set user context for Sentry
         setSentryUser({ id: u.id, email: u.email });
         addBreadcrumb({
@@ -51,7 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Identify user in PostHog (role added after profile fetch below)
         identifyUser(u.id, { email: u.email });
-        
+
         setTimeout(async () => {
           try {
             const { data: existingProfile } = await supabase
@@ -61,43 +67,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               .maybeSingle();
 
             if (!existingProfile) {
-              const defaultRole = u.email?.endsWith('@learn2lead.com')
-                ? 'tutor'
-                : 'student';
-                
+              // Every new signup lands as 'student'; tutors are promoted
+              // manually by an admin from the Students tab. (This used to
+              // auto-assign 'tutor' to @learn2lead.com addresses, a domain
+              // that was never actually owned — removed.)
+              const defaultRole = 'student';
+
               // Extract first and last name from user metadata
               const { user_metadata } = u;
-              const firstName = user_metadata?.first_name || user_metadata?.name?.split(' ')[0] || '';
-              const lastName = user_metadata?.last_name || 
-                (user_metadata?.name ? user_metadata.name.split(' ').slice(1).join(' ') : '');
-                
-              await supabase
-                .from('profiles')
-                .insert({ 
-                  id: u.id, 
-                  email: u.email!, 
-                  role: defaultRole,
-                  first_name: firstName,
-                  last_name: lastName
-                });
+              const firstName =
+                user_metadata?.first_name ||
+                user_metadata?.name?.split(' ')[0] ||
+                '';
+              const lastName =
+                user_metadata?.last_name ||
+                (user_metadata?.name
+                  ? user_metadata.name.split(' ').slice(1).join(' ')
+                  : '');
 
-              // Create corresponding student/tutor record
-              if (defaultRole === 'student') {
-                await createStudent({
-                  name: firstName ? `${firstName} ${lastName}`.trim() : (u.email?.split('@')[0] || 'New Student'),
-                  email: u.email!,
-                  subjects: [],
-                });
-              } else if (defaultRole === 'tutor') {
-                await createTutor({
-                  name: firstName ? `${firstName} ${lastName}`.trim() : (u.email?.split('@')[0] || 'New Tutor'),
-                  email: u.email!,
-                  subjects: [],
-                  rating: 0,
-                  classes: 0,
-                  hourlyRate: 25,
-                });
-              }
+              await supabase.from('profiles').insert({
+                id: u.id,
+                email: u.email!,
+                role: defaultRole,
+                first_name: firstName,
+                last_name: lastName,
+              });
+
+              await createStudent({
+                name: firstName
+                  ? `${firstName} ${lastName}`.trim()
+                  : u.email?.split('@')[0] || 'New Student',
+                email: u.email!,
+                subjects: [],
+              });
 
               setUserRole(defaultRole);
             } else {
@@ -106,8 +108,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             // Try to restore saved route, otherwise go to default dashboard
             const savedRoute = getSavedRoute(u.id);
-            const targetPath = savedRoute || getDashboardPath(existingProfile?.role || 'student');
-            
+            const targetPath =
+              savedRoute ||
+              getDashboardPath(existingProfile?.role || 'student');
+
             navigate(targetPath, {
               replace: true,
             });
@@ -130,7 +134,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Reset PostHog identity
         resetUser();
-        
+
         clearSavedRoute(); // Clear saved route on sign out
         setUserRole(null);
         setUser(null);
@@ -161,8 +165,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const handleSignUp = async (
-    email: string, 
-    password: string, 
+    email: string,
+    password: string,
     userData?: { first_name?: string; last_name?: string }
   ) => {
     await signUpWithEmail(email, password, userData);
@@ -176,7 +180,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       log.debug('Signing out user...');
       const success = await signOut();
-      
+
       if (success) {
         setUser(null);
         setSession(null);
