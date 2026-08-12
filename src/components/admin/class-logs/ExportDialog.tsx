@@ -155,11 +155,15 @@ export const ExportDialog: React.FC<ExportDialogProps> = ({
             onClick={handleExportRange}
             disabled={!isRangeValid || isLoading}
           >
-            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            {isLoading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : null}
             Export Date Range
           </Button>
           <Button onClick={handleExportAll} disabled={isLoading}>
-            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            {isLoading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : null}
             Export All ({totalRecords})
           </Button>
         </DialogFooter>

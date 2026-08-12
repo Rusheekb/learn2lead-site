@@ -70,7 +70,9 @@ class ErrorBoundary extends Component<Props, State> {
     });
 
     if (import.meta.env.DEV) {
-      log.error('Error caught by boundary', error, { componentStack: errorInfo.componentStack });
+      log.error('Error caught by boundary', error, {
+        componentStack: errorInfo.componentStack,
+      });
     }
   }
 
@@ -100,7 +102,8 @@ class ErrorBoundary extends Component<Props, State> {
             </h1>
 
             <p className="text-muted-foreground mb-8 text-sm leading-relaxed">
-              Something unexpected happened. A quick reload usually fixes it — if not, head back home.
+              Something unexpected happened. A quick reload usually fixes it —
+              if not, head back home.
             </p>
 
             {import.meta.env.DEV && this.state.error && (
@@ -126,7 +129,11 @@ class ErrorBoundary extends Component<Props, State> {
                 <RefreshCw className="h-4 w-4" />
                 Reload Page
               </Button>
-              <Button variant="outline" onClick={() => (window.location.href = '/')} className="gap-2">
+              <Button
+                variant="outline"
+                onClick={() => (window.location.href = '/')}
+                className="gap-2"
+              >
                 <Home className="h-4 w-4" />
                 Go Home
               </Button>

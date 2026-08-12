@@ -34,6 +34,7 @@ interface DbRecord {
   'Tutor Cost'?: number | null;
   student_payment_date?: string | Date | null;
   tutor_payment_date?: string | Date | null;
+  tutor_is_paid?: boolean | null;
   'Additional Info'?: string | null;
   disputed?: boolean | null;
   dispute_reason?: string | null;

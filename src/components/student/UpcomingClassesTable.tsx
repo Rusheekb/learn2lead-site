@@ -1,4 +1,3 @@
-
 import React, { useMemo, memo } from 'react';
 import DataTable, { ColumnDefinition } from '@/components/common/DataTable';
 import { Button } from '@/components/ui/button';
@@ -25,66 +24,66 @@ interface UpcomingClassesTableProps {
   onViewClass: (cls: ClassItem) => void;
 }
 
-const UpcomingClassesTable: React.FC<UpcomingClassesTableProps> = memo(({
-  classes,
-  onViewClass,
-}) => {
-  const columns: ColumnDefinition<ClassItem>[] = useMemo(() => [
-    {
-      header: 'Class',
-      cell: (cls) => (
-        <div>
-          <p className="font-medium dark:text-gray-100">{cls.title}</p>
-          <p className="text-sm text-gray-500 dark:text-gray-400">{cls.subject}</p>
-        </div>
-      ),
-    },
-    {
-      header: 'Date',
-      accessorKey: 'date',
-    },
-    {
-      header: 'Time',
-      cell: (cls) => formatTimeRange(cls.startTime, cls.endTime),
-    },
-    {
-      header: 'Tutor',
-      accessorKey: 'tutorName',
-    },
-    {
-      header: 'Actions',
-      cell: (cls) => (
-        <div className="flex flex-col sm:flex-row gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700 text-xs sm:text-sm w-full sm:w-auto"
-            onClick={() => onViewClass(cls)}
-          >
-            View Details
-          </Button>
-          <Button 
-            size="sm"
-            className="dark:bg-tutoring-teal dark:text-gray-900 text-xs sm:text-sm w-full sm:w-auto"
-            onClick={() => onViewClass(cls)}
-          >
-            <ArrowRight className="h-4 w-4" />
-          </Button>
-        </div>
-      ),
-    },
-  ], [onViewClass]);
+const UpcomingClassesTable: React.FC<UpcomingClassesTableProps> = memo(
+  ({ classes, onViewClass }) => {
+    const columns: ColumnDefinition<ClassItem>[] = useMemo(
+      () => [
+        {
+          header: 'Class',
+          cell: (cls) => (
+            <div>
+              <p className="font-medium dark:text-gray-100">{cls.title}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {cls.subject}
+              </p>
+            </div>
+          ),
+        },
+        {
+          header: 'Date',
+          accessorKey: 'date',
+        },
+        {
+          header: 'Time',
+          cell: (cls) => formatTimeRange(cls.startTime, cls.endTime),
+        },
+        {
+          header: 'Tutor',
+          accessorKey: 'tutorName',
+        },
+        {
+          header: 'Actions',
+          cell: (cls) => (
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700 text-xs sm:text-sm w-full sm:w-auto"
+                onClick={() => onViewClass(cls)}
+              >
+                View Details
+              </Button>
+              <Button
+                size="sm"
+                className="dark:bg-tutoring-teal dark:text-gray-900 text-xs sm:text-sm w-full sm:w-auto"
+                onClick={() => onViewClass(cls)}
+              >
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
+          ),
+        },
+      ],
+      [onViewClass]
+    );
 
-  return (
-    <div className="overflow-x-auto">
-      <DataTable
-        data={classes}
-        columns={columns}
-        showCard={false}
-      />
-    </div>
-  );
-});
+    return (
+      <div className="overflow-x-auto">
+        <DataTable data={classes} columns={columns} showCard={false} />
+      </div>
+    );
+  }
+);
 
 UpcomingClassesTable.displayName = 'UpcomingClassesTable';
 

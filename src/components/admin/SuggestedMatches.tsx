@@ -2,13 +2,18 @@ import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  getTopMatches, 
-  MatchResult, 
-  StudentPreferences, 
-  TutorPreferences 
+import {
+  getTopMatches,
+  MatchResult,
+  StudentPreferences,
+  TutorPreferences,
 } from '@/utils/matchingAlgorithm';
 import { Check, AlertTriangle, Info, Loader2 } from 'lucide-react';
 import { logger } from '@/lib/logger';
@@ -46,7 +51,9 @@ const SuggestedMatches: React.FC<SuggestedMatchesProps> = ({
       // Fetch student preferences
       const { data: studentData } = await supabase
         .from('students')
-        .select('learning_pace, teaching_style_pref, session_structure_pref, primary_goal, availability_windows, communication_pref, grade')
+        .select(
+          'learning_pace, teaching_style_pref, session_structure_pref, primary_goal, availability_windows, communication_pref, grade'
+        )
         .eq('email', studentEmail)
         .single();
 
@@ -58,12 +65,17 @@ const SuggestedMatches: React.FC<SuggestedMatchesProps> = ({
       }
 
       const studentPrefs: StudentPreferences = {
-        learning_pace: studentData.learning_pace as StudentPreferences['learning_pace'],
-        teaching_style_pref: studentData.teaching_style_pref as StudentPreferences['teaching_style_pref'],
-        session_structure_pref: studentData.session_structure_pref as StudentPreferences['session_structure_pref'],
-        primary_goal: studentData.primary_goal as StudentPreferences['primary_goal'],
+        learning_pace:
+          studentData.learning_pace as StudentPreferences['learning_pace'],
+        teaching_style_pref:
+          studentData.teaching_style_pref as StudentPreferences['teaching_style_pref'],
+        session_structure_pref:
+          studentData.session_structure_pref as StudentPreferences['session_structure_pref'],
+        primary_goal:
+          studentData.primary_goal as StudentPreferences['primary_goal'],
         availability_windows: studentData.availability_windows || [],
-        communication_pref: studentData.communication_pref as StudentPreferences['communication_pref'],
+        communication_pref:
+          studentData.communication_pref as StudentPreferences['communication_pref'],
         grade: studentData.grade,
       };
 
@@ -80,7 +92,9 @@ const SuggestedMatches: React.FC<SuggestedMatchesProps> = ({
       // Fetch all tutors with their preferences
       const { data: tutorsData } = await supabase
         .from('tutors')
-        .select('email, teaching_style_strength, preferred_pace, pace_flexibility, session_structure, specialty_focus, availability_windows, grade_level_comfort');
+        .select(
+          'email, teaching_style_strength, preferred_pace, pace_flexibility, session_structure, specialty_focus, availability_windows, grade_level_comfort'
+        );
 
       if (!tutorsData) {
         setMatches([]);
@@ -89,37 +103,49 @@ const SuggestedMatches: React.FC<SuggestedMatchesProps> = ({
       }
 
       // Map tutors with their preferences
-      const tutorsWithPrefs = tutors.map(tutor => {
-        const tutorData = tutorsData.find(t => {
+      const tutorsWithPrefs = tutors.map((tutor) => {
+        const tutorData = tutorsData.find((t) => {
           // Match by checking if tutor name contains email username or vice versa
-          return tutors.some(tt => tt.id === tutor.id);
+          return tutors.some((tt) => tt.id === tutor.id);
         });
-        
-        // Try to find by iterating
-        const matchedTutorData = tutorsData.find(td => {
-          const tutorRecord = tutors.find(t => t.id === tutor.id);
-          if (!tutorRecord) return false;
-          // Match by name comparison (simplified)
-          return td.email && tutorRecord.name.toLowerCase().includes(td.email.split('@')[0].toLowerCase());
-        }) || tutorsData.find(td => td.email);
 
-        const prefs: TutorPreferences = matchedTutorData ? {
-          teaching_style_strength: matchedTutorData.teaching_style_strength as TutorPreferences['teaching_style_strength'],
-          preferred_pace: matchedTutorData.preferred_pace as TutorPreferences['preferred_pace'],
-          pace_flexibility: matchedTutorData.pace_flexibility ?? true,
-          session_structure: matchedTutorData.session_structure as TutorPreferences['session_structure'],
-          specialty_focus: matchedTutorData.specialty_focus as TutorPreferences['specialty_focus'],
-          availability_windows: matchedTutorData.availability_windows || [],
-          grade_level_comfort: matchedTutorData.grade_level_comfort || [],
-        } : {
-          teaching_style_strength: null,
-          preferred_pace: null,
-          pace_flexibility: true,
-          session_structure: null,
-          specialty_focus: null,
-          availability_windows: [],
-          grade_level_comfort: [],
-        };
+        // Try to find by iterating
+        const matchedTutorData =
+          tutorsData.find((td) => {
+            const tutorRecord = tutors.find((t) => t.id === tutor.id);
+            if (!tutorRecord) return false;
+            // Match by name comparison (simplified)
+            return (
+              td.email &&
+              tutorRecord.name
+                .toLowerCase()
+                .includes(td.email.split('@')[0].toLowerCase())
+            );
+          }) || tutorsData.find((td) => td.email);
+
+        const prefs: TutorPreferences = matchedTutorData
+          ? {
+              teaching_style_strength:
+                matchedTutorData.teaching_style_strength as TutorPreferences['teaching_style_strength'],
+              preferred_pace:
+                matchedTutorData.preferred_pace as TutorPreferences['preferred_pace'],
+              pace_flexibility: matchedTutorData.pace_flexibility ?? true,
+              session_structure:
+                matchedTutorData.session_structure as TutorPreferences['session_structure'],
+              specialty_focus:
+                matchedTutorData.specialty_focus as TutorPreferences['specialty_focus'],
+              availability_windows: matchedTutorData.availability_windows || [],
+              grade_level_comfort: matchedTutorData.grade_level_comfort || [],
+            }
+          : {
+              teaching_style_strength: null,
+              preferred_pace: null,
+              pace_flexibility: true,
+              session_structure: null,
+              specialty_focus: null,
+              availability_windows: [],
+              grade_level_comfort: [],
+            };
 
         return {
           id: tutor.id,
@@ -131,28 +157,38 @@ const SuggestedMatches: React.FC<SuggestedMatchesProps> = ({
       // Get tutors with emails for proper matching
       const { data: tutorEmails } = await supabase
         .from('tutors')
-        .select('id, email, name, teaching_style_strength, preferred_pace, pace_flexibility, session_structure, specialty_focus, availability_windows, grade_level_comfort');
+        .select(
+          'id, email, name, teaching_style_strength, preferred_pace, pace_flexibility, session_structure, specialty_focus, availability_windows, grade_level_comfort'
+        );
 
-      const enrichedTutors = tutors.map(tutor => {
-        const tutorRecord = tutorEmails?.find(te => te.name === tutor.name || te.id === tutor.id);
-        
-        const prefs: TutorPreferences = tutorRecord ? {
-          teaching_style_strength: tutorRecord.teaching_style_strength as TutorPreferences['teaching_style_strength'],
-          preferred_pace: tutorRecord.preferred_pace as TutorPreferences['preferred_pace'],
-          pace_flexibility: tutorRecord.pace_flexibility ?? true,
-          session_structure: tutorRecord.session_structure as TutorPreferences['session_structure'],
-          specialty_focus: tutorRecord.specialty_focus as TutorPreferences['specialty_focus'],
-          availability_windows: tutorRecord.availability_windows || [],
-          grade_level_comfort: tutorRecord.grade_level_comfort || [],
-        } : {
-          teaching_style_strength: null,
-          preferred_pace: null,
-          pace_flexibility: true,
-          session_structure: null,
-          specialty_focus: null,
-          availability_windows: [],
-          grade_level_comfort: [],
-        };
+      const enrichedTutors = tutors.map((tutor) => {
+        const tutorRecord = tutorEmails?.find(
+          (te) => te.name === tutor.name || te.id === tutor.id
+        );
+
+        const prefs: TutorPreferences = tutorRecord
+          ? {
+              teaching_style_strength:
+                tutorRecord.teaching_style_strength as TutorPreferences['teaching_style_strength'],
+              preferred_pace:
+                tutorRecord.preferred_pace as TutorPreferences['preferred_pace'],
+              pace_flexibility: tutorRecord.pace_flexibility ?? true,
+              session_structure:
+                tutorRecord.session_structure as TutorPreferences['session_structure'],
+              specialty_focus:
+                tutorRecord.specialty_focus as TutorPreferences['specialty_focus'],
+              availability_windows: tutorRecord.availability_windows || [],
+              grade_level_comfort: tutorRecord.grade_level_comfort || [],
+            }
+          : {
+              teaching_style_strength: null,
+              preferred_pace: null,
+              pace_flexibility: true,
+              session_structure: null,
+              specialty_focus: null,
+              availability_windows: [],
+              grade_level_comfort: [],
+            };
 
         return {
           id: tutor.id,
@@ -173,7 +209,8 @@ const SuggestedMatches: React.FC<SuggestedMatchesProps> = ({
 
   const getScoreColor = (percentage: number) => {
     if (percentage >= 75) return 'text-green-600 bg-green-50 border-green-200';
-    if (percentage >= 50) return 'text-yellow-600 bg-yellow-50 border-yellow-200';
+    if (percentage >= 50)
+      return 'text-yellow-600 bg-yellow-50 border-yellow-200';
     return 'text-red-600 bg-red-50 border-red-200';
   };
 
@@ -201,7 +238,8 @@ const SuggestedMatches: React.FC<SuggestedMatchesProps> = ({
               </TooltipTrigger>
               <TooltipContent>
                 <p className="max-w-xs">
-                  Based on learning preferences, teaching styles, pace compatibility, and schedule overlap.
+                  Based on learning preferences, teaching styles, pace
+                  compatibility, and schedule overlap.
                 </p>
               </TooltipContent>
             </Tooltip>
@@ -230,7 +268,10 @@ const SuggestedMatches: React.FC<SuggestedMatchesProps> = ({
                 className="flex items-center justify-between p-2 border rounded-lg hover:bg-accent/50 transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <Badge variant="outline" className="w-6 h-6 flex items-center justify-center p-0 text-xs">
+                  <Badge
+                    variant="outline"
+                    className="w-6 h-6 flex items-center justify-center p-0 text-xs"
+                  >
                     {index + 1}
                   </Badge>
                   <div>
@@ -240,12 +281,18 @@ const SuggestedMatches: React.FC<SuggestedMatchesProps> = ({
                         <Tooltip>
                           <TooltipTrigger>
                             <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                              {getMatchIcon(match.breakdown.teachingStyle.match)}
+                              {getMatchIcon(
+                                match.breakdown.teachingStyle.match
+                              )}
                               <span>Style</span>
                             </div>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Teaching style: {match.breakdown.teachingStyle.score}/{match.breakdown.teachingStyle.max} pts</p>
+                            <p>
+                              Teaching style:{' '}
+                              {match.breakdown.teachingStyle.score}/
+                              {match.breakdown.teachingStyle.max} pts
+                            </p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -258,7 +305,10 @@ const SuggestedMatches: React.FC<SuggestedMatchesProps> = ({
                             </div>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Pace compatibility: {match.breakdown.pace.score}/{match.breakdown.pace.max} pts</p>
+                            <p>
+                              Pace compatibility: {match.breakdown.pace.score}/
+                              {match.breakdown.pace.max} pts
+                            </p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -271,7 +321,10 @@ const SuggestedMatches: React.FC<SuggestedMatchesProps> = ({
                             </div>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Schedule overlap: {match.breakdown.schedule.score}/{match.breakdown.schedule.max} pts</p>
+                            <p>
+                              Schedule overlap: {match.breakdown.schedule.score}
+                              /{match.breakdown.schedule.max} pts
+                            </p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -279,7 +332,9 @@ const SuggestedMatches: React.FC<SuggestedMatchesProps> = ({
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge className={`${getScoreColor(match.percentage)} border`}>
+                  <Badge
+                    className={`${getScoreColor(match.percentage)} border`}
+                  >
                     {match.percentage}%
                   </Badge>
                   <Button
@@ -292,7 +347,7 @@ const SuggestedMatches: React.FC<SuggestedMatchesProps> = ({
                 </div>
               </div>
             ))}
-            {matches.some(m => !m.preferencesComplete) && (
+            {matches.some((m) => !m.preferencesComplete) && (
               <p className="text-xs text-muted-foreground mt-2">
                 ⚠️ Some tutors haven't completed their preferences
               </p>

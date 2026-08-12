@@ -12,16 +12,24 @@ const SubjectResourcesList: React.FC = () => {
   const [expandedSubject, setExpandedSubject] = useState<number | null>(null);
   const navigate = useNavigate();
 
-  const filteredSubjects = subjects.map(subject => ({
-    ...subject,
-    topics: subject.topics.filter(topic =>
-      topic.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      topic.resources.some(r => 
-        r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        r.source.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    ),
-  })).filter(subject => subject.topics.length > 0 || subject.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredSubjects = subjects
+    .map((subject) => ({
+      ...subject,
+      topics: subject.topics.filter(
+        (topic) =>
+          topic.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          topic.resources.some(
+            (r) =>
+              r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              r.source.toLowerCase().includes(searchQuery.toLowerCase())
+          )
+      ),
+    }))
+    .filter(
+      (subject) =>
+        subject.topics.length > 0 ||
+        subject.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
   const handleSubjectClick = (subjectId: number) => {
     setExpandedSubject(expandedSubject === subjectId ? null : subjectId);
@@ -64,7 +72,12 @@ const SubjectResourcesList: React.FC = () => {
                     <div>
                       <CardTitle className="text-lg">{subject.name}</CardTitle>
                       <p className="text-sm text-muted-foreground">
-                        {subject.topics.length} topics • {subject.topics.reduce((acc, t) => acc + t.resources.length, 0)} resources
+                        {subject.topics.length} topics •{' '}
+                        {subject.topics.reduce(
+                          (acc, t) => acc + t.resources.length,
+                          0
+                        )}{' '}
+                        resources
                       </p>
                     </div>
                   </div>
@@ -79,11 +92,16 @@ const SubjectResourcesList: React.FC = () => {
                   <div className="space-y-4">
                     {subject.topics.slice(0, 3).map((topic, idx) => (
                       <div key={idx} className="space-y-2">
-                        <h4 className="font-medium text-sm text-foreground">{topic.name}</h4>
-                        <TopicResourceLinks resources={topic.resources} compact />
+                        <h4 className="font-medium text-sm text-foreground">
+                          {topic.name}
+                        </h4>
+                        <TopicResourceLinks
+                          resources={topic.resources}
+                          compact
+                        />
                       </div>
                     ))}
-                    
+
                     {subject.topics.length > 3 && (
                       <p className="text-sm text-muted-foreground">
                         +{subject.topics.length - 3} more topics
@@ -111,7 +129,9 @@ const SubjectResourcesList: React.FC = () => {
 
       {filteredSubjects.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-muted-foreground">No resources found matching "{searchQuery}"</p>
+          <p className="text-muted-foreground">
+            No resources found matching "{searchQuery}"
+          </p>
         </div>
       )}
     </div>

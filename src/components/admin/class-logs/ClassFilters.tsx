@@ -1,4 +1,3 @@
-
 import React from 'react';
 import FilterControls from '@/components/shared/FilterControls';
 
@@ -39,19 +38,19 @@ const ClassFilters: React.FC<ClassFiltersProps> = ({
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         searchPlaceholder="Search by tutor, student, subject (use commas to combine)"
-        
         showDateFilter={true}
         dateFilter={dateFilter}
         setDateFilter={setDateFilter}
-        
         clearFilters={clearFilters}
       />
-      
+
       {/* Payment status and method filters */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
         {paymentFilter !== undefined && setPaymentFilter && (
           <div className="flex items-center gap-2 min-w-0">
-            <label className="text-sm font-medium whitespace-nowrap">Payment:</label>
+            <label className="text-sm font-medium whitespace-nowrap">
+              Payment:
+            </label>
             <select
               value={paymentFilter}
               onChange={(e) => setPaymentFilter(e.target.value)}
@@ -68,7 +67,9 @@ const ClassFilters: React.FC<ClassFiltersProps> = ({
         )}
         {paymentMethodFilter !== undefined && setPaymentMethodFilter && (
           <div className="flex items-center gap-2 min-w-0">
-            <label className="text-sm font-medium whitespace-nowrap">Method:</label>
+            <label className="text-sm font-medium whitespace-nowrap">
+              Method:
+            </label>
             <select
               value={paymentMethodFilter}
               onChange={(e) => setPaymentMethodFilter(e.target.value)}

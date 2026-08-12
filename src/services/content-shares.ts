@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import type { PostgrestSingleResponse } from '@supabase/supabase-js';
 
@@ -20,23 +19,23 @@ export async function fetchContentShares(): Promise<ContentShareItem[]> {
     log.error('Error fetching content shares', result.error);
     throw result.error;
   }
-  
+
   const shares = result.data || [];
   const validShares: ContentShareItem[] = [];
-  
+
   for (const share of shares) {
     if (!share.file_path) {
       validShares.push(share);
       continue;
     }
-    
+
     try {
       const { data: fileData, error: fileError } = await supabase.storage
         .from('shared_content')
         .list(share.file_path.split('/').slice(0, -1).join('/'), {
-          search: share.file_path.split('/').pop()
+          search: share.file_path.split('/').pop(),
         });
-      
+
       if (!fileError && fileData && fileData.length > 0) {
         validShares.push(share);
       }
@@ -44,7 +43,7 @@ export async function fetchContentShares(): Promise<ContentShareItem[]> {
       log.warn(`File ${share.file_path} not found in storage, skipping share`);
     }
   }
-  
+
   return validShares;
 }
 
@@ -96,23 +95,23 @@ export async function fetchUserContentShares(
     log.error('Error fetching user content shares', result.error);
     throw result.error;
   }
-  
+
   const shares = result.data || [];
   const validShares: ContentShareItem[] = [];
-  
+
   for (const share of shares) {
     if (!share.file_path) {
       validShares.push(share);
       continue;
     }
-    
+
     try {
       const { data: fileData, error: fileError } = await supabase.storage
         .from('shared_content')
         .list(share.file_path.split('/').slice(0, -1).join('/'), {
-          search: share.file_path.split('/').pop()
+          search: share.file_path.split('/').pop(),
         });
-      
+
       if (!fileError && fileData && fileData.length > 0) {
         validShares.push(share);
       }
@@ -120,6 +119,6 @@ export async function fetchUserContentShares(
       log.warn(`File ${share.file_path} not found in storage, skipping share`);
     }
   }
-  
+
   return validShares;
 }

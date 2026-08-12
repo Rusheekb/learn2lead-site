@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Notification } from '@/types/notificationTypes';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -38,17 +37,17 @@ const NotificationsList: React.FC<NotificationsListProps> = ({
     }
   };
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
     <>
       <div className="flex items-center justify-between p-4 border-b">
         <h3 className="font-medium">Notifications</h3>
         {unreadCount > 0 && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={handleMarkAllRead} 
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleMarkAllRead}
             className="text-xs"
           >
             <Check className="h-4 w-4 mr-1" />
@@ -81,14 +80,20 @@ const NotificationsList: React.FC<NotificationsListProps> = ({
                   !notification.read && 'bg-blue-50 dark:bg-blue-900/20'
                 )}
               >
-                <div className={cn(
-                  'text-sm font-medium',
-                  !notification.read ? 'text-gray-900 dark:text-gray-50' : 'text-gray-700 dark:text-gray-300'
-                )}>
+                <div
+                  className={cn(
+                    'text-sm font-medium',
+                    !notification.read
+                      ? 'text-gray-900 dark:text-gray-50'
+                      : 'text-gray-700 dark:text-gray-300'
+                  )}
+                >
                   {notification.message}
                 </div>
                 <div className="text-xs text-gray-500 dark:text-gray-400">
-                  {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                  {formatDistanceToNow(new Date(notification.created_at), {
+                    addSuffix: true,
+                  })}
                 </div>
               </div>
             ))}

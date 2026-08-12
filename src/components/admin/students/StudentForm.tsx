@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { DialogFooter } from '@/components/ui/dialog';
@@ -13,7 +12,14 @@ import { Student } from './StudentTable';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { studentSchema } from '@/lib/validation';
 
@@ -71,7 +77,7 @@ const StudentForm: React.FC<StudentFormProps> = ({ onAddStudent }) => {
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="email"
@@ -79,26 +85,26 @@ const StudentForm: React.FC<StudentFormProps> = ({ onAddStudent }) => {
               <FormItem className="grid gap-2">
                 <FormLabel htmlFor="email">Email</FormLabel>
                 <FormControl>
-                  <Input 
-                    id="email" 
-                    type="email" 
-                    placeholder="john.smith@example.com" 
-                    {...field} 
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="john.smith@example.com"
+                    {...field}
                   />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="grade"
             render={({ field }) => (
               <FormItem className="grid gap-2">
                 <FormLabel htmlFor="grade">Grade Level</FormLabel>
-                <Select 
-                  onValueChange={field.onChange} 
+                <Select
+                  onValueChange={field.onChange}
                   defaultValue={field.value}
                 >
                   <FormControl>
@@ -117,13 +123,15 @@ const StudentForm: React.FC<StudentFormProps> = ({ onAddStudent }) => {
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="subjects"
             render={({ field }) => (
               <FormItem className="grid gap-2">
-                <FormLabel htmlFor="subjects">Subjects (comma-separated)</FormLabel>
+                <FormLabel htmlFor="subjects">
+                  Subjects (comma-separated)
+                </FormLabel>
                 <FormControl>
                   <Input
                     id="subjects"

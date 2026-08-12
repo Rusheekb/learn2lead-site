@@ -4,7 +4,10 @@ import StudentList from './StudentList';
 import StudentListSkeleton from './StudentListSkeleton';
 import StudentDetailsDialog from './StudentDetailsDialog';
 import { useAuth } from '@/contexts/AuthContext';
-import { fetchTutorStudentsByEmail, TutorStudentData } from '@/services/tutors/tutorStudentsService';
+import {
+  fetchTutorStudentsByEmail,
+  TutorStudentData,
+} from '@/services/tutors/tutorStudentsService';
 import { useQuery } from '@tanstack/react-query';
 import type { Student } from '@/types/sharedTypes';
 
@@ -18,13 +21,15 @@ const TutorStudents: React.FC = memo(() => {
     queryKey: ['tutorStudentsList', user?.id],
     queryFn: async () => {
       const tutorStudents = await fetchTutorStudentsByEmail();
-      return tutorStudents.map((ts: TutorStudentData): Student => ({
-        id: ts.student_id,
-        name: ts.student_name,
-        email: ts.student_email,
-        subjects: ts.subjects || [],
-        nextSession: undefined,
-      }));
+      return tutorStudents.map(
+        (ts: TutorStudentData): Student => ({
+          id: ts.student_id,
+          name: ts.student_name,
+          email: ts.student_email,
+          subjects: ts.subjects || [],
+          nextSession: undefined,
+        })
+      );
     },
     enabled: !!user?.id,
     staleTime: 5 * 60 * 1000, // 5 minutes

@@ -55,12 +55,12 @@ AccordionTrigger.displayName = AccordionPrimitive.Trigger.displayName;
 
 // Content animation variants
 const contentVariants = {
-  collapsed: { 
-    height: 0, 
+  collapsed: {
+    height: 0,
     opacity: 0,
   },
-  expanded: { 
-    height: 'auto', 
+  expanded: {
+    height: 'auto',
     opacity: 1,
   },
 };
@@ -69,11 +69,7 @@ const AccordionContent = React.forwardRef<
   React.ElementRef<typeof AccordionPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Content>
 >(({ className, children, ...props }, ref) => (
-  <AccordionPrimitive.Content
-    ref={ref}
-    asChild
-    {...props}
-  >
+  <AccordionPrimitive.Content ref={ref} asChild {...props}>
     <motion.div
       initial="collapsed"
       animate="expanded"
@@ -85,7 +81,7 @@ const AccordionContent = React.forwardRef<
       }}
       className="overflow-hidden text-sm"
     >
-      <motion.div 
+      <motion.div
         className={cn('pb-4 pt-0', className)}
         initial={{ y: -10 }}
         animate={{ y: 0 }}

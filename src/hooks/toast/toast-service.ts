@@ -1,4 +1,3 @@
-
 import { toast } from './use-toast';
 import type { ToastOptions } from './types';
 

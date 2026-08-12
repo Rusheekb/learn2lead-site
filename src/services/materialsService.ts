@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
@@ -30,7 +29,7 @@ export async function uploadMaterial(
     }
 
     const { data } = supabase.storage.from('materials').getPublicUrl(filePath);
-    
+
     return data.publicUrl;
   } catch (error) {
     log.error('Error in uploadMaterial', error);
@@ -97,7 +96,7 @@ export async function removeMaterialFromClass(
     }
 
     const existingUrls = data.materials_url || [];
-    const updatedUrls = existingUrls.filter(url => url !== materialUrl);
+    const updatedUrls = existingUrls.filter((url) => url !== materialUrl);
 
     const { error: updateError } = await supabase
       .from('scheduled_classes')
@@ -113,11 +112,11 @@ export async function removeMaterialFromClass(
     const filePathMatch = materialUrl.match(/\/materials\/([^?]+)/);
     if (filePathMatch && filePathMatch[1]) {
       const filePath = filePathMatch[1];
-      
+
       const { error: removeError } = await supabase.storage
         .from('materials')
         .remove([filePath]);
-        
+
       if (removeError) {
         log.error('Error removing file from storage', removeError);
       }

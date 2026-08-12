@@ -8,10 +8,13 @@ interface TopicResourceLinksProps {
   compact?: boolean;
 }
 
-const TopicResourceLinks: React.FC<TopicResourceLinksProps> = ({ resources, compact = false }) => {
-  const videos = resources.filter(r => r.type === 'video');
-  const articles = resources.filter(r => r.type === 'article');
-  const practice = resources.filter(r => r.type === 'practice');
+const TopicResourceLinks: React.FC<TopicResourceLinksProps> = ({
+  resources,
+  compact = false,
+}) => {
+  const videos = resources.filter((r) => r.type === 'video');
+  const articles = resources.filter((r) => r.type === 'article');
+  const practice = resources.filter((r) => r.type === 'practice');
 
   if (compact) {
     // Compact view: just show all resources in a simple list

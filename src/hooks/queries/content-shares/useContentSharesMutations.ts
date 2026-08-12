@@ -1,6 +1,9 @@
-
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createContentShare, updateContentShare, deleteContentShare } from '@/services/content-shares';
+import {
+  createContentShare,
+  updateContentShare,
+  deleteContentShare,
+} from '@/services/content-shares';
 import { ContentShareItem } from '@/types/sharedTypes';
 import { toast } from 'sonner';
 import { contentSharesKeys } from './queryKeys';
@@ -19,20 +22,24 @@ export const useContentSharesMutations = () => {
       queryClient.invalidateQueries({ queryKey: contentSharesKeys.lists() });
     },
     onError: (error) => {
-      toast.error(`Failed to share content: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(
+        `Failed to share content: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     },
   });
 
   // Update a content share
   const updateMutation = useMutation({
-    mutationFn: (params: { id: string, updates: Partial<ContentShareItem> }) =>
+    mutationFn: (params: { id: string; updates: Partial<ContentShareItem> }) =>
       updateContentShare(params.id, params.updates),
     onSuccess: () => {
       toast.success('Content share updated successfully');
       queryClient.invalidateQueries({ queryKey: contentSharesKeys.lists() });
     },
     onError: (error) => {
-      toast.error(`Failed to update content share: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(
+        `Failed to update content share: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     },
   });
 
@@ -44,13 +51,15 @@ export const useContentSharesMutations = () => {
       queryClient.invalidateQueries({ queryKey: contentSharesKeys.lists() });
     },
     onError: (error) => {
-      toast.error(`Failed to delete content share: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(
+        `Failed to delete content share: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     },
   });
 
   return {
     createShare: createMutation.mutate,
-    updateShare: (id: string, updates: Partial<ContentShareItem>) => 
+    updateShare: (id: string, updates: Partial<ContentShareItem>) =>
       updateMutation.mutate({ id, updates }),
     deleteShare: deleteMutation.mutate,
   };

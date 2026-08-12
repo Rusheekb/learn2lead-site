@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, Eye, Clock } from 'lucide-react';
@@ -47,7 +46,7 @@ const ShareTable: React.FC<ShareTableProps> = ({
     },
     {
       header: 'Status',
-      cell: (share) => (
+      cell: (share) =>
         share.viewed_at ? (
           <div className="flex items-center text-green-600">
             <Eye className="h-4 w-4 mr-1" /> Viewed
@@ -56,8 +55,7 @@ const ShareTable: React.FC<ShareTableProps> = ({
           <div className="flex items-center text-amber-600">
             <Clock className="h-4 w-4 mr-1" /> Pending
           </div>
-        )
-      ),
+        ),
     },
     {
       header: 'Actions',
@@ -92,13 +90,7 @@ const ShareTable: React.FC<ShareTableProps> = ({
     },
   ];
 
-  return (
-    <DataTable
-      data={shares}
-      columns={columns}
-      showCard={false}
-    />
-  );
+  return <DataTable data={shares} columns={columns} showCard={false} />;
 };
 
 export default ShareTable;

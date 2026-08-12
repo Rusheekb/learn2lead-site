@@ -81,6 +81,6 @@ export const useShareForm = (userId: string | undefined) => {
     file,
     setFile,
     isUploading,
-    handleShare
+    handleShare,
   };
 };

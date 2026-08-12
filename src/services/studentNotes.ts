@@ -13,7 +13,9 @@ export interface StudentNote {
   updated_at: string;
 }
 
-export async function fetchStudentNotes(studentId: string): Promise<StudentNote[]> {
+export async function fetchStudentNotes(
+  studentId: string
+): Promise<StudentNote[]> {
   const { data, error } = await supabase
     .from('student_notes')
     .select('*')

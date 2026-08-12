@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { format } from 'date-fns';
 import { ClassEvent } from '@/types/tutorTypes';
@@ -12,13 +11,23 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { addWeeks, eachWeekOfInterval, isBefore, isAfter, startOfDay } from 'date-fns';
+import {
+  addWeeks,
+  eachWeekOfInterval,
+  isBefore,
+  isAfter,
+  startOfDay,
+} from 'date-fns';
 
 interface StudentOption {
   id: string;
@@ -66,9 +75,7 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
         <Input
           id="title"
           value={newEvent.title || ''}
-          onChange={(e) =>
-            setNewEvent({ ...newEvent, title: e.target.value })
-          }
+          onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
           placeholder="Enter class title"
           required
           className={!newEvent.title ? 'border-red-300' : ''}
@@ -88,7 +95,9 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
           }
           required
         >
-          <SelectTrigger className={`w-full ${!newEvent.subject ? 'border-red-300' : ''}`}>
+          <SelectTrigger
+            className={`w-full ${!newEvent.subject ? 'border-red-300' : ''}`}
+          >
             <SelectValue placeholder="Select Subject" />
           </SelectTrigger>
           <SelectContent>
@@ -107,12 +116,14 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
       {/* Student */}
       <div className="space-y-2">
         <Label htmlFor="student">Student *</Label>
-        <Select 
-          value={newEvent.studentId || ''} 
+        <Select
+          value={newEvent.studentId || ''}
           onValueChange={(value) => onStudentSelect(value)}
           required
         >
-          <SelectTrigger className={`w-full ${!newEvent.studentId ? 'border-red-300' : ''}`}>
+          <SelectTrigger
+            className={`w-full ${!newEvent.studentId ? 'border-red-300' : ''}`}
+          >
             <SelectValue placeholder="Select Student" />
           </SelectTrigger>
           <SelectContent>
@@ -133,7 +144,9 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
           <p className="text-sm text-red-600">Please select a student</p>
         )}
         {newEvent.relationshipId && (
-          <p className="text-xs text-gray-500">Relationship ID: {newEvent.relationshipId}</p>
+          <p className="text-xs text-gray-500">
+            Relationship ID: {newEvent.relationshipId}
+          </p>
         )}
       </div>
 
@@ -151,7 +164,11 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
               )}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
-              {newEvent.date ? format(newEvent.date as Date, 'PPP') : <span>Pick a date</span>}
+              {newEvent.date ? (
+                format(newEvent.date as Date, 'PPP')
+              ) : (
+                <span>Pick a date</span>
+              )}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0">
@@ -161,11 +178,17 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
               onSelect={(date) => {
                 if (date) {
                   // Ensure we use the local date without timezone conversion
-                  const localDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+                  const localDate = new Date(
+                    date.getFullYear(),
+                    date.getMonth(),
+                    date.getDate()
+                  );
                   setNewEvent({ ...newEvent, date: localDate });
                 }
               }}
-              disabled={(date) => date < new Date(new Date().setDate(new Date().getDate() - 1))} // Disable past dates
+              disabled={(date) =>
+                date < new Date(new Date().setDate(new Date().getDate() - 1))
+              } // Disable past dates
               initialFocus
             />
           </PopoverContent>
@@ -228,12 +251,20 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
       {/* Recurrence Section */}
       <div className="md:col-span-2 space-y-4 rounded-lg border p-4">
         <div className="flex items-center justify-between">
-          <Label htmlFor="recurring" className="cursor-pointer">Repeat weekly</Label>
+          <Label htmlFor="recurring" className="cursor-pointer">
+            Repeat weekly
+          </Label>
           <Switch
             id="recurring"
             checked={newEvent.recurring || false}
             onCheckedChange={(checked) =>
-              setNewEvent({ ...newEvent, recurring: checked, recurringUntil: checked ? addWeeks(newEvent.date as Date || new Date(), 4) : null })
+              setNewEvent({
+                ...newEvent,
+                recurring: checked,
+                recurringUntil: checked
+                  ? addWeeks((newEvent.date as Date) || new Date(), 4)
+                  : null,
+              })
             }
             disabled={!newEvent.date}
           />
@@ -249,32 +280,47 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
                     variant="outline"
                     className={cn(
                       'w-full justify-start text-left font-normal',
-                      !(newEvent as any).recurringUntil && 'text-muted-foreground'
+                      !(newEvent as any).recurringUntil &&
+                        'text-muted-foreground'
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {(newEvent as any).recurringUntil
-                      ? format((newEvent as any).recurringUntil as Date, 'PPP')
-                      : <span>Pick an end date</span>}
+                    {(newEvent as any).recurringUntil ? (
+                      format((newEvent as any).recurringUntil as Date, 'PPP')
+                    ) : (
+                      <span>Pick an end date</span>
+                    )}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
                   <Calendar
                     mode="single"
-                    selected={(newEvent as any).recurringUntil as Date | undefined}
+                    selected={
+                      (newEvent as any).recurringUntil as Date | undefined
+                    }
                     onSelect={(date) => {
                       if (date) {
-                        const localDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-                        setNewEvent({ ...newEvent, recurringUntil: localDate } as any);
+                        const localDate = new Date(
+                          date.getFullYear(),
+                          date.getMonth(),
+                          date.getDate()
+                        );
+                        setNewEvent({
+                          ...newEvent,
+                          recurringUntil: localDate,
+                        } as any);
                       }
                     }}
                     disabled={(date) => {
                       const startDate = startOfDay(newEvent.date as Date);
                       const maxDate = addWeeks(startDate, 12);
-                      return isBefore(date, addWeeks(startDate, 1)) || isAfter(date, maxDate);
+                      return (
+                        isBefore(date, addWeeks(startDate, 1)) ||
+                        isAfter(date, maxDate)
+                      );
                     }}
                     initialFocus
-                    className={cn("p-3 pointer-events-auto")}
+                    className={cn('p-3 pointer-events-auto')}
                   />
                 </PopoverContent>
               </Popover>
@@ -286,18 +332,25 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
               if (!endDate) return null;
               const weeks = eachWeekOfInterval(
                 { start: startDate, end: endDate },
-                { weekStartsOn: (startDate.getDay() as 0 | 1 | 2 | 3 | 4 | 5 | 6) }
+                {
+                  weekStartsOn: startDate.getDay() as 0 | 1 | 2 | 3 | 4 | 5 | 6,
+                }
               );
               // eachWeekOfInterval may include the start week; count dates that match the weekday
               const count = Math.min(
-                Array.from({ length: 12 }, (_, i) => addWeeks(startDate, i))
-                  .filter((d) => !isAfter(d, endDate)).length,
+                Array.from({ length: 12 }, (_, i) =>
+                  addWeeks(startDate, i)
+                ).filter((d) => !isAfter(d, endDate)).length,
                 12
               );
               const dayName = format(startDate, 'EEEE');
               return (
                 <p className="text-sm text-muted-foreground">
-                  This will create <strong>{count} class{count !== 1 ? 'es' : ''}</strong> on {dayName}s
+                  This will create{' '}
+                  <strong>
+                    {count} class{count !== 1 ? 'es' : ''}
+                  </strong>{' '}
+                  on {dayName}s
                   {newEvent.startTime && ` at ${newEvent.startTime}`}.
                 </p>
               );
@@ -312,9 +365,7 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
         <Textarea
           id="notes"
           value={newEvent.notes || ''}
-          onChange={(e) =>
-            setNewEvent({ ...newEvent, notes: e.target.value })
-          }
+          onChange={(e) => setNewEvent({ ...newEvent, notes: e.target.value })}
           placeholder="Class details, topics to cover, etc."
           rows={4}
         />

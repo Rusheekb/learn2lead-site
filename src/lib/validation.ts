@@ -37,10 +37,7 @@ export const fields = {
       .email({ message: validationMessages.email })
       .max(255, { message: validationMessages.maxLength('Email', 255) }),
 
-  password: () =>
-    z
-      .string()
-      .min(6, { message: validationMessages.password }),
+  password: () => z.string().min(6, { message: validationMessages.password }),
 
   url: (label = 'URL', optional = false) => {
     const base = z.string().url({ message: validationMessages.url });
@@ -51,24 +48,39 @@ export const fields = {
     z
       .string()
       .trim()
-      .min(min, { message: min === 1 ? validationMessages.required(label) : validationMessages.minLength(label, min) })
+      .min(min, {
+        message:
+          min === 1
+            ? validationMessages.required(label)
+            : validationMessages.minLength(label, min),
+      })
       .max(max, { message: validationMessages.maxLength(label, max) }),
 
   optionalText: (label: string, max = 1000) =>
-    z.string().max(max, { message: validationMessages.maxLength(label, max) }).optional().or(z.literal('')),
+    z
+      .string()
+      .max(max, { message: validationMessages.maxLength(label, max) })
+      .optional()
+      .or(z.literal('')),
 
   positiveNumber: (label: string) =>
     z
       .string()
-      .refine((val) => !isNaN(Number(val)), { message: `${label} must be a number` })
-      .refine((val) => Number(val) >= 0, { message: validationMessages.positiveNumber(label) }),
+      .refine((val) => !isNaN(Number(val)), {
+        message: `${label} must be a number`,
+      })
+      .refine((val) => Number(val) >= 0, {
+        message: validationMessages.positiveNumber(label),
+      }),
 } as const;
 
 // ─── Composite schemas ──────────────────────────────────────────────────────
 
 export const signInSchema = z.object({
   email: fields.email(),
-  password: z.string().min(1, { message: validationMessages.required('Password') }),
+  password: z
+    .string()
+    .min(1, { message: validationMessages.required('Password') }),
 });
 
 export const signUpSchema = z.object({
@@ -123,7 +135,9 @@ export const getFirstError = (error: z.ZodError): string =>
 export function validateForm<T extends z.ZodSchema>(
   schema: T,
   data: unknown
-): { success: true; data: z.infer<T> } | { success: false; errors: Record<string, string>; firstError: string } {
+):
+  | { success: true; data: z.infer<T> }
+  | { success: false; errors: Record<string, string>; firstError: string } {
   const result = schema.safeParse(data);
   if (result.success) {
     return { success: true, data: result.data };

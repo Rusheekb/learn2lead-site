@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -21,13 +20,13 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
   description,
 }) => {
   const descriptionId = description ? `${id}-description` : undefined;
-  
+
   return (
     <div className={`flex items-center space-x-2 ${className}`}>
-      <Switch 
-        id={id} 
-        checked={checked} 
-        onCheckedChange={onCheckedChange} 
+      <Switch
+        id={id}
+        checked={checked}
+        onCheckedChange={onCheckedChange}
         className="focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-tutoring-blue"
         aria-describedby={descriptionId}
       />

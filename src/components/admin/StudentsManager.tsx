@@ -1,4 +1,3 @@
-
 import React, { memo, useCallback, useState } from 'react';
 import { Student } from '@/types/tutorTypes';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +6,14 @@ import { UserCheck } from 'lucide-react';
 import SearchInput from '@/components/shared/filters/SearchInput';
 import PaginationControls from '@/components/common/Pagination';
 import { useStudentsQuery } from '@/hooks/queries/useStudentsQuery';
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { RolePromotionDialog } from './RolePromotionDialog';
@@ -21,7 +27,9 @@ interface StudentsManagerProps {
 
 const StudentsManager: React.FC<StudentsManagerProps> = memo(({ onSelect }) => {
   const { userRole } = useAuth();
-  const [promotionStudent, setPromotionStudent] = useState<Student | null>(null);
+  const [promotionStudent, setPromotionStudent] = useState<Student | null>(
+    null
+  );
   const {
     students,
     isLoading,
@@ -37,31 +45,40 @@ const StudentsManager: React.FC<StudentsManagerProps> = memo(({ onSelect }) => {
     setSearchTerm,
     refetch,
   } = useStudentsQuery();
-  
-  const handleDeleteStudent = useCallback(async (studentId: string) => {
-    try {
-      await deleteStudent(studentId);
-      toast.success("Student deleted successfully");
-    } catch (error) {
-      log.error('Error deleting student:', error);
-      toast.error("Failed to delete student");
-    }
-  }, [deleteStudent]);
+
+  const handleDeleteStudent = useCallback(
+    async (studentId: string) => {
+      try {
+        await deleteStudent(studentId);
+        toast.success('Student deleted successfully');
+      } catch (error) {
+        log.error('Error deleting student:', error);
+        toast.error('Failed to delete student');
+      }
+    },
+    [deleteStudent]
+  );
 
   const handlePromotionSuccess = useCallback(() => {
     setPromotionStudent(null);
     refetch();
   }, [refetch]);
 
-  const handlePromoteClick = useCallback((e: React.MouseEvent, student: Student) => {
-    e.stopPropagation();
-    setPromotionStudent(student);
-  }, []);
+  const handlePromoteClick = useCallback(
+    (e: React.MouseEvent, student: Student) => {
+      e.stopPropagation();
+      setPromotionStudent(student);
+    },
+    []
+  );
 
-  const handleDeleteClick = useCallback((e: React.MouseEvent, studentId: string) => {
-    e.stopPropagation();
-    handleDeleteStudent(studentId);
-  }, [handleDeleteStudent]);
+  const handleDeleteClick = useCallback(
+    (e: React.MouseEvent, studentId: string) => {
+      e.stopPropagation();
+      handleDeleteStudent(studentId);
+    },
+    [handleDeleteStudent]
+  );
 
   const handleClosePromotion = useCallback(() => {
     setPromotionStudent(null);
@@ -72,16 +89,16 @@ const StudentsManager: React.FC<StudentsManagerProps> = memo(({ onSelect }) => {
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold tracking-tight">Students Management</h2>
-      
+
       <Card>
         <CardHeader>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <CardTitle>Student Directory</CardTitle>
-            <SearchInput 
-              searchTerm={searchTerm} 
-              setSearchTerm={setSearchTerm} 
-              placeholder="Search students..." 
-              className="w-full md:w-64" 
+            <SearchInput
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              placeholder="Search students..."
+              className="w-full md:w-64"
             />
           </div>
         </CardHeader>
@@ -96,7 +113,9 @@ const StudentsManager: React.FC<StudentsManagerProps> = memo(({ onSelect }) => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
-                    <TableHead className="hidden sm:table-cell">Email</TableHead>
+                    <TableHead className="hidden sm:table-cell">
+                      Email
+                    </TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -109,9 +128,13 @@ const StudentsManager: React.FC<StudentsManagerProps> = memo(({ onSelect }) => {
                     >
                       <TableCell>
                         <div className="font-medium">{student.name}</div>
-                        <div className="text-xs text-muted-foreground sm:hidden">{student.email}</div>
+                        <div className="text-xs text-muted-foreground sm:hidden">
+                          {student.email}
+                        </div>
                       </TableCell>
-                      <TableCell className="hidden sm:table-cell">{student.email}</TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        {student.email}
+                      </TableCell>
                       <TableCell>
                         <div className="flex flex-col sm:flex-row gap-1 sm:gap-2">
                           {isAdmin && (
@@ -140,7 +163,7 @@ const StudentsManager: React.FC<StudentsManagerProps> = memo(({ onSelect }) => {
               </Table>
             </div>
           )}
-          
+
           <PaginationControls
             currentPage={page}
             totalPages={totalPages}
@@ -162,7 +185,7 @@ const StudentsManager: React.FC<StudentsManagerProps> = memo(({ onSelect }) => {
             id: promotionStudent.id,
             email: promotionStudent.email,
             name: promotionStudent.name,
-            role: 'student'
+            role: 'student',
           }}
           onSuccess={handlePromotionSuccess}
         />

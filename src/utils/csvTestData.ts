@@ -18,7 +18,7 @@ export const generateTestCSV = (): string => {
     'Tutor Cost',
     'Student Payment',
     'Tutor Payment',
-    'Additional Info'
+    'Additional Info',
   ];
 
   // Test scenarios:
@@ -43,7 +43,7 @@ export const generateTestCSV = (): string => {
       '25',
       '11/16/24',
       '11/17/24',
-      'Test update scenario'
+      'Test update scenario',
     ],
     // New record with auto-generated ID
     [
@@ -61,7 +61,7 @@ export const generateTestCSV = (): string => {
       '35',
       '',
       '',
-      'Test auto-generation'
+      'Test auto-generation',
     ],
     // New record with provided Class Number
     [
@@ -79,7 +79,7 @@ export const generateTestCSV = (): string => {
       '50',
       '11/21/24',
       '',
-      'Test insert with ID'
+      'Test insert with ID',
     ],
     // Another auto-generated scenario
     [
@@ -97,22 +97,28 @@ export const generateTestCSV = (): string => {
       '25',
       '',
       '',
-      'Second auto-generation test'
-    ]
+      'Second auto-generation test',
+    ],
   ];
 
   // Convert to CSV format
   const csvLines = [
     headers.join(','),
-    ...testRows.map(row => 
-      row.map(cell => {
-        // Escape cells with commas or quotes
-        if (cell.includes(',') || cell.includes('\"') || cell.includes('\n')) {
-          return `\"${cell.replace(/\"/g, '\"\"')}\"`;
-        }
-        return cell;
-      }).join(',')
-    )
+    ...testRows.map((row) =>
+      row
+        .map((cell) => {
+          // Escape cells with commas or quotes
+          if (
+            cell.includes(',') ||
+            cell.includes('\"') ||
+            cell.includes('\n')
+          ) {
+            return `\"${cell.replace(/\"/g, '\"\"')}\"`;
+          }
+          return cell;
+        })
+        .join(',')
+    ),
   ];
 
   return csvLines.join('\n');
@@ -126,9 +132,12 @@ export const downloadTestCSV = (): void => {
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   const url = URL.createObjectURL(blob);
-  
+
   link.setAttribute('href', url);
-  link.setAttribute('download', `test-class-logs-${new Date().toISOString().split('T')[0]}.csv`);
+  link.setAttribute(
+    'download',
+    `test-class-logs-${new Date().toISOString().split('T')[0]}.csv`
+  );
   link.style.visibility = 'hidden';
   document.body.appendChild(link);
   link.click();

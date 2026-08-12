@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { checkUpcomingClasses } from '@/services/notificationService';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,15 +8,15 @@ export const useClassNotifications = () => {
 
   useEffect(() => {
     if (!user) return;
-    
+
     // Check immediately on login
     checkUpcomingClasses();
-    
+
     // Then check every minute
     const intervalId = setInterval(() => {
       checkUpcomingClasses();
     }, 60000); // Check every minute
-    
+
     return () => {
       clearInterval(intervalId);
     };

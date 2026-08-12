@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Profile } from '@/hooks/useProfile';
@@ -14,18 +13,21 @@ interface ContentShareContainerProps {
   fetchUsers: () => Promise<Profile[]>;
 }
 
-const ContentShareContainer: React.FC<ContentShareContainerProps> = ({ role, fetchUsers }) => {
+const ContentShareContainer: React.FC<ContentShareContainerProps> = ({
+  role,
+  fetchUsers,
+}) => {
   const { user } = useAuth();
-  
+
   const {
     shares,
     isLoading,
     users,
     handleDownload,
     markAsViewed,
-    getUserName
+    getUserName,
   } = useContentShareData(user?.id, fetchUsers);
-  
+
   const {
     isOpen,
     setIsOpen,
@@ -36,9 +38,9 @@ const ContentShareContainer: React.FC<ContentShareContainerProps> = ({ role, fet
     file,
     setFile,
     isUploading,
-    handleShare
+    handleShare,
   } = useShareForm(user?.id);
-  
+
   return (
     <div className="space-y-6">
       <ShareActions openShareDialog={() => setIsOpen(true)} />

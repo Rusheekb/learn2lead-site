@@ -12,7 +12,8 @@ const DISMISS_KEY = 'pwa-install-dismissed';
 const DISMISS_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 export const PWAInstallPrompt: React.FC = () => {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [deferredPrompt, setDeferredPrompt] =
+    useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
 
   useEffect(() => {
@@ -71,7 +72,11 @@ export const PWAInstallPrompt: React.FC = () => {
                   Add to your home screen for faster access and offline support.
                 </p>
                 <div className="mt-3 flex items-center gap-2">
-                  <Button size="sm" onClick={handleInstall} className="h-8 text-xs gap-1.5">
+                  <Button
+                    size="sm"
+                    onClick={handleInstall}
+                    className="h-8 text-xs gap-1.5"
+                  >
                     <Download className="h-3.5 w-3.5" />
                     Install
                   </Button>

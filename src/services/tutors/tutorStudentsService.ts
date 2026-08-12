@@ -18,11 +18,11 @@ export interface TutorStudentData {
 
 export async function fetchTutorStudentsByEmail(): Promise<TutorStudentData[]> {
   const { data, error } = await supabase.rpc('get_tutor_students_by_email');
-  
+
   if (error) {
     log.error('Error fetching tutor students', error);
     throw error;
   }
-  
+
   return data || [];
 }

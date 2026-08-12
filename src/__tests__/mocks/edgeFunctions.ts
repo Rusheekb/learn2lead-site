@@ -14,7 +14,9 @@ export interface DeductCreditErrorResponse {
   code?: 'NO_SUBSCRIPTION' | 'INSUFFICIENT_CREDITS' | 'AUTH_ERROR';
 }
 
-export type DeductCreditResponse = DeductCreditSuccessResponse | DeductCreditErrorResponse;
+export type DeductCreditResponse =
+  | DeductCreditSuccessResponse
+  | DeductCreditErrorResponse;
 
 export interface RestoreCreditSuccessResponse {
   success: true;
@@ -27,7 +29,9 @@ export interface RestoreCreditErrorResponse {
   error: string;
 }
 
-export type RestoreCreditResponse = RestoreCreditSuccessResponse | RestoreCreditErrorResponse;
+export type RestoreCreditResponse =
+  | RestoreCreditSuccessResponse
+  | RestoreCreditErrorResponse;
 
 export interface CheckSubscriptionResponse {
   subscribed: boolean;
@@ -43,7 +47,9 @@ export interface CheckSubscriptionResponse {
 // Factory functions for creating mock responses
 export const edgeFunctionMocks = {
   deductCredit: {
-    success: (creditsRemaining: number): { data: DeductCreditSuccessResponse; error: null } => ({
+    success: (
+      creditsRemaining: number
+    ): { data: DeductCreditSuccessResponse; error: null } => ({
       data: {
         success: true,
         credits_remaining: creditsRemaining,
@@ -51,7 +57,7 @@ export const edgeFunctionMocks = {
       },
       error: null,
     }),
-    
+
     noSubscription: (): { data: DeductCreditErrorResponse; error: null } => ({
       data: {
         success: false,
@@ -60,8 +66,11 @@ export const edgeFunctionMocks = {
       },
       error: null,
     }),
-    
-    insufficientCredits: (): { data: DeductCreditErrorResponse; error: null } => ({
+
+    insufficientCredits: (): {
+      data: DeductCreditErrorResponse;
+      error: null;
+    } => ({
       data: {
         success: false,
         error: 'Insufficient credits. Please purchase more classes.',
@@ -69,15 +78,17 @@ export const edgeFunctionMocks = {
       },
       error: null,
     }),
-    
+
     authError: (): { data: null; error: { message: string } } => ({
       data: null,
       error: { message: 'Not authenticated' },
     }),
   },
-  
+
   restoreCredit: {
-    success: (newBalance: number): { data: RestoreCreditSuccessResponse; error: null } => ({
+    success: (
+      newBalance: number
+    ): { data: RestoreCreditSuccessResponse; error: null } => ({
       data: {
         success: true,
         credits_restored: 1,
@@ -85,7 +96,7 @@ export const edgeFunctionMocks = {
       },
       error: null,
     }),
-    
+
     failure: (): { data: RestoreCreditErrorResponse; error: null } => ({
       data: {
         success: false,
@@ -93,15 +104,18 @@ export const edgeFunctionMocks = {
       },
       error: null,
     }),
-    
+
     networkError: (): { data: null; error: { message: string } } => ({
       data: null,
       error: { message: 'Network error' },
     }),
   },
-  
+
   checkSubscription: {
-    active: (credits: number, planName = 'Standard'): { data: CheckSubscriptionResponse; error: null } => ({
+    active: (
+      credits: number,
+      planName = 'Standard'
+    ): { data: CheckSubscriptionResponse; error: null } => ({
       data: {
         subscribed: true,
         credits_remaining: credits,
@@ -112,7 +126,7 @@ export const edgeFunctionMocks = {
       },
       error: null,
     }),
-    
+
     inactive: (): { data: CheckSubscriptionResponse; error: null } => ({
       data: {
         subscribed: false,
@@ -122,8 +136,11 @@ export const edgeFunctionMocks = {
       },
       error: null,
     }),
-    
-    paused: (resumesAt: string, credits = 5): { data: CheckSubscriptionResponse; error: null } => ({
+
+    paused: (
+      resumesAt: string,
+      credits = 5
+    ): { data: CheckSubscriptionResponse; error: null } => ({
       data: {
         subscribed: true,
         credits_remaining: credits,
@@ -134,19 +151,23 @@ export const edgeFunctionMocks = {
       },
       error: null,
     }),
-    
-    lowCredits: (credits = 2): { data: CheckSubscriptionResponse; error: null } => ({
+
+    lowCredits: (
+      credits = 2
+    ): { data: CheckSubscriptionResponse; error: null } => ({
       data: {
         subscribed: true,
         credits_remaining: credits,
         plan_name: 'Basic',
-        price_per_class: 17.50,
+        price_per_class: 17.5,
         is_paused: false,
       },
       error: null,
     }),
-    
-    negativeCredits: (credits = -3): { data: CheckSubscriptionResponse; error: null } => ({
+
+    negativeCredits: (
+      credits = -3
+    ): { data: CheckSubscriptionResponse; error: null } => ({
       data: {
         subscribed: true,
         credits_remaining: credits,
@@ -156,22 +177,24 @@ export const edgeFunctionMocks = {
       },
       error: null,
     }),
-    
+
     error: (): { data: null; error: { message: string } } => ({
       data: null,
       error: { message: 'Failed to check subscription status' },
     }),
   },
-  
+
   manualCreditAllocation: {
-    success: (newBalance: number): { data: { success: true; new_balance: number }; error: null } => ({
+    success: (
+      newBalance: number
+    ): { data: { success: true; new_balance: number }; error: null } => ({
       data: {
         success: true,
         new_balance: newBalance,
       },
       error: null,
     }),
-    
+
     failure: (): { data: { success: false; error: string }; error: null } => ({
       data: {
         success: false,

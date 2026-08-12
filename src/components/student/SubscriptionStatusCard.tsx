@@ -10,7 +10,8 @@ import { TrendingUp, AlertCircle, ShoppingCart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export const SubscriptionStatusCard: React.FC = () => {
-  const { subscribed, planName, creditsRemaining, isLoading, error } = useSubscription();
+  const { subscribed, planName, creditsRemaining, isLoading, error } =
+    useSubscription();
   const navigate = useNavigate();
 
   if (isLoading) {
@@ -77,27 +78,32 @@ export const SubscriptionStatusCard: React.FC = () => {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">Credits Available</span>
+          <span className="text-sm text-muted-foreground">
+            Credits Available
+          </span>
           <CreditBadge credits={creditsRemaining} />
         </div>
 
         {creditsRemaining !== null && creditsRemaining === 0 && (
           <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
             <p className="text-sm text-destructive font-medium">
-              You've used all your credits. Purchase more to continue booking classes.
+              You've used all your credits. Purchase more to continue booking
+              classes.
             </p>
           </div>
         )}
 
-        {creditsRemaining !== null && creditsRemaining > 0 && creditsRemaining < 3 && (
-          <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
-            <p className="text-sm text-orange-700 dark:text-orange-400 font-medium">
-              Running low on credits — consider topping up!
-            </p>
-          </div>
-        )}
+        {creditsRemaining !== null &&
+          creditsRemaining > 0 &&
+          creditsRemaining < 3 && (
+            <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
+              <p className="text-sm text-orange-700 dark:text-orange-400 font-medium">
+                Running low on credits — consider topping up!
+              </p>
+            </div>
+          )}
 
-        <Button 
+        <Button
           variant={creditsRemaining === 0 ? 'default' : 'outline'}
           className="w-full"
           onClick={() => navigate('/pricing')}

@@ -12,10 +12,12 @@ interface FetchTutorsOptions {
   searchTerm?: string;
 }
 
-export async function fetchTutors(options: FetchTutorsOptions = {}): Promise<PaginatedResponse<Tutor>> {
+export async function fetchTutors(
+  options: FetchTutorsOptions = {}
+): Promise<PaginatedResponse<Tutor>> {
   const { page = 1, pageSize = 10, searchTerm = '' } = options;
   const offset = (page - 1) * pageSize;
-  
+
   let query = supabase.from('tutors').select('*', { count: 'exact' });
 
   if (searchTerm) {
@@ -25,13 +27,13 @@ export async function fetchTutors(options: FetchTutorsOptions = {}): Promise<Pag
   query = query.range(offset, offset + pageSize - 1).order('name');
 
   const result = await query;
-  
+
   if (result.error) {
     log.error('Error fetching tutors', result.error);
     throw result.error;
   }
-  
-  const tutors = (result.data || []).map(tutor => ({
+
+  const tutors = (result.data || []).map((tutor) => ({
     id: tutor.id,
     name: tutor.name,
     email: tutor.email,
@@ -47,7 +49,7 @@ export async function fetchTutors(options: FetchTutorsOptions = {}): Promise<Pag
     count: result.count || 0,
     page,
     pageSize,
-    hasMore: offset + tutors.length < (result.count || 0)
+    hasMore: offset + tutors.length < (result.count || 0),
   };
 }
 
@@ -57,20 +59,20 @@ export async function createTutor(tutor: Omit<Tutor, 'id'>): Promise<Tutor> {
     email: tutor.email,
     subjects: tutor.subjects || [],
     hourly_rate: tutor.hourlyRate,
-    active: tutor.active !== undefined ? tutor.active : true
+    active: tutor.active !== undefined ? tutor.active : true,
   };
-  
+
   const result = await supabase
     .from('tutors')
     .insert(dbTutor)
     .select()
     .single();
-  
+
   if (result.error) {
     log.error('Error creating tutor', result.error);
     throw result.error;
   }
-  
+
   return {
     id: result.data.id,
     name: result.data.name,
@@ -79,7 +81,7 @@ export async function createTutor(tutor: Omit<Tutor, 'id'>): Promise<Tutor> {
     rating: 5,
     classes: 0,
     hourlyRate: result.data.hourly_rate || 0,
-    active: result.data.active
+    active: result.data.active,
   };
 }
 
@@ -91,21 +93,22 @@ export async function updateTutor(
   if (updates.name !== undefined) dbUpdates.name = updates.name;
   if (updates.email !== undefined) dbUpdates.email = updates.email;
   if (updates.subjects !== undefined) dbUpdates.subjects = updates.subjects;
-  if (updates.hourlyRate !== undefined) dbUpdates.hourly_rate = updates.hourlyRate;
+  if (updates.hourlyRate !== undefined)
+    dbUpdates.hourly_rate = updates.hourlyRate;
   if (updates.active !== undefined) dbUpdates.active = updates.active;
-  
+
   const result = await supabase
     .from('tutors')
     .update(dbUpdates)
     .eq('id', id)
     .select()
     .single();
-  
+
   if (result.error) {
     log.error('Error updating tutor', result.error);
     throw result.error;
   }
-  
+
   return {
     id: result.data.id,
     name: result.data.name,
@@ -114,7 +117,7 @@ export async function updateTutor(
     rating: 5,
     classes: 0,
     hourlyRate: result.data.hourly_rate || 0,
-    active: result.data.active
+    active: result.data.active,
   };
 }
 
@@ -125,12 +128,12 @@ export async function deleteTutor(id: string): Promise<Tutor> {
     .eq('id', id)
     .select()
     .single();
-  
+
   if (result.error) {
     log.error('Error deleting tutor', result.error);
     throw result.error;
   }
-  
+
   return {
     id: result.data.id,
     name: result.data.name,
@@ -139,6 +142,6 @@ export async function deleteTutor(id: string): Promise<Tutor> {
     rating: 5,
     classes: 0,
     hourlyRate: result.data.hourly_rate || 0,
-    active: result.data.active
+    active: result.data.active,
   };
 }

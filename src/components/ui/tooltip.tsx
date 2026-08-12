@@ -12,12 +12,12 @@ const TooltipTrigger = TooltipPrimitive.Trigger;
 
 // Animation variants for tooltip
 const tooltipVariants = {
-  initial: { 
-    opacity: 0, 
+  initial: {
+    opacity: 0,
     scale: 0.92,
   },
-  animate: { 
-    opacity: 1, 
+  animate: {
+    opacity: 1,
     scale: 1,
     transition: {
       type: 'spring' as const,
@@ -25,8 +25,8 @@ const tooltipVariants = {
       damping: 25,
     },
   },
-  exit: { 
-    opacity: 0, 
+  exit: {
+    opacity: 0,
     scale: 0.92,
     transition: {
       duration: 0.1,

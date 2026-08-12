@@ -1,4 +1,3 @@
-
 import { Menu, X } from 'lucide-react';
 
 interface MobileMenuButtonProps {
@@ -8,7 +7,7 @@ interface MobileMenuButtonProps {
 
 const MobileMenuButton = ({ isOpen, onClick }: MobileMenuButtonProps) => {
   const label = isOpen ? 'Close menu' : 'Open menu';
-  
+
   return (
     <button
       onClick={onClick}
@@ -16,7 +15,11 @@ const MobileMenuButton = ({ isOpen, onClick }: MobileMenuButtonProps) => {
       aria-expanded={isOpen}
       aria-label={label}
     >
-      {isOpen ? <X size={24} aria-hidden="true" /> : <Menu size={24} aria-hidden="true" />}
+      {isOpen ? (
+        <X size={24} aria-hidden="true" />
+      ) : (
+        <Menu size={24} aria-hidden="true" />
+      )}
       <span className="sr-only">{label}</span>
     </button>
   );

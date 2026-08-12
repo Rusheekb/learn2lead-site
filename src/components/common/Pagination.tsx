@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Pagination,
@@ -41,13 +40,17 @@ const PaginationControls: React.FC<PaginationControlsProps> = ({
     }
 
     const pages = [1];
-    
+
     if (currentPage > 3) {
       pages.push(-1); // Ellipsis
     }
 
     // Pages around current page
-    for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+    for (
+      let i = Math.max(2, currentPage - 1);
+      i <= Math.min(totalPages - 1, currentPage + 1);
+      i++
+    ) {
       pages.push(i);
     }
 
@@ -75,32 +78,38 @@ const PaginationControls: React.FC<PaginationControlsProps> = ({
                 e.preventDefault();
                 if (hasPrevPage) onPrevPage();
               }}
-              className={!hasPrevPage ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              className={
+                !hasPrevPage
+                  ? 'pointer-events-none opacity-50'
+                  : 'cursor-pointer'
+              }
             />
           </PaginationItem>
 
-          {showPageNumbers && totalPages > 1 && getVisiblePages().map((page, idx) => (
-            <React.Fragment key={idx}>
-              {page < 0 ? (
-                <PaginationItem>
-                  <PaginationEllipsis />
-                </PaginationItem>
-              ) : (
-                <PaginationItem>
-                  <PaginationLink
-                    isActive={page === currentPage}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      onPageChange(page);
-                    }}
-                    className="cursor-pointer"
-                  >
-                    {page}
-                  </PaginationLink>
-                </PaginationItem>
-              )}
-            </React.Fragment>
-          ))}
+          {showPageNumbers &&
+            totalPages > 1 &&
+            getVisiblePages().map((page, idx) => (
+              <React.Fragment key={idx}>
+                {page < 0 ? (
+                  <PaginationItem>
+                    <PaginationEllipsis />
+                  </PaginationItem>
+                ) : (
+                  <PaginationItem>
+                    <PaginationLink
+                      isActive={page === currentPage}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        onPageChange(page);
+                      }}
+                      className="cursor-pointer"
+                    >
+                      {page}
+                    </PaginationLink>
+                  </PaginationItem>
+                )}
+              </React.Fragment>
+            ))}
 
           <PaginationItem>
             <PaginationNext
@@ -108,7 +117,11 @@ const PaginationControls: React.FC<PaginationControlsProps> = ({
                 e.preventDefault();
                 if (hasNextPage) onNextPage();
               }}
-              className={!hasNextPage ? "pointer-events-none opacity-50" : "cursor-pointer"}
+              className={
+                !hasNextPage
+                  ? 'pointer-events-none opacity-50'
+                  : 'cursor-pointer'
+              }
             />
           </PaginationItem>
         </PaginationContent>

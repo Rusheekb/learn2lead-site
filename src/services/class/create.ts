@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ensureDateFormat } from '@/utils/safeDateUtils';
@@ -25,10 +24,7 @@ export const createScheduledClassBatch = async (
     }));
 
     const { data, error } = await retryWithBackoff(
-      async () => supabase
-        .from('scheduled_classes')
-        .insert(rows)
-        .select('id'),
+      async () => supabase.from('scheduled_classes').insert(rows).select('id'),
       { maxRetries: 2 }
     );
 
@@ -79,11 +75,12 @@ export const createScheduledClass = async (
     };
 
     const { data, error } = await retryWithBackoff(
-      async () => supabase
-        .from('scheduled_classes')
-        .insert(insertData)
-        .select('id')
-        .single(),
+      async () =>
+        supabase
+          .from('scheduled_classes')
+          .insert(insertData)
+          .select('id')
+          .single(),
       { maxRetries: 2 }
     );
 

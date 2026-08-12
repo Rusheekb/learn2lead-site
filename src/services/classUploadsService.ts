@@ -20,18 +20,18 @@ export async function fetchClassUploads(
       .eq('class_id', classId);
 
     if (error) throw error;
-    
+
     const uploads = (data as ClassUploadRecord[]) || [];
     const validUploads: ClassUploadRecord[] = [];
-    
+
     for (const upload of uploads) {
       try {
         const { data: fileData, error: fileError } = await supabase.storage
           .from('materials')
           .list(upload.file_path.split('/').slice(0, -1).join('/'), {
-            search: upload.file_path.split('/').pop()
+            search: upload.file_path.split('/').pop(),
           });
-        
+
         if (!fileError && fileData && fileData.length > 0) {
           validUploads.push(upload);
         }
@@ -39,7 +39,7 @@ export async function fetchClassUploads(
         log.warn(`File ${upload.file_path} not found in storage, skipping`);
       }
     }
-    
+
     return mapToStudentUploads(validUploads);
   } catch (error) {
     log.error('Error fetching class uploads', error);
@@ -54,8 +54,10 @@ export async function uploadClassFile(
   note?: string
 ): Promise<StudentUpload | null> {
   try {
-    const { data: { session } } = await supabase.auth.getSession();
-    
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
     if (!session) {
       throw new Error('User not authenticated');
     }
@@ -65,15 +67,13 @@ export async function uploadClassFile(
     formData.append('bucket', 'materials');
     formData.append('path', `class_uploads/${classId}/`);
 
-    const { data: uploadResult, error: uploadError } = await supabase.functions.invoke(
-      'secure-file-upload',
-      {
+    const { data: uploadResult, error: uploadError } =
+      await supabase.functions.invoke('secure-file-upload', {
         body: formData,
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
-      }
-    );
+      });
 
     if (uploadError || !uploadResult?.success) {
       log.error('Secure upload error', uploadError || uploadResult?.error);

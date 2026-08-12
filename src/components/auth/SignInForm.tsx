@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,10 +25,15 @@ const SignInForm: React.FC<SignInFormProps> = ({
   isLoading,
   handleSubmit,
   handleGoogleSignIn,
-  onForgotPassword
+  onForgotPassword,
 }) => {
   return (
-    <form onSubmit={handleSubmit} className="space-y-4" aria-label="Sign in form" noValidate>
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-4"
+      aria-label="Sign in form"
+      noValidate
+    >
       <div className="space-y-2">
         <Label htmlFor="email-signin">Email</Label>
         <Input

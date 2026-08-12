@@ -19,7 +19,11 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }) => {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [sent, setSent] = useState(false);
-  const limiter = useRateLimiter({ maxAttempts: 3, windowMs: 300_000, lockoutMs: 120_000 });
+  const limiter = useRateLimiter({
+    maxAttempts: 3,
+    windowMs: 300_000,
+    lockoutMs: 120_000,
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +34,9 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }) => {
     }
 
     if (!limiter.recordAttempt()) {
-      toast.error(`Too many attempts. Please wait ${limiter.secondsUntilReset}s.`);
+      toast.error(
+        `Too many attempts. Please wait ${limiter.secondsUntilReset}s.`
+      );
       return;
     }
 
@@ -44,13 +50,19 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }) => {
       if (error) throw error;
 
       setSent(true);
-      addBreadcrumb({ category: 'auth', message: 'Password reset email sent', level: 'info' });
+      addBreadcrumb({
+        category: 'auth',
+        message: 'Password reset email sent',
+        level: 'info',
+      });
       toast.success('Check your email for a password reset link');
     } catch (error) {
       log.error('Password reset error:', error);
       // Don't reveal if account exists — always show success-like message
       setSent(true);
-      toast.success('If an account exists with that email, a reset link has been sent');
+      toast.success(
+        'If an account exists with that email, a reset link has been sent'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -62,10 +74,12 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }) => {
         <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
           <Mail className="h-6 w-6 text-primary" />
         </div>
-        <h3 className="text-lg font-semibold text-foreground">Check your email</h3>
+        <h3 className="text-lg font-semibold text-foreground">
+          Check your email
+        </h3>
         <p className="text-sm text-muted-foreground">
-          If an account exists for <strong>{email}</strong>, we've sent a password reset link.
-          Check your spam folder if you don't see it.
+          If an account exists for <strong>{email}</strong>, we've sent a
+          password reset link. Check your spam folder if you don't see it.
         </p>
         <Button variant="ghost" onClick={onBack} className="mt-4">
           <ArrowLeft className="mr-2 h-4 w-4" />
@@ -76,7 +90,12 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }) => {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4" aria-label="Reset password form" noValidate>
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-4"
+      aria-label="Reset password form"
+      noValidate
+    >
       <p className="text-sm text-muted-foreground">
         Enter your email and we'll send you a link to reset your password.
       </p>

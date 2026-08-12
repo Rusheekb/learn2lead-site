@@ -1,7 +1,10 @@
-
 import { useEffect, useState } from 'react';
 import { Notification } from '@/types/notificationTypes';
-import { fetchNotifications, markNotificationAsRead, markAllNotificationsAsRead } from '@/services/notificationService';
+import {
+  fetchNotifications,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+} from '@/services/notificationService';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/lib/logger';
@@ -12,11 +15,11 @@ export const useNotifications = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
-  
+
   // Load notifications
   const loadNotifications = async () => {
     if (!user) return;
-    
+
     setIsLoading(true);
     try {
       const data = await fetchNotifications();
@@ -30,10 +33,10 @@ export const useNotifications = () => {
   const markAsRead = async (id: string) => {
     const success = await markNotificationAsRead(id);
     if (success) {
-      setNotifications(prev => 
-        prev.map(notification => 
-          notification.id === id 
-            ? { ...notification, read: true } 
+      setNotifications((prev) =>
+        prev.map((notification) =>
+          notification.id === id
+            ? { ...notification, read: true }
             : notification
         )
       );
@@ -45,8 +48,8 @@ export const useNotifications = () => {
   const markAllAsRead = async () => {
     const success = await markAllNotificationsAsRead();
     if (success) {
-      setNotifications(prev => 
-        prev.map(notification => ({ ...notification, read: true }))
+      setNotifications((prev) =>
+        prev.map((notification) => ({ ...notification, read: true }))
       );
     }
     return success;
@@ -54,7 +57,7 @@ export const useNotifications = () => {
 
   // Get unread count
   const getUnreadCount = () => {
-    return notifications.filter(n => !n.read).length;
+    return notifications.filter((n) => !n.read).length;
   };
 
   // Set up realtime subscription for new notifications

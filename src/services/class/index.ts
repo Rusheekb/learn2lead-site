@@ -1,4 +1,3 @@
-
 // Export all functions from this service
 export { fetchScheduledClasses } from './fetch';
 export { createScheduledClass } from './create';

@@ -1,4 +1,3 @@
-
 export interface ClassSession {
   id: string;
   title: string;

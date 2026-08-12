@@ -1,6 +1,6 @@
 /**
  * Retry utility with exponential backoff for critical network operations.
- * 
+ *
  * Only retries on transient/network errors — NOT on business logic failures
  * (e.g. insufficient credits, validation errors).
  */
@@ -25,10 +25,14 @@ export function isTransientError(error: unknown): boolean {
   if (!error) return false;
 
   // Network errors (fetch failures, timeouts)
-  if (error instanceof TypeError && error.message.includes('fetch')) return true;
+  if (error instanceof TypeError && error.message.includes('fetch'))
+    return true;
   if (error instanceof DOMException && error.name === 'AbortError') return true;
 
-  const msg = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
+  const msg =
+    error instanceof Error
+      ? error.message.toLowerCase()
+      : String(error).toLowerCase();
 
   // Common transient patterns
   const transientPatterns = [
@@ -46,7 +50,7 @@ export function isTransientError(error: unknown): boolean {
     'bad gateway',
     'service unavailable',
     'gateway timeout',
-    'rate limit',    // 429 — worth retrying after backoff
+    'rate limit', // 429 — worth retrying after backoff
     'too many requests',
   ];
 
@@ -54,7 +58,12 @@ export function isTransientError(error: unknown): boolean {
 }
 
 /** Calculates delay with exponential backoff + jitter. */
-function computeDelay(attempt: number, baseDelay: number, maxDelay: number, jitter: number): number {
+function computeDelay(
+  attempt: number,
+  baseDelay: number,
+  maxDelay: number,
+  jitter: number
+): number {
   const exponential = baseDelay * Math.pow(2, attempt);
   const capped = Math.min(exponential, maxDelay);
   const jitterAmount = capped * jitter * (Math.random() * 2 - 1); // ±jitter
@@ -122,7 +131,10 @@ export async function retryEdgeFunction<T = any>(
 
     // If there's an invocation-level error (network, 5xx), throw to trigger retry
     if (result.error) {
-      const msg = typeof result.error === 'string' ? result.error : result.error?.message || '';
+      const msg =
+        typeof result.error === 'string'
+          ? result.error
+          : result.error?.message || '';
       if (isTransientError(new Error(msg))) {
         throw new Error(msg);
       }

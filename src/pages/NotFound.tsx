@@ -73,7 +73,10 @@ const NotFound = () => {
 
         {/* Attempted Path (for debugging) */}
         <p className="mt-8 text-xs text-muted-foreground/60">
-          Attempted path: <code className="bg-muted px-1 py-0.5 rounded">{location.pathname}</code>
+          Attempted path:{' '}
+          <code className="bg-muted px-1 py-0.5 rounded">
+            {location.pathname}
+          </code>
         </p>
       </div>
     </div>

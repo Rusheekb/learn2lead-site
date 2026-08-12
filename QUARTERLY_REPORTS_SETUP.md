@@ -5,6 +5,7 @@ This document explains how to set up and configure the automated quarterly repor
 ## Overview
 
 The quarterly reporting system automatically generates and emails AI-powered progress reports to students on the 1st of each quarter (Jan 1, Apr 1, Jul 1, Oct 1). Reports include:
+
 - Classes completed during the quarter (3 months of data)
 - Content covered and homework assigned
 - Tutor notes
@@ -20,9 +21,11 @@ The quarterly reporting system automatically generates and emails AI-powered pro
 ## Setup Instructions
 
 ### 1. Database Table (Already Complete)
+
 The `monthly_reports_sent` table is reused for quarterly reports with RLS policies.
 
 ### 2. Edge Functions (Already Deployed)
+
 Both edge functions are deployed automatically and configured in `supabase/config.toml`.
 
 ### 3. Cron Job Setup (Manual Step Required)
@@ -30,6 +33,7 @@ Both edge functions are deployed automatically and configured in `supabase/confi
 To enable automatic quarterly report generation, you need to set up a pg_cron job in Supabase:
 
 **Steps:**
+
 1. Go to the Supabase SQL Editor: https://supabase.com/dashboard/project/lnhtlbatcufmsyoujuqh/sql/new
 2. Copy and paste the following SQL:
 
@@ -53,6 +57,7 @@ SELECT
 3. Execute the query
 
 **Schedule Details:**
+
 - Runs every Jan 1, Apr 1, Jul 1, Oct 1 at 9:00 AM UTC
 - Generates reports for the previous quarter (3 months of data)
 - Sends emails to all active students
@@ -76,6 +81,7 @@ SELECT * FROM cron.job WHERE jobname = 'quarterly-reports-generation';
 ### 6. Test the System
 
 You can manually trigger report generation from the Admin Dashboard:
+
 1. Navigate to Admin Dashboard
 2. Click the "Reports" tab
 3. Select a student and quarter
@@ -103,6 +109,7 @@ SELECT
 ### View Report History
 
 The "Report History" section shows:
+
 - All previously sent reports
 - Student names and emails
 - Report quarters
@@ -114,6 +121,7 @@ The "Report History" section shows:
 ### Edge Function Logs
 
 View logs for troubleshooting:
+
 - `generate-quarterly-report`: https://supabase.com/dashboard/project/lnhtlbatcufmsyoujuqh/functions/generate-quarterly-report/logs
 - `cron-quarterly-reports`: https://supabase.com/dashboard/project/lnhtlbatcufmsyoujuqh/functions/cron-quarterly-reports/logs
 
@@ -122,7 +130,7 @@ View logs for troubleshooting:
 Query the database:
 
 ```sql
-SELECT 
+SELECT
   r.report_month,
   p.email,
   p.first_name,
@@ -146,6 +154,7 @@ SELECT cron.unschedule('quarterly-reports-generation');
 ### Change Schedule
 
 To modify when reports are sent, update the cron expression:
+
 - `'0 9 1 1,4,7,10 *'` = 9:00 AM UTC on Jan 1, Apr 1, Jul 1, Oct 1
 - The format is: minute hour day month day-of-week
 
@@ -160,6 +169,7 @@ Modify the prompt in the `generateAIRecommendations` function in `supabase/funct
 ## Troubleshooting
 
 **No emails received:**
+
 1. Check edge function logs for errors
 2. Verify RESEND_API_KEY is configured
 3. Ensure student has classes in the target quarter
@@ -169,6 +179,7 @@ Modify the prompt in the `generateAIRecommendations` function in `supabase/funct
 The system prevents duplicates by checking `monthly_reports_sent` table before sending.
 
 **AI recommendations unavailable:**
+
 1. Verify LOVABLE_API_KEY is configured
 2. Check edge function logs for AI API errors
 3. Reports will still send without AI recommendations if generation fails
@@ -183,6 +194,7 @@ The system prevents duplicates by checking `monthly_reports_sent` table before s
 ## Support
 
 For issues or questions:
+
 1. Check edge function logs
 2. Review database table for sent reports
 3. Test manual report generation via admin UI

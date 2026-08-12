@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 
@@ -15,7 +14,7 @@ const AuthButton: React.FC<AuthButtonProps> = ({
   text,
   loadingText,
   onClick,
-  type = 'submit'
+  type = 'submit',
 }) => {
   return (
     <Button

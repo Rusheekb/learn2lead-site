@@ -1,4 +1,3 @@
-
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -25,12 +24,26 @@ import InlineErrorFallback from './components/shared/InlineErrorFallback';
 
 // Lazy-load auth-gated and heavy components
 const PrivateRoute = React.lazy(() => import('./components/PrivateRoute'));
-const DashboardShell = React.lazy(() => import('./components/shared/DashboardShell'));
-const RoutePersistence = React.lazy(() => import('./components/shared/RoutePersistence').then(m => ({ default: m.RoutePersistence })));
-const PWAInstallPrompt = React.lazy(() => import('./components/shared/PWAInstallPrompt'));
-const PWAUpdatePrompt = React.lazy(() => import('./components/shared/PWAUpdatePrompt'));
-const OfflineBanner = React.lazy(() => import('./components/shared/OfflineBanner'));
-const SidebarProvider = React.lazy(() => import('@/hooks/useSidebar').then(m => ({ default: m.SidebarProvider })));
+const DashboardShell = React.lazy(
+  () => import('./components/shared/DashboardShell')
+);
+const RoutePersistence = React.lazy(() =>
+  import('./components/shared/RoutePersistence').then((m) => ({
+    default: m.RoutePersistence,
+  }))
+);
+const PWAInstallPrompt = React.lazy(
+  () => import('./components/shared/PWAInstallPrompt')
+);
+const PWAUpdatePrompt = React.lazy(
+  () => import('./components/shared/PWAUpdatePrompt')
+);
+const OfflineBanner = React.lazy(
+  () => import('./components/shared/OfflineBanner')
+);
+const SidebarProvider = React.lazy(() =>
+  import('@/hooks/useSidebar').then((m) => ({ default: m.SidebarProvider }))
+);
 
 const Profile = React.lazy(() => import('./pages/Profile'));
 const TutorDashboard = React.lazy(() => import('./pages/TutorDashboard'));
@@ -72,7 +85,11 @@ const SectionErrorBoundary = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-const StudentDashboardWrapper = ({ children }: { children: React.ReactNode }) => (
+const StudentDashboardWrapper = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => (
   <DashboardShell title="Student Portal">
     <OptimizedSuspense>
       <SectionErrorBoundary>
@@ -105,84 +122,132 @@ const AdminDashboardWrapper = ({ children }: { children: React.ReactNode }) => (
 // Animated routes component
 const AnimatedRoutes = () => {
   const location = useLocation();
-  
+
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         {/* Public routes with optimized loading */}
-        <Route path="/" element={
-          <OptimizedSuspense>
-            <AnimatedPage><Index /></AnimatedPage>
-          </OptimizedSuspense>
-        } />
-        <Route path="/login" element={
-          <OptimizedSuspense>
-            <AnimatedPage><Login /></AnimatedPage>
-          </OptimizedSuspense>
-        } />
-        <Route path="/reset-password" element={
-          <OptimizedSuspense>
-            <AnimatedPage><ResetPassword /></AnimatedPage>
-          </OptimizedSuspense>
-        } />
-        <Route path="/pricing" element={
-          <OptimizedSuspense>
-            <AnimatedPage><Pricing /></AnimatedPage>
-          </OptimizedSuspense>
-        } />
-        <Route path="/refer/:code" element={
-          <OptimizedSuspense>
-            <AnimatedPage><ReferralLanding /></AnimatedPage>
-          </OptimizedSuspense>
-        } />
-        
+        <Route
+          path="/"
+          element={
+            <OptimizedSuspense>
+              <AnimatedPage>
+                <Index />
+              </AnimatedPage>
+            </OptimizedSuspense>
+          }
+        />
+        <Route
+          path="/login"
+          element={
+            <OptimizedSuspense>
+              <AnimatedPage>
+                <Login />
+              </AnimatedPage>
+            </OptimizedSuspense>
+          }
+        />
+        <Route
+          path="/reset-password"
+          element={
+            <OptimizedSuspense>
+              <AnimatedPage>
+                <ResetPassword />
+              </AnimatedPage>
+            </OptimizedSuspense>
+          }
+        />
+        <Route
+          path="/pricing"
+          element={
+            <OptimizedSuspense>
+              <AnimatedPage>
+                <Pricing />
+              </AnimatedPage>
+            </OptimizedSuspense>
+          }
+        />
+        <Route
+          path="/refer/:code"
+          element={
+            <OptimizedSuspense>
+              <AnimatedPage>
+                <ReferralLanding />
+              </AnimatedPage>
+            </OptimizedSuspense>
+          }
+        />
+
         {/* Private routes */}
         <Route element={<PrivateRoute />}>
           <Route element={<PrivateRoute allowedRoles={['student']} />}>
-            <Route path="/dashboard/*" element={
-              <StudentDashboardWrapper>
-                <Dashboard />
-              </StudentDashboardWrapper>
-            } />
-            <Route path="/profile" element={
-              <StudentDashboardWrapper>
-                <Profile />
-              </StudentDashboardWrapper>
-            } />
+            <Route
+              path="/dashboard/*"
+              element={
+                <StudentDashboardWrapper>
+                  <Dashboard />
+                </StudentDashboardWrapper>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <StudentDashboardWrapper>
+                  <Profile />
+                </StudentDashboardWrapper>
+              }
+            />
           </Route>
 
           <Route element={<PrivateRoute allowedRoles={['tutor']} />}>
-            <Route path="/tutor-dashboard/*" element={
-              <TutorDashboardWrapper>
-                <TutorDashboard />
-              </TutorDashboardWrapper>
-            } />
-            <Route path="/tutor-profile" element={
-              <TutorDashboardWrapper>
-                <Profile />
-              </TutorDashboardWrapper>
-            } />
+            <Route
+              path="/tutor-dashboard/*"
+              element={
+                <TutorDashboardWrapper>
+                  <TutorDashboard />
+                </TutorDashboardWrapper>
+              }
+            />
+            <Route
+              path="/tutor-profile"
+              element={
+                <TutorDashboardWrapper>
+                  <Profile />
+                </TutorDashboardWrapper>
+              }
+            />
           </Route>
 
           <Route element={<PrivateRoute allowedRoles={['admin']} />}>
-            <Route path="/admin-dashboard/*" element={
-              <AdminDashboardWrapper>
-                <AdminDashboard />
-              </AdminDashboardWrapper>
-            } />
-            <Route path="/admin-profile" element={
-              <AdminDashboardWrapper>
-                <Profile />
-              </AdminDashboardWrapper>
-            } />
+            <Route
+              path="/admin-dashboard/*"
+              element={
+                <AdminDashboardWrapper>
+                  <AdminDashboard />
+                </AdminDashboardWrapper>
+              }
+            />
+            <Route
+              path="/admin-profile"
+              element={
+                <AdminDashboardWrapper>
+                  <Profile />
+                </AdminDashboardWrapper>
+              }
+            />
           </Route>
         </Route>
 
-        <Route path="*" element={
-          <OptimizedSuspense>
-            <AnimatedPage><NotFound /></AnimatedPage>
-          </OptimizedSuspense>
-        } />
+        <Route
+          path="*"
+          element={
+            <OptimizedSuspense>
+              <AnimatedPage>
+                <NotFound />
+              </AnimatedPage>
+            </OptimizedSuspense>
+          }
+        />
       </Routes>
     </AnimatePresence>
   );

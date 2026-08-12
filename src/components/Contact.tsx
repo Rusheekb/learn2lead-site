@@ -60,7 +60,9 @@ const Contact = () => {
       setErrors({});
     } catch (error: any) {
       log.error('Contact form error:', error);
-      toast.error(error.message || 'Failed to send message. Please try again later.');
+      toast.error(
+        error.message || 'Failed to send message. Please try again later.'
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -68,7 +70,11 @@ const Contact = () => {
 
   const fieldError = (name: string) =>
     errors[name] ? (
-      <p id={`${name}-error`} className="mt-1 text-sm text-destructive" role="alert">
+      <p
+        id={`${name}-error`}
+        className="mt-1 text-sm text-destructive"
+        role="alert"
+      >
         {errors[name]}
       </p>
     ) : null;
@@ -77,10 +83,17 @@ const Contact = () => {
     errors[name] ? 'border-destructive focus-visible:ring-destructive' : '';
 
   return (
-    <section id="contact" aria-labelledby="contact-heading" className="py-20 bg-tutoring-lightGray">
+    <section
+      id="contact"
+      aria-labelledby="contact-heading"
+      className="py-20 bg-tutoring-lightGray"
+    >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 id="contact-heading" className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+          <h2
+            id="contact-heading"
+            className="text-3xl md:text-4xl font-bold text-foreground mb-4"
+          >
             Get in Touch
           </h2>
           <p className="text-lg text-muted-foreground">
@@ -138,8 +151,14 @@ const Contact = () => {
               >
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-foreground mb-1">
-                      Name <span className="text-destructive" aria-hidden="true">*</span>
+                    <label
+                      htmlFor="name"
+                      className="block text-sm font-medium text-foreground mb-1"
+                    >
+                      Name{' '}
+                      <span className="text-destructive" aria-hidden="true">
+                        *
+                      </span>
                     </label>
                     <Input
                       id="name"
@@ -155,8 +174,14 @@ const Contact = () => {
                     {fieldError('name')}
                   </div>
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-foreground mb-1">
-                      Email <span className="text-destructive" aria-hidden="true">*</span>
+                    <label
+                      htmlFor="email"
+                      className="block text-sm font-medium text-foreground mb-1"
+                    >
+                      Email{' '}
+                      <span className="text-destructive" aria-hidden="true">
+                        *
+                      </span>
                     </label>
                     <Input
                       id="email"
@@ -167,7 +192,9 @@ const Contact = () => {
                       onChange={handleChange}
                       aria-required="true"
                       aria-invalid={!!errors.email}
-                      aria-describedby={errors.email ? 'email-error' : undefined}
+                      aria-describedby={
+                        errors.email ? 'email-error' : undefined
+                      }
                       className={inputClass('email')}
                     />
                     {fieldError('email')}
@@ -175,8 +202,14 @@ const Contact = () => {
                 </div>
 
                 <div>
-                  <label htmlFor="subject" className="block text-sm font-medium text-foreground mb-1">
-                    Subject <span className="text-destructive" aria-hidden="true">*</span>
+                  <label
+                    htmlFor="subject"
+                    className="block text-sm font-medium text-foreground mb-1"
+                  >
+                    Subject{' '}
+                    <span className="text-destructive" aria-hidden="true">
+                      *
+                    </span>
                   </label>
                   <Input
                     id="subject"
@@ -186,15 +219,23 @@ const Contact = () => {
                     onChange={handleChange}
                     aria-required="true"
                     aria-invalid={!!errors.subject}
-                    aria-describedby={errors.subject ? 'subject-error' : undefined}
+                    aria-describedby={
+                      errors.subject ? 'subject-error' : undefined
+                    }
                     className={inputClass('subject')}
                   />
                   {fieldError('subject')}
                 </div>
 
                 <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-foreground mb-1">
-                    Message <span className="text-destructive" aria-hidden="true">*</span>
+                  <label
+                    htmlFor="message"
+                    className="block text-sm font-medium text-foreground mb-1"
+                  >
+                    Message{' '}
+                    <span className="text-destructive" aria-hidden="true">
+                      *
+                    </span>
                   </label>
                   <Textarea
                     id="message"
@@ -205,7 +246,9 @@ const Contact = () => {
                     onChange={handleChange}
                     aria-required="true"
                     aria-invalid={!!errors.message}
-                    aria-describedby={errors.message ? 'message-error' : undefined}
+                    aria-describedby={
+                      errors.message ? 'message-error' : undefined
+                    }
                   />
                   {fieldError('message')}
                 </div>
@@ -218,7 +261,10 @@ const Contact = () => {
                 >
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                      <Loader2
+                        className="mr-2 h-4 w-4 animate-spin"
+                        aria-hidden="true"
+                      />
                       Sending...
                     </>
                   ) : (

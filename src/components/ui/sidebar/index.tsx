@@ -1,4 +1,3 @@
-
 // This file re-exports all sidebar components for convenience
 import { Sidebar } from './Sidebar';
 import { SidebarContent } from './SidebarContent';

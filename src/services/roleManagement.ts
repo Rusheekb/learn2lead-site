@@ -15,7 +15,7 @@ export interface RolePromotionResult {
 }
 
 export async function promoteStudentToTutor(
-  studentUserId: string, 
+  studentUserId: string,
   reason: string = 'Admin promotion'
 ): Promise<RolePromotionResult> {
   addBreadcrumb({
@@ -27,7 +27,7 @@ export async function promoteStudentToTutor(
 
   const { data, error } = await supabase.rpc('promote_student_to_tutor', {
     student_user_id: studentUserId,
-    reason: reason
+    reason: reason,
   });
 
   if (error) {
@@ -37,12 +37,15 @@ export async function promoteStudentToTutor(
       level: 'error',
       data: { targetUserId: studentUserId },
     });
-    captureException(new Error(error.message), { context: 'promoteStudentToTutor', studentUserId });
+    captureException(new Error(error.message), {
+      context: 'promoteStudentToTutor',
+      studentUserId,
+    });
     log.error('Error promoting student to tutor', error);
     return {
       success: false,
       error: error.message,
-      code: 'RPC_ERROR'
+      code: 'RPC_ERROR',
     };
   }
 
@@ -56,7 +59,10 @@ export async function promoteStudentToTutor(
   return data as unknown as RolePromotionResult;
 }
 
-async function resolveProfileId(idOrMaybeStudentId: string, email?: string): Promise<string | null> {
+async function resolveProfileId(
+  idOrMaybeStudentId: string,
+  email?: string
+): Promise<string | null> {
   try {
     const byId = await supabase
       .from('profiles')
@@ -114,7 +120,7 @@ export async function promoteStudentToTutorByIdOrEmail(
 }
 
 export async function demoteTutorToStudent(
-  tutorUserId: string, 
+  tutorUserId: string,
   reason: string = 'Admin demotion'
 ): Promise<RolePromotionResult> {
   addBreadcrumb({
@@ -126,7 +132,7 @@ export async function demoteTutorToStudent(
 
   const { data, error } = await supabase.rpc('demote_tutor_to_student', {
     tutor_user_id: tutorUserId,
-    reason: reason
+    reason: reason,
   });
 
   if (error) {
@@ -136,12 +142,15 @@ export async function demoteTutorToStudent(
       level: 'error',
       data: { targetUserId: tutorUserId },
     });
-    captureException(new Error(error.message), { context: 'demoteTutorToStudent', tutorUserId });
+    captureException(new Error(error.message), {
+      context: 'demoteTutorToStudent',
+      tutorUserId,
+    });
     log.error('Error demoting tutor to student', error);
     return {
       success: false,
       error: error.message,
-      code: 'RPC_ERROR'
+      code: 'RPC_ERROR',
     };
   }
 
@@ -188,7 +197,9 @@ export async function demoteTutorToStudentByIdOrEmail(
   return data as unknown as RolePromotionResult;
 }
 
-export async function fetchUserProfile(userId: string): Promise<Profile | null> {
+export async function fetchUserProfile(
+  userId: string
+): Promise<Profile | null> {
   const { data, error } = await supabase
     .from('profiles')
     .select('*')

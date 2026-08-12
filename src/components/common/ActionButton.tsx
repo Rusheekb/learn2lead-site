@@ -22,7 +22,17 @@ interface ActionButtonProps extends ButtonProps {
  * Includes hover scale, click feedback animations, and optional animated tooltip
  */
 const ActionButton = React.forwardRef<HTMLButtonElement, ActionButtonProps>(
-  ({ children, className = '', feedbackColor = 'default', tooltip, tooltipSide = 'top', ...props }, ref) => {
+  (
+    {
+      children,
+      className = '',
+      feedbackColor = 'default',
+      tooltip,
+      tooltipSide = 'top',
+      ...props
+    },
+    ref
+  ) => {
     const buttonContent = (
       <motion.div
         whileHover={{ scale: 1.1 }}
@@ -43,12 +53,8 @@ const ActionButton = React.forwardRef<HTMLButtonElement, ActionButtonProps>(
       return (
         <TooltipProvider delayDuration={200}>
           <Tooltip>
-            <TooltipTrigger asChild>
-              {buttonContent}
-            </TooltipTrigger>
-            <TooltipContent side={tooltipSide}>
-              {tooltip}
-            </TooltipContent>
+            <TooltipTrigger asChild>{buttonContent}</TooltipTrigger>
+            <TooltipContent side={tooltipSide}>{tooltip}</TooltipContent>
           </Tooltip>
         </TooltipProvider>
       );

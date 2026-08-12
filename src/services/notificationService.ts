@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Notification } from '@/types/notificationTypes';
 import { toast } from 'sonner';
@@ -27,13 +26,15 @@ export const fetchNotifications = async (): Promise<Notification[]> => {
 
 export const checkUpcomingClasses = async (): Promise<void> => {
   try {
-    const { data, error } = await supabase.functions.invoke('check-upcoming-classes');
-    
+    const { data, error } = await supabase.functions.invoke(
+      'check-upcoming-classes'
+    );
+
     if (error) {
       log.error('Error checking upcoming classes', error);
       return;
     }
-    
+
     log.debug('Checked for upcoming classes', { data });
   } catch (error) {
     log.error('Error invoking check-upcoming-classes function', error);

@@ -8,7 +8,10 @@ interface PlanBadgeProps {
   className?: string;
 }
 
-export const PlanBadge: React.FC<PlanBadgeProps> = ({ planName, className }) => {
+export const PlanBadge: React.FC<PlanBadgeProps> = ({
+  planName,
+  className,
+}) => {
   if (!planName) return null;
 
   const getPlanIcon = () => {
@@ -20,15 +23,19 @@ export const PlanBadge: React.FC<PlanBadgeProps> = ({ planName, className }) => 
 
   const getPlanColor = () => {
     const lowerPlan = planName.toLowerCase();
-    if (lowerPlan.includes('premium')) return 'bg-gradient-to-r from-amber-500 to-orange-500 text-white';
-    if (lowerPlan.includes('standard')) return 'bg-primary text-primary-foreground';
+    if (lowerPlan.includes('premium'))
+      return 'bg-gradient-to-r from-amber-500 to-orange-500 text-white';
+    if (lowerPlan.includes('standard'))
+      return 'bg-primary text-primary-foreground';
     return 'bg-secondary text-secondary-foreground';
   };
 
   const Icon = getPlanIcon();
 
   return (
-    <Badge className={cn(getPlanColor(), 'flex items-center gap-1.5', className)}>
+    <Badge
+      className={cn(getPlanColor(), 'flex items-center gap-1.5', className)}
+    >
       <Icon className="h-3.5 w-3.5" />
       <span>{planName}</span>
     </Badge>

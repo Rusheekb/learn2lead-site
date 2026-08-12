@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useProfile } from '@/hooks/useProfile';
 import { supabase } from '@/integrations/supabase/client';

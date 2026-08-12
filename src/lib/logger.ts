@@ -19,14 +19,22 @@ function createLogger(context: LogContext) {
   return {
     debug(message: string, meta?: LogMeta) {
       if (import.meta.env.DEV) {
-        console.log(`%c${prefix} ${message}`, `color: ${COLORS.debug}`, meta ?? '');
+        console.log(
+          `%c${prefix} ${message}`,
+          `color: ${COLORS.debug}`,
+          meta ?? ''
+        );
       }
       // Suppressed in production
     },
 
     info(message: string, meta?: LogMeta) {
       if (import.meta.env.DEV) {
-        console.log(`%c${prefix} ${message}`, `color: ${COLORS.info}`, meta ?? '');
+        console.log(
+          `%c${prefix} ${message}`,
+          `color: ${COLORS.info}`,
+          meta ?? ''
+        );
       }
       // Suppressed in production
     },

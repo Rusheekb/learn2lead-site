@@ -23,7 +23,9 @@ interface UsageStats {
 
 export function useReferralCode() {
   const { user } = useAuth();
-  const [referralCode, setReferralCode] = useState<ReferralCodeData | null>(null);
+  const [referralCode, setReferralCode] = useState<ReferralCodeData | null>(
+    null
+  );
   const [usageStats, setUsageStats] = useState<UsageStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -62,8 +64,10 @@ export function useReferralCode() {
         });
 
         // Use secure function for anonymized stats (no email exposure)
-        const { data: statsData, error: statsError } = await supabase
-          .rpc('get_referral_usage_stats', { p_user_id: user.id });
+        const { data: statsData, error: statsError } = await supabase.rpc(
+          'get_referral_usage_stats',
+          { p_user_id: user.id }
+        );
 
         if (!statsError && statsData && statsData.length > 0) {
           const stats = statsData[0];
@@ -95,7 +99,9 @@ export function useReferralCode() {
       setIsGenerating(true);
       setError(null);
 
-      const { data, error: fnError } = await supabase.functions.invoke('generate-referral-code');
+      const { data, error: fnError } = await supabase.functions.invoke(
+        'generate-referral-code'
+      );
 
       if (fnError) {
         log.error('Error generating referral code:', fnError);
@@ -110,7 +116,9 @@ export function useReferralCode() {
         return data.code;
       } else if (data?.requires_subscription) {
         setRequiresSubscription(true);
-        setError('Active Stripe subscription required to generate a referral code');
+        setError(
+          'Active Stripe subscription required to generate a referral code'
+        );
         return null;
       } else {
         setError(data?.error || 'Failed to generate referral code');

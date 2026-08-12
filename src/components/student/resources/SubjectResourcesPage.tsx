@@ -14,13 +14,18 @@ const SubjectResourcesPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedTopic, setExpandedTopic] = useState<string | null>(null);
 
-  const subject = subjectId ? getSubjectById(parseInt(subjectId, 10)) : undefined;
+  const subject = subjectId
+    ? getSubjectById(parseInt(subjectId, 10))
+    : undefined;
 
   if (!subject) {
     return (
       <div className="text-center py-12">
         <p className="text-muted-foreground mb-4">Subject not found</p>
-        <Button variant="outline" onClick={() => navigate('/dashboard?tab=resources')}>
+        <Button
+          variant="outline"
+          onClick={() => navigate('/dashboard?tab=resources')}
+        >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Resources
         </Button>
@@ -30,22 +35,31 @@ const SubjectResourcesPage: React.FC = () => {
 
   const IconComponent = subject.iconComponent;
 
-  const filteredTopics = subject.topics.filter(topic =>
-    topic.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    topic.resources.some(r =>
-      r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.source.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+  const filteredTopics = subject.topics.filter(
+    (topic) =>
+      topic.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      topic.resources.some(
+        (r) =>
+          r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          r.source.toLowerCase().includes(searchQuery.toLowerCase())
+      )
   );
 
-  const totalResources = subject.topics.reduce((acc, t) => acc + t.resources.length, 0);
+  const totalResources = subject.topics.reduce(
+    (acc, t) => acc + t.resources.length,
+    0
+  );
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard?tab=resources')}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate('/dashboard?tab=resources')}
+          >
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="flex items-center gap-3">
@@ -53,7 +67,9 @@ const SubjectResourcesPage: React.FC = () => {
               <IconComponent className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">{subject.name}</h1>
+              <h1 className="text-2xl font-bold text-foreground">
+                {subject.name}
+              </h1>
               <p className="text-muted-foreground">
                 {subject.topics.length} topics • {totalResources} resources
               </p>
@@ -70,9 +86,12 @@ const SubjectResourcesPage: React.FC = () => {
               <Sparkles className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <p className="font-medium text-foreground">AI Practice Coming Soon</p>
+              <p className="font-medium text-foreground">
+                AI Practice Coming Soon
+              </p>
               <p className="text-sm text-muted-foreground">
-                Get unlimited AI-generated practice questions tailored to your level
+                Get unlimited AI-generated practice questions tailored to your
+                level
               </p>
             </div>
             <Badge variant="secondary" className="ml-auto">
@@ -106,7 +125,9 @@ const SubjectResourcesPage: React.FC = () => {
               >
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base">{topic.name}</CardTitle>
-                  <Badge variant="outline">{topic.resources.length} resources</Badge>
+                  <Badge variant="outline">
+                    {topic.resources.length} resources
+                  </Badge>
                 </div>
               </CardHeader>
 
@@ -122,7 +143,9 @@ const SubjectResourcesPage: React.FC = () => {
 
       {filteredTopics.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-muted-foreground">No topics found matching "{searchQuery}"</p>
+          <p className="text-muted-foreground">
+            No topics found matching "{searchQuery}"
+          </p>
         </div>
       )}
     </div>

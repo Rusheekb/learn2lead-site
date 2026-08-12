@@ -1,4 +1,3 @@
-
 import { useCallback, useRef, useState } from 'react';
 
 interface RateLimiterOptions {
@@ -40,9 +39,7 @@ export function useRateLimiter({
 
   const pruneExpired = useCallback(() => {
     const now = Date.now();
-    attemptsRef.current = attemptsRef.current.filter(
-      (t) => now - t < windowMs
-    );
+    attemptsRef.current = attemptsRef.current.filter((t) => now - t < windowMs);
   }, [windowMs]);
 
   const updateState = useCallback(() => {

@@ -1,4 +1,3 @@
-
 /**
  * Query keys for content shares
  */

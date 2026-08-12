@@ -1,4 +1,3 @@
-
 import { AppRole } from '@/hooks/useProfile';
 
 export const getDashboardPath = (role: AppRole | null): string => {

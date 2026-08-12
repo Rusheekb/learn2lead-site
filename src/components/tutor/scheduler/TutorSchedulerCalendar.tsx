@@ -1,4 +1,3 @@
-
 import React, { memo } from 'react';
 import { ClassEvent } from '@/types/tutorTypes';
 import CalendarWithEvents from '@/components/CalendarWithEvents';
@@ -12,25 +11,27 @@ interface TutorSchedulerCalendarProps {
   getUnreadMessageCount: (classId: string) => number;
 }
 
-const TutorSchedulerCalendar: React.FC<TutorSchedulerCalendarProps> = memo(({
-  selectedDate,
-  setSelectedDate,
-  scheduledClasses,
-  onSelectEvent,
-  onAddEventClick,
-  getUnreadMessageCount,
-}) => {
-  return (
-    <CalendarWithEvents
-      selectedDate={selectedDate}
-      setSelectedDate={setSelectedDate}
-      scheduledClasses={scheduledClasses}
-      onSelectEvent={onSelectEvent}
-      onAddEventClick={onAddEventClick}
-      getUnreadMessageCount={getUnreadMessageCount}
-    />
-  );
-});
+const TutorSchedulerCalendar: React.FC<TutorSchedulerCalendarProps> = memo(
+  ({
+    selectedDate,
+    setSelectedDate,
+    scheduledClasses,
+    onSelectEvent,
+    onAddEventClick,
+    getUnreadMessageCount,
+  }) => {
+    return (
+      <CalendarWithEvents
+        selectedDate={selectedDate}
+        setSelectedDate={setSelectedDate}
+        scheduledClasses={scheduledClasses}
+        onSelectEvent={onSelectEvent}
+        onAddEventClick={onAddEventClick}
+        getUnreadMessageCount={getUnreadMessageCount}
+      />
+    );
+  }
+);
 
 TutorSchedulerCalendar.displayName = 'TutorSchedulerCalendar';
 

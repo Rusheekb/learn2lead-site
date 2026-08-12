@@ -14,15 +14,15 @@ export const exportClassLogsToCSV = (
 ): void => {
   // Filter by date range if provided
   let filteredClasses = classes;
-  
+
   if (startDate || endDate) {
-    filteredClasses = classes.filter(cls => {
+    filteredClasses = classes.filter((cls) => {
       const classDate = parseDateToLocal(cls.date);
-      
+
       if (startDate && classDate < startDate) {
         return false;
       }
-      
+
       if (endDate) {
         // Set end date to end of day for inclusive comparison
         const endOfDay = new Date(endDate);
@@ -31,7 +31,7 @@ export const exportClassLogsToCSV = (
           return false;
         }
       }
-      
+
       return true;
     });
   }
@@ -51,21 +51,23 @@ export const exportClassLogsToCSV = (
     'Tutor Cost',
     'Student Payment',
     'Tutor Payment',
-    'Additional Info'
+    'Additional Info',
   ];
 
   // Convert filtered classes to CSV rows
-  const rows = filteredClasses.map(cls => {
+  const rows = filteredClasses.map((cls) => {
     const date = parseDateToLocal(cls.date);
-    const formattedDate = date.toLocaleDateString('en-US', { 
-      month: '2-digit', 
-      day: '2-digit', 
-      year: 'numeric' 
+    const formattedDate = date.toLocaleDateString('en-US', {
+      month: '2-digit',
+      day: '2-digit',
+      year: 'numeric',
     });
     const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' });
 
     // Format payment dates as M/d/yy or blank if no date
-    const formatPaymentDate = (paymentDate: Date | null | undefined): string => {
+    const formatPaymentDate = (
+      paymentDate: Date | null | undefined
+    ): string => {
       if (!paymentDate) return '';
       const d = parseDateToLocal(paymentDate);
       const month = d.getMonth() + 1;
@@ -89,21 +91,21 @@ export const exportClassLogsToCSV = (
       cls.tutorCost?.toString() || '',
       formatPaymentDate(cls.studentPaymentDate),
       formatPaymentDate(cls.tutorPaymentDate),
-      escapeCSVField(cls.notes || '')
+      escapeCSVField(cls.notes || ''),
     ];
   });
 
   // Combine headers and rows
   const csvContent = [
     headers.join(','),
-    ...rows.map(row => row.join(','))
+    ...rows.map((row) => row.join(',')),
   ].join('\n');
 
   // Create and download file
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   const url = URL.createObjectURL(blob);
-  
+
   // Create filename with date range if applicable
   let filename = 'class-logs';
   if (startDate && endDate) {
@@ -114,7 +116,7 @@ export const exportClassLogsToCSV = (
     filename = `class-logs-${new Date().toISOString().split('T')[0]}`;
   }
   filename += '.csv';
-  
+
   link.setAttribute('href', url);
   link.setAttribute('download', filename);
   link.style.visibility = 'hidden';
@@ -128,11 +130,11 @@ export const exportClassLogsToCSV = (
  */
 const escapeCSVField = (field: string): string => {
   if (!field) return '';
-  
+
   // If field contains comma, quote, or newline, wrap in quotes and escape quotes
   if (field.includes(',') || field.includes('"') || field.includes('\n')) {
     return `"${field.replace(/"/g, '""')}"`;
   }
-  
+
   return field;
 };

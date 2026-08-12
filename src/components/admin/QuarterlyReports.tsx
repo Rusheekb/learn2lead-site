@@ -2,9 +2,28 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
@@ -34,7 +53,12 @@ function getQuarterLabel(date: Date): string {
   const month = date.getMonth();
   const year = date.getFullYear();
   const quarter = Math.floor(month / 3) + 1;
-  const quarterNames = ['Q1 (Jan-Mar)', 'Q2 (Apr-Jun)', 'Q3 (Jul-Sep)', 'Q4 (Oct-Dec)'];
+  const quarterNames = [
+    'Q1 (Jan-Mar)',
+    'Q2 (Apr-Jun)',
+    'Q3 (Jul-Sep)',
+    'Q4 (Oct-Dec)',
+  ];
   return `${quarterNames[quarter - 1]} ${year}`;
 }
 
@@ -60,7 +84,11 @@ const QuarterlyReports: React.FC = () => {
   });
 
   // Fetch quarterly reports (stored in monthly_reports_sent table)
-  const { data: reports = [], isLoading: isLoadingReports, refetch } = useQuery({
+  const {
+    data: reports = [],
+    isLoading: isLoadingReports,
+    refetch,
+  } = useQuery({
     queryKey: ['quarterly-reports'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -77,29 +105,34 @@ const QuarterlyReports: React.FC = () => {
   const getAvailableQuarters = () => {
     const quarters = [];
     const now = new Date();
-    
+
     for (let i = 1; i <= 4; i++) {
       // Go back i quarters
-      let targetMonth = now.getMonth() - (i * 3);
+      let targetMonth = now.getMonth() - i * 3;
       let targetYear = now.getFullYear();
-      
+
       while (targetMonth < 0) {
         targetMonth += 12;
         targetYear -= 1;
       }
-      
+
       // Get quarter number and first day of that quarter
       const quarter = Math.floor(targetMonth / 3) + 1;
       const firstDayOfQuarter = new Date(targetYear, (quarter - 1) * 3, 1);
-      
-      const quarterNames = ['Q1 (Jan-Mar)', 'Q2 (Apr-Jun)', 'Q3 (Jul-Sep)', 'Q4 (Oct-Dec)'];
-      
+
+      const quarterNames = [
+        'Q1 (Jan-Mar)',
+        'Q2 (Apr-Jun)',
+        'Q3 (Jul-Sep)',
+        'Q4 (Oct-Dec)',
+      ];
+
       quarters.push({
         value: firstDayOfQuarter.toISOString().split('T')[0],
-        label: `${quarterNames[quarter - 1]} ${targetYear}`
+        label: `${quarterNames[quarter - 1]} ${targetYear}`,
       });
     }
-    
+
     return quarters;
   };
 
@@ -113,7 +146,11 @@ const QuarterlyReports: React.FC = () => {
 
     setIsSending(true);
     try {
-      const payload: { report_quarter: string; student_id?: string; test_email?: string } = {
+      const payload: {
+        report_quarter: string;
+        student_id?: string;
+        test_email?: string;
+      } = {
         report_quarter: selectedQuarter,
       };
 
@@ -125,9 +162,12 @@ const QuarterlyReports: React.FC = () => {
         payload.test_email = testEmail.trim();
       }
 
-      const { data, error } = await supabase.functions.invoke('generate-quarterly-report', {
-        body: payload
-      });
+      const { data, error } = await supabase.functions.invoke(
+        'generate-quarterly-report',
+        {
+          body: payload,
+        }
+      );
 
       if (error) throw error;
 
@@ -136,7 +176,7 @@ const QuarterlyReports: React.FC = () => {
           ? `Sent ${data.sent} of ${data.total} quarterly reports successfully`
           : 'Quarterly report sent successfully'
       );
-      
+
       refetch();
     } catch (error) {
       log.error('Error sending report', error);
@@ -147,7 +187,7 @@ const QuarterlyReports: React.FC = () => {
   };
 
   const getStudentName = (studentId: string) => {
-    const student = students.find(s => s.id === studentId);
+    const student = students.find((s) => s.id === studentId);
     if (!student) return 'Unknown Student';
     return student.first_name && student.last_name
       ? `${student.first_name} ${student.last_name}`
@@ -155,7 +195,7 @@ const QuarterlyReports: React.FC = () => {
   };
 
   const getStudentEmail = (studentId: string) => {
-    const student = students.find(s => s.id === studentId);
+    const student = students.find((s) => s.id === studentId);
     return student?.email || '';
   };
 
@@ -168,7 +208,8 @@ const QuarterlyReports: React.FC = () => {
       <div>
         <h2 className="text-2xl font-bold tracking-tight">Quarterly Reports</h2>
         <p className="text-muted-foreground">
-          Generate and view AI-powered quarterly progress reports sent to students
+          Generate and view AI-powered quarterly progress reports sent to
+          students
         </p>
       </div>
 
@@ -180,7 +221,8 @@ const QuarterlyReports: React.FC = () => {
             Send Quarterly Report
           </CardTitle>
           <CardDescription>
-            Generate comprehensive AI-powered progress reports with 3 months of data for better recommendations
+            Generate comprehensive AI-powered progress reports with 3 months of
+            data for better recommendations
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -189,9 +231,12 @@ const QuarterlyReports: React.FC = () => {
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex items-start gap-2">
               <TestTube className="h-5 w-5 text-yellow-600 mt-0.5" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-yellow-800">Test Mode Active</p>
+                <p className="text-sm font-medium text-yellow-800">
+                  Test Mode Active
+                </p>
                 <p className="text-xs text-yellow-700 mt-1">
-                  Reports will be sent to <strong>{testEmail}</strong> instead of actual student emails
+                  Reports will be sent to <strong>{testEmail}</strong> instead
+                  of actual student emails
                 </p>
               </div>
             </div>
@@ -200,7 +245,10 @@ const QuarterlyReports: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="text-sm font-medium mb-2 block">Student</label>
-              <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
+              <Select
+                value={selectedStudentId}
+                onValueChange={setSelectedStudentId}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select student" />
                 </SelectTrigger>
@@ -218,8 +266,13 @@ const QuarterlyReports: React.FC = () => {
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-2 block">Report Quarter</label>
-              <Select value={selectedQuarter} onValueChange={setSelectedQuarter}>
+              <label className="text-sm font-medium mb-2 block">
+                Report Quarter
+              </label>
+              <Select
+                value={selectedQuarter}
+                onValueChange={setSelectedQuarter}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select quarter" />
                 </SelectTrigger>
@@ -248,19 +301,24 @@ const QuarterlyReports: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-4">
-            <Button 
-              onClick={handleSendReport} 
+            <Button
+              onClick={handleSendReport}
               disabled={isSending || !selectedQuarter}
               className="flex-1"
             >
-              {isSending ? 'Sending...' : testEmail ? 'Send Test Report' : 'Generate & Send Report'}
+              {isSending
+                ? 'Sending...'
+                : testEmail
+                  ? 'Send Test Report'
+                  : 'Generate & Send Report'}
             </Button>
           </div>
 
           <div className="text-sm text-muted-foreground">
             <p className="flex items-center gap-1">
               <Calendar className="h-4 w-4" />
-              Reports are automatically sent on Jan 1, Apr 1, Jul 1, and Oct 1 for the previous quarter
+              Reports are automatically sent on Jan 1, Apr 1, Jul 1, and Oct 1
+              for the previous quarter
             </p>
           </div>
         </CardContent>
@@ -282,7 +340,9 @@ const QuarterlyReports: React.FC = () => {
             <div className="text-center py-8 text-muted-foreground">
               <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
               <p>No reports sent yet</p>
-              <p className="text-sm mt-1">Generate your first quarterly report above</p>
+              <p className="text-sm mt-1">
+                Generate your first quarterly report above
+              </p>
             </div>
           ) : (
             <div className="border rounded-lg">
@@ -320,11 +380,14 @@ const QuarterlyReports: React.FC = () => {
                           day: 'numeric',
                           year: 'numeric',
                           hour: '2-digit',
-                          minute: '2-digit'
+                          minute: '2-digit',
                         })}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                        <Badge
+                          variant="outline"
+                          className="bg-green-50 text-green-700 border-green-200"
+                        >
                           Sent
                         </Badge>
                       </TableCell>

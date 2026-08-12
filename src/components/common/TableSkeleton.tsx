@@ -1,7 +1,13 @@
-
 import React from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from '@/components/ui/table';
 
 interface TableSkeletonProps {
   columns: string[];
@@ -9,10 +15,10 @@ interface TableSkeletonProps {
   cellWidths?: string[];
 }
 
-const TableSkeleton: React.FC<TableSkeletonProps> = ({ 
-  columns, 
+const TableSkeleton: React.FC<TableSkeletonProps> = ({
+  columns,
   rowCount = 5,
-  cellWidths = []
+  cellWidths = [],
 }) => {
   return (
     <Table>
@@ -24,17 +30,19 @@ const TableSkeleton: React.FC<TableSkeletonProps> = ({
         </TableRow>
       </TableHeader>
       <TableBody>
-        {Array(rowCount).fill(0).map((_, rowIndex) => (
-          <TableRow key={rowIndex}>
-            {columns.map((_, colIndex) => (
-              <TableCell key={colIndex}>
-                <Skeleton 
-                  className={`h-5 ${cellWidths[colIndex] || 'w-24'}`} 
-                />
-              </TableCell>
-            ))}
-          </TableRow>
-        ))}
+        {Array(rowCount)
+          .fill(0)
+          .map((_, rowIndex) => (
+            <TableRow key={rowIndex}>
+              {columns.map((_, colIndex) => (
+                <TableCell key={colIndex}>
+                  <Skeleton
+                    className={`h-5 ${cellWidths[colIndex] || 'w-24'}`}
+                  />
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
       </TableBody>
     </Table>
   );

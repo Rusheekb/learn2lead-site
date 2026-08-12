@@ -1,11 +1,20 @@
-
 import React from 'react';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
-import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import {
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { UseFormReturn } from 'react-hook-form';
@@ -20,12 +29,14 @@ export const TitleField: React.FC<FormFieldsProps> = ({ form }) => (
     name="title"
     render={({ field }) => (
       <FormItem className="w-full">
-        <FormLabel>Class Title <span className="text-red-500">*</span></FormLabel>
+        <FormLabel>
+          Class Title <span className="text-red-500">*</span>
+        </FormLabel>
         <FormControl>
-          <Input 
-            placeholder="Enter class title (min 3 characters)" 
+          <Input
+            placeholder="Enter class title (min 3 characters)"
             className="w-full bg-white"
-            {...field} 
+            {...field}
           />
         </FormControl>
         <FormMessage className="text-red-500 text-xs" />
@@ -40,7 +51,9 @@ export const DateField: React.FC<FormFieldsProps> = ({ form }) => (
     name="date"
     render={({ field }) => (
       <FormItem className="flex flex-col w-full">
-        <FormLabel>Date <span className="text-red-500">*</span></FormLabel>
+        <FormLabel>
+          Date <span className="text-red-500">*</span>
+        </FormLabel>
         <Popover>
           <PopoverTrigger asChild>
             <FormControl>
@@ -52,7 +65,11 @@ export const DateField: React.FC<FormFieldsProps> = ({ form }) => (
                 )}
               >
                 <CalendarIcon className="mr-2 h-4 w-4" />
-                {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
+                {field.value ? (
+                  format(field.value, 'PPP')
+                ) : (
+                  <span>Pick a date</span>
+                )}
               </Button>
             </FormControl>
           </PopoverTrigger>
@@ -62,7 +79,9 @@ export const DateField: React.FC<FormFieldsProps> = ({ form }) => (
               selected={field.value}
               onSelect={field.onChange}
               initialFocus
-              disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+              disabled={(date) =>
+                date < new Date(new Date().setHours(0, 0, 0, 0))
+              }
               className="pointer-events-auto"
             />
           </PopoverContent>
@@ -73,19 +92,19 @@ export const DateField: React.FC<FormFieldsProps> = ({ form }) => (
   />
 );
 
-export const TimeField: React.FC<FormFieldsProps & { name: "startTime" | "endTime", label: string }> = ({ form, name, label }) => (
+export const TimeField: React.FC<
+  FormFieldsProps & { name: 'startTime' | 'endTime'; label: string }
+> = ({ form, name, label }) => (
   <FormField
     control={form.control}
     name={name}
     render={({ field }) => (
       <FormItem className="w-full">
-        <FormLabel>{label} <span className="text-red-500">*</span></FormLabel>
+        <FormLabel>
+          {label} <span className="text-red-500">*</span>
+        </FormLabel>
         <FormControl>
-          <Input 
-            type="time" 
-            className="w-full bg-white"
-            {...field} 
-          />
+          <Input type="time" className="w-full bg-white" {...field} />
         </FormControl>
         <FormMessage className="text-red-500 text-xs" />
       </FormItem>
@@ -99,12 +118,14 @@ export const SubjectField: React.FC<FormFieldsProps> = ({ form }) => (
     name="subject"
     render={({ field }) => (
       <FormItem className="w-full">
-        <FormLabel>Subject <span className="text-red-500">*</span></FormLabel>
+        <FormLabel>
+          Subject <span className="text-red-500">*</span>
+        </FormLabel>
         <FormControl>
-          <Input 
-            placeholder="Enter subject" 
+          <Input
+            placeholder="Enter subject"
             className="w-full bg-white"
-            {...field} 
+            {...field}
           />
         </FormControl>
         <FormMessage className="text-red-500 text-xs" />
@@ -119,12 +140,14 @@ export const ZoomLinkField: React.FC<FormFieldsProps> = ({ form }) => (
     name="zoomLink"
     render={({ field }) => (
       <FormItem className="w-full">
-        <FormLabel>Zoom Meeting Link <span className="text-red-500">*</span></FormLabel>
+        <FormLabel>
+          Zoom Meeting Link <span className="text-red-500">*</span>
+        </FormLabel>
         <FormControl>
-          <Input 
-            placeholder="Enter Zoom meeting URL (https://...)" 
+          <Input
+            placeholder="Enter Zoom meeting URL (https://...)"
             className="w-full bg-white"
-            {...field} 
+            {...field}
           />
         </FormControl>
         <FormMessage className="text-red-500 text-xs" />
@@ -141,10 +164,10 @@ export const NotesField: React.FC<FormFieldsProps> = ({ form }) => (
       <FormItem className="w-full">
         <FormLabel>Notes</FormLabel>
         <FormControl>
-          <Input 
-            placeholder="Add any notes (optional)" 
+          <Input
+            placeholder="Add any notes (optional)"
             className="w-full bg-white"
-            {...field} 
+            {...field}
           />
         </FormControl>
         <FormMessage className="text-red-500 text-xs" />

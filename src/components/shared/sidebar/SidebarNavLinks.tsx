@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { AppRole } from '@/types/profile';
 import StudentNavLinks from './StudentNavLinks';
@@ -14,30 +13,21 @@ interface SidebarNavLinksProps {
 const SidebarNavLinks: React.FC<SidebarNavLinksProps> = ({
   userRole,
   isExpanded,
-  profilePath
+  profilePath,
 }) => {
   // Role-specific navigation items
   switch (userRole) {
     case 'student':
       return (
-        <StudentNavLinks 
-          isExpanded={isExpanded}
-          profilePath={profilePath}
-        />
+        <StudentNavLinks isExpanded={isExpanded} profilePath={profilePath} />
       );
     case 'tutor':
       return (
-        <TutorNavLinks 
-          isExpanded={isExpanded}
-          profilePath={profilePath}
-        />
+        <TutorNavLinks isExpanded={isExpanded} profilePath={profilePath} />
       );
     case 'admin':
       return (
-        <AdminNavLinks 
-          isExpanded={isExpanded}
-          profilePath={profilePath}
-        />
+        <AdminNavLinks isExpanded={isExpanded} profilePath={profilePath} />
       );
     default:
       return null;

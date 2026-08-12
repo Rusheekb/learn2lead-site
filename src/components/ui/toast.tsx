@@ -41,18 +41,18 @@ const toastVariants = cva(
 
 // Animation variants for toast
 const toastAnimationVariants = {
-  initial: { 
-    opacity: 0, 
+  initial: {
+    opacity: 0,
     x: 100,
     scale: 0.95,
   },
-  animate: { 
-    opacity: 1, 
+  animate: {
+    opacity: 1,
     x: 0,
     scale: 1,
   },
-  exit: { 
-    opacity: 0, 
+  exit: {
+    opacity: 0,
     x: 100,
     scale: 0.95,
   },
@@ -83,9 +83,7 @@ const Toast = React.forwardRef<
       >
         {children}
         {showProgress && (
-          <motion.div
-            className="absolute bottom-0 left-0 right-0 h-1 bg-primary/20 overflow-hidden"
-          >
+          <motion.div className="absolute bottom-0 left-0 right-0 h-1 bg-primary/20 overflow-hidden">
             <motion.div
               className="h-full w-full bg-primary/40 origin-left"
               initial={{ scaleX: 1 }}

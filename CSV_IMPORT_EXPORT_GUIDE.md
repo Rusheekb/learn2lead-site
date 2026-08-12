@@ -13,6 +13,7 @@ Each class record has a unique **Class Number** in the format:
 ```
 
 ### Examples:
+
 - `SM-JD-20241119-1` - Sarah Miller with John Doe on November 19, 2024 (first class that day)
 - `SM-JD-20241119-2` - Sarah Miller with John Doe on November 19, 2024 (second class that day)
 - `MB-JS-20241120-1` - Michael Brown with Jane Smith on November 20, 2024
@@ -20,6 +21,7 @@ Each class record has a unique **Class Number** in the format:
 ### Auto-Generation
 
 **You can leave the Class Number column blank when importing** - the system will automatically generate a unique ID based on:
+
 - Student name initials
 - Tutor name initials
 - Class date
@@ -29,23 +31,23 @@ Each class record has a unique **Class Number** in the format:
 
 Your CSV file must include these columns in this exact order:
 
-| Column | Description | Required | Example |
-|--------|-------------|----------|---------|
-| Class Number | Unique identifier | No (auto-generates if blank) | `SM-JD-20241119-1` |
-| Tutor Name | Full name of tutor | Yes | `John Doe` |
-| Student Name | Full name of student | Yes | `Sarah Miller` |
-| Date | Class date | Yes | `11/19/2024` |
-| Day | Day of week | No | `Tuesday` |
-| Time (CST) | Start time | Yes | `14:00` or `2:00 PM` |
-| Time (hrs) | Duration in hours | Yes | `1` or `1.5` |
-| Subject | Subject taught | Yes | `Math` |
-| Content | Class content/topics | No | `Algebra review` |
-| HW | Homework assigned | No | `Practice problems 1-10` |
-| Class Cost | Total class cost | No | `50` |
-| Tutor Cost | Tutor payment amount | No | `25` |
-| Student Payment | Payment date or status | No | `11/20/24` or blank |
-| Tutor Payment | Payment date or status | No | `11/21/24` or blank |
-| Additional Info | Notes and comments | No | `Makeup class` |
+| Column          | Description            | Required                     | Example                  |
+| --------------- | ---------------------- | ---------------------------- | ------------------------ |
+| Class Number    | Unique identifier      | No (auto-generates if blank) | `SM-JD-20241119-1`       |
+| Tutor Name      | Full name of tutor     | Yes                          | `John Doe`               |
+| Student Name    | Full name of student   | Yes                          | `Sarah Miller`           |
+| Date            | Class date             | Yes                          | `11/19/2024`             |
+| Day             | Day of week            | No                           | `Tuesday`                |
+| Time (CST)      | Start time             | Yes                          | `14:00` or `2:00 PM`     |
+| Time (hrs)      | Duration in hours      | Yes                          | `1` or `1.5`             |
+| Subject         | Subject taught         | Yes                          | `Math`                   |
+| Content         | Class content/topics   | No                           | `Algebra review`         |
+| HW              | Homework assigned      | No                           | `Practice problems 1-10` |
+| Class Cost      | Total class cost       | No                           | `50`                     |
+| Tutor Cost      | Tutor payment amount   | No                           | `25`                     |
+| Student Payment | Payment date or status | No                           | `11/20/24` or blank      |
+| Tutor Payment   | Payment date or status | No                           | `11/21/24` or blank      |
+| Additional Info | Notes and comments     | No                           | `Makeup class`           |
 
 ### Date Formats
 
@@ -91,6 +93,7 @@ The CSV import uses an **upsert** strategy:
 ### What's Included
 
 The exported CSV contains:
+
 - All class information in the standard column format
 - Unique Class Numbers for every record
 - Payment dates in `M/D/YY` format
@@ -127,24 +130,29 @@ The exported CSV contains:
 ### Common Issues
 
 **"Invalid date format"**
+
 - Ensure dates are in `M/D/YYYY` format for class dates
 - Check that payment dates use `M/D/YY` format
 
 **"Duplicate Class Numbers"**
+
 - Each Class Number must be unique
 - If auto-generating, ensure student/tutor names are consistent
 
 **"Missing required columns"**
+
 - Verify your CSV has all required columns in the correct order
 - Check that column headers match exactly (case-sensitive)
 
 **"Import creates duplicates"**
+
 - Include the Class Number column to update existing records
 - Use exported CSV as a starting point to preserve Class Numbers
 
 ### Getting Help
 
 If you encounter issues:
+
 1. Download the test CSV to verify correct format
 2. Try exporting current data to see proper formatting
 3. Check that your CSV encoding is UTF-8
@@ -177,9 +185,9 @@ If you encounter issues:
 
 You can use this as your Excel template structure:
 
-| Class Number | Tutor Name | Student Name | Date | Day | Time (CST) | Time (hrs) | Subject | Content | HW | Class Cost | Tutor Cost | Student Payment | Tutor Payment | Additional Info |
-|--------------|------------|--------------|------|-----|------------|------------|---------|---------|-----|------------|------------|-----------------|---------------|-----------------|
-| *leave blank for new* | John Doe | Sarah Miller | 11/19/2024 | Tuesday | 14:00 | 1.5 | Math | Algebra | Problems 1-10 | 50 | 25 | 11/20/24 | 11/21/24 | Regular class |
+| Class Number          | Tutor Name | Student Name | Date       | Day     | Time (CST) | Time (hrs) | Subject | Content | HW            | Class Cost | Tutor Cost | Student Payment | Tutor Payment | Additional Info |
+| --------------------- | ---------- | ------------ | ---------- | ------- | ---------- | ---------- | ------- | ------- | ------------- | ---------- | ---------- | --------------- | ------------- | --------------- |
+| _leave blank for new_ | John Doe   | Sarah Miller | 11/19/2024 | Tuesday | 14:00      | 1.5        | Math    | Algebra | Problems 1-10 | 50         | 25         | 11/20/24        | 11/21/24      | Regular class   |
 
 ### Setting Up Your Template
 

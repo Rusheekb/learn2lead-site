@@ -1,4 +1,3 @@
-
 // Re-export everything from the refactored toast module
 export { useToast, toast } from './toast';
 export type { ToasterToast, ToastActionElement } from './toast';

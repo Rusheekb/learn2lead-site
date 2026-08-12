@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useReferralCode } from '@/hooks/useReferralCode';
@@ -8,29 +14,33 @@ import { copyToClipboard } from '@/utils/clipboardUtils';
 import { toast } from 'sonner';
 import { Copy, Gift, Loader2, BarChart3, Share2, Link2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { SocialShareButtons, ShareLinkCard, ReferralStats } from '@/components/referral';
+import {
+  SocialShareButtons,
+  ShareLinkCard,
+  ReferralStats,
+} from '@/components/referral';
 
 const REFERRAL_BASE_URL = 'https://learn2lead.vercel.app/refer';
 
 const ReferralCodeSection: React.FC = () => {
-  const { 
-    referralCode, 
-    usageStats, 
-    isLoading, 
-    isGenerating, 
-    error, 
-    requiresSubscription, 
-    generateCode 
+  const {
+    referralCode,
+    usageStats,
+    isLoading,
+    isGenerating,
+    error,
+    requiresSubscription,
+    generateCode,
   } = useReferralCode();
   const [activeTab, setActiveTab] = useState('overview');
 
-  const referralUrl = referralCode?.code 
-    ? `${REFERRAL_BASE_URL}/${referralCode.code}` 
+  const referralUrl = referralCode?.code
+    ? `${REFERRAL_BASE_URL}/${referralCode.code}`
     : '';
 
   const handleCopyCode = async () => {
     if (!referralCode?.code) return;
-    
+
     const success = await copyToClipboard(referralCode.code);
     if (success) {
       toast.success('Referral code copied to clipboard!');
@@ -87,12 +97,17 @@ const ReferralCodeSection: React.FC = () => {
           Referral Program
         </CardTitle>
         <CardDescription>
-          Share your referral code and earn $25 credit for each friend who subscribes
+          Share your referral code and earn $25 credit for each friend who
+          subscribes
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {referralCode ? (
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="w-full"
+          >
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="overview" className="gap-2">
                 <Gift className="h-4 w-4 hidden sm:inline" />
@@ -112,7 +127,9 @@ const ReferralCodeSection: React.FC = () => {
             <TabsContent value="overview" className="space-y-4 mt-4">
               {/* Code Display */}
               <div className="rounded-lg border bg-gradient-to-br from-primary/5 to-primary/10 p-4">
-                <p className="text-sm text-muted-foreground mb-2">Your Referral Code</p>
+                <p className="text-sm text-muted-foreground mb-2">
+                  Your Referral Code
+                </p>
                 <div className="flex items-center gap-3">
                   <span className="text-2xl font-bold tracking-wider text-primary">
                     {referralCode.code}
@@ -135,13 +152,17 @@ const ReferralCodeSection: React.FC = () => {
                   <p className="text-2xl font-bold text-primary">
                     {usageStats?.timesUsed || 0}
                   </p>
-                  <p className="text-sm text-muted-foreground">Friends Referred</p>
+                  <p className="text-sm text-muted-foreground">
+                    Friends Referred
+                  </p>
                 </div>
                 <div className="rounded-lg border p-4 text-center">
                   <p className="text-2xl font-bold text-green-600">
                     ${usageStats?.totalEarnings || 0}
                   </p>
-                  <p className="text-sm text-muted-foreground">Credits Earned</p>
+                  <p className="text-sm text-muted-foreground">
+                    Credits Earned
+                  </p>
                 </div>
               </div>
 
@@ -188,7 +209,9 @@ const ReferralCodeSection: React.FC = () => {
                 <p className="text-sm font-medium">Share Message</p>
                 <p className="text-sm text-muted-foreground">
                   I'm learning with Learn2Lead tutoring! Use my referral code{' '}
-                  <span className="font-semibold text-foreground">{referralCode.code}</span>{' '}
+                  <span className="font-semibold text-foreground">
+                    {referralCode.code}
+                  </span>{' '}
                   for ${referralCode.discountAmount} off your first month.
                 </p>
               </div>
@@ -204,8 +227,9 @@ const ReferralCodeSection: React.FC = () => {
               <div className="space-y-3">
                 <h3 className="font-semibold">Subscription Required</h3>
                 <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                  Generate your unique referral code by subscribing to one of our plans.
-                  Earn $25 for each friend who subscribes using your code!
+                  Generate your unique referral code by subscribing to one of
+                  our plans. Earn $25 for each friend who subscribes using your
+                  code!
                 </p>
                 <Button asChild>
                   <Link to="/pricing">View Plans</Link>
@@ -215,7 +239,8 @@ const ReferralCodeSection: React.FC = () => {
               <div className="space-y-2">
                 <h3 className="font-semibold">Get Your Referral Code</h3>
                 <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                  Generate your unique referral code and earn $25 for each friend who subscribes using your code.
+                  Generate your unique referral code and earn $25 for each
+                  friend who subscribes using your code.
                 </p>
                 <Button
                   onClick={handleGenerateCode}

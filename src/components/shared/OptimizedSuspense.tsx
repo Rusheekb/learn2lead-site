@@ -23,10 +23,10 @@ const DefaultFallback = ({ className }: { className?: string }) => (
   </div>
 );
 
-export const OptimizedSuspense: React.FC<OptimizedSuspenseProps> = ({ 
-  children, 
-  fallback, 
-  className 
+export const OptimizedSuspense: React.FC<OptimizedSuspenseProps> = ({
+  children,
+  fallback,
+  className,
 }) => {
   return (
     <Suspense fallback={fallback || <DefaultFallback className={className} />}>

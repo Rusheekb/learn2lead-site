@@ -2,7 +2,6 @@ import { logger } from '@/lib/logger';
 
 const log = logger.create('clipboardUtils');
 
-
 /**
  * Copies text to clipboard
  * @param text Text to copy to clipboard
@@ -24,7 +23,7 @@ export const copyToClipboard = async (text: string): Promise<boolean> => {
       document.body.appendChild(textArea);
       textArea.focus();
       textArea.select();
-      
+
       const success = document.execCommand('copy');
       document.body.removeChild(textArea);
       return success;

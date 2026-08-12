@@ -19,10 +19,12 @@ export interface PaginatedResponse<T> {
   hasMore: boolean;
 }
 
-export async function fetchStudents(options: FetchStudentsOptions = {}): Promise<PaginatedResponse<Student>> {
+export async function fetchStudents(
+  options: FetchStudentsOptions = {}
+): Promise<PaginatedResponse<Student>> {
   const { page = 1, pageSize = 10, searchTerm = '' } = options;
   const offset = (page - 1) * pageSize;
-  
+
   let query = supabase.from('students').select('*', { count: 'exact' });
 
   if (searchTerm) {
@@ -37,8 +39,8 @@ export async function fetchStudents(options: FetchStudentsOptions = {}): Promise
     log.error('Error fetching students', result.error);
     throw result.error;
   }
-  
-  const students = (result.data || []).map(student => ({
+
+  const students = (result.data || []).map((student) => ({
     id: student.id,
     name: student.name,
     email: student.email,
@@ -46,7 +48,7 @@ export async function fetchStudents(options: FetchStudentsOptions = {}): Promise
     grade: student.grade,
     active: student.active,
     enrollmentDate: student.enrollment_date,
-    paymentStatus: student.payment_status as any
+    paymentStatus: student.payment_status as any,
   }));
 
   return {
@@ -54,35 +56,37 @@ export async function fetchStudents(options: FetchStudentsOptions = {}): Promise
     count: result.count || 0,
     page,
     pageSize,
-    hasMore: offset + students.length < (result.count || 0)
+    hasMore: offset + students.length < (result.count || 0),
   };
 }
 
-export async function createStudent(student: Omit<Student, 'id'>): Promise<Student> {
+export async function createStudent(
+  student: Omit<Student, 'id'>
+): Promise<Student> {
   if (!student.name || !student.email) {
     throw new Error('Student name and email are required');
   }
 
   const dbStudent = {
     name: student.name,
-    email: student.email, 
+    email: student.email,
     subjects: student.subjects || [],
     grade: student.grade,
     active: student.active !== undefined ? student.active : true,
-    payment_status: student.paymentStatus || 'pending'
+    payment_status: student.paymentStatus || 'pending',
   };
-  
+
   const result = await supabase
     .from('students')
     .insert(dbStudent)
     .select()
     .single();
-  
+
   if (result.error) {
     log.error('Error creating student', result.error);
     throw result.error;
   }
-  
+
   return {
     id: result.data.id,
     name: result.data.name,
@@ -91,7 +95,7 @@ export async function createStudent(student: Omit<Student, 'id'>): Promise<Stude
     grade: result.data.grade,
     active: result.data.active,
     enrollmentDate: result.data.enrollment_date,
-    paymentStatus: result.data.payment_status as any
+    paymentStatus: result.data.payment_status as any,
   };
 }
 
@@ -105,20 +109,21 @@ export async function updateStudent(
   if (updates.subjects !== undefined) dbUpdates.subjects = updates.subjects;
   if (updates.grade !== undefined) dbUpdates.grade = updates.grade;
   if (updates.active !== undefined) dbUpdates.active = updates.active;
-  if (updates.paymentStatus !== undefined) dbUpdates.payment_status = updates.paymentStatus;
-  
+  if (updates.paymentStatus !== undefined)
+    dbUpdates.payment_status = updates.paymentStatus;
+
   const result = await supabase
     .from('students')
     .update(dbUpdates)
     .eq('id', id)
     .select()
     .single();
-  
+
   if (result.error) {
     log.error('Error updating student', result.error);
     throw result.error;
   }
-  
+
   return {
     id: result.data.id,
     name: result.data.name,
@@ -127,7 +132,7 @@ export async function updateStudent(
     grade: result.data.grade,
     active: result.data.active,
     enrollmentDate: result.data.enrollment_date,
-    paymentStatus: result.data.payment_status as any
+    paymentStatus: result.data.payment_status as any,
   };
 }
 
@@ -138,12 +143,12 @@ export async function deleteStudent(id: string): Promise<Student> {
     .eq('id', id)
     .select()
     .single();
-  
+
   if (result.error) {
     log.error('Error deleting student', result.error);
     throw result.error;
   }
-  
+
   return {
     id: result.data.id,
     name: result.data.name,
@@ -152,6 +157,6 @@ export async function deleteStudent(id: string): Promise<Student> {
     grade: result.data.grade,
     active: result.data.active,
     enrollmentDate: result.data.enrollment_date,
-    paymentStatus: result.data.payment_status as any
+    paymentStatus: result.data.payment_status as any,
   };
 }

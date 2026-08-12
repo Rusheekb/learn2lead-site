@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SignInForm from './SignInForm';
@@ -35,7 +34,7 @@ const AuthTabs: React.FC<AuthTabsProps> = ({
   authError,
   handleSignIn,
   handleSignUp,
-  handleGoogleSignIn
+  handleGoogleSignIn,
 }) => {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
 

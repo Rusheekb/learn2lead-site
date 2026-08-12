@@ -2,14 +2,14 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { copyToClipboard } from '@/utils/clipboardUtils';
-import { 
-  Twitter, 
-  Facebook, 
-  MessageCircle, 
-  Mail, 
-  Smartphone, 
-  Link2, 
-  Share2 
+import {
+  Twitter,
+  Facebook,
+  MessageCircle,
+  Mail,
+  Smartphone,
+  Link2,
+  Share2,
 } from 'lucide-react';
 
 interface SocialShareButtonsProps {
@@ -28,7 +28,7 @@ const SocialShareButtons: React.FC<SocialShareButtonsProps> = ({
   variant = 'icons',
 }) => {
   const shareMessage = `I'm learning with Learn2Lead tutoring! Use my referral code ${referralCode} for $${discountAmount} off your first month. Sign up here: ${referralUrl}`;
-  
+
   const encodedMessage = encodeURIComponent(shareMessage);
   const encodedUrl = encodeURIComponent(referralUrl);
 
@@ -179,20 +179,12 @@ const SocialShareButtons: React.FC<SocialShareButtonsProps> = ({
         <Mail className="h-4 w-4" />
         Email
       </Button>
-      <Button
-        variant="outline"
-        onClick={handleCopyLink}
-        className="gap-2"
-      >
+      <Button variant="outline" onClick={handleCopyLink} className="gap-2">
         <Link2 className="h-4 w-4" />
         Copy Link
       </Button>
       {'share' in navigator && (
-        <Button
-          variant="default"
-          onClick={handleNativeShare}
-          className="gap-2"
-        >
+        <Button variant="default" onClick={handleNativeShare} className="gap-2">
           <Share2 className="h-4 w-4" />
           Share
         </Button>

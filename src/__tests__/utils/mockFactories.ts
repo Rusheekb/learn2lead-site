@@ -35,7 +35,9 @@ export interface MockSession {
   refresh_token: string;
 }
 
-export function createMockStudent(overrides: Partial<MockStudent> = {}): MockStudent {
+export function createMockStudent(
+  overrides: Partial<MockStudent> = {}
+): MockStudent {
   return {
     id: 'student-123',
     name: 'Test Student',
@@ -47,7 +49,9 @@ export function createMockStudent(overrides: Partial<MockStudent> = {}): MockStu
   };
 }
 
-export function createMockSubscription(overrides: Partial<MockSubscription> = {}): MockSubscription {
+export function createMockSubscription(
+  overrides: Partial<MockSubscription> = {}
+): MockSubscription {
   return {
     id: 'sub-123',
     student_id: 'student-123',
@@ -62,7 +66,9 @@ export function createMockSubscription(overrides: Partial<MockSubscription> = {}
   };
 }
 
-export function createMockClassEvent(overrides: Partial<ClassEvent> = {}): ClassEvent {
+export function createMockClassEvent(
+  overrides: Partial<ClassEvent> = {}
+): ClassEvent {
   return {
     id: 'class-123',
     title: 'Math Tutoring Session',
@@ -82,7 +88,9 @@ export function createMockClassEvent(overrides: Partial<ClassEvent> = {}): Class
   };
 }
 
-export function createMockSession(overrides: Partial<MockSession> = {}): MockSession {
+export function createMockSession(
+  overrides: Partial<MockSession> = {}
+): MockSession {
   return {
     user: {
       id: 'user-123',
@@ -96,13 +104,15 @@ export function createMockSession(overrides: Partial<MockSession> = {}): MockSes
   };
 }
 
-export function createMockTutor(overrides: Partial<{
-  id: string;
-  name: string;
-  email: string;
-  subjects: string[];
-  active: boolean;
-}> = {}) {
+export function createMockTutor(
+  overrides: Partial<{
+    id: string;
+    name: string;
+    email: string;
+    subjects: string[];
+    active: boolean;
+  }> = {}
+) {
   return {
     id: 'tutor-456',
     name: 'Test Tutor',
@@ -113,13 +123,15 @@ export function createMockTutor(overrides: Partial<{
   };
 }
 
-export function createMockProfile(overrides: Partial<{
-  id: string;
-  email: string;
-  first_name: string;
-  last_name: string;
-  role: 'student' | 'tutor' | 'admin';
-}> = {}) {
+export function createMockProfile(
+  overrides: Partial<{
+    id: string;
+    email: string;
+    first_name: string;
+    last_name: string;
+    role: 'student' | 'tutor' | 'admin';
+  }> = {}
+) {
   return {
     id: 'profile-123',
     email: 'user@test.com',

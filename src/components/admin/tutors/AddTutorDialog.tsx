@@ -8,7 +8,14 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { toast } from 'sonner';
 import { Tutor } from '@/types/tutorTypes';
 import { useForm } from 'react-hook-form';
@@ -78,7 +85,7 @@ const AddTutorDialog: React.FC<AddTutorDialogProps> = ({
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="email"
@@ -97,13 +104,15 @@ const AddTutorDialog: React.FC<AddTutorDialogProps> = ({
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="subjects"
                 render={({ field }) => (
                   <FormItem className="grid gap-2">
-                    <FormLabel htmlFor="subjects">Subjects (comma-separated)</FormLabel>
+                    <FormLabel htmlFor="subjects">
+                      Subjects (comma-separated)
+                    </FormLabel>
                     <FormControl>
                       <Input
                         id="subjects"
@@ -115,7 +124,7 @@ const AddTutorDialog: React.FC<AddTutorDialogProps> = ({
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="hourlyRate"

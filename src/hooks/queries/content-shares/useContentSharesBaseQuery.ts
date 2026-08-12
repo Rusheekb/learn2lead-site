@@ -1,4 +1,3 @@
-
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { fetchContentShares } from '@/services/content-shares';
@@ -16,11 +15,11 @@ export const useContentSharesBaseQuery = () => {
   const queryClient = useQueryClient();
 
   // Fetch all content shares
-  const { 
-    data: shares = [], 
-    isLoading, 
-    error, 
-    refetch 
+  const {
+    data: shares = [],
+    isLoading,
+    error,
+    refetch,
   } = useQuery({
     queryKey: contentSharesKeys.lists(),
     queryFn: fetchContentShares,
@@ -39,10 +38,12 @@ export const useContentSharesBaseQuery = () => {
         },
         (payload) => {
           log.debug('Realtime update for content shares:', payload);
-          
+
           // Invalidate the query to refetch data
-          queryClient.invalidateQueries({ queryKey: contentSharesKeys.lists() });
-          
+          queryClient.invalidateQueries({
+            queryKey: contentSharesKeys.lists(),
+          });
+
           // Show toast based on the event type
           if (payload.eventType === 'INSERT') {
             toast.info('New content shared');

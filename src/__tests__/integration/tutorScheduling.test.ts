@@ -75,7 +75,9 @@ describe('Tutor Scheduling Flow', () => {
           subject: 'Math',
         })
       );
-      expect(mockToastSuccess).toHaveBeenCalledWith('Class scheduled successfully');
+      expect(mockToastSuccess).toHaveBeenCalledWith(
+        'Class scheduled successfully'
+      );
     });
 
     it('should reject class creation when required fields are missing', async () => {
@@ -84,7 +86,9 @@ describe('Tutor Scheduling Flow', () => {
       const result = await createScheduledClass(incompleteData);
 
       expect(result).toBeNull();
-      expect(mockToastError).toHaveBeenCalledWith('Missing required field: title');
+      expect(mockToastError).toHaveBeenCalledWith(
+        'Missing required field: title'
+      );
       expect(mockInsertSingle).not.toHaveBeenCalled();
     });
 
@@ -94,7 +98,9 @@ describe('Tutor Scheduling Flow', () => {
       const result = await createScheduledClass(noStudent);
 
       expect(result).toBeNull();
-      expect(mockToastError).toHaveBeenCalledWith('Missing required field: student_id');
+      expect(mockToastError).toHaveBeenCalledWith(
+        'Missing required field: student_id'
+      );
     });
 
     it('should reject when subject is missing', async () => {
@@ -103,7 +109,9 @@ describe('Tutor Scheduling Flow', () => {
       const result = await createScheduledClass(noSubject);
 
       expect(result).toBeNull();
-      expect(mockToastError).toHaveBeenCalledWith('Missing required field: subject');
+      expect(mockToastError).toHaveBeenCalledWith(
+        'Missing required field: subject'
+      );
     });
 
     it('should handle database errors gracefully', async () => {

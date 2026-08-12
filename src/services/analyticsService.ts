@@ -1,4 +1,3 @@
-
 import { ClassEvent } from '@/types/tutorTypes';
 import { parseNumericString } from '@/utils/numberUtils';
 import { captureEvent } from '@/lib/posthog';
@@ -17,7 +16,7 @@ export enum EventName {
   TAB_CHANGE = 'tab_change',
   CLASS_CREATED = 'class_created',
   CLASS_EDITED = 'class_edited',
-  CLASS_DELETED = 'class_deleted'
+  CLASS_DELETED = 'class_deleted',
 }
 
 export enum EventCategory {
@@ -25,7 +24,7 @@ export enum EventCategory {
   INTERACTION = 'interaction',
   UI = 'ui',
   CLASS = 'class',
-  AUTH = 'auth'
+  AUTH = 'auth',
 }
 
 export interface AnalyticsEvent {
@@ -65,51 +64,65 @@ class AnalyticsService {
         totalRevenue: 0,
         netIncome: 0,
         studentRetentionRate: 0,
-        averageClassCost: 0
+        averageClassCost: 0,
       };
     }
 
     const totalRevenue = classes.reduce((sum, classEvent) => {
-      const cost = typeof classEvent.classCost === 'number' ? classEvent.classCost : 
-                   typeof classEvent.classCost === 'string' ? parseNumericString(classEvent.classCost) : 0;
+      const cost =
+        typeof classEvent.classCost === 'number'
+          ? classEvent.classCost
+          : typeof classEvent.classCost === 'string'
+            ? parseNumericString(classEvent.classCost)
+            : 0;
       return sum + cost;
     }, 0);
 
     const totalTutorCosts = classes.reduce((sum, classEvent) => {
-      const cost = typeof classEvent.tutorCost === 'number' ? classEvent.tutorCost : 
-                   typeof classEvent.tutorCost === 'string' ? parseNumericString(classEvent.tutorCost) : 0;
+      const cost =
+        typeof classEvent.tutorCost === 'number'
+          ? classEvent.tutorCost
+          : typeof classEvent.tutorCost === 'string'
+            ? parseNumericString(classEvent.tutorCost)
+            : 0;
       return sum + cost;
     }, 0);
 
     const netIncome = totalRevenue - totalTutorCosts;
-    const averageClassCost = classes.length > 0 ? totalRevenue / classes.length : 0;
+    const averageClassCost =
+      classes.length > 0 ? totalRevenue / classes.length : 0;
 
     const studentCounts = new Map<string, number>();
-    classes.forEach(classEvent => {
-      if (classEvent.studentName && 
-          classEvent.studentName.trim() && 
-          classEvent.studentName !== 'Unknown Student') {
+    classes.forEach((classEvent) => {
+      if (
+        classEvent.studentName &&
+        classEvent.studentName.trim() &&
+        classEvent.studentName !== 'Unknown Student'
+      ) {
         const count = studentCounts.get(classEvent.studentName) || 0;
         studentCounts.set(classEvent.studentName, count + 1);
       }
     });
 
     const totalStudents = studentCounts.size;
-    const returningStudents = Array.from(studentCounts.values()).filter(count => count > 1).length;
-    const studentRetentionRate = totalStudents > 0 ? (returningStudents / totalStudents) * 100 : 0;
+    const returningStudents = Array.from(studentCounts.values()).filter(
+      (count) => count > 1
+    ).length;
+    const studentRetentionRate =
+      totalStudents > 0 ? (returningStudents / totalStudents) * 100 : 0;
 
     return {
       totalRevenue,
       netIncome,
       studentRetentionRate,
-      averageClassCost
+      averageClassCost,
     };
   }
 
   async fetchStudentAnalytics(studentId: string): Promise<UserAnalytics> {
     try {
       const { supabase } = await import('@/integrations/supabase/client');
-      
+
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('first_name, last_name, email')
@@ -121,17 +134,20 @@ class AnalyticsService {
         return { classesCompleted: 0, totalCredits: 0, classesPaid: 0 };
       }
 
-      const fullName = profile.first_name && profile.last_name 
-        ? `${profile.first_name} ${profile.last_name}`.trim()
-        : profile.email;
+      const fullName =
+        profile.first_name && profile.last_name
+          ? `${profile.first_name} ${profile.last_name}`.trim()
+          : profile.email;
 
       const escapedFullName = fullName.replace(/"/g, '""');
       const escapedEmail = profile.email.replace(/"/g, '""');
-      
+
       const { data: classLogs, error: logsError } = await supabase
         .from('class_logs')
         .select('id')
-        .or(`"Student Name".eq."${escapedFullName}","Student Name".eq."${escapedEmail}"`);
+        .or(
+          `"Student Name".eq."${escapedFullName}","Student Name".eq."${escapedEmail}"`
+        );
 
       const classesCompleted = logsError || !classLogs ? 0 : classLogs.length;
 
@@ -151,7 +167,7 @@ class AnalyticsService {
         .eq('student_id', studentId)
         .eq('transaction_type', 'credit');
 
-      const classesPaid = creditEntries 
+      const classesPaid = creditEntries
         ? creditEntries.reduce((sum, entry) => sum + Math.abs(entry.amount), 0)
         : 0;
 
@@ -165,7 +181,7 @@ class AnalyticsService {
   async fetchTutorAnalytics(tutorId: string): Promise<UserAnalytics> {
     try {
       const { supabase } = await import('@/integrations/supabase/client');
-      
+
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('first_name, last_name, email')
@@ -177,17 +193,20 @@ class AnalyticsService {
         return { classesCompleted: 0, totalCredits: 0, classesPaid: 0 };
       }
 
-      const fullName = profile.first_name && profile.last_name 
-        ? `${profile.first_name} ${profile.last_name}`.trim()
-        : profile.email;
+      const fullName =
+        profile.first_name && profile.last_name
+          ? `${profile.first_name} ${profile.last_name}`.trim()
+          : profile.email;
 
       const escapedFullName = fullName.replace(/"/g, '""');
       const escapedEmail = profile.email.replace(/"/g, '""');
-      
+
       const { data: classLogs, error: logsError } = await supabase
         .from('class_logs')
         .select('id')
-        .or(`"Tutor Name".eq."${escapedFullName}","Tutor Name".eq."${escapedEmail}"`);
+        .or(
+          `"Tutor Name".eq."${escapedFullName}","Tutor Name".eq."${escapedEmail}"`
+        );
 
       const classesCompleted = logsError || !classLogs ? 0 : classLogs.length;
 
@@ -200,5 +219,7 @@ class AnalyticsService {
 }
 
 export const analytics = new AnalyticsService();
-export const fetchStudentAnalytics = (studentId: string) => analytics.fetchStudentAnalytics(studentId);
-export const fetchTutorAnalytics = (tutorId: string) => analytics.fetchTutorAnalytics(tutorId);
+export const fetchStudentAnalytics = (studentId: string) =>
+  analytics.fetchStudentAnalytics(studentId);
+export const fetchTutorAnalytics = (tutorId: string) =>
+  analytics.fetchTutorAnalytics(tutorId);

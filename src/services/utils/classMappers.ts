@@ -1,4 +1,3 @@
-
 import { StudentMessage, StudentUpload } from '@/types/classTypes';
 
 // Define database record types

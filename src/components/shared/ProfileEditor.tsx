@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Profile } from '@/hooks/useProfile';
@@ -54,9 +53,13 @@ const ProfileEditor: React.FC<ProfileEditorProps> = ({
         <CardTitle>Edit Profile</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6" aria-label="Edit profile form">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-6"
+          aria-label="Edit profile form"
+        >
           <AvatarUploader profile={profile} onSave={onSave} />
-          <ProfileForm 
+          <ProfileForm
             formData={formData}
             profile={profile}
             handleInputChange={handleInputChange}

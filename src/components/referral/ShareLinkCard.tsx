@@ -47,7 +47,9 @@ const ShareLinkCard: React.FC<ShareLinkCardProps> = ({
     if (!svgElement) return;
 
     const svgData = new XMLSerializer().serializeToString(svgElement);
-    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const svgBlob = new Blob([svgData], {
+      type: 'image/svg+xml;charset=utf-8',
+    });
     const svgUrl = URL.createObjectURL(svgBlob);
 
     const img = new Image();
@@ -60,7 +62,7 @@ const ShareLinkCard: React.FC<ShareLinkCardProps> = ({
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, 256, 256);
         ctx.drawImage(img, 0, 0, 256, 256);
-        
+
         const link = document.createElement('a');
         link.download = `learn2lead-referral-${referralCode}.png`;
         link.href = downloadCanvas.toDataURL('image/png');
@@ -137,7 +139,8 @@ const ShareLinkCard: React.FC<ShareLinkCardProps> = ({
                   />
                 </div>
                 <p className="text-center text-sm text-muted-foreground">
-                  Scan to get <span className="font-semibold">$25 off</span> your first month
+                  Scan to get <span className="font-semibold">$25 off</span>{' '}
+                  your first month
                 </p>
                 <div className="flex gap-2 w-full">
                   <Button
@@ -148,10 +151,7 @@ const ShareLinkCard: React.FC<ShareLinkCardProps> = ({
                     <Download className="h-4 w-4" />
                     Download
                   </Button>
-                  <Button
-                    onClick={handleCopyLink}
-                    className="flex-1 gap-2"
-                  >
+                  <Button onClick={handleCopyLink} className="flex-1 gap-2">
                     <Copy className="h-4 w-4" />
                     Copy Link
                   </Button>

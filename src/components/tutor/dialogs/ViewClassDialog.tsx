@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -124,7 +123,9 @@ const ViewClassDialog: React.FC<ViewClassDialogProps> = ({
         <DialogContent className="max-w-full sm:max-w-lg md:max-w-2xl lg:max-w-3xl max-h-[90vh] px-4 sm:px-8 w-[calc(100vw-2rem)] sm:w-auto">
           <div className="flex flex-col h-full max-h-[calc(90vh-4rem)]">
             <DialogHeader className="flex flex-row items-center justify-between flex-shrink-0">
-              <DialogTitle className="text-xl sm:text-2xl break-words pr-8">{selectedEvent?.title}</DialogTitle>
+              <DialogTitle className="text-xl sm:text-2xl break-words pr-8">
+                {selectedEvent?.title}
+              </DialogTitle>
               {isCompleted ? (
                 <div className="flex items-center gap-1.5 text-muted-foreground text-sm">
                   <Lock className="h-4 w-4" />
@@ -176,7 +177,11 @@ const ViewClassDialog: React.FC<ViewClassDialogProps> = ({
             </div>
 
             <DialogFooter className="flex-shrink-0 pt-4 border-t">
-              <Button variant="outline" onClick={() => setIsOpen(false)} className="w-full sm:w-auto">
+              <Button
+                variant="outline"
+                onClick={() => setIsOpen(false)}
+                className="w-full sm:w-auto"
+              >
                 Close
               </Button>
             </DialogFooter>

@@ -3,7 +3,10 @@
  * Tests the full booking pipeline: validation → credit check → insert
  */
 
-import { createScheduledClass, createScheduledClassBatch } from '@/services/class/create';
+import {
+  createScheduledClass,
+  createScheduledClassBatch,
+} from '@/services/class/create';
 
 const mockInsert = jest.fn();
 const mockToastSuccess = jest.fn();
@@ -68,7 +71,9 @@ describe('Class Booking Validation', () => {
       const id = await createScheduledClass(validClass);
 
       expect(id).toBe('new-class-id');
-      expect(mockToastSuccess).toHaveBeenCalledWith('Class scheduled successfully');
+      expect(mockToastSuccess).toHaveBeenCalledWith(
+        'Class scheduled successfully'
+      );
     });
 
     it('should validate all 7 required fields', async () => {
@@ -138,10 +143,7 @@ describe('Class Booking Validation', () => {
     });
 
     it('should return 0 when no dates are provided', async () => {
-      const count = await createScheduledClassBatch(
-        { ...validClass },
-        []
-      );
+      const count = await createScheduledClassBatch({ ...validClass }, []);
 
       // Empty array insert
       expect(count).toBe(0);

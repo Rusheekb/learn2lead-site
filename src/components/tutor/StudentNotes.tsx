@@ -13,11 +13,11 @@ interface StudentNotesProps {
   creating?: boolean;
 }
 
-const StudentNotes: React.FC<StudentNotesProps> = ({ 
-  notes, 
-  onAddNote, 
-  loading = false, 
-  creating = false 
+const StudentNotes: React.FC<StudentNotesProps> = ({
+  notes,
+  onAddNote,
+  loading = false,
+  creating = false,
 }) => {
   const [newNote, setNewNote] = useState({ title: '', content: '' });
 

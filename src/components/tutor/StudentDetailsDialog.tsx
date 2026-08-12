@@ -29,7 +29,9 @@ const StudentDetailsDialog: React.FC<StudentDetailsDialogProps> = ({
   activeTab,
   setActiveTab,
 }) => {
-  const { notes, loading, creating, addNote } = useStudentNotes(student?.id || null);
+  const { notes, loading, creating, addNote } = useStudentNotes(
+    student?.id || null
+  );
 
   if (!student) return null;
 
@@ -58,9 +60,9 @@ const StudentDetailsDialog: React.FC<StudentDetailsDialogProps> = ({
           </TabsContent>
 
           <TabsContent value="notes">
-            <StudentNotes 
-              notes={notes} 
-              onAddNote={addNote} 
+            <StudentNotes
+              notes={notes}
+              onAddNote={addNote}
               loading={loading}
               creating={creating}
             />

@@ -6,7 +6,7 @@ import * as Sentry from '@sentry/react';
  */
 export const initSentry = () => {
   const dsn = import.meta.env.VITE_SENTRY_DSN;
-  
+
   // Only initialize in production with a valid DSN
   if (!dsn || import.meta.env.DEV) {
     if (import.meta.env.DEV) {
@@ -18,7 +18,7 @@ export const initSentry = () => {
   Sentry.init({
     dsn,
     environment: import.meta.env.MODE,
-    
+
     // Performance monitoring
     integrations: [
       Sentry.browserTracingIntegration(),
@@ -28,22 +28,22 @@ export const initSentry = () => {
         blockAllMedia: true,
       }),
     ],
-    
+
     // Sample rate for transactions (performance monitoring)
     tracesSampleRate: 0.1, // 10% of transactions
-    
+
     // Session replay sample rates
     replaysSessionSampleRate: 0.1, // 10% of sessions
     replaysOnErrorSampleRate: 1.0, // 100% of sessions with errors
-    
+
     // Filter out noisy errors
     beforeSend(event, hint) {
       const error = hint.originalException;
-      
+
       // Ignore network errors that are expected
       if (error instanceof Error) {
         const message = error.message.toLowerCase();
-        
+
         // Skip common non-actionable errors
         if (
           message.includes('failed to fetch') ||
@@ -54,10 +54,10 @@ export const initSentry = () => {
           return null;
         }
       }
-      
+
       return event;
     },
-    
+
     // Don't send PII
     sendDefaultPii: false,
   });
@@ -66,12 +66,15 @@ export const initSentry = () => {
 /**
  * Capture an exception manually
  */
-export const captureException = (error: Error, context?: Record<string, unknown>) => {
+export const captureException = (
+  error: Error,
+  context?: Record<string, unknown>
+) => {
   if (import.meta.env.DEV) {
     console.error('[Sentry] Would capture:', error, context);
     return;
   }
-  
+
   Sentry.captureException(error, {
     extra: context,
   });
@@ -80,12 +83,15 @@ export const captureException = (error: Error, context?: Record<string, unknown>
 /**
  * Capture a message for debugging
  */
-export const captureMessage = (message: string, level: Sentry.SeverityLevel = 'info') => {
+export const captureMessage = (
+  message: string,
+  level: Sentry.SeverityLevel = 'info'
+) => {
   if (import.meta.env.DEV) {
     console.log(`[Sentry] Would capture message (${level}):`, message);
     return;
   }
-  
+
   Sentry.captureMessage(message, level);
 };
 
@@ -97,7 +103,7 @@ export const setUser = (user: { id: string; email?: string } | null) => {
     console.log('[Sentry] Would set user:', user);
     return;
   }
-  
+
   if (user) {
     Sentry.setUser({
       id: user.id,
@@ -115,7 +121,7 @@ export const addBreadcrumb = (breadcrumb: Sentry.Breadcrumb) => {
   if (import.meta.env.DEV) {
     return;
   }
-  
+
   Sentry.addBreadcrumb(breadcrumb);
 };
 

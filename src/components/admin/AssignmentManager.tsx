@@ -1,14 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { createAssignment, endAssignment, TutorStudentAssignment } from '@/services/assignments/assignmentService';
+import {
+  createAssignment,
+  endAssignment,
+  TutorStudentAssignment,
+} from '@/services/assignments/assignmentService';
 import { useAuth } from '@/contexts/AuthContext';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import {
   Select,
   SelectContent,
@@ -26,7 +44,12 @@ const log = logger.create('AssignmentManager');
 
 interface AssignmentManagerProps {
   tutors: Array<{ id: string; profileId: string; name: string }>;
-  students: Array<{ id: string; profileId: string; name: string; email?: string }>;
+  students: Array<{
+    id: string;
+    profileId: string;
+    name: string;
+    email?: string;
+  }>;
   assignments: TutorStudentAssignment[];
   onAssignmentChange: () => void;
 }
@@ -37,11 +60,11 @@ const AssignmentManager: React.FC<AssignmentManagerProps> = ({
   tutors,
   students,
   assignments,
-  onAssignmentChange
+  onAssignmentChange,
 }) => {
   const { user } = useAuth();
   const [selectedStudentEmail, setSelectedStudentEmail] = useState<string>('');
-  
+
   const form = useForm<AssignmentFormValues>({
     resolver: zodResolver(assignmentSchema),
     defaultValues: {
@@ -52,11 +75,13 @@ const AssignmentManager: React.FC<AssignmentManagerProps> = ({
 
   // Watch for student selection changes to update suggested matches
   const selectedStudentId = form.watch('studentId');
-  
+
   useEffect(() => {
     const loadStudentEmail = async () => {
       if (selectedStudentId) {
-        const selectedStudent = students.find(s => s.id === selectedStudentId);
+        const selectedStudent = students.find(
+          (s) => s.id === selectedStudentId
+        );
         if (selectedStudent?.email) {
           setSelectedStudentEmail(selectedStudent.email);
         } else if (selectedStudent?.profileId) {
@@ -84,11 +109,11 @@ const AssignmentManager: React.FC<AssignmentManagerProps> = ({
   const handleCreateAssignment = async (values: AssignmentFormValues) => {
     try {
       // Find the tutor and student to get their profile IDs
-      const selectedTutor = tutors.find(t => t.id === values.tutorId);
-      const selectedStudent = students.find(s => s.id === values.studentId);
-      
+      const selectedTutor = tutors.find((t) => t.id === values.tutorId);
+      const selectedStudent = students.find((s) => s.id === values.studentId);
+
       if (!selectedTutor || !selectedStudent) {
-        toast.error("Selected tutor or student not found");
+        toast.error('Selected tutor or student not found');
         return;
       }
 
@@ -96,20 +121,20 @@ const AssignmentManager: React.FC<AssignmentManagerProps> = ({
         tutor_id: selectedTutor.profileId,
         student_id: selectedStudent.profileId,
         tutorName: selectedTutor.name,
-        studentName: selectedStudent.name
+        studentName: selectedStudent.name,
       });
 
       await createAssignment({
         tutor_id: selectedTutor.profileId, // Use profileId for assignment
-        student_id: selectedStudent.profileId // Use profileId for assignment
+        student_id: selectedStudent.profileId, // Use profileId for assignment
       });
-      
+
       form.reset();
       onAssignmentChange();
-      toast.success("Assignment created successfully");
+      toast.success('Assignment created successfully');
     } catch (error) {
       log.error('Failed to create assignment:', error);
-      toast.error("Failed to create assignment");
+      toast.error('Failed to create assignment');
     }
   };
 
@@ -117,10 +142,10 @@ const AssignmentManager: React.FC<AssignmentManagerProps> = ({
     try {
       await endAssignment(assignmentId);
       onAssignmentChange();
-      toast.success("Assignment ended successfully");
+      toast.success('Assignment ended successfully');
     } catch (error) {
       log.error('Failed to end assignment:', error);
-      toast.error("Failed to end assignment");
+      toast.error('Failed to end assignment');
     }
   };
 
@@ -131,8 +156,8 @@ const AssignmentManager: React.FC<AssignmentManagerProps> = ({
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form 
-            onSubmit={form.handleSubmit(handleCreateAssignment)} 
+          <form
+            onSubmit={form.handleSubmit(handleCreateAssignment)}
             className="space-y-4 mb-6"
           >
             <div className="flex flex-wrap gap-4 items-end">
@@ -160,7 +185,7 @@ const AssignmentManager: React.FC<AssignmentManagerProps> = ({
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={form.control}
                 name="tutorId"
@@ -185,7 +210,7 @@ const AssignmentManager: React.FC<AssignmentManagerProps> = ({
                   </FormItem>
                 )}
               />
-              
+
               <Button type="submit" className="mt-auto">
                 Create Assignment
               </Button>
@@ -217,23 +242,25 @@ const AssignmentManager: React.FC<AssignmentManagerProps> = ({
             {assignments.map((assignment) => (
               <TableRow key={assignment.id}>
                 <TableCell>
-                  {tutors.find(t => t.profileId === assignment.tutor_id)?.name || 'Unknown'}
+                  {tutors.find((t) => t.profileId === assignment.tutor_id)
+                    ?.name || 'Unknown'}
                 </TableCell>
                 <TableCell>
-                  {students.find(s => s.profileId === assignment.student_id)?.name || 'Unknown'}
+                  {students.find((s) => s.profileId === assignment.student_id)
+                    ?.name || 'Unknown'}
                 </TableCell>
                 <TableCell>
                   {new Date(assignment.assigned_at).toLocaleDateString()}
                 </TableCell>
                 <TableCell>
-                  <Badge variant={assignment.active ? "default" : "secondary"}>
-                    {assignment.active ? "Active" : "Inactive"}
+                  <Badge variant={assignment.active ? 'default' : 'secondary'}>
+                    {assignment.active ? 'Active' : 'Inactive'}
                   </Badge>
                 </TableCell>
                 <TableCell>
                   {assignment.active && (
-                    <Button 
-                      variant="destructive" 
+                    <Button
+                      variant="destructive"
                       size="sm"
                       onClick={() => handleEndAssignment(assignment.id)}
                     >

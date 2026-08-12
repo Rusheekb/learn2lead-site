@@ -7,22 +7,29 @@ import { logger } from '@/lib/logger';
 
 const log = logger.create('useContentShareData');
 
-export const useContentShareData = (userId?: string, fetchUsers?: () => Promise<any[]>) => {
+export const useContentShareData = (
+  userId?: string,
+  fetchUsers?: () => Promise<any[]>
+) => {
   const [users, setUsers] = useState<any[]>([]);
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
   // Fetch content shares via React Query
-  const { data: shares = [], isLoading, error } = useQuery({
+  const {
+    data: shares = [],
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ['content-shares', user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
-      
+
       const { data, error } = await supabase
         .from('content_shares')
         .select('*')
         .order('created_at', { ascending: false });
-      
+
       if (error) throw error;
       return data as ContentShareItem[];
     },
@@ -39,7 +46,9 @@ export const useContentShareData = (userId?: string, fetchUsers?: () => Promise<
         'postgres_changes',
         { event: '*', schema: 'public', table: 'content_shares' },
         () => {
-          queryClient.invalidateQueries({ queryKey: ['content-shares', user.id] });
+          queryClient.invalidateQueries({
+            queryKey: ['content-shares', user.id],
+          });
         }
       )
       .subscribe();
@@ -78,7 +87,7 @@ export const useContentShareData = (userId?: string, fetchUsers?: () => Promise<
   };
 
   const getUserName = (userId: string) => {
-    return users.find(u => u.id === userId)?.name || 'Unknown User';
+    return users.find((u) => u.id === userId)?.name || 'Unknown User';
   };
 
   return {

@@ -94,7 +94,7 @@ export function createQueryMock() {
   const mock = {
     data: null as unknown,
     error: null as Error | null,
-    
+
     from: jest.fn().mockReturnThis(),
     select: jest.fn().mockReturnThis(),
     insert: jest.fn().mockReturnThis(),
@@ -103,21 +103,31 @@ export function createQueryMock() {
     eq: jest.fn().mockReturnThis(),
     neq: jest.fn().mockReturnThis(),
     in: jest.fn().mockReturnThis(),
-    single: jest.fn().mockImplementation(() => Promise.resolve({ data: mock.data, error: mock.error })),
-    maybeSingle: jest.fn().mockImplementation(() => Promise.resolve({ data: mock.data, error: mock.error })),
-    
+    single: jest
+      .fn()
+      .mockImplementation(() =>
+        Promise.resolve({ data: mock.data, error: mock.error })
+      ),
+    maybeSingle: jest
+      .fn()
+      .mockImplementation(() =>
+        Promise.resolve({ data: mock.data, error: mock.error })
+      ),
+
     setResponse: (data: unknown, error: Error | null = null) => {
       mock.data = data;
       mock.error = error;
       return mock;
     },
   };
-  
+
   return mock;
 }
 
 // Auth mock builders
-export function createAuthMock(session: { user: { id: string; email: string } } | null = null) {
+export function createAuthMock(
+  session: { user: { id: string; email: string } } | null = null
+) {
   return {
     getSession: jest.fn().mockResolvedValue({
       data: { session },
@@ -138,15 +148,18 @@ export function createAuthMock(session: { user: { id: string; email: string } } 
 // Functions invoke mock builder
 export function createFunctionsMock() {
   const responses: Record<string, unknown> = {};
-  
+
   return {
     invoke: jest.fn().mockImplementation((functionName: string) => {
       if (responses[functionName]) {
         return Promise.resolve(responses[functionName]);
       }
-      return Promise.resolve({ data: null, error: { message: 'Function not mocked' } });
+      return Promise.resolve({
+        data: null,
+        error: { message: 'Function not mocked' },
+      });
     }),
-    
+
     setResponse: (functionName: string, response: unknown) => {
       responses[functionName] = response;
     },
@@ -158,15 +171,18 @@ export function createSupabaseMock() {
   const queryMock = createQueryMock();
   const authMock = createAuthMock();
   const functionsMock = createFunctionsMock();
-  
+
   return {
     ...queryMock,
     auth: authMock,
     functions: functionsMock,
-    
+
     setAuth: (session: { user: { id: string; email: string } } | null) => {
       authMock.getSession.mockResolvedValue({ data: { session }, error: null });
-      authMock.getUser.mockResolvedValue({ data: { user: session?.user ?? null }, error: null });
+      authMock.getUser.mockResolvedValue({
+        data: { user: session?.user ?? null },
+        error: null,
+      });
     },
   };
 }

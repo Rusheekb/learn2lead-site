@@ -100,18 +100,27 @@ const TablePagination = memo(function TablePagination({
   pageSizeOptions = [10, 20, 50, 100],
 }: TablePaginationProps) {
   return (
-    <nav aria-label="Table pagination" className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 py-4">
+    <nav
+      aria-label="Table pagination"
+      className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 py-4"
+    >
       <div className="text-sm text-muted-foreground" aria-live="polite">
         {totalItems > 0 && (
           <span>
-            {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, totalItems)} of {totalItems}
+            {(currentPage - 1) * pageSize + 1}–
+            {Math.min(currentPage * pageSize, totalItems)} of {totalItems}
           </span>
         )}
       </div>
       <div className="flex flex-wrap items-center gap-3">
         {onPageSizeChange && (
           <div className="flex items-center gap-2">
-            <label htmlFor="vdt-page-size" className="text-sm font-medium whitespace-nowrap">Rows</label>
+            <label
+              htmlFor="vdt-page-size"
+              className="text-sm font-medium whitespace-nowrap"
+            >
+              Rows
+            </label>
             <select
               id="vdt-page-size"
               className="h-8 w-[70px] rounded-md border border-input bg-background px-2 text-sm"
@@ -127,7 +136,7 @@ const TablePagination = memo(function TablePagination({
             </select>
           </div>
         )}
-        
+
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
@@ -183,11 +192,7 @@ function VirtualizedTableBody<T>({
   const virtualItems = virtualizer.getVirtualItems();
 
   return (
-    <div
-      ref={parentRef}
-      className="overflow-auto"
-      style={{ maxHeight }}
-    >
+    <div ref={parentRef} className="overflow-auto" style={{ maxHeight }}>
       <div
         style={{
           height: `${virtualizer.getTotalSize()}px`,
@@ -212,19 +217,32 @@ function VirtualizedTableBody<T>({
               role={onRowClick ? 'button' : 'row'}
               tabIndex={onRowClick ? 0 : undefined}
               onClick={onRowClick ? () => onRowClick(row) : undefined}
-              onKeyDown={onRowClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onRowClick(row); } } : undefined}
+              onKeyDown={
+                onRowClick
+                  ? (e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onRowClick(row);
+                      }
+                    }
+                  : undefined
+              }
             >
               {columns.map((column, colIndex) => (
                 <div
                   key={colIndex}
                   className={`px-4 py-2 flex-1 ${column.className || ''}`}
-                  style={column.width ? { width: column.width, flex: 'none' } : undefined}
+                  style={
+                    column.width
+                      ? { width: column.width, flex: 'none' }
+                      : undefined
+                  }
                 >
                   {column.cell
                     ? column.cell(row)
                     : column.accessorKey
-                    ? String(row[column.accessorKey] || '')
-                    : ''}
+                      ? String(row[column.accessorKey] || '')
+                      : ''}
                 </div>
               ))}
             </div>
@@ -267,57 +285,63 @@ function VirtualizedDataTable<T>({
 
   const renderContent = () => {
     if (isLoading) {
-      return loadingState || (
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {columns.map((column, index) => (
-                  <TableHead key={index} className={column.className}>
-                    {column.header}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {Array.from({ length: 5 }).map((_, rowIndex) => (
-                <motion.tr
-                  key={rowIndex}
-                  custom={rowIndex}
-                  initial="hidden"
-                  animate="visible"
-                  variants={skeletonRowVariants}
-                  className="border-b"
-                >
-                  {columns.map((_, colIndex) => (
-                    <TableCell key={colIndex}>
-                      <Skeleton className="h-4 w-full animate-shimmer bg-gradient-to-r from-muted via-muted-foreground/10 to-muted bg-[length:200%_100%]" />
-                    </TableCell>
+      return (
+        loadingState || (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  {columns.map((column, index) => (
+                    <TableHead key={index} className={column.className}>
+                      {column.header}
+                    </TableHead>
                   ))}
-                </motion.tr>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {Array.from({ length: 5 }).map((_, rowIndex) => (
+                  <motion.tr
+                    key={rowIndex}
+                    custom={rowIndex}
+                    initial="hidden"
+                    animate="visible"
+                    variants={skeletonRowVariants}
+                    className="border-b"
+                  >
+                    {columns.map((_, colIndex) => (
+                      <TableCell key={colIndex}>
+                        <Skeleton className="h-4 w-full animate-shimmer bg-gradient-to-r from-muted via-muted-foreground/10 to-muted bg-[length:200%_100%]" />
+                      </TableCell>
+                    ))}
+                  </motion.tr>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )
       );
     }
 
     if (error) {
-      return errorState || (
-        <div className="text-center py-12 text-destructive">
-          <p>{error}</p>
-          <Button variant="outline" size="sm" className="mt-4">
-            Retry
-          </Button>
-        </div>
+      return (
+        errorState || (
+          <div className="text-center py-12 text-destructive">
+            <p>{error}</p>
+            <Button variant="outline" size="sm" className="mt-4">
+              Retry
+            </Button>
+          </div>
+        )
       );
     }
 
     if (data.length === 0) {
-      return emptyState || (
-        <div className="text-center py-12 text-muted-foreground">
-          <p>No data found.</p>
-        </div>
+      return (
+        emptyState || (
+          <div className="text-center py-12 text-muted-foreground">
+            <p>No data found.</p>
+          </div>
+        )
       );
     }
 
@@ -327,19 +351,27 @@ function VirtualizedDataTable<T>({
         <>
           <div className="overflow-x-auto">
             {/* Header */}
-            <div className="flex border-b border-border bg-muted/50" role="row" aria-label="Column headers">
+            <div
+              className="flex border-b border-border bg-muted/50"
+              role="row"
+              aria-label="Column headers"
+            >
               {columns.map((column, index) => (
                 <div
                   key={index}
                   role="columnheader"
                   className={`px-4 py-3 text-sm font-medium text-muted-foreground flex-1 ${column.className || ''}`}
-                  style={column.width ? { width: column.width, flex: 'none' } : undefined}
+                  style={
+                    column.width
+                      ? { width: column.width, flex: 'none' }
+                      : undefined
+                  }
                 >
                   {column.header}
                 </div>
               ))}
             </div>
-            
+
             {/* Virtualized Body */}
             <VirtualizedTableBody
               data={data}
@@ -380,14 +412,27 @@ function VirtualizedDataTable<T>({
                     exit="exit"
                     variants={tableRowVariants}
                     layout
-                    whileHover={{ 
+                    whileHover={{
                       backgroundColor: 'hsl(var(--muted) / 0.6)',
                       scale: 1.005,
-                      transition: { type: 'spring' as const, stiffness: 500, damping: 30 }
+                      transition: {
+                        type: 'spring' as const,
+                        stiffness: 500,
+                        damping: 30,
+                      },
                     }}
                     className={`border-b transition-colors data-[state=selected]:bg-muted ${onRowClick ? 'cursor-pointer' : ''}`}
                     onClick={onRowClick ? () => onRowClick(row) : undefined}
-                    onKeyDown={onRowClick ? (e: React.KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onRowClick(row); } } : undefined}
+                    onKeyDown={
+                      onRowClick
+                        ? (e: React.KeyboardEvent) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              onRowClick(row);
+                            }
+                          }
+                        : undefined
+                    }
                     tabIndex={onRowClick ? 0 : undefined}
                     role={onRowClick ? 'button' : undefined}
                   >
@@ -396,8 +441,8 @@ function VirtualizedDataTable<T>({
                         {column.cell
                           ? column.cell(row)
                           : column.accessorKey
-                          ? String(row[column.accessorKey] || '')
-                          : ''}
+                            ? String(row[column.accessorKey] || '')
+                            : ''}
                       </TableCell>
                     ))}
                   </motion.tr>
@@ -422,13 +467,13 @@ function VirtualizedDataTable<T>({
         <CardHeader className="p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             {title && <CardTitle>{title}</CardTitle>}
-            {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
+            {subtitle && (
+              <p className="text-sm text-muted-foreground">{subtitle}</p>
+            )}
           </div>
         </CardHeader>
       )}
-      <CardContent className="p-2 sm:p-6">
-        {renderContent()}
-      </CardContent>
+      <CardContent className="p-2 sm:p-6">{renderContent()}</CardContent>
     </Card>
   );
 }

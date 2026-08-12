@@ -21,7 +21,10 @@ const typeLabels = {
   practice: 'Practice',
 };
 
-const ResourceCard: React.FC<ResourceCardProps> = ({ resource, compact = false }) => {
+const ResourceCard: React.FC<ResourceCardProps> = ({
+  resource,
+  compact = false,
+}) => {
   const Icon = typeIcons[resource.type];
 
   if (compact) {
@@ -45,8 +48,8 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ resource, compact = false }
       target="_blank"
       rel="noopener noreferrer"
       className={cn(
-        "flex items-start gap-3 p-3 rounded-lg border border-border",
-        "bg-card hover:bg-accent/50 transition-colors group"
+        'flex items-start gap-3 p-3 rounded-lg border border-border',
+        'bg-card hover:bg-accent/50 transition-colors group'
       )}
     >
       <div className="flex-shrink-0 p-2 rounded-md bg-primary/10">

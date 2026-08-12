@@ -1,4 +1,3 @@
-
 import type { ToastOptions, ToastVariant } from './types';
 
 // Create a unique ID for each toast
@@ -7,13 +6,17 @@ export const generateId = () => {
 };
 
 // Core toast creation function
-export const createToast = (message: string, options?: ToastOptions, variant: ToastVariant = 'default') => {
+export const createToast = (
+  message: string,
+  options?: ToastOptions,
+  variant: ToastVariant = 'default'
+) => {
   const id = generateId();
   return {
     id,
     title: options?.title,
     description: message,
     action: options?.action,
-    variant
+    variant,
   };
 };

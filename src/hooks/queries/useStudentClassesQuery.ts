@@ -1,4 +1,3 @@
-
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { ClassItem, StudentMessage, StudentUpload } from '@/types/classTypes';
@@ -8,14 +7,21 @@ import { toast } from 'sonner';
 // Query keys
 export const studentKeys = {
   all: ['student'] as const,
-  classes: (studentName: string) => [...studentKeys.all, 'classes', studentName] as const,
-  messages: (studentName: string) => [...studentKeys.all, 'messages', studentName] as const,
-  uploads: (studentName: string) => [...studentKeys.all, 'uploads', studentName] as const,
-  scheduledClasses: (studentId: string) => ['studentClasses', studentId] as const,
+  classes: (studentName: string) =>
+    [...studentKeys.all, 'classes', studentName] as const,
+  messages: (studentName: string) =>
+    [...studentKeys.all, 'messages', studentName] as const,
+  uploads: (studentName: string) =>
+    [...studentKeys.all, 'uploads', studentName] as const,
+  scheduledClasses: (studentId: string) =>
+    ['studentClasses', studentId] as const,
 };
 
 // Fetch student classes
-export const useStudentClassesQuery = (studentName: string, studentId?: string) => {
+export const useStudentClassesQuery = (
+  studentName: string,
+  studentId?: string
+) => {
   const queryClient = useQueryClient();
 
   const fetchStudentClasses = async () => {
@@ -23,12 +29,12 @@ export const useStudentClassesQuery = (studentName: string, studentId?: string) 
       .from('class_logs')
       .select('*')
       .eq('Student Name', studentName);
-      
+
     if (error) {
       throw error;
     }
-    
-    return (data || []).map(item => ({
+
+    return (data || []).map((item) => ({
       id: item.id,
       title: item['Class Number'] || '',
       subject: item.Subject || '',
@@ -46,7 +52,12 @@ export const useStudentClassesQuery = (studentName: string, studentId?: string) 
     })) as ClassItem[];
   };
 
-  const { data: classes = [], isLoading, error, refetch } = useQuery({
+  const {
+    data: classes = [],
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: studentKeys.classes(studentName),
     queryFn: fetchStudentClasses,
     enabled: !!studentName,
@@ -55,7 +66,7 @@ export const useStudentClassesQuery = (studentName: string, studentId?: string) 
   // Setup realtime subscription for class_logs
   useEffect(() => {
     if (!studentName) return;
-    
+
     const channel = supabase
       .channel('student-class-changes')
       .on(
@@ -68,10 +79,12 @@ export const useStudentClassesQuery = (studentName: string, studentId?: string) 
         },
         (payload) => {
           // Realtime update for student classes
-          
+
           // Invalidate the query to refetch data
-          queryClient.invalidateQueries({ queryKey: studentKeys.classes(studentName) });
-          
+          queryClient.invalidateQueries({
+            queryKey: studentKeys.classes(studentName),
+          });
+
           // Show toast based on the event type
           if (payload.eventType === 'INSERT') {
             toast.info('New class added');
@@ -88,7 +101,7 @@ export const useStudentClassesQuery = (studentName: string, studentId?: string) 
   // Setup realtime subscription for scheduled_classes if studentId is provided
   useEffect(() => {
     if (!studentId) return;
-    
+
     const channel = supabase
       .channel('student-scheduled-classes')
       .on(
@@ -101,10 +114,12 @@ export const useStudentClassesQuery = (studentName: string, studentId?: string) 
         },
         (payload) => {
           // Realtime update for student scheduled classes
-          
+
           // Invalidate the query to refetch data
-          queryClient.invalidateQueries({ queryKey: studentKeys.scheduledClasses(studentId) });
-          
+          queryClient.invalidateQueries({
+            queryKey: studentKeys.scheduledClasses(studentId),
+          });
+
           // Show toast based on the event type
           if (payload.eventType === 'INSERT') {
             const newClass = payload.new;
@@ -156,12 +171,12 @@ export const useStudentUploadsQuery = (studentName: string) => {
       .from('class_uploads')
       .select('*')
       .eq('student_name', studentName);
-      
+
     if (error) {
       throw error;
     }
-    
-    return (data || []).map(item => ({
+
+    return (data || []).map((item) => ({
       id: item.id,
       classId: item.class_id,
       studentName: item.student_name,
@@ -172,7 +187,12 @@ export const useStudentUploadsQuery = (studentName: string) => {
     })) as StudentUpload[];
   };
 
-  const { data: uploads = [], isLoading, error, refetch } = useQuery({
+  const {
+    data: uploads = [],
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: studentKeys.uploads(studentName),
     queryFn: fetchStudentUploads,
     enabled: !!studentName,
@@ -181,7 +201,7 @@ export const useStudentUploadsQuery = (studentName: string) => {
   // Setup realtime subscription
   useEffect(() => {
     if (!studentName) return;
-    
+
     const channel = supabase
       .channel('student-uploads-changes')
       .on(
@@ -194,9 +214,11 @@ export const useStudentUploadsQuery = (studentName: string) => {
         },
         (payload) => {
           // Realtime update for student uploads
-          
+
           // Invalidate the query to refetch data
-          queryClient.invalidateQueries({ queryKey: studentKeys.uploads(studentName) });
+          queryClient.invalidateQueries({
+            queryKey: studentKeys.uploads(studentName),
+          });
         }
       )
       .subscribe();

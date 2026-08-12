@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 
@@ -13,7 +12,7 @@ const SocialAuthButton: React.FC<SocialAuthButtonProps> = ({
   provider,
   isLoading,
   onClick,
-  icon
+  icon,
 }) => {
   return (
     <Button

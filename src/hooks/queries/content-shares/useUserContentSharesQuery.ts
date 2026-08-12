@@ -1,4 +1,3 @@
-
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -19,20 +18,20 @@ export const useUserContentSharesQuery = (userId: string) => {
       .from('content_shares')
       .select('*')
       .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`);
-      
+
     if (result.error) {
       throw result.error;
     }
-    
+
     return result.data || [];
   };
 
   // Fetch user's content shares
-  const { 
-    data: userShares = [], 
-    isLoading, 
-    error, 
-    refetch 
+  const {
+    data: userShares = [],
+    isLoading,
+    error,
+    refetch,
   } = useQuery({
     queryKey: contentSharesKeys.user(userId),
     queryFn: fetchUserShares,
@@ -42,7 +41,7 @@ export const useUserContentSharesQuery = (userId: string) => {
   // Setup realtime subscription for user-specific updates
   useEffect(() => {
     if (!userId) return;
-    
+
     const channel = supabase
       .channel(`user-content-shares-${userId}`)
       .on(
@@ -55,10 +54,12 @@ export const useUserContentSharesQuery = (userId: string) => {
         },
         (payload) => {
           log.debug('Realtime update for user content shares:', payload);
-          
+
           // Invalidate the query to refetch data
-          queryClient.invalidateQueries({ queryKey: contentSharesKeys.user(userId) });
-          
+          queryClient.invalidateQueries({
+            queryKey: contentSharesKeys.user(userId),
+          });
+
           // Show toast based on the event type
           if (payload.eventType === 'INSERT') {
             toast.info('New content has been shared');

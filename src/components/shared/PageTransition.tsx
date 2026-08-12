@@ -98,15 +98,15 @@ const staggerContainerVariants: Variants = {
 // Stagger item variants with exit
 const staggerItemVariants: Variants = {
   initial: { opacity: 0, y: 10 },
-  enter: { 
-    opacity: 1, 
+  enter: {
+    opacity: 1,
     y: 0,
-    transition: { duration: 0.3, ease: 'easeOut' }
+    transition: { duration: 0.3, ease: 'easeOut' },
   },
   exit: {
     opacity: 0,
     y: -5,
-    transition: { duration: 0.15, ease: 'easeIn' }
+    transition: { duration: 0.15, ease: 'easeIn' },
   },
 };
 
@@ -136,7 +136,13 @@ export const PageTransition = ({ children }: PageTransitionProps) => {
  * Wrapper for content/tab transitions within a page
  * Uses a fade-only animation for smoother tab switching
  */
-export const ContentTransition = ({ children, transitionKey }: { children: ReactNode; transitionKey: string }) => {
+export const ContentTransition = ({
+  children,
+  transitionKey,
+}: {
+  children: ReactNode;
+  transitionKey: string;
+}) => {
   return (
     <AnimatePresence mode="wait">
       <motion.div
@@ -156,7 +162,13 @@ export const ContentTransition = ({ children, transitionKey }: { children: React
  * Wrapper for card/modal-like transitions
  * Uses scale + fade for a pop-in effect
  */
-export const ScaleTransition = ({ children, show }: { children: ReactNode; show: boolean }) => {
+export const ScaleTransition = ({
+  children,
+  show,
+}: {
+  children: ReactNode;
+  show: boolean;
+}) => {
   return (
     <AnimatePresence>
       {show && (
@@ -177,7 +189,13 @@ export const ScaleTransition = ({ children, show }: { children: ReactNode; show:
  * Stagger children animation wrapper
  * Animates children in sequence with exit support
  */
-export const StaggerContainer = ({ children, className }: { children: ReactNode; className?: string }) => {
+export const StaggerContainer = ({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) => {
   return (
     <motion.div
       className={className}
@@ -195,12 +213,15 @@ export const StaggerContainer = ({ children, className }: { children: ReactNode;
  * Individual stagger item
  * Use as child of StaggerContainer
  */
-export const StaggerItem = ({ children, className }: { children: ReactNode; className?: string }) => {
+export const StaggerItem = ({
+  children,
+  className,
+}: {
+  children: ReactNode;
+  className?: string;
+}) => {
   return (
-    <motion.div
-      className={className}
-      variants={staggerItemVariants}
-    >
+    <motion.div className={className} variants={staggerItemVariants}>
       {children}
     </motion.div>
   );

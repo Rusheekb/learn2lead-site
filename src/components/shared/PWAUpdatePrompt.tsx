@@ -50,7 +50,12 @@ export const PWAUpdatePrompt: React.FC = () => {
               <Button size="sm" onClick={handleUpdate} className="h-7 text-xs">
                 Update
               </Button>
-              <Button size="sm" variant="ghost" onClick={handleDismiss} className="h-7 text-xs">
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={handleDismiss}
+                className="h-7 text-xs"
+              >
                 Later
               </Button>
             </div>

@@ -5,7 +5,10 @@ import { logger } from '@/lib/logger';
 const log = logger.create('dateTimeTransformers');
 
 // Calculate end time based on start time and duration
-export const calculateEndTime = (startTime: string, duration: number): string => {
+export const calculateEndTime = (
+  startTime: string,
+  duration: number
+): string => {
   if (!startTime || !duration) {
     return '';
   }
@@ -50,12 +53,7 @@ export const parseDateWithFormats = (dateString: string): Date => {
   }
 
   // List of possible date formats to try
-  const formats = [
-    'MM/dd/yyyy',
-    'M/d/yyyy',
-    'MMM d, yyyy',
-    'MMMM d, yyyy',
-  ];
+  const formats = ['MM/dd/yyyy', 'M/d/yyyy', 'MMM d, yyyy', 'MMMM d, yyyy'];
 
   // Try each format using parse (treats as local time)
   for (const formatString of formats) {

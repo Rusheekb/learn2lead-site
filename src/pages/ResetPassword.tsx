@@ -29,7 +29,11 @@ const ResetPassword = () => {
 
     if (type === 'recovery' && accessToken) {
       setIsValidSession(true);
-      addBreadcrumb({ category: 'auth', message: 'Password recovery session detected', level: 'info' });
+      addBreadcrumb({
+        category: 'auth',
+        message: 'Password recovery session detected',
+        level: 'info',
+      });
     } else {
       // Also check if user has an active session from the recovery flow
       supabase.auth.getSession().then(({ data: { session } }) => {
@@ -59,14 +63,20 @@ const ResetPassword = () => {
       if (error) throw error;
 
       setSuccess(true);
-      addBreadcrumb({ category: 'auth', message: 'Password reset successful', level: 'info' });
+      addBreadcrumb({
+        category: 'auth',
+        message: 'Password reset successful',
+        level: 'info',
+      });
       toast.success('Password updated successfully!');
 
       // Redirect to login after a short delay
       setTimeout(() => navigate('/login', { replace: true }), 3000);
     } catch (error) {
       log.error('Password update error:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to update password');
+      toast.error(
+        error instanceof Error ? error.message : 'Failed to update password'
+      );
     } finally {
       setIsLoading(false);
     }
@@ -84,7 +94,9 @@ const ResetPassword = () => {
                   <div className="mx-auto w-12 h-12 rounded-full bg-secondary/20 flex items-center justify-center">
                     <CheckCircle className="h-6 w-6 text-secondary" />
                   </div>
-                  <h2 className="text-lg font-semibold text-foreground">Password Updated</h2>
+                  <h2 className="text-lg font-semibold text-foreground">
+                    Password Updated
+                  </h2>
                   <p className="text-sm text-muted-foreground">
                     Your password has been reset. Redirecting to sign in...
                   </p>
@@ -109,9 +121,12 @@ const ResetPassword = () => {
                   <div className="mx-auto w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
                     <AlertCircle className="h-6 w-6 text-destructive" />
                   </div>
-                  <h2 className="text-lg font-semibold text-foreground">Invalid or Expired Link</h2>
+                  <h2 className="text-lg font-semibold text-foreground">
+                    Invalid or Expired Link
+                  </h2>
                   <p className="text-sm text-muted-foreground">
-                    This password reset link is invalid or has expired. Please request a new one.
+                    This password reset link is invalid or has expired. Please
+                    request a new one.
                   </p>
                   <Button onClick={() => navigate('/login')} className="mt-4">
                     Back to Sign In
@@ -146,7 +161,12 @@ const ResetPassword = () => {
               <CardTitle className="text-center">Set New Password</CardTitle>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4" aria-label="Set new password form" noValidate>
+              <form
+                onSubmit={handleSubmit}
+                className="space-y-4"
+                aria-label="Set new password form"
+                noValidate
+              >
                 <div className="space-y-2">
                   <Label htmlFor="new-password">New Password</Label>
                   <Input
@@ -162,7 +182,10 @@ const ResetPassword = () => {
                     aria-required="true"
                     aria-describedby="new-password-hint"
                   />
-                  <p id="new-password-hint" className="text-xs text-muted-foreground">
+                  <p
+                    id="new-password-hint"
+                    className="text-xs text-muted-foreground"
+                  >
                     Must be at least 6 characters
                   </p>
                 </div>

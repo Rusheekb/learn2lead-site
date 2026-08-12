@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -32,10 +31,15 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
   setLastName,
   isLoading,
   handleSubmit,
-  handleGoogleSignIn
+  handleGoogleSignIn,
 }) => {
   return (
-    <form onSubmit={handleSubmit} className="space-y-4" aria-label="Create account form" noValidate>
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-4"
+      aria-label="Create account form"
+      noValidate
+    >
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="first-name-signup">First Name</Label>

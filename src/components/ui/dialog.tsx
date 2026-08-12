@@ -1,4 +1,3 @@
-
 import * as React from 'react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
@@ -17,7 +16,7 @@ const DialogClose = DialogPrimitive.Close;
 // Animation variants for overlay
 const overlayVariants = {
   hidden: { opacity: 0 },
-  visible: { 
+  visible: {
     opacity: 1,
     transition: {
       duration: 0.2,
@@ -35,13 +34,13 @@ const overlayVariants = {
 
 // Animation variants for content
 const contentVariants = {
-  hidden: { 
-    opacity: 0, 
+  hidden: {
+    opacity: 0,
     scale: 0.95,
     y: -10,
   },
-  visible: { 
-    opacity: 1, 
+  visible: {
+    opacity: 1,
     scale: 1,
     y: 0,
     transition: {
@@ -65,11 +64,7 @@ const DialogOverlay = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
 >(({ className, ...props }, ref) => (
-  <DialogPrimitive.Overlay
-    ref={ref}
-    asChild
-    {...props}
-  >
+  <DialogPrimitive.Overlay ref={ref} asChild {...props}>
     <motion.div
       initial="hidden"
       animate="visible"
@@ -90,17 +85,13 @@ const DialogContent = React.forwardRef<
 >(({ className, children, ...props }, ref) => (
   <DialogPortal>
     <DialogOverlay />
-    <DialogPrimitive.Content
-      ref={ref}
-      asChild
-      {...props}
-    >
+    <DialogPrimitive.Content ref={ref} asChild {...props}>
       <motion.div
         initial="hidden"
         animate="visible"
         exit="exit"
         variants={contentVariants}
-        transformTemplate={({ scale, y }) => 
+        transformTemplate={({ scale, y }) =>
           `translate(-50%, -50%) scale(${scale ?? 1}) translateY(${y ?? 0})`
         }
         className={cn(

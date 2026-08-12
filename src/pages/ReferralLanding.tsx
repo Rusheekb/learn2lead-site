@@ -18,7 +18,9 @@ interface ReferralCodeData {
 const ReferralLanding: React.FC = () => {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
-  const [referralData, setReferralData] = useState<ReferralCodeData | null>(null);
+  const [referralData, setReferralData] = useState<ReferralCodeData | null>(
+    null
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,7 +36,8 @@ const ReferralLanding: React.FC = () => {
         // Fetch the referral code and referrer info
         const { data, error: fetchError } = await supabase
           .from('referral_codes')
-          .select(`
+          .select(
+            `
             code,
             discount_amount,
             active,
@@ -42,7 +45,8 @@ const ReferralLanding: React.FC = () => {
             max_uses,
             times_used,
             created_by
-          `)
+          `
+          )
           .eq('code', code.toUpperCase())
           .single();
 

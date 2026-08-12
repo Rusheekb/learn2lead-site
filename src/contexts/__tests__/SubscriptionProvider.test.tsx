@@ -4,7 +4,11 @@
 
 import React from 'react';
 import { render, act, waitFor } from '@testing-library/react';
-import { SubscriptionProvider, SubscriptionContext, SubscriptionContextType } from '../SubscriptionContext/SubscriptionProvider';
+import {
+  SubscriptionProvider,
+  SubscriptionContext,
+  SubscriptionContextType,
+} from '../SubscriptionContext/SubscriptionProvider';
 
 // Mock useAuth
 const mockUseAuth = jest.fn();

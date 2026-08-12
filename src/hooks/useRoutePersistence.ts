@@ -16,13 +16,13 @@ export const useRoutePersistence = (userId: string | null) => {
     if (!userId) return;
 
     const currentPath = location.pathname + location.search;
-    
+
     // Only save private routes (not public routes)
     if (!PUBLIC_ROUTES.includes(location.pathname)) {
       const routeData = {
         path: currentPath,
         userId,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
       localStorage.setItem(ROUTE_STORAGE_KEY, JSON.stringify(routeData));
     }
@@ -35,7 +35,7 @@ export const getSavedRoute = (userId: string): string | null => {
     if (!saved) return null;
 
     const routeData = JSON.parse(saved);
-    
+
     // Check if route belongs to current user and is not too old (7 days)
     if (
       routeData.userId === userId &&
@@ -47,7 +47,7 @@ export const getSavedRoute = (userId: string): string | null => {
   } catch (error) {
     log.error('Error retrieving saved route', error);
   }
-  
+
   return null;
 };
 

@@ -1,7 +1,11 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { fetchTutors, createTutor, updateTutor, deleteTutor } from '@/services/tutors/tutorService';
+import {
+  fetchTutors,
+  createTutor,
+  updateTutor,
+  deleteTutor,
+} from '@/services/tutors/tutorService';
 import { Tutor } from '@/types/tutorTypes';
 import { toast } from 'sonner';
 import { useEffect, useState } from 'react';
@@ -11,7 +15,7 @@ import { useDebounce } from '@/hooks/useDebounce';
 export const tutorsKeys = {
   all: ['tutors'] as const,
   lists: () => [...tutorsKeys.all, 'list'] as const,
-  paginated: (page: number, pageSize: number, search: string) => 
+  paginated: (page: number, pageSize: number, search: string) =>
     [...tutorsKeys.lists(), { page, pageSize, search }] as const,
   detail: (id: string) => [...tutorsKeys.all, 'detail', id] as const,
 };
@@ -29,18 +33,19 @@ export const useTutorsQuery = (options: UseTutorsQueryOptions = {}) => {
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   // Fetch all tutors
-  const { 
-    data: tutorsResponse, 
-    isLoading, 
-    error, 
-    refetch 
+  const {
+    data: tutorsResponse,
+    isLoading,
+    error,
+    refetch,
   } = useQuery({
     queryKey: tutorsKeys.paginated(page, pageSize, debouncedSearchTerm),
-    queryFn: () => fetchTutors({
-      page,
-      pageSize,
-      searchTerm: debouncedSearchTerm
-    }),
+    queryFn: () =>
+      fetchTutors({
+        page,
+        pageSize,
+        searchTerm: debouncedSearchTerm,
+      }),
   });
 
   const tutors = tutorsResponse?.data || [];
@@ -57,20 +62,24 @@ export const useTutorsQuery = (options: UseTutorsQueryOptions = {}) => {
       queryClient.invalidateQueries({ queryKey: tutorsKeys.lists() });
     },
     onError: (error) => {
-      toast.error(`Failed to create tutor: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(
+        `Failed to create tutor: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     },
   });
 
   // Update a tutor
   const updateMutation = useMutation({
-    mutationFn: (params: { id: string, updates: Partial<Tutor> }) => 
+    mutationFn: (params: { id: string; updates: Partial<Tutor> }) =>
       updateTutor(params.id, params.updates),
     onSuccess: (updatedTutor) => {
       toast.success('Tutor updated successfully');
       queryClient.invalidateQueries({ queryKey: tutorsKeys.lists() });
     },
     onError: (error) => {
-      toast.error(`Failed to update tutor: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(
+        `Failed to update tutor: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     },
   });
 
@@ -82,7 +91,9 @@ export const useTutorsQuery = (options: UseTutorsQueryOptions = {}) => {
       queryClient.invalidateQueries({ queryKey: tutorsKeys.lists() });
     },
     onError: (error) => {
-      toast.error(`Failed to delete tutor: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(
+        `Failed to delete tutor: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     },
   });
 
@@ -99,10 +110,10 @@ export const useTutorsQuery = (options: UseTutorsQueryOptions = {}) => {
         },
         (payload) => {
           // Realtime update for tutors
-          
+
           // Invalidate the query to refetch data
           queryClient.invalidateQueries({ queryKey: tutorsKeys.lists() });
-          
+
           // Show toast based on the event type
           if (payload.eventType === 'INSERT') {
             toast.info('New tutor added');
@@ -122,13 +133,13 @@ export const useTutorsQuery = (options: UseTutorsQueryOptions = {}) => {
 
   const nextPage = () => {
     if (hasNextPage) {
-      setPage(prevPage => prevPage + 1);
+      setPage((prevPage) => prevPage + 1);
     }
   };
 
   const prevPage = () => {
     if (hasPrevPage) {
-      setPage(prevPage => prevPage - 1);
+      setPage((prevPage) => prevPage - 1);
     }
   };
 
@@ -149,7 +160,7 @@ export const useTutorsQuery = (options: UseTutorsQueryOptions = {}) => {
     error,
     refetch: () => refetch(),
     createTutor: createMutation.mutate,
-    updateTutor: (id: string, updates: Partial<Tutor>) => 
+    updateTutor: (id: string, updates: Partial<Tutor>) =>
       updateMutation.mutate({ id, updates }),
     deleteTutor: deleteMutation.mutate,
     // Pagination controls

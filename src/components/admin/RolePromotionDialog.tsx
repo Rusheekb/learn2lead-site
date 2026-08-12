@@ -11,7 +11,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { AlertTriangle, Users, UserCheck } from 'lucide-react';
 import { toast } from 'sonner';
-import { promoteStudentToTutorByIdOrEmail, demoteTutorToStudentByIdOrEmail } from '@/services/roleManagement';
+import {
+  promoteStudentToTutorByIdOrEmail,
+  demoteTutorToStudentByIdOrEmail,
+} from '@/services/roleManagement';
 import { logger } from '@/lib/logger';
 
 const log = logger.create('RolePromotionDialog');
@@ -28,7 +31,12 @@ interface Props {
   onSuccess: () => void;
 }
 
-export function RolePromotionDialog({ isOpen, onClose, user, onSuccess }: Props) {
+export function RolePromotionDialog({
+  isOpen,
+  onClose,
+  user,
+  onSuccess,
+}: Props) {
   const [reason, setReason] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -36,7 +44,7 @@ export function RolePromotionDialog({ isOpen, onClose, user, onSuccess }: Props)
 
   const isPromotion = user.role === 'student';
   const actionText = isPromotion ? 'Promote to Tutor' : 'Demote to Student';
-  const warningText = isPromotion 
+  const warningText = isPromotion
     ? 'This will give the user tutor privileges including access to student data and class management.'
     : 'This will remove tutor privileges and any student assignments. The user will lose access to tutor features.';
 
@@ -48,12 +56,15 @@ export function RolePromotionDialog({ isOpen, onClose, user, onSuccess }: Props)
 
     setIsLoading(true);
     try {
-      const result = isPromotion 
+      const result = isPromotion
         ? await promoteStudentToTutorByIdOrEmail(user.id, user.email, reason)
         : await demoteTutorToStudentByIdOrEmail(user.id, user.email, reason);
 
       if (result.success) {
-        toast.success(result.message || `User ${isPromotion ? 'promoted' : 'demoted'} successfully`);
+        toast.success(
+          result.message ||
+            `User ${isPromotion ? 'promoted' : 'demoted'} successfully`
+        );
         onSuccess();
         onClose();
         setReason('');
@@ -61,16 +72,22 @@ export function RolePromotionDialog({ isOpen, onClose, user, onSuccess }: Props)
         // Handle specific error codes with better messaging
         switch (result.code) {
           case 'NOT_AUTHENTICATED':
-            toast.error('Session expired. Please refresh the page and log in again.');
+            toast.error(
+              'Session expired. Please refresh the page and log in again.'
+            );
             break;
           case 'PROFILE_NOT_FOUND':
-            toast.error('Your user profile could not be found. Please refresh the page and try again.');
+            toast.error(
+              'Your user profile could not be found. Please refresh the page and try again.'
+            );
             break;
           case 'PERMISSION_DENIED':
             toast.error('You do not have permission to change user roles.');
             break;
           case 'HAS_ACTIVE_STUDENTS':
-            toast.error(`Cannot demote tutor with ${result.active_students} active student assignments`);
+            toast.error(
+              `Cannot demote tutor with ${result.active_students} active student assignments`
+            );
             break;
           case 'USER_NOT_FOUND':
             toast.error('The selected user could not be found.');
@@ -79,7 +96,9 @@ export function RolePromotionDialog({ isOpen, onClose, user, onSuccess }: Props)
             toast.error(`User is not a ${isPromotion ? 'student' : 'tutor'}.`);
             break;
           default:
-            toast.error(result.error || 'Role change failed. Please try again.');
+            toast.error(
+              result.error || 'Role change failed. Please try again.'
+            );
         }
       }
     } catch (error) {
@@ -95,11 +114,15 @@ export function RolePromotionDialog({ isOpen, onClose, user, onSuccess }: Props)
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            {isPromotion ? <UserCheck className="h-5 w-5" /> : <Users className="h-5 w-5" />}
+            {isPromotion ? (
+              <UserCheck className="h-5 w-5" />
+            ) : (
+              <Users className="h-5 w-5" />
+            )}
             {actionText}
           </DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
             <div className="flex items-start gap-2">
@@ -139,10 +162,10 @@ export function RolePromotionDialog({ isOpen, onClose, user, onSuccess }: Props)
           <Button variant="outline" onClick={onClose} disabled={isLoading}>
             Cancel
           </Button>
-          <Button 
-            onClick={handleSubmit} 
+          <Button
+            onClick={handleSubmit}
             disabled={isLoading || !reason.trim()}
-            variant={isPromotion ? "default" : "destructive"}
+            variant={isPromotion ? 'default' : 'destructive'}
           >
             {isLoading ? 'Processing...' : actionText}
           </Button>

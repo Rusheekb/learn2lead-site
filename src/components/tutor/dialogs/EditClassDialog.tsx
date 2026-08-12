@@ -1,11 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { CalendarIcon, Save, X } from 'lucide-react';
 import { format, parse } from 'date-fns';
 import { ClassEvent } from '@/types/tutorTypes';
@@ -27,7 +36,7 @@ const EditClassDialog: React.FC<EditClassDialogProps> = ({
   isOpen,
   setIsOpen,
   classEvent,
-  onUpdate
+  onUpdate,
 }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -39,14 +48,14 @@ const EditClassDialog: React.FC<EditClassDialogProps> = ({
     endTime: '',
     subject: '',
     zoomLink: '',
-    notes: ''
+    notes: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (classEvent && isOpen) {
       const eventDate = parseDateToLocal(classEvent.date);
-        
+
       setFormData({
         title: classEvent.title || '',
         date: eventDate,
@@ -54,7 +63,7 @@ const EditClassDialog: React.FC<EditClassDialogProps> = ({
         endTime: classEvent.endTime || '',
         subject: classEvent.subject || '',
         zoomLink: classEvent.zoomLink || '',
-        notes: classEvent.notes || ''
+        notes: classEvent.notes || '',
       });
       setErrors({});
     }
@@ -78,7 +87,7 @@ const EditClassDialog: React.FC<EditClassDialogProps> = ({
     if (formData.startTime && formData.endTime) {
       const start = parse(formData.startTime, 'HH:mm', new Date());
       const end = parse(formData.endTime, 'HH:mm', new Date());
-      
+
       if (end <= start) {
         newErrors.endTime = 'End time must be after start time';
       }
@@ -117,7 +126,7 @@ const EditClassDialog: React.FC<EditClassDialogProps> = ({
           subject: formData.subject.trim(),
           zoom_link: formData.zoomLink || null,
           notes: formData.notes || null,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('id', classEvent.id)
         .eq('tutor_id', user.id); // Ensure only tutor can edit their classes
@@ -128,9 +137,11 @@ const EditClassDialog: React.FC<EditClassDialogProps> = ({
 
       // Invalidate relevant queries
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['scheduledClasses', user.id] }),
+        queryClient.invalidateQueries({
+          queryKey: ['scheduledClasses', user.id],
+        }),
         queryClient.invalidateQueries({ queryKey: ['upcomingClasses'] }),
-        queryClient.refetchQueries({ queryKey: ['scheduledClasses', user.id] })
+        queryClient.refetchQueries({ queryKey: ['scheduledClasses', user.id] }),
       ]);
 
       toast.success('Class updated successfully');
@@ -164,11 +175,15 @@ const EditClassDialog: React.FC<EditClassDialogProps> = ({
               <Input
                 id="title"
                 value={formData.title}
-                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, title: e.target.value }))
+                }
                 placeholder="Enter class title"
                 className={errors.title ? 'border-red-500' : ''}
               />
-              {errors.title && <p className="text-sm text-red-500 mt-1">{errors.title}</p>}
+              {errors.title && (
+                <p className="text-sm text-red-500 mt-1">{errors.title}</p>
+              )}
             </div>
 
             <div>
@@ -187,7 +202,9 @@ const EditClassDialog: React.FC<EditClassDialogProps> = ({
                   <Calendar
                     mode="single"
                     selected={formData.date}
-                    onSelect={(date) => date && setFormData(prev => ({ ...prev, date }))}
+                    onSelect={(date) =>
+                      date && setFormData((prev) => ({ ...prev, date }))
+                    }
                     initialFocus
                   />
                 </PopoverContent>
@@ -201,10 +218,19 @@ const EditClassDialog: React.FC<EditClassDialogProps> = ({
                   id="startTime"
                   type="time"
                   value={formData.startTime}
-                  onChange={(e) => setFormData(prev => ({ ...prev, startTime: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      startTime: e.target.value,
+                    }))
+                  }
                   className={errors.startTime ? 'border-red-500' : ''}
                 />
-                {errors.startTime && <p className="text-sm text-red-500 mt-1">{errors.startTime}</p>}
+                {errors.startTime && (
+                  <p className="text-sm text-red-500 mt-1">
+                    {errors.startTime}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -213,10 +239,17 @@ const EditClassDialog: React.FC<EditClassDialogProps> = ({
                   id="endTime"
                   type="time"
                   value={formData.endTime}
-                  onChange={(e) => setFormData(prev => ({ ...prev, endTime: e.target.value }))}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      endTime: e.target.value,
+                    }))
+                  }
                   className={errors.endTime ? 'border-red-500' : ''}
                 />
-                {errors.endTime && <p className="text-sm text-red-500 mt-1">{errors.endTime}</p>}
+                {errors.endTime && (
+                  <p className="text-sm text-red-500 mt-1">{errors.endTime}</p>
+                )}
               </div>
             </div>
 
@@ -225,11 +258,15 @@ const EditClassDialog: React.FC<EditClassDialogProps> = ({
               <Input
                 id="subject"
                 value={formData.subject}
-                onChange={(e) => setFormData(prev => ({ ...prev, subject: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, subject: e.target.value }))
+                }
                 placeholder="Enter subject"
                 className={errors.subject ? 'border-red-500' : ''}
               />
-              {errors.subject && <p className="text-sm text-red-500 mt-1">{errors.subject}</p>}
+              {errors.subject && (
+                <p className="text-sm text-red-500 mt-1">{errors.subject}</p>
+              )}
             </div>
 
             <div>
@@ -237,11 +274,15 @@ const EditClassDialog: React.FC<EditClassDialogProps> = ({
               <Input
                 id="zoomLink"
                 value={formData.zoomLink}
-                onChange={(e) => setFormData(prev => ({ ...prev, zoomLink: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, zoomLink: e.target.value }))
+                }
                 placeholder="https://zoom.us/..."
                 className={errors.zoomLink ? 'border-red-500' : ''}
               />
-              {errors.zoomLink && <p className="text-sm text-red-500 mt-1">{errors.zoomLink}</p>}
+              {errors.zoomLink && (
+                <p className="text-sm text-red-500 mt-1">{errors.zoomLink}</p>
+              )}
             </div>
 
             <div>
@@ -249,7 +290,9 @@ const EditClassDialog: React.FC<EditClassDialogProps> = ({
               <Textarea
                 id="notes"
                 value={formData.notes}
-                onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, notes: e.target.value }))
+                }
                 placeholder="Additional notes..."
                 rows={3}
               />
@@ -265,10 +308,7 @@ const EditClassDialog: React.FC<EditClassDialogProps> = ({
               <X className="h-4 w-4 mr-2" />
               Cancel
             </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={isLoading}
-            >
+            <Button onClick={handleSubmit} disabled={isLoading}>
               <Save className="h-4 w-4 mr-2" />
               {isLoading ? 'Saving...' : 'Save Changes'}
             </Button>

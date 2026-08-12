@@ -13,7 +13,8 @@ interface SecurityEvent {
 
 export class AuthSecurityService {
   private static instance: AuthSecurityService;
-  private failedAttempts: Map<string, { count: number; lastAttempt: Date }> = new Map();
+  private failedAttempts: Map<string, { count: number; lastAttempt: Date }> =
+    new Map();
 
   static getInstance(): AuthSecurityService {
     if (!AuthSecurityService.instance) {
@@ -22,7 +23,11 @@ export class AuthSecurityService {
     return AuthSecurityService.instance;
   }
 
-  private isRateLimited(identifier: string, maxAttempts: number = 5, windowMinutes: number = 15): boolean {
+  private isRateLimited(
+    identifier: string,
+    maxAttempts: number = 5,
+    windowMinutes: number = 15
+  ): boolean {
     const attempts = this.failedAttempts.get(identifier);
     if (!attempts) return false;
 
@@ -36,10 +41,13 @@ export class AuthSecurityService {
   }
 
   private recordFailedAttempt(identifier: string): void {
-    const current = this.failedAttempts.get(identifier) || { count: 0, lastAttempt: new Date() };
+    const current = this.failedAttempts.get(identifier) || {
+      count: 0,
+      lastAttempt: new Date(),
+    };
     this.failedAttempts.set(identifier, {
       count: current.count + 1,
-      lastAttempt: new Date()
+      lastAttempt: new Date(),
     });
   }
 
@@ -52,8 +60,8 @@ export class AuthSecurityService {
   }
 
   async logLoginAttempt(
-    email: string, 
-    success: boolean, 
+    email: string,
+    success: boolean,
     error?: string
   ): Promise<void> {
     if (!success) {
@@ -64,11 +72,13 @@ export class AuthSecurityService {
           details: {
             email,
             error: 'Too many failed login attempts',
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           },
-          userAgent: navigator.userAgent
+          userAgent: navigator.userAgent,
         });
-        throw new Error('Too many failed login attempts. Please try again later.');
+        throw new Error(
+          'Too many failed login attempts. Please try again later.'
+        );
       }
       this.recordFailedAttempt(identifier);
     }
@@ -80,9 +90,11 @@ export class AuthSecurityService {
         success,
         error: error || undefined,
         timestamp: new Date().toISOString(),
-        rateLimit: !success ? this.failedAttempts.get(email.toLowerCase()) : undefined
+        rateLimit: !success
+          ? this.failedAttempts.get(email.toLowerCase())
+          : undefined,
       },
-      userAgent: navigator.userAgent
+      userAgent: navigator.userAgent,
     };
 
     await this.logSecurityEvent(event);
@@ -93,9 +105,9 @@ export class AuthSecurityService {
       eventType: 'password_reset_request',
       details: {
         email,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       },
-      userAgent: navigator.userAgent
+      userAgent: navigator.userAgent,
     };
 
     await this.logSecurityEvent(event);
@@ -112,9 +124,9 @@ export class AuthSecurityService {
       details: {
         activityType,
         ...details,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       },
-      userAgent: navigator.userAgent
+      userAgent: navigator.userAgent,
     };
 
     await this.logSecurityEvent(event);
@@ -133,15 +145,18 @@ export class AuthSecurityService {
         action,
         targetUserId,
         ...details,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       },
-      userAgent: navigator.userAgent
+      userAgent: navigator.userAgent,
     };
 
     await this.logSecurityEvent(event);
   }
 
-  async validateUserRole(userId: string, requiredRole: string): Promise<boolean> {
+  async validateUserRole(
+    userId: string,
+    requiredRole: string
+  ): Promise<boolean> {
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -151,17 +166,17 @@ export class AuthSecurityService {
 
       if (error || !data) {
         await this.logSuspiciousActivity(userId, 'role_validation_failed', {
-          error: error?.message || 'User profile not found'
+          error: error?.message || 'User profile not found',
         });
         return false;
       }
 
       const hasRole = data.role === requiredRole;
-      
+
       if (!hasRole) {
         await this.logSuspiciousActivity(userId, 'unauthorized_role_access', {
           userRole: data.role,
-          requiredRole
+          requiredRole,
         });
       }
 
@@ -169,21 +184,21 @@ export class AuthSecurityService {
     } catch (error) {
       log.error('Role validation error', error);
       await this.logSuspiciousActivity(userId, 'role_validation_error', {
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
       return false;
     }
   }
 
   async checkRateLimit(
-    identifier: string, 
-    action: string, 
-    maxAttempts: number = 5, 
+    identifier: string,
+    action: string,
+    maxAttempts: number = 5,
     windowMinutes: number = 15
   ): Promise<boolean> {
     try {
       const windowStart = new Date(Date.now() - windowMinutes * 60 * 1000);
-      
+
       const data: any[] = [];
       const error = null;
 
@@ -203,8 +218,8 @@ export class AuthSecurityService {
             action,
             attemptCount,
             maxAttempts,
-            windowMinutes
-          }
+            windowMinutes,
+          },
         });
       }
 

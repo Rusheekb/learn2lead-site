@@ -1,4 +1,3 @@
-
 import { ClassStatus, AttendanceStatus } from '@/types/tutorTypes';
 
 export interface ScheduledClass {
@@ -26,4 +25,3 @@ export interface Profile {
   first_name: string | null;
   last_name: string | null;
 }
-

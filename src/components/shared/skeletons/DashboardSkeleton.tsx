@@ -140,7 +140,11 @@ export const UpcomingSessionSkeleton = () => (
 /**
  * Skeleton for a list of upcoming sessions
  */
-export const UpcomingSessionsListSkeleton = ({ count = 3 }: { count?: number }) => (
+export const UpcomingSessionsListSkeleton = ({
+  count = 3,
+}: {
+  count?: number;
+}) => (
   <div className="space-y-3">
     {Array(count)
       .fill(0)
@@ -179,7 +183,13 @@ export const TableRowSkeleton = ({ columns = 5 }: { columns?: number }) => (
 /**
  * Skeleton for full table
  */
-export const TableSkeleton = ({ rows = 5, columns = 5 }: { rows?: number; columns?: number }) => (
+export const TableSkeleton = ({
+  rows = 5,
+  columns = 5,
+}: {
+  rows?: number;
+  columns?: number;
+}) => (
   <Card>
     <div className="p-4 border-b">
       <div className="flex items-center gap-4">

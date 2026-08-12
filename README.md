@@ -1,11 +1,9 @@
-
 # Learn2Lead Application
 
 ![CI](https://github.com/YOUR_USERNAME/YOUR_REPO/actions/workflows/ci.yml/badge.svg)
 ![Tests](https://img.shields.io/badge/tests-70%2B-brightgreen)
 ![Coverage](https://img.shields.io/badge/coverage-50%25-yellow)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue)
-
 
 This project uses environment variables for configuration. To keep your credentials safe, **do not commit** any local environment files. Make sure the following entries exist in your `.gitignore`:
 
@@ -32,14 +30,16 @@ A template for your environment variables is provided in `.env.example`.
    npm install
    ```
 4. Run database migrations:
+
    ```bash
    # On Unix/Linux/MacOS
    node scripts/make-executable.js
    ./scripts/db-migrate.js
-   
+
    # On Windows
    node scripts/db-migrate.js
    ```
+
 5. Start the development server:
    ```bash
    npm run dev
@@ -82,4 +82,3 @@ The project maintains 50%+ code coverage across branches, functions, lines, and 
 ## Additional Configuration
 
 For more information about Vite environment variables and modes, see [Vite's documentation](https://vitejs.dev/guide/env-and-mode.html).
-

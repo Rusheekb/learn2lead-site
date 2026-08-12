@@ -63,11 +63,14 @@ const StudentFileUpload: React.FC<StudentFileUploadProps> = ({
         Upload File
       </Button>
 
-      <Dialog open={isOpen} onOpenChange={(open) => {
-        if (!open && !isUploading) {
-          resetForm();
-        }
-      }}>
+      <Dialog
+        open={isOpen}
+        onOpenChange={(open) => {
+          if (!open && !isUploading) {
+            resetForm();
+          }
+        }}
+      >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Upload File for Class</DialogTitle>
@@ -86,7 +89,9 @@ const StudentFileUpload: React.FC<StudentFileUploadProps> = ({
               <label
                 htmlFor="file-upload"
                 className={`cursor-pointer flex flex-col items-center ${
-                  isUploading ? 'text-gray-400' : 'text-gray-500 hover:text-gray-700'
+                  isUploading
+                    ? 'text-gray-400'
+                    : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
                 <FileUp className="h-8 w-8 mb-2" />
@@ -118,15 +123,15 @@ const StudentFileUpload: React.FC<StudentFileUploadProps> = ({
           </div>
 
           <DialogFooter>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={resetForm}
               disabled={isUploading}
             >
               Cancel
             </Button>
-            <Button 
-              onClick={handleUpload} 
+            <Button
+              onClick={handleUpload}
               disabled={!uploadedFile || isUploading}
             >
               {isUploading ? 'Uploading...' : 'Upload File'}

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import FilterControls from '@/components/shared/FilterControls';
 

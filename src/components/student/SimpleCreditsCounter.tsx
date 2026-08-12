@@ -21,7 +21,11 @@ export const SimpleCreditsCounter: React.FC = memo(() => {
         <span className="text-sm font-medium text-muted-foreground">
           Hours Available
         </span>
-        <CreditBadge credits={creditsRemaining} pricePerClass={pricePerClass} hideAmount />
+        <CreditBadge
+          credits={creditsRemaining}
+          pricePerClass={pricePerClass}
+          hideAmount
+        />
       </div>
     </Card>
   );

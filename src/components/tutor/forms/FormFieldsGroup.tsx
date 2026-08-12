@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { UseFormReturn } from 'react-hook-form';
 import {
@@ -7,7 +6,7 @@ import {
   TimeField,
   SubjectField,
   ZoomLinkField,
-  NotesField
+  NotesField,
 } from './ClassFormFields';
 
 interface FormFieldsGroupProps {

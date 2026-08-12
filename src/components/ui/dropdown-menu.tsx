@@ -19,13 +19,13 @@ const DropdownMenuRadioGroup = DropdownMenuPrimitive.RadioGroup;
 
 // Animation variants for dropdown content
 const contentVariants = {
-  hidden: { 
-    opacity: 0, 
+  hidden: {
+    opacity: 0,
     scale: 0.95,
     y: -8,
   },
-  visible: { 
-    opacity: 1, 
+  visible: {
+    opacity: 1,
     scale: 1,
     y: 0,
     transition: {
@@ -48,12 +48,12 @@ const contentVariants = {
 
 // Animation variants for dropdown items
 const itemVariants = {
-  hidden: { 
-    opacity: 0, 
+  hidden: {
+    opacity: 0,
     x: -8,
   },
-  visible: { 
-    opacity: 1, 
+  visible: {
+    opacity: 1,
     x: 0,
     transition: {
       type: 'spring' as const,
@@ -89,11 +89,7 @@ const DropdownMenuSubContent = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.SubContent>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.SubContent>
 >(({ className, ...props }, ref) => (
-  <DropdownMenuPrimitive.SubContent
-    ref={ref}
-    asChild
-    {...props}
-  >
+  <DropdownMenuPrimitive.SubContent ref={ref} asChild {...props}>
     <motion.div
       initial="hidden"
       animate="visible"
@@ -167,7 +163,12 @@ const DropdownMenuCheckboxItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.CheckboxItem>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.CheckboxItem>
 >(({ className, children, checked, ...props }, ref) => (
-  <DropdownMenuPrimitive.CheckboxItem ref={ref} checked={checked} asChild {...props}>
+  <DropdownMenuPrimitive.CheckboxItem
+    ref={ref}
+    checked={checked}
+    asChild
+    {...props}
+  >
     <motion.div
       variants={itemVariants}
       whileHover={{ x: 2, backgroundColor: 'hsl(var(--accent))' }}

@@ -1,7 +1,11 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { fetchStudents, createStudent, updateStudent, deleteStudent } from '@/services/students/studentService';
+import {
+  fetchStudents,
+  createStudent,
+  updateStudent,
+  deleteStudent,
+} from '@/services/students/studentService';
 import { Student } from '@/types/tutorTypes';
 import { toast } from 'sonner';
 import { useEffect, useState } from 'react';
@@ -11,7 +15,7 @@ import { useDebounce } from '@/hooks/useDebounce';
 export const studentsKeys = {
   all: ['students'] as const,
   lists: () => [...studentsKeys.all, 'list'] as const,
-  paginated: (page: number, pageSize: number, search: string) => 
+  paginated: (page: number, pageSize: number, search: string) =>
     [...studentsKeys.lists(), { page, pageSize, search }] as const,
   detail: (id: string) => [...studentsKeys.all, 'detail', id] as const,
 };
@@ -29,18 +33,19 @@ export const useStudentsQuery = (options: UseStudentsQueryOptions = {}) => {
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
   // Fetch all students
-  const { 
+  const {
     data: studentResponse,
-    isLoading, 
-    error, 
-    refetch 
+    isLoading,
+    error,
+    refetch,
   } = useQuery({
     queryKey: studentsKeys.paginated(page, pageSize, debouncedSearchTerm),
-    queryFn: () => fetchStudents({
-      page,
-      pageSize,
-      searchTerm: debouncedSearchTerm
-    }),
+    queryFn: () =>
+      fetchStudents({
+        page,
+        pageSize,
+        searchTerm: debouncedSearchTerm,
+      }),
   });
 
   const students = studentResponse?.data || [];
@@ -57,20 +62,24 @@ export const useStudentsQuery = (options: UseStudentsQueryOptions = {}) => {
       queryClient.invalidateQueries({ queryKey: studentsKeys.lists() });
     },
     onError: (error) => {
-      toast.error(`Failed to create student: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(
+        `Failed to create student: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     },
   });
 
   // Update a student
   const updateMutation = useMutation({
-    mutationFn: (params: { id: string, updates: Partial<Student> }) => 
+    mutationFn: (params: { id: string; updates: Partial<Student> }) =>
       updateStudent(params.id, params.updates),
     onSuccess: (updatedStudent) => {
       toast.success('Student updated successfully');
       queryClient.invalidateQueries({ queryKey: studentsKeys.lists() });
     },
     onError: (error) => {
-      toast.error(`Failed to update student: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(
+        `Failed to update student: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     },
   });
 
@@ -82,7 +91,9 @@ export const useStudentsQuery = (options: UseStudentsQueryOptions = {}) => {
       queryClient.invalidateQueries({ queryKey: studentsKeys.lists() });
     },
     onError: (error) => {
-      toast.error(`Failed to delete student: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error(
+        `Failed to delete student: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     },
   });
 
@@ -99,10 +110,10 @@ export const useStudentsQuery = (options: UseStudentsQueryOptions = {}) => {
         },
         (payload) => {
           // Realtime update for students
-          
+
           // Invalidate the query to refetch data
           queryClient.invalidateQueries({ queryKey: studentsKeys.lists() });
-          
+
           // Show toast based on the event type
           if (payload.eventType === 'INSERT') {
             toast.info('New student added');
@@ -122,13 +133,13 @@ export const useStudentsQuery = (options: UseStudentsQueryOptions = {}) => {
 
   const nextPage = () => {
     if (hasNextPage) {
-      setPage(prevPage => prevPage + 1);
+      setPage((prevPage) => prevPage + 1);
     }
   };
 
   const prevPage = () => {
     if (hasPrevPage) {
-      setPage(prevPage => prevPage - 1);
+      setPage((prevPage) => prevPage - 1);
     }
   };
 
@@ -149,7 +160,7 @@ export const useStudentsQuery = (options: UseStudentsQueryOptions = {}) => {
     error,
     refetch: () => refetch(),
     createStudent: createMutation.mutate,
-    updateStudent: (id: string, updates: Partial<Student>) => 
+    updateStudent: (id: string, updates: Partial<Student>) =>
       updateMutation.mutate({ id, updates }),
     deleteStudent: deleteMutation.mutate,
     // Pagination controls

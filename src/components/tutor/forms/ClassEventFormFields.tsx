@@ -11,7 +11,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -47,7 +51,7 @@ const ClassEventFormFields: React.FC<ClassEventFormFieldsProps> = ({
   formData,
   setFormData,
   errors = {},
-  readOnlyFields = []
+  readOnlyFields = [],
 }) => {
   const isReadOnly = (field: string) => readOnlyFields.includes(field);
   const hasError = (field: string) => !!errors[field];
@@ -60,9 +64,7 @@ const ClassEventFormFields: React.FC<ClassEventFormFieldsProps> = ({
         <Input
           id="title"
           value={formData.title || ''}
-          onChange={(e) =>
-            setFormData({ ...formData, title: e.target.value })
-          }
+          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
           placeholder="Enter class title"
           required
           readOnly={isReadOnly('title')}
@@ -83,7 +85,9 @@ const ClassEventFormFields: React.FC<ClassEventFormFieldsProps> = ({
           }
           disabled={isReadOnly('subject')}
         >
-          <SelectTrigger className={hasError('subject') ? 'border-red-300' : ''}>
+          <SelectTrigger
+            className={hasError('subject') ? 'border-red-300' : ''}
+          >
             <SelectValue placeholder="Select Subject" />
           </SelectTrigger>
           <SelectContent>
@@ -114,7 +118,11 @@ const ClassEventFormFields: React.FC<ClassEventFormFieldsProps> = ({
               )}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
-              {formData.date ? format(formData.date as Date, 'PPP') : <span>Pick a date</span>}
+              {formData.date ? (
+                format(formData.date as Date, 'PPP')
+              ) : (
+                <span>Pick a date</span>
+              )}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0">
@@ -200,9 +208,7 @@ const ClassEventFormFields: React.FC<ClassEventFormFieldsProps> = ({
         <Textarea
           id="notes"
           value={formData.notes || ''}
-          onChange={(e) =>
-            setFormData({ ...formData, notes: e.target.value })
-          }
+          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
           placeholder="Class details, topics to cover, etc."
           rows={4}
           readOnly={isReadOnly('notes')}

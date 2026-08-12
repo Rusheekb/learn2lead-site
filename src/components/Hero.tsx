@@ -19,12 +19,19 @@ const Hero = () => {
   };
 
   return (
-    <section id="home" aria-labelledby="hero-heading" className="pt-28 pb-16 md:pt-32 md:pb-24">
+    <section
+      id="home"
+      aria-labelledby="hero-heading"
+      className="pt-28 pb-16 md:pt-32 md:pb-24"
+    >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row items-center justify-between">
           {/* Left column - Text content */}
           <div className="w-full md:w-1/2 mb-10 md:mb-0 md:pr-10 animate-fade-in">
-            <h1 id="hero-heading" className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-4">
+            <h1
+              id="hero-heading"
+              className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight mb-4"
+            >
               Unlock Your
               <span className="text-tutoring-blue"> Academic Potential</span>
             </h1>
@@ -67,8 +74,8 @@ const Hero = () => {
 
               <div className="relative p-4 bg-white rounded-2xl shadow-xl overflow-hidden">
                 <div className="rounded-xl overflow-hidden">
-                  <img 
-                    src={studentsWorkingImage} 
+                  <img
+                    src={studentsWorkingImage}
                     alt="Students learning together in a collaborative environment"
                     className="w-full h-96 object-cover rounded-xl"
                   />

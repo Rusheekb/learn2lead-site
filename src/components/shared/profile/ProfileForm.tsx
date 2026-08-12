@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,7 +13,9 @@ interface ProfileFormProps {
     zoom_link: string;
   };
   profile: Profile;
-  handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  handleInputChange: (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => void;
   errors?: Record<string, string>;
 }
 
@@ -100,7 +101,13 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
 
       <div>
         <Label htmlFor="profile-email">Email</Label>
-        <Input id="profile-email" value={profile.email} disabled className="bg-muted" aria-describedby="email-hint" />
+        <Input
+          id="profile-email"
+          value={profile.email}
+          disabled
+          className="bg-muted"
+          aria-describedby="email-hint"
+        />
         <p id="email-hint" className="text-sm text-muted-foreground mt-1">
           Email cannot be changed
         </p>
@@ -110,9 +117,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
         <Label htmlFor="profile-role">Role</Label>
         <Input
           id="profile-role"
-          value={
-            profile.role.charAt(0).toUpperCase() + profile.role.slice(1)
-          }
+          value={profile.role.charAt(0).toUpperCase() + profile.role.slice(1)}
           disabled
           className="bg-muted"
           aria-describedby="role-hint"

@@ -8,7 +8,10 @@ interface SharedContentTabProps {
   fetchUsers: () => Promise<Profile[]>;
 }
 
-const SharedContentTab: React.FC<SharedContentTabProps> = ({ role, fetchUsers }) => {
+const SharedContentTab: React.FC<SharedContentTabProps> = ({
+  role,
+  fetchUsers,
+}) => {
   return <ContentShareContainer role={role} fetchUsers={fetchUsers} />;
 };
 

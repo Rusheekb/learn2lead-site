@@ -1,4 +1,3 @@
-
 export interface BackupLog {
   id: string;
   name: string;

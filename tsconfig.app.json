@@ -21,7 +21,6 @@
     "strict": true,
     // (strict includes noImplicitAny, strictNullChecks, etc.)
 
-    
     "paths": {
       "*": ["./*"],
       "@/*": ["./src/*"]

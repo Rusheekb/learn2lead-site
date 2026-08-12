@@ -1,8 +1,12 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
-import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
-import { getRateLimitKey, checkRateLimit, rateLimitResponse } from "../_shared/rateLimiter.ts";
+import { serve } from 'https://deno.land/std@0.190.0/http/server.ts';
+import Stripe from 'https://esm.sh/stripe@18.5.0';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
+import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
+import {
+  getRateLimitKey,
+  checkRateLimit,
+  rateLimitResponse,
+} from '../_shared/rateLimiter.ts';
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -13,53 +17,57 @@ serve(async (req) => {
   const corsResponse = handleCorsPreflightRequest(req);
   if (corsResponse) return corsResponse;
 
-  const origin = req.headers.get("origin");
+  const origin = req.headers.get('origin');
   const corsHeaders = getCorsHeaders(origin);
 
   const rateLimitKey = getRateLimitKey(req, 'manual-credit-allocation');
-  const { limited, retryAfterMs } = checkRateLimit(rateLimitKey, { maxRequests: 20, windowMs: 60_000 });
+  const { limited, retryAfterMs } = checkRateLimit(rateLimitKey, {
+    maxRequests: 20,
+    windowMs: 60_000,
+  });
   if (limited) return rateLimitResponse(retryAfterMs!, corsHeaders);
 
   try {
-    logStep("Function started");
+    logStep('Function started');
 
     const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       { auth: { persistSession: false } }
     );
 
     // Verify admin access
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("No authorization header");
-    
-    const token = authHeader.replace("Bearer ", "");
-    const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) throw new Error('No authorization header');
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: userData, error: userError } =
+      await supabaseClient.auth.getUser(token);
     if (userError) throw new Error(`Auth error: ${userError.message}`);
-    
+
     const user = userData.user;
-    if (!user) throw new Error("User not authenticated");
+    if (!user) throw new Error('User not authenticated');
 
     // Check if user is admin
     const { data: profile } = await supabaseClient
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
       .single();
 
-    if (profile?.role !== "admin") {
-      throw new Error("Unauthorized: Admin access required");
+    if (profile?.role !== 'admin') {
+      throw new Error('Unauthorized: Admin access required');
     }
-    logStep("Admin verified", { adminId: user.id });
+    logStep('Admin verified', { adminId: user.id });
 
     const { email } = await req.json();
-    if (!email) throw new Error("Email is required");
-    logStep("Processing request for user", { email });
+    if (!email) throw new Error('Email is required');
+    logStep('Processing request for user', { email });
 
     // Initialize Stripe
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY not configured");
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
+    if (!stripeKey) throw new Error('STRIPE_SECRET_KEY not configured');
+    const stripe = new Stripe(stripeKey, { apiVersion: '2025-08-27.basil' });
 
     // Find Stripe customer
     const customers = await stripe.customers.list({ email, limit: 1 });
@@ -67,40 +75,46 @@ serve(async (req) => {
       throw new Error(`No Stripe customer found for ${email}`);
     }
     const customerId = customers.data[0].id;
-    logStep("Found Stripe customer", { customerId });
+    logStep('Found Stripe customer', { customerId });
 
     // Get active subscription
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
-      status: "active",
+      status: 'active',
       limit: 1,
     });
 
     if (subscriptions.data.length === 0) {
-      throw new Error("No active subscription found");
+      throw new Error('No active subscription found');
     }
 
     const subscription = subscriptions.data[0];
     const productId = subscription.items.data[0].price.product as string;
-    logStep("Found active subscription", { subscriptionId: subscription.id, productId });
+    logStep('Found active subscription', {
+      subscriptionId: subscription.id,
+      productId,
+    });
 
     // Get subscription plan to determine credits
     const { data: plan } = await supabaseClient
-      .from("subscription_plans")
-      .select("*")
-      .eq("stripe_product_id", productId)
+      .from('subscription_plans')
+      .select('*')
+      .eq('stripe_product_id', productId)
       .single();
 
     if (!plan) {
       throw new Error(`No subscription plan found for product ${productId}`);
     }
-    logStep("Found subscription plan", { planName: plan.name, creditsToAllocate: plan.classes_per_month });
+    logStep('Found subscription plan', {
+      planName: plan.name,
+      creditsToAllocate: plan.classes_per_month,
+    });
 
     // Get user ID from email
     const { data: userProfile } = await supabaseClient
-      .from("profiles")
-      .select("id")
-      .eq("email", email)
+      .from('profiles')
+      .select('id')
+      .eq('email', email)
       .single();
 
     if (!userProfile) {
@@ -110,39 +124,46 @@ serve(async (req) => {
 
     // Check if subscription already exists in our database
     const { data: existingSub } = await supabaseClient
-      .from("student_subscriptions")
-      .select("*")
-      .eq("stripe_subscription_id", subscription.id)
+      .from('student_subscriptions')
+      .select('*')
+      .eq('stripe_subscription_id', subscription.id)
       .single();
 
     if (existingSub) {
-      logStep("Subscription already exists in database", { 
+      logStep('Subscription already exists in database', {
         existingCredits: existingSub.credits_remaining,
-        subscriptionId: existingSub.id 
+        subscriptionId: existingSub.id,
       });
-      
-      return new Response(JSON.stringify({
-        success: false,
-        message: "Subscription already has credits allocated",
-        currentCredits: existingSub.credits_remaining,
-        planName: plan.name
-      }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 400,
-      });
+
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: 'Subscription already has credits allocated',
+          currentCredits: existingSub.credits_remaining,
+          planName: plan.name,
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        }
+      );
     }
 
     // Create subscription record (credits will be set by ledger trigger)
     const { data: newSub, error: subError } = await supabaseClient
-      .from("student_subscriptions")
+      .from('student_subscriptions')
       .insert({
         student_id: studentId,
         stripe_customer_id: customerId,
         stripe_subscription_id: subscription.id,
         plan_id: plan.id,
         status: subscription.status,
-        current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-        current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+        current_period_start: new Date(
+          subscription.current_period_start * 1000
+        ).toISOString(),
+        current_period_end: new Date(
+          subscription.current_period_end * 1000
+        ).toISOString(),
         credits_allocated: plan.classes_per_month,
         credits_remaining: 0, // Will be set by ledger trigger
       })
@@ -150,43 +171,48 @@ serve(async (req) => {
       .single();
 
     if (subError) throw subError;
-    logStep("Created subscription record", { subscriptionId: newSub.id });
+    logStep('Created subscription record', { subscriptionId: newSub.id });
 
     // Create ledger entry
     const { error: ledgerError } = await supabaseClient
-      .from("class_credits_ledger")
+      .from('class_credits_ledger')
       .insert({
         student_id: studentId,
         subscription_id: newSub.id,
-        transaction_type: "allocation",
+        transaction_type: 'allocation',
         amount: plan.classes_per_month,
         balance_after: plan.classes_per_month,
         reason: `Manual allocation - ${plan.name} plan`,
       });
 
     if (ledgerError) throw ledgerError;
-    logStep("Created ledger entry");
+    logStep('Created ledger entry');
 
-    return new Response(JSON.stringify({
-      success: true,
-      message: `Successfully allocated ${plan.classes_per_month} credits`,
-      creditsAllocated: plan.classes_per_month,
-      planName: plan.name,
-      subscriptionId: subscription.id
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
-
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: `Successfully allocated ${plan.classes_per_month} credits`,
+        creditsAllocated: plan.classes_per_month,
+        planName: plan.name,
+        subscriptionId: subscription.id,
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      }
+    );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR", { message: errorMessage });
-    return new Response(JSON.stringify({ 
-      success: false,
-      error: errorMessage 
-    }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
-    });
+    logStep('ERROR', { message: errorMessage });
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: errorMessage,
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      }
+    );
   }
 });

@@ -8,10 +8,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { 
-  createGoogleCalendarUrl, 
-  createOutlookCalendarUrl, 
-  createIcsDownloadUrl 
+import {
+  createGoogleCalendarUrl,
+  createOutlookCalendarUrl,
+  createIcsDownloadUrl,
 } from '@/utils/calendarUtils';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -28,7 +28,7 @@ const CalendarLinks: React.FC<CalendarLinksProps> = ({
   dropdownOnly = false,
 }) => {
   const { user } = useAuth();
-  
+
   // Validate event has required fields for calendar URLs
   const isValidEvent = () => {
     if (!classEvent.date || !classEvent.startTime || !classEvent.endTime) {
@@ -36,21 +36,23 @@ const CalendarLinks: React.FC<CalendarLinksProps> = ({
     }
     // Check if times are in HH:mm format
     const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
-    return timeRegex.test(classEvent.startTime) && timeRegex.test(classEvent.endTime);
+    return (
+      timeRegex.test(classEvent.startTime) && timeRegex.test(classEvent.endTime)
+    );
   };
-  
+
   const handleDownloadIcs = async () => {
     if (!user?.id) {
       toast.error('Please log in to download calendar events');
       return;
     }
-    
+
     // Generate download URL and trigger download
     const downloadUrl = createIcsDownloadUrl({
       ...classEvent,
-      zoomLink: classEvent.zoomLink || undefined
+      zoomLink: classEvent.zoomLink || undefined,
     });
-    
+
     // Create a link element and trigger download
     const link = document.createElement('a');
     link.href = downloadUrl;
@@ -58,48 +60,56 @@ const CalendarLinks: React.FC<CalendarLinksProps> = ({
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
+
     toast.success('Import this .ics file into your calendar application');
   };
-  
+
   // Prepare event data with proper types for calendar functions
   const eventForCalendar = {
     ...classEvent,
     zoomLink: classEvent.zoomLink || undefined,
-    notes: classEvent.notes || undefined
+    notes: classEvent.notes || undefined,
   };
-  
+
   // Only generate URLs if event is valid
-  const googleUrl = isValidEvent() ? createGoogleCalendarUrl(eventForCalendar) : '#';
-  const outlookUrl = isValidEvent() ? createOutlookCalendarUrl(eventForCalendar) : '#';
-  
+  const googleUrl = isValidEvent()
+    ? createGoogleCalendarUrl(eventForCalendar)
+    : '#';
+  const outlookUrl = isValidEvent()
+    ? createOutlookCalendarUrl(eventForCalendar)
+    : '#';
+
   // If event is invalid, show disabled state
   if (!isValidEvent()) {
     return (
       <div className={`flex ${compact ? 'gap-1' : 'gap-2'} items-center`}>
         <Button
-          variant={compact ? "ghost" : "outline"}
-          size={compact ? "sm" : "default"}
+          variant={compact ? 'ghost' : 'outline'}
+          size={compact ? 'sm' : 'default'}
           disabled
           className="flex items-center opacity-50"
         >
-          <Calendar className={`${compact ? 'h-4 w-4' : 'h-5 w-5'} ${compact ? 'mr-1' : 'mr-2'}`} />
-          {!compact && "Calendar unavailable"}
+          <Calendar
+            className={`${compact ? 'h-4 w-4' : 'h-5 w-5'} ${compact ? 'mr-1' : 'mr-2'}`}
+          />
+          {!compact && 'Calendar unavailable'}
         </Button>
       </div>
     );
   }
-  
+
   const calendarDropdown = (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          variant={compact ? "ghost" : "outline"}
-          size={compact ? "sm" : "default"}
+          variant={compact ? 'ghost' : 'outline'}
+          size={compact ? 'sm' : 'default'}
           className="flex items-center"
         >
-          <Calendar className={`${compact ? 'h-4 w-4' : 'h-5 w-5'} ${compact ? 'mr-1' : 'mr-2'}`} />
-          {!compact && "Add to Calendar"}
+          <Calendar
+            className={`${compact ? 'h-4 w-4' : 'h-5 w-5'} ${compact ? 'mr-1' : 'mr-2'}`}
+          />
+          {!compact && 'Add to Calendar'}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
@@ -132,11 +142,11 @@ const CalendarLinks: React.FC<CalendarLinksProps> = ({
       </DropdownMenuContent>
     </DropdownMenu>
   );
-  
+
   if (dropdownOnly) {
     return calendarDropdown;
   }
-  
+
   return (
     <div className={`flex ${compact ? 'gap-1' : 'gap-2'} items-center`}>
       {calendarDropdown}

@@ -83,9 +83,13 @@ const ReferralStats: React.FC<ReferralStatsProps> = ({
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-green-600 font-medium">+$25</span>
+                  <span className="text-xs text-green-600 font-medium">
+                    +$25
+                  </span>
                   <span className="text-xs text-muted-foreground">
-                    {formatDistanceToNow(new Date(usage.usedAt), { addSuffix: true })}
+                    {formatDistanceToNow(new Date(usage.usedAt), {
+                      addSuffix: true,
+                    })}
                   </span>
                 </div>
               </div>

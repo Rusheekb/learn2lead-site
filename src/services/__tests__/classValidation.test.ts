@@ -174,8 +174,8 @@ describe('ClassValidator', () => {
         subject: '',
       });
       expect(errors.length).toBeGreaterThan(1);
-      expect(errors.some(e => e.field === 'title')).toBe(true);
-      expect(errors.some(e => e.field === 'subject')).toBe(true);
+      expect(errors.some((e) => e.field === 'title')).toBe(true);
+      expect(errors.some((e) => e.field === 'subject')).toBe(true);
     });
 
     it('handles date string input', () => {
@@ -194,12 +194,18 @@ describe('ClassValidator', () => {
     };
 
     it('returns empty array for valid completion data', () => {
-      const errors = ClassValidator.validateClassCompletion(validCompletionData, 'Covered algebra basics and equations');
+      const errors = ClassValidator.validateClassCompletion(
+        validCompletionData,
+        'Covered algebra basics and equations'
+      );
       expect(errors).toEqual([]);
     });
 
     it('returns error for missing content', () => {
-      const errors = ClassValidator.validateClassCompletion(validCompletionData, '');
+      const errors = ClassValidator.validateClassCompletion(
+        validCompletionData,
+        ''
+      );
       expect(errors).toContainEqual({
         field: 'content',
         message: 'Class content description is required',
@@ -207,7 +213,10 @@ describe('ClassValidator', () => {
     });
 
     it('returns error for whitespace-only content', () => {
-      const errors = ClassValidator.validateClassCompletion(validCompletionData, '   ');
+      const errors = ClassValidator.validateClassCompletion(
+        validCompletionData,
+        '   '
+      );
       expect(errors).toContainEqual({
         field: 'content',
         message: 'Class content description is required',
@@ -215,15 +224,22 @@ describe('ClassValidator', () => {
     });
 
     it('returns error for content shorter than 10 characters', () => {
-      const errors = ClassValidator.validateClassCompletion(validCompletionData, 'Short');
+      const errors = ClassValidator.validateClassCompletion(
+        validCompletionData,
+        'Short'
+      );
       expect(errors).toContainEqual({
         field: 'content',
-        message: 'Please provide a more detailed description (at least 10 characters)',
+        message:
+          'Please provide a more detailed description (at least 10 characters)',
       });
     });
 
     it('accepts content exactly 10 characters', () => {
-      const errors = ClassValidator.validateClassCompletion(validCompletionData, 'Exactly 10');
+      const errors = ClassValidator.validateClassCompletion(
+        validCompletionData,
+        'Exactly 10'
+      );
       expect(errors).toEqual([]);
     });
 
@@ -282,7 +298,7 @@ describe('ClassValidator', () => {
         studentId: undefined,
       });
       // Should not contain studentId error
-      expect(errors.find(e => e.field === 'studentId')).toBeUndefined();
+      expect(errors.find((e) => e.field === 'studentId')).toBeUndefined();
     });
 
     it('does not require relationshipId for edit', () => {
@@ -291,7 +307,7 @@ describe('ClassValidator', () => {
         relationshipId: undefined,
       });
       // Should not contain relationshipId error
-      expect(errors.find(e => e.field === 'relationshipId')).toBeUndefined();
+      expect(errors.find((e) => e.field === 'relationshipId')).toBeUndefined();
     });
 
     it('still validates title for edit', () => {

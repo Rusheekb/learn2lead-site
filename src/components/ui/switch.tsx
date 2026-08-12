@@ -9,7 +9,7 @@ const Switch = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof SwitchPrimitives.Root>
 >(({ className, checked, ...props }, ref) => {
   const isChecked = checked ?? props.defaultChecked ?? false;
-  
+
   return (
     <SwitchPrimitives.Root
       className={cn(
@@ -24,8 +24,8 @@ const Switch = React.forwardRef<
       <motion.button
         initial={false}
         animate={{
-          backgroundColor: isChecked 
-            ? 'hsl(var(--primary))' 
+          backgroundColor: isChecked
+            ? 'hsl(var(--primary))'
             : 'hsl(var(--input))',
         }}
         transition={{

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Calendar, HelpCircle } from 'lucide-react';
@@ -8,9 +7,11 @@ interface TutorSchedulerHeaderProps {
   onAddClick: () => void;
 }
 
-const TutorSchedulerHeader: React.FC<TutorSchedulerHeaderProps> = ({ onAddClick }) => {
+const TutorSchedulerHeader: React.FC<TutorSchedulerHeaderProps> = ({
+  onAddClick,
+}) => {
   const [isCalendarHelpOpen, setIsCalendarHelpOpen] = useState(false);
-  
+
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
@@ -20,7 +21,12 @@ const TutorSchedulerHeader: React.FC<TutorSchedulerHeaderProps> = ({ onAddClick 
         </p>
       </div>
       <div className="flex gap-2">
-        <Button variant="outline" size="sm" className="text-xs sm:text-sm" onClick={() => setIsCalendarHelpOpen(true)}>
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-xs sm:text-sm"
+          onClick={() => setIsCalendarHelpOpen(true)}
+        >
           <Calendar className="mr-1.5 h-4 w-4" />
           <span className="hidden sm:inline">Calendar Sync</span>
           <span className="sm:hidden">Sync</span>
@@ -31,8 +37,8 @@ const TutorSchedulerHeader: React.FC<TutorSchedulerHeaderProps> = ({ onAddClick 
           <span className="sm:hidden">Add</span>
         </Button>
       </div>
-      
-      <CalendarHelpDialog 
+
+      <CalendarHelpDialog
         isOpen={isCalendarHelpOpen}
         setIsOpen={setIsCalendarHelpOpen}
       />

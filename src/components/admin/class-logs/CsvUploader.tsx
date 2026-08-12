@@ -59,7 +59,9 @@ const CsvUploader: React.FC<CsvUploaderProps> = ({ onUploadComplete }) => {
         skipEmptyLines: true,
         complete: async (results) => {
           try {
-            const { data: { session } } = await supabase.auth.getSession();
+            const {
+              data: { session },
+            } = await supabase.auth.getSession();
             if (!session) {
               toast.error('You must be logged in to import data');
               setIsUploading(false);
@@ -67,9 +69,12 @@ const CsvUploader: React.FC<CsvUploaderProps> = ({ onUploadComplete }) => {
             }
 
             // Call the edge function to import the data
-            const { data, error } = await supabase.functions.invoke('import-class-logs', {
-              body: { rows: results.data },
-            });
+            const { data, error } = await supabase.functions.invoke(
+              'import-class-logs',
+              {
+                body: { rows: results.data },
+              }
+            );
 
             if (error) throw error;
 
@@ -79,9 +84,10 @@ const CsvUploader: React.FC<CsvUploaderProps> = ({ onUploadComplete }) => {
               toast.error(
                 `Import completed with errors: ${success} successful, ${failed} failed`,
                 {
-                  description: errors.slice(0, 3).map((e: any) => 
-                    `Row ${e.row}: ${e.error}`
-                  ).join('\n'),
+                  description: errors
+                    .slice(0, 3)
+                    .map((e: any) => `Row ${e.row}: ${e.error}`)
+                    .join('\n'),
                   duration: 10000,
                 }
               );
@@ -247,7 +253,9 @@ const CsvUploader: React.FC<CsvUploaderProps> = ({ onUploadComplete }) => {
           Cancel
         </Button>
         <Button onClick={handleUpload} disabled={!file || isUploading}>
-          {isUploading ? 'Importing...' : `Import ${file ? '(' + previewData.length + '+ rows)' : ''}`}
+          {isUploading
+            ? 'Importing...'
+            : `Import ${file ? '(' + previewData.length + '+ rows)' : ''}`}
         </Button>
       </div>
     </div>

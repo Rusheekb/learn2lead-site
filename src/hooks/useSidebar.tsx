@@ -1,6 +1,4 @@
-
 import { useState, useEffect, createContext, useContext } from 'react';
-
 
 interface SidebarContextType {
   isExpanded: boolean;
@@ -18,10 +16,10 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
   const toggleSidebar = () => {
     setSidebarExpanded((prev: boolean) => {
       const newState = !prev;
-      
+
       // Sidebar toggled successfully
       // Sidebar toggled
-      
+
       return newState;
     });
   };
@@ -31,7 +29,9 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
   }, [isSidebarExpanded]);
 
   return (
-    <SidebarContext.Provider value={{ isExpanded: isSidebarExpanded, toggleSidebar }}>
+    <SidebarContext.Provider
+      value={{ isExpanded: isSidebarExpanded, toggleSidebar }}
+    >
       {children}
     </SidebarContext.Provider>
   );

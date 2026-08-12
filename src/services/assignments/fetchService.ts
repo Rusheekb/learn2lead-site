@@ -12,7 +12,9 @@ export interface StudentWithProfileId extends Student {
   profileId: string;
 }
 
-export async function fetchTutorsWithProfileIds(): Promise<TutorWithProfileId[]> {
+export async function fetchTutorsWithProfileIds(): Promise<
+  TutorWithProfileId[]
+> {
   const { data: tutorsData, error: tutorsError } = await supabase
     .from('tutors')
     .select('*')
@@ -24,7 +26,7 @@ export async function fetchTutorsWithProfileIds(): Promise<TutorWithProfileId[]>
   }
 
   const tutorsWithProfileIds: TutorWithProfileId[] = [];
-  
+
   for (const tutor of tutorsData || []) {
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
@@ -33,7 +35,10 @@ export async function fetchTutorsWithProfileIds(): Promise<TutorWithProfileId[]>
       .maybeSingle();
 
     if (profileError) {
-      log.error(`Error fetching profile for tutor ${tutor.email}`, profileError);
+      log.error(
+        `Error fetching profile for tutor ${tutor.email}`,
+        profileError
+      );
       continue;
     }
 
@@ -47,16 +52,20 @@ export async function fetchTutorsWithProfileIds(): Promise<TutorWithProfileId[]>
         rating: 5,
         classes: 0,
         hourlyRate: tutor.hourly_rate || 0,
-        active: tutor.active
+        active: tutor.active,
       });
     }
   }
 
-  log.debug('Found tutors with profile IDs', { count: tutorsWithProfileIds.length });
+  log.debug('Found tutors with profile IDs', {
+    count: tutorsWithProfileIds.length,
+  });
   return tutorsWithProfileIds;
 }
 
-export async function fetchStudentsWithProfileIds(): Promise<StudentWithProfileId[]> {
+export async function fetchStudentsWithProfileIds(): Promise<
+  StudentWithProfileId[]
+> {
   const { data: studentsData, error: studentsError } = await supabase
     .from('students')
     .select('*')
@@ -68,7 +77,7 @@ export async function fetchStudentsWithProfileIds(): Promise<StudentWithProfileI
   }
 
   const studentsWithProfileIds: StudentWithProfileId[] = [];
-  
+
   for (const student of studentsData || []) {
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
@@ -77,7 +86,10 @@ export async function fetchStudentsWithProfileIds(): Promise<StudentWithProfileI
       .maybeSingle();
 
     if (profileError) {
-      log.error(`Error fetching profile for student ${student.email}`, profileError);
+      log.error(
+        `Error fetching profile for student ${student.email}`,
+        profileError
+      );
       continue;
     }
 
@@ -91,11 +103,13 @@ export async function fetchStudentsWithProfileIds(): Promise<StudentWithProfileI
         grade: student.grade,
         active: student.active,
         enrollmentDate: student.enrollment_date,
-        paymentStatus: student.payment_status as any
+        paymentStatus: student.payment_status as any,
       });
     }
   }
 
-  log.debug('Found students with profile IDs', { count: studentsWithProfileIds.length });
+  log.debug('Found students with profile IDs', {
+    count: studentsWithProfileIds.length,
+  });
   return studentsWithProfileIds;
 }

@@ -12,7 +12,10 @@ const sizeClasses = {
   lg: 'h-12 w-12',
 };
 
-const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ size = 'md', className = '' }) => {
+const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
+  size = 'md',
+  className = '',
+}) => {
   return (
     <div className={`flex items-center justify-center h-64 ${className}`}>
       <div className="relative">
@@ -29,7 +32,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ size = 'md', className 
             ease: 'easeInOut',
           }}
         />
-        
+
         {/* Main spinning element */}
         <motion.div
           className={`rounded-full border-2 border-primary/30 border-t-primary ${sizeClasses[size]}`}
@@ -40,7 +43,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ size = 'md', className 
             ease: 'linear',
           }}
         />
-        
+
         {/* Inner dot */}
         <motion.div
           className="absolute inset-0 flex items-center justify-center"
