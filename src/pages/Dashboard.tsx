@@ -1,6 +1,13 @@
-import { useState } from 'react';
-import { Navigate, useSearchParams, Routes, Route } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import {
+  Navigate,
+  useSearchParams,
+  Routes,
+  Route,
+  useNavigate,
+} from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 import DashboardContent from '@/components/student/DashboardContent';
 import { ClassCalendarContainer } from '@/components/student/ClassCalendarContainer';
 import { StudentDashboardSkeleton } from '@/components/shared/skeletons';
@@ -15,7 +22,23 @@ const Dashboard = () => {
   const [selectedSubject, setSelectedSubject] = useState<number | null>(null);
   const { userRole, user, isLoading } = useAuth();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const activeTab = searchParams.get('tab') || 'dashboard';
+
+  useEffect(() => {
+    if (searchParams.get('purchase') === 'success') {
+      toast.success(
+        'Payment successful! Your credits have been added and are ready to use.',
+        {
+          duration: 6000,
+        }
+      );
+      // Remove the param so it doesn't re-fire on refresh
+      const next = new URLSearchParams(searchParams);
+      next.delete('purchase');
+      navigate({ search: next.toString() }, { replace: true });
+    }
+  }, []);
 
   // Redirect based on user role
   if (userRole && userRole !== 'student') {

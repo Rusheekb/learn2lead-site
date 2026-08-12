@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { LogOut } from 'lucide-react';
 import NotificationBell from '../NotificationBell';
@@ -8,33 +7,37 @@ interface SidebarFooterProps {
   signOut: () => void;
 }
 
-const SidebarFooter: React.FC<SidebarFooterProps> = ({ isExpanded, signOut }) => {
+const SidebarFooter: React.FC<SidebarFooterProps> = ({
+  isExpanded,
+  signOut,
+}) => {
   const handleLogout = (e: React.MouseEvent) => {
     e.preventDefault();
     signOut();
   };
 
   return (
-    <div className="p-4 border-t mt-auto">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <NotificationBell />
-          {isExpanded && <span className="text-sm text-gray-600">Notifications</span>}
-        </div>
+    <div className="px-2 py-3 border-t border-border">
+      <div
+        className={`flex items-center mb-1 ${isExpanded ? 'px-1' : 'justify-center'}`}
+      >
+        <NotificationBell />
+        {isExpanded && (
+          <span className="ml-2 text-xs text-muted-foreground">
+            Notifications
+          </span>
+        )}
       </div>
-      
-      {/* Logout button */}
+
       <button
         onClick={handleLogout}
-        className={`${
-          isExpanded
-            ? 'flex items-center w-full'
-            : 'flex justify-center w-full'
-        } px-4 py-2 rounded-md text-gray-700 hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-tutoring-blue`}
+        className={`flex items-center w-full px-2.5 py-1.5 rounded-md text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+          isExpanded ? 'justify-start' : 'justify-center'
+        }`}
         aria-label="Log out"
       >
-        <LogOut className="h-5 w-5" aria-hidden="true" />
-        {isExpanded && <span className="ml-2">Logout</span>}
+        <LogOut className="h-4 w-4 shrink-0" aria-hidden="true" />
+        {isExpanded && <span className="ml-2.5">Logout</span>}
         <span className="sr-only">Logout from application</span>
       </button>
     </div>

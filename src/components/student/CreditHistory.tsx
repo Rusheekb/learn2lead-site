@@ -24,6 +24,7 @@ interface CreditTransaction {
   balance_after: number;
   reason: string;
   related_class_id: string | null;
+  dollar_amount: number | null;
   created_at: string;
 }
 
@@ -143,12 +144,18 @@ export const CreditHistory: React.FC = () => {
                           isDebit ? 'text-destructive' : 'text-primary'
                         )}
                       >
-                        {isDebit ? '' : '+'}
+                        {isDebit ? '−' : '+'}
                         {t.amount}h
                       </p>
-                      <p className="text-xs text-muted-foreground">
-                        Bal: {t.balance_after}
-                      </p>
+                      {!isDebit && t.dollar_amount != null ? (
+                        <p className="text-xs text-muted-foreground">
+                          ${t.dollar_amount.toFixed(2)} paid
+                        </p>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">
+                          Bal: {t.balance_after}h
+                        </p>
+                      )}
                     </div>
 
                     <Badge

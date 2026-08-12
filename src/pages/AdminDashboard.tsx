@@ -39,6 +39,9 @@ const QuarterlyReports = lazy(
 const ReferralAnalytics = lazy(
   () => import('@/components/admin/ReferralAnalytics')
 );
+const WebhookEventLog = lazy(
+  () => import('@/components/admin/WebhookEventLog')
+);
 const AdminCalendarView = lazy(
   () => import('@/components/admin/AdminCalendarView')
 );
@@ -154,6 +157,12 @@ const AdminDashboard: React.FC = () => {
         return (
           <Suspense fallback={<TableSkeleton rows={5} columns={5} />}>
             <ReferralAnalytics />
+          </Suspense>
+        );
+      case 'payments':
+        return (
+          <Suspense fallback={<TableSkeleton rows={8} columns={6} />}>
+            <WebhookEventLog />
           </Suspense>
         );
       case 'calendar':

@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -62,7 +61,7 @@ export interface TablePaginationProps {
 }
 
 export interface ColumnDefinition<T> {
-  header: string;
+  header: React.ReactNode;
   accessorKey?: keyof T;
   cell?: (item: T) => React.ReactNode;
   className?: string;
@@ -101,13 +100,19 @@ function TablePagination({
         <div className="text-sm text-muted-foreground" aria-live="polite">
           {totalItems > 0 && (
             <span>
-              {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, totalItems)} of {totalItems}
+              {(currentPage - 1) * pageSize + 1}–
+              {Math.min(currentPage * pageSize, totalItems)} of {totalItems}
             </span>
           )}
         </div>
         {onPageSizeChange && (
           <div className="flex items-center gap-2">
-            <label htmlFor="dt-page-size" className="text-sm font-medium whitespace-nowrap">Rows</label>
+            <label
+              htmlFor="dt-page-size"
+              className="text-sm font-medium whitespace-nowrap"
+            >
+              Rows
+            </label>
             <select
               id="dt-page-size"
               className="h-8 w-[70px] rounded-md border border-input bg-background px-2 text-sm"
@@ -163,7 +168,7 @@ function DataTable<T>({
   emptyState,
   errorState,
   loadingState,
-  cardClassName = "",
+  cardClassName = '',
   showCard = true,
   keyExtractor,
 }: DataTableProps<T>) {
@@ -177,57 +182,63 @@ function DataTable<T>({
   };
   const renderContent = () => {
     if (isLoading) {
-      return loadingState || (
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {columns.map((column, index) => (
-                  <TableHead key={index} className={column.className}>
-                    {column.header}
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {Array.from({ length: 5 }).map((_, rowIndex) => (
-                <motion.tr
-                  key={rowIndex}
-                  custom={rowIndex}
-                  initial="hidden"
-                  animate="visible"
-                  variants={skeletonRowVariants}
-                  className="border-b"
-                >
-                  {columns.map((_, colIndex) => (
-                    <TableCell key={colIndex}>
-                      <Skeleton className="h-4 w-full animate-shimmer bg-gradient-to-r from-muted via-muted-foreground/10 to-muted bg-[length:200%_100%]" />
-                    </TableCell>
+      return (
+        loadingState || (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  {columns.map((column, index) => (
+                    <TableHead key={index} className={column.className}>
+                      {column.header}
+                    </TableHead>
                   ))}
-                </motion.tr>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {Array.from({ length: 5 }).map((_, rowIndex) => (
+                  <motion.tr
+                    key={rowIndex}
+                    custom={rowIndex}
+                    initial="hidden"
+                    animate="visible"
+                    variants={skeletonRowVariants}
+                    className="border-b"
+                  >
+                    {columns.map((_, colIndex) => (
+                      <TableCell key={colIndex}>
+                        <Skeleton className="h-4 w-full animate-shimmer bg-gradient-to-r from-muted via-muted-foreground/10 to-muted bg-[length:200%_100%]" />
+                      </TableCell>
+                    ))}
+                  </motion.tr>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )
       );
     }
 
     if (error) {
-      return errorState || (
-        <div className="text-center py-12 text-red-500">
-          <p>{error}</p>
-          <Button variant="outline" size="sm" className="mt-4">
-            Retry
-          </Button>
-        </div>
+      return (
+        errorState || (
+          <div className="text-center py-12 text-red-500">
+            <p>{error}</p>
+            <Button variant="outline" size="sm" className="mt-4">
+              Retry
+            </Button>
+          </div>
+        )
       );
     }
 
     if (data.length === 0) {
-      return emptyState || (
-        <div className="text-center py-12 text-gray-500">
-          <p>No data found.</p>
-        </div>
+      return (
+        emptyState || (
+          <div className="text-center py-12 text-gray-500">
+            <p>No data found.</p>
+          </div>
+        )
       );
     }
 
@@ -255,16 +266,29 @@ function DataTable<T>({
                     exit="exit"
                     variants={tableRowVariants}
                     layout
-                    whileHover={{ 
+                    whileHover={{
                       backgroundColor: 'hsl(var(--muted) / 0.6)',
                       scale: 1.005,
-                      transition: { type: 'spring' as const, stiffness: 500, damping: 30 }
+                      transition: {
+                        type: 'spring' as const,
+                        stiffness: 500,
+                        damping: 30,
+                      },
                     }}
-                    className={`border-b transition-colors data-[state=selected]:bg-muted ${onRowClick ? "cursor-pointer" : ""}`}
+                    className={`border-b transition-colors data-[state=selected]:bg-muted ${onRowClick ? 'cursor-pointer' : ''}`}
                     onClick={onRowClick ? () => onRowClick(row) : undefined}
-                    onKeyDown={onRowClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onRowClick(row); } } : undefined}
+                    onKeyDown={
+                      onRowClick
+                        ? (e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              onRowClick(row);
+                            }
+                          }
+                        : undefined
+                    }
                     tabIndex={onRowClick ? 0 : undefined}
-                    role={onRowClick ? "button" : undefined}
+                    role={onRowClick ? 'button' : undefined}
                     aria-label={onRowClick ? `Row ${rowIndex + 1}` : undefined}
                   >
                     {columns.map((column, colIndex) => (
@@ -272,8 +296,8 @@ function DataTable<T>({
                         {column.cell
                           ? column.cell(row)
                           : column.accessorKey
-                          ? String(row[column.accessorKey] || '')
-                          : ''}
+                            ? String(row[column.accessorKey] || '')
+                            : ''}
                       </TableCell>
                     ))}
                   </motion.tr>
@@ -283,9 +307,7 @@ function DataTable<T>({
           </Table>
         </div>
 
-        {pagination && (
-          <TablePagination {...pagination} />
-        )}
+        {pagination && <TablePagination {...pagination} />}
       </>
     );
   };
@@ -300,13 +322,13 @@ function DataTable<T>({
         <CardHeader className="p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             {title && <CardTitle>{title}</CardTitle>}
-            {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
+            {subtitle && (
+              <p className="text-sm text-muted-foreground">{subtitle}</p>
+            )}
           </div>
         </CardHeader>
       )}
-      <CardContent className="p-2 sm:p-6">
-        {renderContent()}
-      </CardContent>
+      <CardContent className="p-2 sm:p-6">{renderContent()}</CardContent>
     </Card>
   );
 }

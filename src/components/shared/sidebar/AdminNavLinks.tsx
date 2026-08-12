@@ -1,7 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
-  BarChart3,
   Calendar,
   CreditCard,
   FileText,
@@ -13,6 +12,9 @@ import {
   UsersRound,
   Mail,
   Gift,
+  Webhook,
+  ChevronDown,
+  Wrench,
 } from 'lucide-react';
 import { useSidebarStyles } from './useSidebarStyles';
 
@@ -21,146 +23,159 @@ interface AdminNavLinksProps {
   profilePath: string;
 }
 
-const AdminNavLinks: React.FC<AdminNavLinksProps> = ({
-  isExpanded,
-  profilePath,
-}) => {
+const AdminNavLinks: React.FC<AdminNavLinksProps> = ({ isExpanded }) => {
   const { baseClasses, activeClasses, isLinkActive } = useSidebarStyles();
-  const expandedClasses = isExpanded ? 'justify-start' : 'justify-center';
+  const [toolsOpen, setToolsOpen] = useState(true);
+  const pos = isExpanded ? 'justify-start' : 'justify-center';
+
+  const cls = (tab: string) => {
+    const active = isLinkActive('/admin-dashboard', { key: 'tab', value: tab });
+    return `${baseClasses} ${pos}${active ? ` ${activeClasses}` : ''}`;
+  };
 
   return (
-    <nav className="space-y-1" aria-label="Admin navigation">
+    <nav className="space-y-0.5" aria-label="Admin navigation">
       <NavLink
         to="/admin-dashboard?tab=overview"
-        className={() =>
-          isLinkActive('/admin-dashboard', { key: 'tab', value: 'overview' })
-            ? `${baseClasses} ${expandedClasses} ${activeClasses}`
-            : `${baseClasses} ${expandedClasses}`
-        }
+        className={cls('overview')}
         aria-label="Overview"
       >
-        <LayoutDashboard className="h-5 w-5" aria-hidden="true" />
-        {isExpanded && <span className="ml-3">Overview</span>}
+        <LayoutDashboard className="h-4 w-4 shrink-0" aria-hidden="true" />
+        {isExpanded && <span className="ml-2.5">Overview</span>}
       </NavLink>
       <NavLink
         to="/admin-dashboard?tab=schedule"
-        className={() =>
-          isLinkActive('/admin-dashboard', { key: 'tab', value: 'schedule' })
-            ? `${baseClasses} ${expandedClasses} ${activeClasses}`
-            : `${baseClasses} ${expandedClasses}`
-        }
+        className={cls('schedule')}
         aria-label="Class Logs"
       >
-        <FileText className="h-5 w-5" aria-hidden="true" />
-        {isExpanded && <span className="ml-3">Class Logs</span>}
+        <FileText className="h-4 w-4 shrink-0" aria-hidden="true" />
+        {isExpanded && <span className="ml-2.5">Class Logs</span>}
       </NavLink>
       <NavLink
         to="/admin-dashboard?tab=calendar"
-        className={() =>
-          isLinkActive('/admin-dashboard', { key: 'tab', value: 'calendar' })
-            ? `${baseClasses} ${expandedClasses} ${activeClasses}`
-            : `${baseClasses} ${expandedClasses}`
-        }
+        className={cls('calendar')}
         aria-label="Calendar"
       >
-        <Calendar className="h-5 w-5" aria-hidden="true" />
-        {isExpanded && <span className="ml-3">Calendar</span>}
-      </NavLink>
-      <NavLink
-        to="/admin-dashboard?tab=credits"
-        className={() =>
-          isLinkActive('/admin-dashboard', { key: 'tab', value: 'credits' })
-            ? `${baseClasses} ${expandedClasses} ${activeClasses}`
-            : `${baseClasses} ${expandedClasses}`
-        }
-        aria-label="Credits"
-      >
-        <CreditCard className="h-5 w-5" aria-hidden="true" />
-        {isExpanded && <span className="ml-3">Credits</span>}
+        <Calendar className="h-4 w-4 shrink-0" aria-hidden="true" />
+        {isExpanded && <span className="ml-2.5">Calendar</span>}
       </NavLink>
       <NavLink
         to="/admin-dashboard?tab=reports"
-        className={() =>
-          isLinkActive('/admin-dashboard', { key: 'tab', value: 'reports' })
-            ? `${baseClasses} ${expandedClasses} ${activeClasses}`
-            : `${baseClasses} ${expandedClasses}`
-        }
-        aria-label="Monthly Reports"
+        className={cls('reports')}
+        aria-label="Reports"
       >
-        <Mail className="h-5 w-5" aria-hidden="true" />
-        {isExpanded && <span className="ml-3">Reports</span>}
+        <Mail className="h-4 w-4 shrink-0" aria-hidden="true" />
+        {isExpanded && <span className="ml-2.5">Reports</span>}
       </NavLink>
       <NavLink
         to="/admin-dashboard?tab=referrals"
-        className={() =>
-          isLinkActive('/admin-dashboard', { key: 'tab', value: 'referrals' })
-            ? `${baseClasses} ${expandedClasses} ${activeClasses}`
-            : `${baseClasses} ${expandedClasses}`
-        }
+        className={cls('referrals')}
         aria-label="Referrals"
       >
-        <Gift className="h-5 w-5" aria-hidden="true" />
-        {isExpanded && <span className="ml-3">Referrals</span>}
+        <Gift className="h-4 w-4 shrink-0" aria-hidden="true" />
+        {isExpanded && <span className="ml-2.5">Referrals</span>}
       </NavLink>
+
+      {/* ── Tools section ──────────────────────────────────────────────── */}
+      {isExpanded ? (
+        <>
+          <button
+            onClick={() => setToolsOpen((o) => !o)}
+            className={`${baseClasses} ${pos} w-full text-muted-foreground hover:text-foreground`}
+            aria-expanded={toolsOpen}
+          >
+            <Wrench className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <span className="ml-2.5 flex-1 text-left text-xs font-semibold uppercase tracking-wider">
+              Tools
+            </span>
+            <ChevronDown
+              className={`h-3.5 w-3.5 shrink-0 transition-transform ${toolsOpen ? 'rotate-180' : ''}`}
+            />
+          </button>
+          {toolsOpen && (
+            <div className="pl-3">
+              <NavLink
+                to="/admin-dashboard?tab=credits"
+                className={cls('credits')}
+                aria-label="Credits"
+              >
+                <CreditCard className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <span className="ml-2.5">Credits</span>
+              </NavLink>
+              <NavLink
+                to="/admin-dashboard?tab=payments"
+                className={cls('payments')}
+                aria-label="Payments"
+              >
+                <Webhook className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <span className="ml-2.5">Payments</span>
+              </NavLink>
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          <NavLink
+            to="/admin-dashboard?tab=credits"
+            className={cls('credits')}
+            aria-label="Credits"
+          >
+            <CreditCard className="h-4 w-4 shrink-0" aria-hidden="true" />
+          </NavLink>
+          <NavLink
+            to="/admin-dashboard?tab=payments"
+            className={cls('payments')}
+            aria-label="Payments"
+          >
+            <Webhook className="h-4 w-4 shrink-0" aria-hidden="true" />
+          </NavLink>
+        </>
+      )}
+
+      <div className="my-2 mx-1 border-t border-border/60" />
+
       <NavLink
         to="/admin-dashboard?tab=tutors"
-        className={() =>
-          isLinkActive('/admin-dashboard', { key: 'tab', value: 'tutors' })
-            ? `${baseClasses} ${expandedClasses} ${activeClasses}`
-            : `${baseClasses} ${expandedClasses}`
-        }
+        className={cls('tutors')}
         aria-label="Tutors"
       >
-        <UserRound className="h-5 w-5" aria-hidden="true" />
-        {isExpanded && <span className="ml-3">Tutors</span>}
+        <UserRound className="h-4 w-4 shrink-0" aria-hidden="true" />
+        {isExpanded && <span className="ml-2.5">Tutors</span>}
       </NavLink>
       <NavLink
         to="/admin-dashboard?tab=students"
-        className={() =>
-          isLinkActive('/admin-dashboard', { key: 'tab', value: 'students' })
-            ? `${baseClasses} ${expandedClasses} ${activeClasses}`
-            : `${baseClasses} ${expandedClasses}`
-        }
+        className={cls('students')}
         aria-label="Students"
       >
-        <Users className="h-5 w-5" aria-hidden="true" />
-        {isExpanded && <span className="ml-3">Students</span>}
+        <Users className="h-4 w-4 shrink-0" aria-hidden="true" />
+        {isExpanded && <span className="ml-2.5">Students</span>}
       </NavLink>
       <NavLink
         to="/admin-dashboard?tab=assignments"
-        className={() =>
-          isLinkActive('/admin-dashboard', { key: 'tab', value: 'assignments' })
-            ? `${baseClasses} ${expandedClasses} ${activeClasses}`
-            : `${baseClasses} ${expandedClasses}`
-        }
+        className={cls('assignments')}
         aria-label="Assignments"
       >
-        <UsersRound className="h-5 w-5" aria-hidden="true" />
-        {isExpanded && <span className="ml-3">Assignments</span>}
+        <UsersRound className="h-4 w-4 shrink-0" aria-hidden="true" />
+        {isExpanded && <span className="ml-2.5">Assignments</span>}
       </NavLink>
+
+      <div className="my-2 mx-1 border-t border-border/60" />
+
       <NavLink
         to="/admin-dashboard?tab=settings"
-        className={() =>
-          isLinkActive('/admin-dashboard', { key: 'tab', value: 'settings' })
-            ? `${baseClasses} ${expandedClasses} ${activeClasses}`
-            : `${baseClasses} ${expandedClasses}`
-        }
+        className={cls('settings')}
         aria-label="Settings"
       >
-        <Settings className="h-5 w-5" aria-hidden="true" />
-        {isExpanded && <span className="ml-3">Settings</span>}
+        <Settings className="h-4 w-4 shrink-0" aria-hidden="true" />
+        {isExpanded && <span className="ml-2.5">Settings</span>}
       </NavLink>
       <NavLink
         to="/admin-dashboard?tab=profile"
-        className={() =>
-          isLinkActive('/admin-dashboard', { key: 'tab', value: 'profile' })
-            ? `${baseClasses} ${expandedClasses} ${activeClasses}`
-            : `${baseClasses} ${expandedClasses}`
-        }
+        className={cls('profile')}
         aria-label="Profile"
       >
-        <User className="h-5 w-5" aria-hidden="true" />
-        {isExpanded && <span className="ml-3">Profile</span>}
+        <User className="h-4 w-4 shrink-0" aria-hidden="true" />
+        {isExpanded && <span className="ml-2.5">Profile</span>}
       </NavLink>
     </nav>
   );

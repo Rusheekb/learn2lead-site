@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import {
   Dialog,
@@ -18,14 +17,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { UserCheck, Shield, History, Loader2, DollarSign, Save } from 'lucide-react';
-import { fetchStudentAnalytics, fetchTutorAnalytics } from '@/services/analyticsService';
+import {
+  UserCheck,
+  Shield,
+  History,
+  Loader2,
+  DollarSign,
+  Save,
+  PlusCircle,
+} from 'lucide-react';
+import {
+  fetchStudentAnalytics,
+  fetchTutorAnalytics,
+} from '@/services/analyticsService';
 import { Student, Tutor } from '@/types/tutorTypes';
 import { useAuth } from '@/contexts/AuthContext';
 import { RolePromotionDialog } from './RolePromotionDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
+import { logAdminAction } from '@/services/adminActivityLog';
+import { useQueryClient } from '@tanstack/react-query';
 
 const log = logger.create('UserDetailModal');
 
@@ -39,7 +51,12 @@ interface Props {
 
 export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
   const { userRole } = useAuth();
-  const [stats, setStats] = useState<{ classesCompleted: number; totalCredits: number; classesPaid: number } | null>(null);
+  const queryClient = useQueryClient();
+  const [stats, setStats] = useState<{
+    classesCompleted: number;
+    totalCredits: number;
+    classesPaid: number;
+  } | null>(null);
   const [showRoleDialog, setShowRoleDialog] = useState(false);
   const [isLoadingStats, setIsLoadingStats] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -49,6 +66,11 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
   const [paymentMethod, setPaymentMethod] = useState<string>('zelle');
   const [hourlyRate, setHourlyRate] = useState<string>('');
   const [prepaidBalance, setPrepaidBalance] = useState<number>(0);
+
+  // Credit adjustment
+  const [creditAmount, setCreditAmount] = useState<string>('');
+  const [creditReason, setCreditReason] = useState<string>('');
+  const [isAdjustingCredits, setIsAdjustingCredits] = useState(false);
   // Fetch rate data when user changes
   useEffect(() => {
     if (!user) return;
@@ -82,7 +104,7 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
 
   useEffect(() => {
     if (!user) return;
-    
+
     const fetchAnalytics = async () => {
       setIsLoadingStats(true);
       try {
@@ -103,7 +125,8 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
           return;
         }
 
-        const fn = user.role === 'student' ? fetchStudentAnalytics : fetchTutorAnalytics;
+        const fn =
+          user.role === 'student' ? fetchStudentAnalytics : fetchTutorAnalytics;
         const analytics = await fn(profile.id);
         setStats(analytics);
       } catch (error) {
@@ -148,12 +171,89 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
         if (error) throw error;
       }
       toast.success('Rates updated successfully');
+      logAdminAction({
+        actionType: 'rates_updated',
+        description: `Updated ${user.role === 'student' ? 'class rate' : 'hourly rate'} for ${user.name || user.email}`,
+        entityType: user.role,
+        entityId: user.id,
+      });
       onUserUpdated?.();
     } catch (error) {
       log.error('Error saving rates:', error);
       toast.error('Failed to update rates');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleAdjustCredits = async () => {
+    if (!user) return;
+    const amount = parseFloat(creditAmount);
+    if (isNaN(amount) || amount === 0) {
+      toast.error('Enter a non-zero amount');
+      return;
+    }
+    if (!creditReason.trim()) {
+      toast.error('Reason is required');
+      return;
+    }
+
+    setIsAdjustingCredits(true);
+    try {
+      // Get profile id from email
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', user.email)
+        .maybeSingle();
+      if (!profile) throw new Error('Profile not found');
+
+      // Row-locked, atomic write via edge function (service role) — avoids the
+      // stale-balance race of reading credits_remaining and writing it back
+      // from the browser, especially against a concurrent class completion.
+      const { data: sessionData } = await supabase.auth.getSession();
+      const { data: result, error } = await supabase.functions.invoke(
+        'admin-adjust-credits',
+        {
+          body: {
+            student_id: profile.id,
+            amount,
+            reason: creditReason.trim(),
+          },
+          headers: {
+            Authorization: `Bearer ${sessionData.session?.access_token}`,
+          },
+        }
+      );
+      if (error) throw error;
+      if (!result?.success)
+        throw new Error(result?.error || 'Failed to adjust credits');
+
+      const newBalance = result.new_balance;
+
+      logAdminAction({
+        actionType: 'credits_adjusted',
+        description: `${amount > 0 ? 'Added' : 'Removed'} ${Math.abs(amount)}h for ${user.name || user.email} — ${creditReason.trim()}`,
+        entityType: 'student',
+        entityId: profile.id,
+        metadata: { amount, newBalance, reason: creditReason.trim() },
+      });
+
+      toast.success(
+        `${Math.abs(amount)}h ${amount > 0 ? 'added' : 'removed'} successfully`
+      );
+      queryClient.invalidateQueries({ queryKey: ['admin-activity-log'] });
+      setCreditAmount('');
+      setCreditReason('');
+      // Refresh stats
+      setStats((s) => (s ? { ...s, totalCredits: newBalance } : s));
+    } catch (err) {
+      log.error('Credit adjustment failed:', err);
+      toast.error(
+        err instanceof Error ? err.message : 'Failed to adjust credits'
+      );
+    } finally {
+      setIsAdjustingCredits(false);
     }
   };
 
@@ -172,14 +272,20 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
               </Badge>
             </DialogTitle>
           </DialogHeader>
-          
+
           <div className="py-4 space-y-4">
             <div className="space-y-2">
-              <p className="text-sm"><strong>Name:</strong> {user.name || '—'}</p>
-              <p className="text-sm"><strong>User ID:</strong> {user.id}</p>
-              <p className="text-sm"><strong>Email:</strong> {user.email}</p>
+              <p className="text-sm">
+                <strong>Name:</strong> {user.name || '—'}
+              </p>
+              <p className="text-sm">
+                <strong>User ID:</strong> {user.id}
+              </p>
+              <p className="text-sm">
+                <strong>Email:</strong> {user.email}
+              </p>
             </div>
-            
+
             <hr className="my-4" />
 
             {/* Rate Management Section */}
@@ -203,12 +309,16 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
                       onChange={(e) => setClassRate(e.target.value)}
                     />
                     <p className="text-xs text-muted-foreground">
-                      Auto-fills "Class Cost" on future class logs for this student.
+                      Auto-fills "Class Cost" on future class logs for this
+                      student.
                     </p>
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="paymentMethod">Payment Method</Label>
-                    <Select value={paymentMethod} onValueChange={setPaymentMethod}>
+                    <Select
+                      value={paymentMethod}
+                      onValueChange={setPaymentMethod}
+                    >
                       <SelectTrigger id="paymentMethod">
                         <SelectValue />
                       </SelectTrigger>
@@ -225,7 +335,8 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
                         ${prepaidBalance.toFixed(2)}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Surplus from overpayment, auto-applied to future classes.
+                        Surplus from overpayment, auto-applied to future
+                        classes.
                       </p>
                     </div>
                   )}
@@ -256,13 +367,70 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
                 disabled={isSaving}
                 className="w-full sm:w-auto"
               >
-                {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                {isSaving ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <Save className="h-4 w-4 mr-2" />
+                )}
                 Save Rates
               </Button>
             </div>
-            
+
+            {/* Credit Adjustment — students only */}
+            {user.role === 'student' && (
+              <>
+                <hr className="my-4" />
+                <div className="space-y-3">
+                  <h4 className="font-medium flex items-center gap-2">
+                    <PlusCircle className="h-4 w-4" />
+                    Adjust Credits
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label htmlFor="creditAmount">
+                        Hours (+ add / − remove)
+                      </Label>
+                      <Input
+                        id="creditAmount"
+                        type="number"
+                        step="0.5"
+                        placeholder="e.g. 2 or -1"
+                        value={creditAmount}
+                        onChange={(e) => setCreditAmount(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="creditReason">Reason</Label>
+                      <Input
+                        id="creditReason"
+                        placeholder="e.g. Makeup session"
+                        value={creditReason}
+                        onChange={(e) => setCreditReason(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleAdjustCredits}
+                    disabled={
+                      isAdjustingCredits || !creditAmount || !creditReason
+                    }
+                    className="w-full sm:w-auto"
+                  >
+                    {isAdjustingCredits ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <PlusCircle className="h-4 w-4 mr-2" />
+                    )}
+                    Apply Adjustment
+                  </Button>
+                </div>
+              </>
+            )}
+
             <hr className="my-4" />
-            
+
             <div className="space-y-2">
               <h4 className="font-medium flex items-center gap-2">
                 <History className="h-4 w-4" />
@@ -281,11 +449,13 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
                     </p>
                   )}
                   <p className="text-sm">
-                    <strong>Classes Completed:</strong> {stats?.classesCompleted ?? 0}
+                    <strong>Classes Completed:</strong>{' '}
+                    {stats?.classesCompleted ?? 0}
                   </p>
                   {user.role === 'student' && (
                     <p className="text-sm">
-                      <strong>Remaining Credits:</strong> {stats?.totalCredits ?? 0}
+                      <strong>Remaining Credits:</strong>{' '}
+                      {stats?.totalCredits ?? 0}
                     </p>
                   )}
                 </>
@@ -301,24 +471,30 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
                     Role Management
                   </h4>
                   <p className="text-xs text-muted-foreground">
-                    {canPromote ? 'Promote this student to tutor role' : 'Demote this tutor to student role'}
+                    {canPromote
+                      ? 'Promote this student to tutor role'
+                      : 'Demote this tutor to student role'}
                   </p>
                 </div>
               </>
             )}
           </div>
-          
+
           <DialogFooter className="flex-col sm:flex-row gap-2">
             {isAdmin && (canPromote || canDemote) && (
-              <Button 
-                variant={canPromote ? "default" : "destructive"}
+              <Button
+                variant={canPromote ? 'default' : 'destructive'}
                 onClick={() => setShowRoleDialog(true)}
                 className="w-full sm:w-auto"
               >
                 {canPromote ? 'Promote to Tutor' : 'Demote to Student'}
               </Button>
             )}
-            <Button onClick={onClose} variant="outline" className="w-full sm:w-auto">
+            <Button
+              onClick={onClose}
+              variant="outline"
+              className="w-full sm:w-auto"
+            >
               Close
             </Button>
           </DialogFooter>

@@ -8,50 +8,40 @@ interface TutorNavLinksProps {
   profilePath: string;
 }
 
-const TutorNavLinks: React.FC<TutorNavLinksProps> = ({
-  isExpanded,
-  profilePath,
-}) => {
+const TutorNavLinks: React.FC<TutorNavLinksProps> = ({ isExpanded }) => {
   const { baseClasses, activeClasses, isLinkActive } = useSidebarStyles();
-  const expandedClasses = isExpanded ? 'justify-start' : 'justify-center';
+  const pos = isExpanded ? 'justify-start' : 'justify-center';
+
+  const cls = (tab: string) => {
+    const active = isLinkActive('/tutor-dashboard', { key: 'tab', value: tab });
+    return `${baseClasses} ${pos}${active ? ` ${activeClasses}` : ''}`;
+  };
 
   return (
-    <nav className="space-y-1" aria-label="Tutor navigation">
+    <nav className="space-y-0.5" aria-label="Tutor navigation">
       <NavLink
         to="/tutor-dashboard?tab=schedule"
-        className={() =>
-          isLinkActive('/tutor-dashboard', { key: 'tab', value: 'schedule' })
-            ? `${baseClasses} ${expandedClasses} ${activeClasses}`
-            : `${baseClasses} ${expandedClasses}`
-        }
+        className={cls('schedule')}
         aria-label="My Schedule"
       >
-        <Calendar className="h-5 w-5" aria-hidden="true" />
-        {isExpanded && <span className="ml-3">My Schedule</span>}
+        <Calendar className="h-4 w-4 shrink-0" aria-hidden="true" />
+        {isExpanded && <span className="ml-2.5">My Schedule</span>}
       </NavLink>
       <NavLink
         to="/tutor-dashboard?tab=students"
-        className={() =>
-          isLinkActive('/tutor-dashboard', { key: 'tab', value: 'students' })
-            ? `${baseClasses} ${expandedClasses} ${activeClasses}`
-            : `${baseClasses} ${expandedClasses}`
-        }
+        className={cls('students')}
         aria-label="My Students"
       >
-        <Users className="h-5 w-5" aria-hidden="true" />
-        {isExpanded && <span className="ml-3">My Students</span>}
+        <Users className="h-4 w-4 shrink-0" aria-hidden="true" />
+        {isExpanded && <span className="ml-2.5">My Students</span>}
       </NavLink>
       <NavLink
         to="/tutor-dashboard?tab=profile"
-        className={() =>
-          isLinkActive('/tutor-dashboard', { key: 'tab', value: 'profile' })
-            ? `${baseClasses} ${expandedClasses} ${activeClasses}`
-            : `${baseClasses} ${expandedClasses}`
-        }
+        className={cls('profile')}
         aria-label="Profile"
       >
-        <User className="h-5 w-5" aria-hidden="true" />
-        {isExpanded && <span className="ml-3">Profile</span>}
+        <User className="h-4 w-4 shrink-0" aria-hidden="true" />
+        {isExpanded && <span className="ml-2.5">Profile</span>}
       </NavLink>
     </nav>
   );

@@ -6,12 +6,12 @@ export const useSidebarStyles = () => {
 
   const baseClasses = useMemo(
     () =>
-      'flex items-center px-4 py-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors duration-200 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-tutoring-blue',
+      'flex items-center px-2.5 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-150 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
     []
   );
 
   const activeClasses = useMemo(
-    () => 'bg-gray-200 text-tutoring-blue font-medium',
+    () => 'bg-tutoring-lightBlue !text-tutoring-blue font-medium',
     []
   );
 
@@ -24,7 +24,6 @@ export const useSidebarStyles = () => {
 
     if (!queryParam) return pathMatches;
 
-    // value: null means the param must NOT be present (e.g. the default/no-tab state)
     if (queryParam.value === null) {
       return pathMatches && !searchParams.has(queryParam.key);
     }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { Fragment, useEffect, useMemo } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { Home } from 'lucide-react';
 import {
@@ -10,7 +10,7 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 
-interface BreadcrumbItem {
+interface BreadcrumbData {
   label: string;
   href?: string;
 }
@@ -57,8 +57,8 @@ export const PageBreadcrumbs = () => {
   const activeTab = searchParams.get('tab');
 
   // Build breadcrumb items based on current route
-  const breadcrumbs = useMemo((): BreadcrumbItem[] => {
-    const items: BreadcrumbItem[] = [{ label: 'Home', href: '/' }];
+  const breadcrumbs = useMemo((): BreadcrumbData[] => {
+    const items: BreadcrumbData[] = [{ label: 'Home', href: '/' }];
 
     // Get the base route label
     const baseLabel = routeLabels[pathname];
@@ -119,19 +119,24 @@ export const PageBreadcrumbs = () => {
           const isFirst = index === 0;
 
           return (
-            <BreadcrumbItem key={index}>
+            <Fragment key={index}>
               {index > 0 && <BreadcrumbSeparator />}
-              {isLast ? (
-                <BreadcrumbPage>{item.label}</BreadcrumbPage>
-              ) : (
-                <BreadcrumbLink asChild>
-                  <Link to={item.href || '/'} className="flex items-center gap-1">
-                    {isFirst && <Home className="h-3.5 w-3.5" />}
-                    {!isFirst && item.label}
-                  </Link>
-                </BreadcrumbLink>
-              )}
-            </BreadcrumbItem>
+              <BreadcrumbItem>
+                {isLast ? (
+                  <BreadcrumbPage>{item.label}</BreadcrumbPage>
+                ) : (
+                  <BreadcrumbLink asChild>
+                    <Link
+                      to={item.href || '/'}
+                      className="flex items-center gap-1"
+                    >
+                      {isFirst && <Home className="h-3.5 w-3.5" />}
+                      {!isFirst && item.label}
+                    </Link>
+                  </BreadcrumbLink>
+                )}
+              </BreadcrumbItem>
+            </Fragment>
           );
         })}
       </BreadcrumbList>

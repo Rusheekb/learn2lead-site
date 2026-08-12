@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { batchUpdateTutorPaymentDate } from '@/services/class-operations/update/updatePaymentDate';
 import {
@@ -13,6 +14,7 @@ import {
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { classLogsKeys } from '@/hooks/useClassLogs';
+import { logAdminAction } from '@/services/adminActivityLog';
 import { format, parseISO } from 'date-fns';
 import {
   AlertDialog,
@@ -38,8 +40,6 @@ interface TutorSummaryRow {
   last_payment_date: string | null;
 }
 
-type PayrollTarget = TutorSummaryRow | 'all';
-
 interface PayrollRun {
   id: string;
   tutor_name: string;
@@ -62,14 +62,11 @@ const TutorPaymentSummary: React.FC<TutorPaymentSummaryProps> = ({
   onPaymentUpdated,
 }) => {
   const queryClient = useQueryClient();
-  const [payrollTarget, setPayrollTarget] = useState<PayrollTarget | null>(
-    null
-  );
+  const [selectedNames, setSelectedNames] = useState<Set<string>>(new Set());
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
 
-  const { data: payrollHistory = [], refetch: refetchHistory } = useQuery<
-    PayrollRun[]
-  >({
+  const { data: payrollHistory = [] } = useQuery<PayrollRun[]>({
     queryKey: ['tutor-payroll-history'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -99,18 +96,38 @@ const TutorPaymentSummary: React.FC<TutorPaymentSummaryProps> = ({
     0
   );
 
-  const confirmTargets: TutorSummaryRow[] =
-    payrollTarget === 'all'
-      ? tutorSummaries
-      : payrollTarget
-        ? [payrollTarget]
-        : [];
+  const allSelected =
+    tutorSummaries.length > 0 &&
+    tutorSummaries.every((t) => selectedNames.has(t.tutor_name));
+  const someSelected = selectedNames.size > 0 && !allSelected;
+  const confirmTargets = tutorSummaries.filter((t) =>
+    selectedNames.has(t.tutor_name)
+  );
+  const selectedTotal = confirmTargets.reduce(
+    (s, t) => s + Number(t.total_owed),
+    0
+  );
+
+  const toggleAll = () =>
+    setSelectedNames(
+      allSelected ? new Set() : new Set(tutorSummaries.map((t) => t.tutor_name))
+    );
+
+  const toggleOne = (name: string) =>
+    setSelectedNames((prev) => {
+      const next = new Set(prev);
+      if (next.has(name)) {
+        next.delete(name);
+      } else {
+        next.add(name);
+      }
+      return next;
+    });
 
   const handleConfirm = async () => {
     const classIds = confirmTargets.flatMap((t) => t.class_ids);
     const ok = await batchUpdateTutorPaymentDate(classIds, new Date());
     if (ok) {
-      // Log each payroll run to the audit table
       const today = format(new Date(), 'yyyy-MM-dd');
       await supabase.from('tutor_payroll_runs').insert(
         confirmTargets.map((t) => ({
@@ -128,13 +145,24 @@ const TutorPaymentSummary: React.FC<TutorPaymentSummaryProps> = ({
           ? confirmTargets[0].tutor_name
           : `${confirmTargets.length} tutors`;
       toast.success(`Payroll processed for ${names}`);
+      logAdminAction({
+        actionType: 'payroll_processed',
+        description: `Processed payroll for ${names} — $${selectedTotal.toFixed(2)} total`,
+        entityType: 'tutor',
+        metadata: {
+          tutors: confirmTargets.map((t) => t.tutor_name),
+          total: selectedTotal,
+        },
+      });
       queryClient.invalidateQueries({ queryKey: classLogsKeys.all });
       queryClient.invalidateQueries({ queryKey: ['tutor-payroll-history'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-activity-log'] });
+      setSelectedNames(new Set());
       onPaymentUpdated();
     } else {
       toast.error('Failed to process payroll');
     }
-    setPayrollTarget(null);
+    setConfirmOpen(false);
   };
 
   if (tutorSummaries.length === 0) {
@@ -150,57 +178,86 @@ const TutorPaymentSummary: React.FC<TutorPaymentSummaryProps> = ({
 
   return (
     <>
-      <Card>
+      <Card className="relative">
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <DollarSign className="h-5 w-5" />
-              Tutor Payroll
-              <span className="text-muted-foreground font-normal text-base">
-                — Total owed: ${grandTotal.toFixed(2)}
-              </span>
-            </CardTitle>
-            <Button onClick={() => setPayrollTarget('all')}>
-              Process Payroll
-            </Button>
-          </div>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <DollarSign className="h-5 w-5" />
+            Tutor Payroll
+            <span className="text-muted-foreground font-normal text-base">
+              — Total owed: ${grandTotal.toFixed(2)}
+            </span>
+          </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {tutorSummaries.map((summary) => (
-              <div
-                key={summary.tutor_name}
-                className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 p-3 rounded-lg border border-border bg-muted/30"
-              >
-                <div className="min-w-0">
-                  <div className="font-medium truncate">
+        <CardContent className="pb-0">
+          {/* Table */}
+          <div className="w-full">
+            {/* Header row */}
+            <div className="flex items-center gap-3 px-3 py-2 border-b text-xs font-medium text-muted-foreground">
+              <Checkbox
+                checked={
+                  allSelected || (someSelected ? 'indeterminate' : false)
+                }
+                onCheckedChange={toggleAll}
+                aria-label="Select all tutors"
+              />
+              <span className="flex-1">Tutor</span>
+              <span className="hidden sm:block w-52">Classes</span>
+              <span className="w-20 text-right">Amount</span>
+            </div>
+
+            {/* Tutor rows */}
+            {tutorSummaries.map((summary) => {
+              const isChecked = selectedNames.has(summary.tutor_name);
+              return (
+                <div
+                  key={summary.tutor_name}
+                  className={`flex items-center gap-3 px-3 py-3 border-b last:border-b-0 transition-colors cursor-pointer hover:bg-muted/30 ${
+                    isChecked ? 'bg-muted/20' : ''
+                  }`}
+                  onClick={() => toggleOne(summary.tutor_name)}
+                >
+                  <Checkbox
+                    checked={isChecked}
+                    onCheckedChange={() => toggleOne(summary.tutor_name)}
+                    onClick={(e) => e.stopPropagation()}
+                    aria-label={`Select ${summary.tutor_name}`}
+                  />
+                  <span className="flex-1 font-medium text-sm truncate">
                     {summary.tutor_name}
-                  </div>
-                  <div className="text-sm text-muted-foreground">
+                  </span>
+                  <span className="hidden sm:block w-52 text-sm text-muted-foreground">
                     {summary.unpaid_count} class
                     {summary.unpaid_count !== 1 ? 'es' : ''} ·{' '}
                     {formatLastPaid(summary.last_payment_date)}
-                  </div>
-                </div>
-                <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4">
-                  <span className="text-lg font-bold whitespace-nowrap">
+                  </span>
+                  <span className="w-20 text-right font-bold text-sm whitespace-nowrap">
                     ${Number(summary.total_owed).toFixed(2)}
                   </span>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setPayrollTarget(summary)}
-                    className="whitespace-nowrap"
-                  >
-                    Pay {summary.tutor_name.split(' ')[0]}
-                  </Button>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
+          {/* Sticky bottom action bar */}
+          {selectedNames.size > 0 && (
+            <div className="sticky bottom-0 bg-background border-t py-3 px-1 flex items-center justify-between gap-4 mt-0">
+              <span className="text-sm text-muted-foreground">
+                {selectedNames.size} tutor
+                {selectedNames.size !== 1 ? 's' : ''} selected ·{' '}
+                <span className="font-semibold text-foreground">
+                  ${selectedTotal.toFixed(2)}
+                </span>
+              </span>
+              <Button size="sm" onClick={() => setConfirmOpen(true)}>
+                Process Payroll
+              </Button>
+            </div>
+          )}
+
           {/* Payroll History */}
-          <div className="mt-4 border-t pt-3">
+          <div
+            className={`border-t pt-3 pb-3 ${selectedNames.size > 0 ? 'mt-0' : 'mt-4'}`}
+          >
             <Button
               variant="ghost"
               size="sm"
@@ -250,19 +307,15 @@ const TutorPaymentSummary: React.FC<TutorPaymentSummaryProps> = ({
       </Card>
 
       <AlertDialog
-        open={payrollTarget !== null}
+        open={confirmOpen}
         onOpenChange={(open) => {
-          if (!open) setPayrollTarget(null);
+          if (!open) setConfirmOpen(false);
         }}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {payrollTarget === 'all'
-                ? 'Process Payroll'
-                : `Pay ${confirmTargets[0]?.tutor_name}`}
-              {' — '}
-              {format(new Date(), 'MMMM d, yyyy')}
+              Process Payroll — {format(new Date(), 'MMMM d, yyyy')}
             </AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-1 pt-1">
@@ -287,12 +340,7 @@ const TutorPaymentSummary: React.FC<TutorPaymentSummaryProps> = ({
                 {confirmTargets.length > 1 && (
                   <div className="flex justify-between text-sm font-semibold border-t pt-1 mt-1">
                     <span>Total</span>
-                    <span>
-                      $
-                      {confirmTargets
-                        .reduce((s, t) => s + Number(t.total_owed), 0)
-                        .toFixed(2)}
-                    </span>
+                    <span>${selectedTotal.toFixed(2)}</span>
                   </div>
                 )}
                 <p className="text-muted-foreground text-xs pt-2">

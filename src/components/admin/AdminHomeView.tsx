@@ -18,6 +18,8 @@ import { format, parseISO } from 'date-fns';
 import { Link } from 'react-router-dom';
 import TutorPaymentSummary from './class-logs/TutorPaymentSummary';
 import StudentPaymentSummary from './class-logs/StudentPaymentSummary';
+import RevenueOverview from './RevenueOverview';
+import AdminActivityLog from './AdminActivityLog';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -143,6 +145,9 @@ const AdminHomeView: React.FC<{ onAddCredits?: (name: string) => void }> = ({
 
   return (
     <div className="space-y-6">
+      {/* ── Revenue ──────────────────────────────────────────────────────── */}
+      <RevenueOverview />
+
       {/* ── Today's Schedule ─────────────────────────────────────────────── */}
       <Card>
         <CardHeader className="pb-3">
@@ -312,6 +317,9 @@ const AdminHomeView: React.FC<{ onAddCredits?: (name: string) => void }> = ({
           )}
         </CardContent>
       </Card>
+
+      {/* ── Admin Activity Log ───────────────────────────────────────────── */}
+      <AdminActivityLog />
 
       {/* ── Quick link to full class logs ────────────────────────────────── */}
       <div className="flex items-center gap-2 text-sm text-muted-foreground">

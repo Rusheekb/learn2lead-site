@@ -22,7 +22,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { format, parseISO } from 'date-fns';
 
 import ClassFilters from './class-logs/ClassFilters';
-import ClassTable from './class-logs/ClassTable';
+import ClassTable, { BulkAction } from './class-logs/ClassTable';
 import ClassDetailsDialog from './class-logs/ClassDetailsDialog';
 import CsvUploader from './class-logs/CsvUploader';
 import { ExportDialog } from './class-logs/ExportDialog';
@@ -30,6 +30,10 @@ import TutorPaymentSummary from './class-logs/TutorPaymentSummary';
 import StudentPaymentSummary from './class-logs/StudentPaymentSummary';
 import StudentPaymentRecorder from './class-logs/StudentPaymentRecorder';
 import { useClassLogs } from '@/hooks/useClassLogs';
+import {
+  batchUpdateTutorPaymentDate,
+  batchUpdateStudentPaymentDate,
+} from '@/services/class-operations/update/updatePaymentDate';
 import { cn, getErrorMessage } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 
@@ -200,6 +204,27 @@ const ClassLogs: React.FC = () => {
     handleToggleTutorPayment,
   } = useClassLogs();
 
+  const handleBulkAction = async (action: BulkAction, classIds: string[]) => {
+    let ok = false;
+    if (action === 'mark-tutor-paid') {
+      ok = await batchUpdateTutorPaymentDate(classIds, new Date());
+    } else if (action === 'mark-tutor-unpaid') {
+      ok = await batchUpdateTutorPaymentDate(classIds, null);
+    } else if (action === 'mark-student-paid') {
+      ok = await batchUpdateStudentPaymentDate(classIds, new Date());
+    } else if (action === 'mark-student-unpaid') {
+      ok = await batchUpdateStudentPaymentDate(classIds, null);
+    }
+    if (ok) {
+      toast.success(
+        `Updated ${classIds.length} record${classIds.length !== 1 ? 's' : ''}`
+      );
+      handleRefreshData();
+    } else {
+      toast.error('Failed to update records');
+    }
+  };
+
   const handleExportCSV = async (startDate?: Date, endDate?: Date) => {
     try {
       // Fetch all matching data on demand
@@ -361,6 +386,7 @@ const ClassLogs: React.FC = () => {
         studentPaymentMethods={studentPaymentMethods}
         onToggleStudentPayment={handleToggleStudentPayment}
         onToggleTutorPayment={handleToggleTutorPayment}
+        onBulkAction={handleBulkAction}
       />
 
       <ClassDetailsDialog

@@ -3,11 +3,14 @@ import TutorScheduler from './TutorScheduler';
 import TutorEarningsHistory from './TutorEarningsHistory';
 import ClassHistory from '@/components/shared/ClassHistory';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import ZoomLinkNudge from './ZoomLinkNudge';
 
 const TutorDashboardContent: React.FC = memo(() => {
   return (
     <div className="space-y-4 sm:space-y-6">
       <h2 className="text-xl sm:text-2xl font-bold">Tutor Dashboard</h2>
+
+      <ZoomLinkNudge />
 
       <Tabs defaultValue="scheduler" className="w-full">
         <TabsList className="grid w-full grid-cols-3">

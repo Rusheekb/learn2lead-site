@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -10,17 +9,20 @@ interface SidebarLogoProps {
   toggleSidebar: () => void;
 }
 
-const SidebarLogo: React.FC<SidebarLogoProps> = ({ isExpanded, toggleSidebar }) => {
+const SidebarLogo: React.FC<SidebarLogoProps> = ({
+  isExpanded,
+  toggleSidebar,
+}) => {
   const { userRole } = useAuth();
   const dashboardPath = getDashboardPath(userRole);
-  
+
   return (
-    <div className="p-4 flex items-center justify-between border-b border-gray-200">
+    <div
+      className={`flex items-center h-12 px-3 border-b border-border ${isExpanded ? 'justify-between' : 'justify-center'}`}
+    >
       <Link
         to={dashboardPath}
-        className={`${
-          !isExpanded ? 'justify-center' : ''
-        } flex items-center text-lg sm:text-xl font-bold text-tutoring-blue`}
+        className="flex items-center text-sm font-semibold text-tutoring-blue tracking-tight"
         aria-label="Go to dashboard"
       >
         {isExpanded ? (
@@ -28,19 +30,19 @@ const SidebarLogo: React.FC<SidebarLogoProps> = ({ isExpanded, toggleSidebar }) 
             Learn<span className="text-tutoring-teal">2</span>Lead
           </>
         ) : (
-          'L2L'
+          <span className="text-xs font-bold">L2L</span>
         )}
       </Link>
       <button
         onClick={toggleSidebar}
-        className="text-gray-600 hover:text-gray-900 hidden md:block focus:outline-none focus:ring-2 focus:ring-tutoring-blue rounded-md"
-        aria-label={isExpanded ? "Collapse sidebar" : "Expand sidebar"}
+        className="hidden md:flex items-center justify-center w-6 h-6 rounded text-muted-foreground/50 hover:text-muted-foreground transition-colors focus:outline-none"
+        aria-label={isExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
         aria-expanded={isExpanded}
       >
         {isExpanded ? (
-          <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+          <ChevronLeft className="h-4 w-4" aria-hidden="true" />
         ) : (
-          <ChevronRight className="h-5 w-5" aria-hidden="true" />
+          <ChevronRight className="h-4 w-4" aria-hidden="true" />
         )}
       </button>
     </div>
