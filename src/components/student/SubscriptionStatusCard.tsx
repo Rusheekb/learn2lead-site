@@ -35,7 +35,7 @@ export const SubscriptionStatusCard: React.FC = () => {
         <CardContent className="pt-6">
           <div className="flex items-center gap-2 text-destructive">
             <AlertCircle className="h-5 w-5" />
-            <p className="text-sm">Error loading credits: {error}</p>
+            <p className="text-sm">Error loading hours: {error}</p>
           </div>
         </CardContent>
       </Card>
@@ -46,15 +46,15 @@ export const SubscriptionStatusCard: React.FC = () => {
     return (
       <Card className="mb-6 bg-gradient-to-br from-primary/5 to-accent/5">
         <CardHeader>
-          <CardTitle className="text-xl">No Credits Available</CardTitle>
+          <CardTitle className="text-xl">No Hours Available</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-muted-foreground">
-            Purchase a credit pack to start booking classes.
+            Purchase an hours pack to start booking classes.
           </p>
           <Button onClick={() => navigate('/pricing')} className="w-full">
             <ShoppingCart className="mr-2 h-4 w-4" />
-            Buy Credits
+            Buy Hours
           </Button>
         </CardContent>
       </Card>
@@ -63,7 +63,7 @@ export const SubscriptionStatusCard: React.FC = () => {
 
   const getBorderColor = () => {
     if (creditsRemaining === null) return '';
-    if (creditsRemaining === 0) return 'border-destructive';
+    if (creditsRemaining <= 0) return 'border-destructive';
     if (creditsRemaining < 3) return 'border-orange-500';
     return 'border-primary';
   };
@@ -72,22 +72,29 @@ export const SubscriptionStatusCard: React.FC = () => {
     <Card className={cn('mb-6', getBorderColor())}>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-xl">Your Credits</CardTitle>
+          <CardTitle className="text-xl">Your Hours</CardTitle>
           <PlanBadge planName={planName} />
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">
-            Credits Available
-          </span>
+          <span className="text-sm text-muted-foreground">Hours Available</span>
           <CreditBadge credits={creditsRemaining} />
         </div>
+
+        {creditsRemaining !== null && creditsRemaining < 0 && (
+          <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
+            <p className="text-sm text-destructive font-medium">
+              You've gone over your available hours. Purchase more to continue
+              booking classes.
+            </p>
+          </div>
+        )}
 
         {creditsRemaining !== null && creditsRemaining === 0 && (
           <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
             <p className="text-sm text-destructive font-medium">
-              You've used all your credits. Purchase more to continue booking
+              You've used all your hours. Purchase more to continue booking
               classes.
             </p>
           </div>
@@ -98,18 +105,24 @@ export const SubscriptionStatusCard: React.FC = () => {
           creditsRemaining < 3 && (
             <div className="bg-orange-500/10 border border-orange-500/20 rounded-lg p-3">
               <p className="text-sm text-orange-700 dark:text-orange-400 font-medium">
-                Running low on credits — consider topping up!
+                Running low on hours — consider topping up!
               </p>
             </div>
           )}
 
         <Button
-          variant={creditsRemaining === 0 ? 'default' : 'outline'}
+          variant={
+            creditsRemaining !== null && creditsRemaining <= 0
+              ? 'default'
+              : 'outline'
+          }
           className="w-full"
           onClick={() => navigate('/pricing')}
         >
           <ShoppingCart className="mr-2 h-4 w-4" />
-          {creditsRemaining === 0 ? 'Buy More Credits' : 'Top Up Credits'}
+          {creditsRemaining !== null && creditsRemaining <= 0
+            ? 'Buy More Hours'
+            : 'Top Up Hours'}
         </Button>
       </CardContent>
     </Card>
