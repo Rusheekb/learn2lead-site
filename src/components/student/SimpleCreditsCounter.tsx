@@ -1,4 +1,5 @@
 import React, { memo } from 'react';
+import { Link } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { useSubscription } from '@/contexts/SubscriptionContext';
 import { CreditBadge } from '@/components/shared/CreditBadge';
@@ -21,11 +22,14 @@ export const SimpleCreditsCounter: React.FC = memo(() => {
         <span className="text-sm font-medium text-muted-foreground">
           Hours Available
         </span>
-        <CreditBadge
-          credits={creditsRemaining}
-          pricePerClass={pricePerClass}
-          hideAmount
-        />
+        <Link to="/pricing" className="rounded-full">
+          <CreditBadge
+            credits={creditsRemaining}
+            pricePerClass={pricePerClass}
+            hideAmount
+            className="cursor-pointer hover:opacity-80 transition-opacity"
+          />
+        </Link>
       </div>
     </Card>
   );
