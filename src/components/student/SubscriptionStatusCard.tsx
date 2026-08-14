@@ -79,7 +79,7 @@ export const SubscriptionStatusCard: React.FC = () => {
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">Hours Available</span>
-          <CreditBadge credits={creditsRemaining} />
+          <CreditBadge credits={creditsRemaining} hideAmount />
         </div>
 
         {creditsRemaining !== null && creditsRemaining < 0 && (
