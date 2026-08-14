@@ -136,31 +136,26 @@ Deno.serve(async (req) => {
     }
     logStep('User authenticated', { userId, email: userEmail });
 
-    // Get credits from ledger (single source of truth)
+    // student_subscriptions.credits_remaining is the primary source of truth
+    // for balance — it's kept in sync by a trigger that fires in true
+    // insertion order on every ledger write, under the same row lock as the
+    // write itself. This used to be re-derived from the ledger instead via
+    // `ORDER BY created_at DESC LIMIT 1`, which has no tiebreaker: confirmed
+    // live that two ledger rows written in the same transaction batch landed
+    // with an identical created_at timestamp, and that query
+    // non-deterministically returned the wrong one. Only fall back to
+    // deriving from the ledger for the narrower legacy case below (a student
+    // with ledger history but no subscription record at all).
     let creditsRemaining = 0;
-    const { data: ledgerData, error: ledgerError } = await supabaseClient
-      .from('class_credits_ledger')
-      .select('balance_after')
-      .eq('student_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (ledgerData && !ledgerError) {
-      creditsRemaining = ledgerData.balance_after || 0;
-      logStep('Retrieved credits from ledger', { creditsRemaining });
-    } else {
-      logStep('No ledger entries found');
-    }
-
-    // Check if user has any subscription record (Stripe or manual)
     let hasAccount = false;
     let planName = null;
     let pricePerClass = null;
 
     const { data: subData, error: subError } = await supabaseClient
       .from('student_subscriptions')
-      .select('id, status, plan_id, subscription_plans(name, price_per_class)')
+      .select(
+        'id, status, credits_remaining, plan_id, subscription_plans(name, price_per_class)'
+      )
       .eq('student_id', userId)
       .order('created_at', { ascending: false })
       .limit(1)
@@ -168,18 +163,37 @@ Deno.serve(async (req) => {
 
     if (subData && !subError) {
       hasAccount = true;
+      creditsRemaining = subData.credits_remaining || 0;
       planName = subData.subscription_plans?.name || 'Direct Payment';
       pricePerClass = subData.subscription_plans?.price_per_class || null;
-      logStep('Found subscription record', { planName, pricePerClass });
+      logStep('Found subscription record', {
+        planName,
+        pricePerClass,
+        creditsRemaining,
+      });
     } else {
-      // Check if there are any ledger entries at all (Zelle users may not have subscription records)
-      if (ledgerData) {
+      // Zelle/manual users may have ledger history with no subscription
+      // record at all — fall back to the ledger's latest row for this
+      // narrower, legacy case only.
+      const { data: ledgerData, error: ledgerError } = await supabaseClient
+        .from('class_credits_ledger')
+        .select('balance_after')
+        .eq('student_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (ledgerData && !ledgerError) {
         hasAccount = true;
+        creditsRemaining = ledgerData.balance_after || 0;
         planName = 'Direct Payment';
         pricePerClass = 35;
         logStep(
-          'No subscription record but has ledger entries - manual/Zelle user'
+          'No subscription record but has ledger entries - manual/Zelle user',
+          { creditsRemaining }
         );
+      } else {
+        logStep('No subscription record and no ledger entries');
       }
     }
 
