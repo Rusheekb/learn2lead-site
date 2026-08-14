@@ -189,9 +189,9 @@ Deno.serve(async (req) => {
         break;
       }
 
-      case 'charge.refunded': {
-        const charge = event.data.object as Stripe.Charge;
-        await handleChargeRefunded(stripe, supabaseClient, charge);
+      case 'refund.created': {
+        const refund = event.data.object as Stripe.Refund;
+        await handleRefundCreated(stripe, supabaseClient, refund);
         break;
       }
 
@@ -611,47 +611,38 @@ async function allocateCreditsFromCheckout(
   }
 }
 
-// ─── charge.refunded ───────────────────────────────────────────────────────────
+// ─── refund.created ─────────────────────────────────────────────────────────────
 // Claws back credits proportionally when a credit-pack purchase is refunded, in
 // full or in part. Allows the resulting balance to go negative if hours were
 // already used before the refund — surfaced via the existing overdrawn UI
 // rather than silently capped at zero, so nothing about the account's real
 // state is hidden.
-async function handleChargeRefunded(
+//
+// Listens to refund.created rather than charge.refunded: Stripe's own event
+// description for charge.refunded says to use refund.created for refund
+// details, and confirmed live — the charge.refunded payload's nested
+// `refunds.data` list came back empty, so charge.refunded alone can't be
+// relied on to carry the refund it's supposedly reporting.
+async function handleRefundCreated(
   stripe: Stripe,
   supabaseClient: any,
-  charge: Stripe.Charge
+  refund: Stripe.Refund
 ) {
   const paymentIntentId =
-    typeof charge.payment_intent === 'string'
-      ? charge.payment_intent
-      : charge.payment_intent?.id;
+    typeof refund.payment_intent === 'string'
+      ? refund.payment_intent
+      : refund.payment_intent?.id;
 
   if (!paymentIntentId) {
-    logStep('charge.refunded: no payment_intent on charge, skipping', {
-      chargeId: charge.id,
-    });
-    return;
-  }
-
-  // The most recently created refund is what triggered this event — use its
-  // own amount (not the cumulative charge.amount_refunded) so that multiple
-  // partial refunds on the same charge each deduct only their own increment,
-  // and its own id as the idempotency key so a retried webhook delivery
-  // can't double-deduct.
-  const latestRefund = charge.refunds?.data?.[0];
-  if (!latestRefund) {
-    logStep('charge.refunded: no refund object on charge, skipping', {
-      chargeId: charge.id,
+    logStep('refund.created: no payment_intent on refund, skipping', {
+      refundId: refund.id,
     });
     return;
   }
 
   logStep('Processing refund', {
-    chargeId: charge.id,
-    refundId: latestRefund.id,
-    refundAmount: latestRefund.amount,
-    chargeAmount: charge.amount,
+    refundId: refund.id,
+    refundAmount: refund.amount,
   });
 
   const sessions = await stripe.checkout.sessions.list({
@@ -662,7 +653,7 @@ async function handleChargeRefunded(
 
   if (!session) {
     logStep(
-      'charge.refunded: no checkout session found for payment_intent — not a credit-pack purchase, skipping',
+      'refund.created: no checkout session found for payment_intent — not a credit-pack purchase, skipping',
       { paymentIntentId }
     );
     return;
@@ -679,25 +670,39 @@ async function handleChargeRefunded(
 
   if (originalError || !originalEntry) {
     logStep(
-      'charge.refunded: no original credit entry found for session, skipping',
+      'refund.created: no original credit entry found for session, skipping',
       { sessionId: session.id, error: originalError?.message }
     );
     return;
   }
 
-  if (!charge.amount || charge.amount <= 0) {
-    logStep('charge.refunded: charge has no positive amount, skipping', {
-      chargeId: charge.id,
+  // The refund object itself doesn't carry the original charge's total
+  // amount — needed as the denominator for the proportional-refund math.
+  const chargeId =
+    typeof refund.charge === 'string' ? refund.charge : refund.charge?.id;
+
+  if (!chargeId) {
+    logStep('refund.created: no charge id on refund, skipping', {
+      refundId: refund.id,
     });
     return;
   }
 
-  const refundFraction = latestRefund.amount / charge.amount;
+  const charge = await stripe.charges.retrieve(chargeId);
+
+  if (!charge.amount || charge.amount <= 0) {
+    logStep('refund.created: charge has no positive amount, skipping', {
+      chargeId,
+    });
+    return;
+  }
+
+  const refundFraction = refund.amount / charge.amount;
   const creditsToDeduct =
     Math.round(originalEntry.amount * refundFraction * 100) / 100;
 
   if (creditsToDeduct <= 0) {
-    logStep('charge.refunded: computed zero credits to deduct, skipping', {
+    logStep('refund.created: computed zero credits to deduct, skipping', {
       refundFraction,
       originalAmount: originalEntry.amount,
     });
@@ -713,15 +718,15 @@ async function handleChargeRefunded(
       p_subscription_id: originalEntry.subscription_id,
       p_transaction_type: 'debit',
       p_amount: -creditsToDeduct,
-      p_reason: `Refund processed - $${(latestRefund.amount / 100).toFixed(2)} refunded`,
-      p_invoice_id: latestRefund.id,
-      p_dollar_amount: latestRefund.amount / 100,
+      p_reason: `Refund processed - $${(refund.amount / 100).toFixed(2)} refunded`,
+      p_invoice_id: refund.id,
+      p_dollar_amount: refund.amount / 100,
       p_allow_negative: true,
     }
   );
 
   if (rpcError || !rpcResult?.success) {
-    logStep('charge.refunded: failed to deduct credits', {
+    logStep('refund.created: failed to deduct credits', {
       error: rpcError,
       result: rpcResult,
     });
@@ -729,20 +734,20 @@ async function handleChargeRefunded(
   }
 
   if (rpcResult.idempotent) {
-    logStep('charge.refunded: refund already processed, no action needed', {
-      refundId: latestRefund.id,
+    logStep('refund.created: refund already processed, no action needed', {
+      refundId: refund.id,
     });
     return;
   }
 
-  logStep('charge.refunded: credits deducted', {
+  logStep('refund.created: credits deducted', {
     creditsDeducted: creditsToDeduct,
     newBalance: rpcResult.new_balance,
   });
 
   await supabaseClient.from('notifications').insert({
     user_id: originalEntry.student_id,
-    message: `${creditsToDeduct} hour${creditsToDeduct === 1 ? '' : 's'} removed from your balance following a $${(latestRefund.amount / 100).toFixed(2)} refund.`,
+    message: `${creditsToDeduct} hour${creditsToDeduct === 1 ? '' : 's'} removed from your balance following a $${(refund.amount / 100).toFixed(2)} refund.`,
     type: 'refund_processed',
   });
 
@@ -750,7 +755,7 @@ async function handleChargeRefunded(
     supabaseClient,
     originalEntry.student_id,
     creditsToDeduct,
-    latestRefund.amount / 100,
+    refund.amount / 100,
     rpcResult.new_balance
   );
 
