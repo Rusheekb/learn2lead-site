@@ -6,7 +6,6 @@ import { CreditHistory } from './CreditHistory';
 import HomeworkInbox from './HomeworkInbox';
 import { subjects } from '@/constants/subjectsData';
 import { SimpleCreditsCounter } from './SimpleCreditsCounter';
-import OutstandingBalance from './OutstandingBalance';
 import LowCreditBanner from './LowCreditBanner';
 import GettingStartedCard from './GettingStartedCard';
 
@@ -26,7 +25,6 @@ const DashboardContent: React.FC<DashboardContentProps> = memo(
         <GettingStartedCard />
         <LowCreditBanner />
         <SimpleCreditsCounter />
-        <OutstandingBalance />
         <div className="mt-6 sm:mt-8">
           <SubjectCards
             subjects={subjects}
