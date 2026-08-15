@@ -913,6 +913,35 @@ async function processReferralReward(
       return;
     }
 
+    // Claim this referral atomically before crediting anyone. There's a
+    // UNIQUE index on referral_usage.used_by_email — the real, database-level
+    // guarantee that an account can only ever redeem one referral. Claiming
+    // it first (instead of crediting the referrer first and recording usage
+    // after) closes a race where two concurrent checkouts from the same
+    // person with two different codes could otherwise both pass
+    // create-checkout's own pre-check and both end up crediting a referrer,
+    // even though only one usage record can ever actually stick.
+    const { error: usageError } = await supabaseClient
+      .from('referral_usage')
+      .insert({
+        referral_code_id: referralCodeId,
+        used_by_user_id: newCustomerUserId || referrerId,
+        used_by_email: newCustomerEmail,
+        subscription_id: sessionId,
+      });
+
+    if (usageError) {
+      if (usageError.code === '23505') {
+        logStep(
+          'Referral already redeemed by this account elsewhere, skipping referrer credit',
+          { newCustomerEmail, sessionId }
+        );
+        return;
+      }
+      logStep('ERROR recording referral usage', { error: usageError.message });
+      throw usageError;
+    }
+
     const { data: referrerSub, error: referrerSubError } = await supabaseClient
       .from('student_subscriptions')
       .select('id')
@@ -962,22 +991,6 @@ async function processReferralReward(
       bonusHours: REFERRAL_BONUS_HOURS,
       newBalance: rpcResult.new_balance,
     });
-
-    // The unique index on referral_usage.subscription_id prevents double-inserts on retry
-    const { error: usageError } = await supabaseClient
-      .from('referral_usage')
-      .insert({
-        referral_code_id: referralCodeId,
-        used_by_user_id: newCustomerUserId || referrerId,
-        used_by_email: newCustomerEmail,
-        subscription_id: sessionId,
-      });
-
-    if (usageError) {
-      logStep('WARNING: Failed to record referral usage (may be duplicate)', {
-        error: usageError.message,
-      });
-    }
 
     const { data: codeData } = await supabaseClient
       .from('referral_codes')
