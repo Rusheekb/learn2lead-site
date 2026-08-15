@@ -102,9 +102,18 @@ serve(async (req) => {
     }
 
     // Stripe is still needed below to create the discount coupon for this code.
-    const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
+    // STRIPE_MODE is safe to key off here (unlike create-checkout/
+    // stripe-webhooks, which deliberately don't — see their comments) since
+    // this function isn't on any live payment or webhook path; it only
+    // affects which mode a newly-created coupon lands in. Same pattern
+    // admin-create-referral-code already uses.
+    const stripeMode = Deno.env.get('STRIPE_MODE') || 'live';
+    const stripeKey =
+      stripeMode !== 'live'
+        ? Deno.env.get('STRIPE_SECRET_KEY_TEST')
+        : Deno.env.get('STRIPE_SECRET_KEY');
     if (!stripeKey) {
-      throw new Error('STRIPE_SECRET_KEY is not configured');
+      throw new Error('Stripe key not configured');
     }
     const stripe = new Stripe(stripeKey, { apiVersion: '2025-08-27.basil' });
 

@@ -38,23 +38,14 @@ const ReferralLanding: React.FC = () => {
       }
 
       try {
-        // Fetch the referral code and referrer info
+        // Public/logged-out visitors (the entire point of this page — a
+        // friend clicking a shared link) can't read referral_codes directly;
+        // its RLS only allows a code's own creator to see it. This RPC
+        // returns just the safe subset a visitor needs, never
+        // stripe_coupon_id or raw IDs.
         const { data, error: fetchError } = await supabase
-          .from('referral_codes')
-          .select(
-            `
-            code,
-            discount_amount,
-            discount_type,
-            active,
-            expires_at,
-            max_uses,
-            times_used,
-            created_by
-          `
-          )
-          .eq('code', code.toUpperCase())
-          .single();
+          .rpc('get_public_referral_code', { p_code: code.toUpperCase() })
+          .maybeSingle();
 
         if (fetchError || !data) {
           setError('Invalid or expired referral code');
@@ -81,20 +72,11 @@ const ReferralLanding: React.FC = () => {
           return;
         }
 
-        // Fetch referrer's name
         let referrerName = 'A friend';
-        if (data.created_by) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('first_name, last_name')
-            .eq('id', data.created_by)
-            .single();
-
-          if (profile?.first_name) {
-            referrerName = profile.first_name;
-            if (profile.last_name) {
-              referrerName += ` ${profile.last_name.charAt(0)}.`;
-            }
+        if (data.referrer_first_name) {
+          referrerName = data.referrer_first_name;
+          if (data.referrer_last_name) {
+            referrerName += ` ${data.referrer_last_name.charAt(0)}.`;
           }
         }
 

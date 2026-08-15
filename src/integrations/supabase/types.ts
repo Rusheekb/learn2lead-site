@@ -1257,6 +1257,20 @@ export type Database = {
           paid_at: string;
         }[];
       };
+      get_public_referral_code: {
+        Args: { p_code: string };
+        Returns: {
+          active: boolean;
+          code: string;
+          discount_amount: number;
+          discount_type: string;
+          expires_at: string | null;
+          max_uses: number | null;
+          referrer_first_name: string | null;
+          referrer_last_name: string | null;
+          times_used: number;
+        }[];
+      };
       get_referral_usage_stats: {
         Args: { p_user_id: string };
         Returns: {
