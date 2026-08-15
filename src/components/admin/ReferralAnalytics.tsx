@@ -42,12 +42,17 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { logAdminAction } from '@/services/adminActivityLog';
+import {
+  formatReferralDiscount,
+  type DiscountType,
+} from '@/utils/referralDiscount';
 
 interface ReferralCode {
   id: string;
   code: string;
   times_used: number;
   discount_amount: number;
+  discount_type: DiscountType;
   active: boolean;
   created_at: string;
   max_uses: number | null;
@@ -216,11 +221,14 @@ const ReferralAnalytics: React.FC = () => {
   const activeCodes = referralCodes?.filter((c) => c.active).length || 0;
   const totalReferrals =
     referralCodes?.reduce((sum, c) => sum + c.times_used, 0) || 0;
-  const totalDiscounts =
-    referralCodes?.reduce(
-      (sum, c) => sum + c.times_used * c.discount_amount,
-      0
-    ) || 0;
+  // Only fixed (dollar) codes have a knowable total dollar cost — a percent
+  // code's actual dollar impact depends on what each buyer purchased, which
+  // isn't stored anywhere, so it can't be included in this sum without
+  // guessing.
+  const totalFixedDiscounts =
+    referralCodes
+      ?.filter((c) => c.discount_type === 'fixed')
+      .reduce((sum, c) => sum + c.times_used * c.discount_amount, 0) || 0;
   const last7DaysReferrals =
     recentUsage?.filter(
       (u) => new Date(u.used_at) > subDays(startOfDay(new Date()), 7)
@@ -326,8 +334,12 @@ const ReferralAnalytics: React.FC = () => {
                 Discounts Given
               </span>
             </div>
-            <p className="text-2xl font-bold">${totalDiscounts.toFixed(0)}</p>
-            <p className="text-xs text-muted-foreground">to new users</p>
+            <p className="text-2xl font-bold">
+              ${totalFixedDiscounts.toFixed(0)}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              to new users (fixed-amount codes only)
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -498,7 +510,10 @@ const ReferralAnalytics: React.FC = () => {
                       </div>
                     </TableCell>
                     <TableCell className="font-medium">
-                      ${code.discount_amount.toFixed(0)}
+                      {formatReferralDiscount(
+                        code.discount_amount,
+                        code.discount_type
+                      )}
                     </TableCell>
                     <TableCell>
                       <span className="font-semibold">{code.times_used}</span>

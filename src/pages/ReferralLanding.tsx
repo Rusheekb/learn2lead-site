@@ -6,12 +6,17 @@ import { supabase } from '@/integrations/supabase/client';
 import { Check, Gift, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { logger } from '@/lib/logger';
+import {
+  formatReferralDiscount,
+  type DiscountType,
+} from '@/utils/referralDiscount';
 
 const log = logger.create('ReferralLanding');
 
 interface ReferralCodeData {
   code: string;
   discountAmount: number;
+  discountType: DiscountType;
   referrerName: string;
 }
 
@@ -40,6 +45,7 @@ const ReferralLanding: React.FC = () => {
             `
             code,
             discount_amount,
+            discount_type,
             active,
             expires_at,
             max_uses,
@@ -95,6 +101,7 @@ const ReferralLanding: React.FC = () => {
         setReferralData({
           code: data.code,
           discountAmount: Number(data.discount_amount),
+          discountType: data.discount_type as DiscountType,
           referrerName,
         });
       } catch (err) {
@@ -175,9 +182,15 @@ const ReferralLanding: React.FC = () => {
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
               Get{' '}
               <span className="text-primary">
-                ${referralData?.discountAmount || 25} off
+                {referralData
+                  ? formatReferralDiscount(
+                      referralData.discountAmount,
+                      referralData.discountType
+                    )
+                  : '15%'}{' '}
+                off
               </span>{' '}
-              your first month
+              your first purchase
             </h1>
             <p className="text-lg text-muted-foreground">
               Expert 1-on-1 tutoring for math, science, English, and more.
@@ -192,7 +205,13 @@ const ReferralLanding: React.FC = () => {
                 <div className="text-left">
                   <p className="text-sm text-muted-foreground">Your discount</p>
                   <p className="text-3xl font-bold text-primary">
-                    ${referralData?.discountAmount || 25} OFF
+                    {referralData
+                      ? formatReferralDiscount(
+                          referralData.discountAmount,
+                          referralData.discountType
+                        )
+                      : '15%'}{' '}
+                    OFF
                   </p>
                 </div>
                 <div className="h-12 w-px bg-border" />

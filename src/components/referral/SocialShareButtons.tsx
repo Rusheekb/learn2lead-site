@@ -3,6 +3,10 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { copyToClipboard } from '@/utils/clipboardUtils';
 import {
+  formatReferralDiscount,
+  type DiscountType,
+} from '@/utils/referralDiscount';
+import {
   Twitter,
   Facebook,
   MessageCircle,
@@ -16,6 +20,7 @@ interface SocialShareButtonsProps {
   referralCode: string;
   referralUrl: string;
   discountAmount?: number;
+  discountType?: DiscountType;
   className?: string;
   variant?: 'icons' | 'buttons';
 }
@@ -23,20 +28,22 @@ interface SocialShareButtonsProps {
 const SocialShareButtons: React.FC<SocialShareButtonsProps> = ({
   referralCode,
   referralUrl,
-  discountAmount = 25,
+  discountAmount = 15,
+  discountType = 'percent',
   className = '',
   variant = 'icons',
 }) => {
-  const shareMessage = `I'm learning with Learn2Lead tutoring! Use my referral code ${referralCode} for $${discountAmount} off your first month. Sign up here: ${referralUrl}`;
+  const discount = formatReferralDiscount(discountAmount, discountType);
+  const shareMessage = `I'm learning with Learn2Lead tutoring! Use my referral code ${referralCode} for ${discount} off your first purchase. Sign up here: ${referralUrl}`;
 
   const encodedMessage = encodeURIComponent(shareMessage);
   const encodedUrl = encodeURIComponent(referralUrl);
 
   const shareLinks = {
-    twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(`I'm learning with @Learn2Lead! Use my code ${referralCode} for $${discountAmount} off 🎓`)}&url=${encodedUrl}`,
-    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodeURIComponent(`Use my referral code ${referralCode} for $${discountAmount} off tutoring!`)}`,
+    twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(`I'm learning with @Learn2Lead! Use my code ${referralCode} for ${discount} off 🎓`)}&url=${encodedUrl}`,
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodeURIComponent(`Use my referral code ${referralCode} for ${discount} off tutoring!`)}`,
     whatsapp: `https://wa.me/?text=${encodedMessage}`,
-    email: `mailto:?subject=${encodeURIComponent(`Get $${discountAmount} off tutoring with Learn2Lead!`)}&body=${encodedMessage}`,
+    email: `mailto:?subject=${encodeURIComponent(`Get ${discount} off tutoring with Learn2Lead!`)}&body=${encodedMessage}`,
     sms: `sms:?body=${encodedMessage}`,
   };
 
@@ -57,8 +64,8 @@ const SocialShareButtons: React.FC<SocialShareButtonsProps> = ({
     if (navigator.share) {
       try {
         await navigator.share({
-          title: `Get $${discountAmount} off tutoring!`,
-          text: `Use my referral code ${referralCode} for $${discountAmount} off your first month of tutoring.`,
+          title: `Get ${discount} off tutoring!`,
+          text: `Use my referral code ${referralCode} for ${discount} off your first purchase of tutoring.`,
           url: referralUrl,
         });
         toast.success('Thanks for sharing!');

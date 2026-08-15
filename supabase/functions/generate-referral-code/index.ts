@@ -22,6 +22,11 @@ const generateRandomSuffix = (length: number): string => {
   return result;
 };
 
+// Sized against real tutor-cost margins (see the referral system pricing
+// analysis this was set from) — keeps every pack tier profitable even after
+// the referrer's own bonus hour is factored in.
+const REFERRAL_DISCOUNT_PERCENT = 15;
+
 serve(async (req) => {
   const corsResponse = handleCorsPreflightRequest(req);
   if (corsResponse) return corsResponse;
@@ -175,8 +180,7 @@ serve(async (req) => {
 
     // Create Stripe coupon for this referral code
     const coupon = await stripe.coupons.create({
-      amount_off: 2500, // $25 in cents
-      currency: 'usd',
+      percent_off: REFERRAL_DISCOUNT_PERCENT,
       duration: 'once',
       name: `Referral: ${uniqueCode}`,
       metadata: {
@@ -194,7 +198,8 @@ serve(async (req) => {
         code: uniqueCode,
         stripe_coupon_id: coupon.id,
         created_by: user.id,
-        discount_amount: 25.0,
+        discount_amount: REFERRAL_DISCOUNT_PERCENT,
+        discount_type: 'percent',
         active: true,
         times_used: 0,
       })

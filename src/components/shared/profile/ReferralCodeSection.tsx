@@ -19,6 +19,7 @@ import {
   ShareLinkCard,
   ReferralStats,
 } from '@/components/referral';
+import { formatReferralDiscount } from '@/utils/referralDiscount';
 
 const REFERRAL_BASE_URL = 'https://learn2lead.vercel.app/refer';
 
@@ -171,6 +172,7 @@ const ReferralCodeSection: React.FC = () => {
                   referralCode={referralCode.code}
                   referralUrl={referralUrl}
                   discountAmount={referralCode.discountAmount}
+                  discountType={referralCode.discountType}
                 />
               </div>
             </TabsContent>
@@ -198,6 +200,7 @@ const ReferralCodeSection: React.FC = () => {
                   referralCode={referralCode.code}
                   referralUrl={referralUrl}
                   discountAmount={referralCode.discountAmount}
+                  discountType={referralCode.discountType}
                   variant="buttons"
                 />
               </div>
@@ -210,7 +213,12 @@ const ReferralCodeSection: React.FC = () => {
                   <span className="font-semibold text-foreground">
                     {referralCode.code}
                   </span>{' '}
-                  for ${referralCode.discountAmount} off your first month.
+                  for{' '}
+                  {formatReferralDiscount(
+                    referralCode.discountAmount,
+                    referralCode.discountType
+                  )}{' '}
+                  off your first purchase.
                 </p>
               </div>
             </TabsContent>

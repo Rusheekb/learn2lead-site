@@ -546,6 +546,7 @@ export type Database = {
           created_at: string;
           created_by: string | null;
           discount_amount: number;
+          discount_type: string;
           expires_at: string | null;
           id: string;
           max_uses: number | null;
@@ -559,6 +560,7 @@ export type Database = {
           created_at?: string;
           created_by?: string | null;
           discount_amount?: number;
+          discount_type?: string;
           expires_at?: string | null;
           id?: string;
           max_uses?: number | null;
@@ -572,6 +574,7 @@ export type Database = {
           created_at?: string;
           created_by?: string | null;
           discount_amount?: number;
+          discount_type?: string;
           expires_at?: string | null;
           id?: string;
           max_uses?: number | null;

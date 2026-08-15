@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { logger } from '@/lib/logger';
+import type { DiscountType } from '@/utils/referralDiscount';
 
 const log = logger.create('useReferralCode');
 
@@ -9,6 +10,7 @@ interface ReferralCodeData {
   code: string;
   timesUsed: number;
   discountAmount: number;
+  discountType: DiscountType;
   createdAt: string;
 }
 
@@ -45,7 +47,7 @@ export function useReferralCode() {
       // Fetch user's referral code
       const { data: codeData, error: codeError } = await supabase
         .from('referral_codes')
-        .select('code, times_used, discount_amount, created_at')
+        .select('code, times_used, discount_amount, discount_type, created_at')
         .eq('created_by', user.id)
         .maybeSingle();
 
@@ -60,6 +62,7 @@ export function useReferralCode() {
           code: codeData.code,
           timesUsed: codeData.times_used,
           discountAmount: Number(codeData.discount_amount),
+          discountType: codeData.discount_type as DiscountType,
           createdAt: codeData.created_at,
         });
 

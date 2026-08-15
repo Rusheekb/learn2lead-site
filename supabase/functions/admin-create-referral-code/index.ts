@@ -114,6 +114,7 @@ Deno.serve(async (req) => {
         code: normalizedCode,
         stripe_coupon_id: coupon.id,
         discount_amount: discountAmount,
+        discount_type: 'fixed',
         max_uses: maxUses ?? null,
         expires_at: expiresAt ?? null,
         active: true,
