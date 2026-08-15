@@ -62,64 +62,46 @@ serve(async (req) => {
     const user = userData.user;
     logStep('User authenticated', { userId: user.id, email: user.email });
 
-    // Initialize Stripe and check subscription status
+    // Eligibility is a genuine purchase, not a Stripe Subscription object —
+    // this app only ever creates one-time payment Checkout Sessions, so a
+    // real Stripe Subscription never exists and that check could never pass
+    // for any user.
+    const { data: existingPurchase, error: purchaseCheckError } =
+      await supabaseClient
+        .from('student_subscriptions')
+        .select('id')
+        .eq('student_id', user.id)
+        .limit(1)
+        .maybeSingle();
+
+    if (purchaseCheckError) {
+      logStep('Error checking purchase history', {
+        error: purchaseCheckError.message,
+      });
+      throw new Error('Failed to verify purchase history');
+    }
+
+    if (!existingPurchase) {
+      logStep('No purchase history found', { userId: user.id });
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Purchase an hours pack before generating a referral code',
+          requires_subscription: true,
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 403,
+        }
+      );
+    }
+
+    // Stripe is still needed below to create the discount coupon for this code.
     const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
     if (!stripeKey) {
       throw new Error('STRIPE_SECRET_KEY is not configured');
     }
-
-    // Updated to use consistent API version
     const stripe = new Stripe(stripeKey, { apiVersion: '2025-08-27.basil' });
-
-    // Check if user has an active Stripe subscription
-    const customers = await stripe.customers.list({
-      email: user.email,
-      limit: 1,
-    });
-
-    if (customers.data.length === 0) {
-      logStep('No Stripe customer found', { email: user.email });
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error:
-            'Active Stripe subscription required to generate a referral code',
-          requires_subscription: true,
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 403,
-        }
-      );
-    }
-
-    const customerId = customers.data[0].id;
-    const subscriptions = await stripe.subscriptions.list({
-      customer: customerId,
-      status: 'active',
-      limit: 1,
-    });
-
-    if (subscriptions.data.length === 0) {
-      logStep('No active Stripe subscription found', { customerId });
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error:
-            'Active Stripe subscription required to generate a referral code',
-          requires_subscription: true,
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 403,
-        }
-      );
-    }
-
-    logStep('Active Stripe subscription verified', {
-      customerId,
-      subscriptionId: subscriptions.data[0].id,
-    });
 
     // Get user profile for name
     const { data: profile, error: profileError } = await supabaseClient

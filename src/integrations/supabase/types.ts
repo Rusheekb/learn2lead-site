@@ -1257,9 +1257,9 @@ export type Database = {
       get_referral_usage_stats: {
         Args: { p_user_id: string };
         Returns: {
+          hours_earned: number;
           latest_usage: string;
           times_used: number;
-          total_earnings: number;
         }[];
       };
       get_student_classes: {

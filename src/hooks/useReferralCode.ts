@@ -14,7 +14,7 @@ interface ReferralCodeData {
 
 interface UsageStats {
   timesUsed: number;
-  totalEarnings: number;
+  hoursEarned: number;
   usageHistory: Array<{
     usedAt: string;
     usedByEmail: string;
@@ -73,7 +73,7 @@ export function useReferralCode() {
           const stats = statsData[0];
           setUsageStats({
             timesUsed: Number(stats.times_used) || 0,
-            totalEarnings: Number(stats.total_earnings) || 0,
+            hoursEarned: Number(stats.hours_earned) || 0,
             usageHistory: [],
           });
         }
@@ -116,9 +116,7 @@ export function useReferralCode() {
         return data.code;
       } else if (data?.requires_subscription) {
         setRequiresSubscription(true);
-        setError(
-          'Active Stripe subscription required to generate a referral code'
-        );
+        setError('Purchase an hours pack before generating a referral code');
         return null;
       } else {
         setError(data?.error || 'Failed to generate referral code');

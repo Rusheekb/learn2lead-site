@@ -153,15 +153,11 @@ Deno.serve(async (req) => {
 
         if (metadata.referral_code_id && metadata.referrer_id) {
           await processReferralReward(
-            stripe,
             supabaseClient,
             metadata.referral_code_id,
             metadata.referrer_id,
-            session.customer as string,
+            metadata.user_id || null,
             session.customer_email || '',
-            metadata.discount_amount
-              ? parseFloat(metadata.discount_amount)
-              : 25,
             session.id
           );
         }
@@ -880,22 +876,28 @@ async function sendAdminOverdrawnRefundAlert(
   }
 }
 
+// Flat bonus hours credited to a referrer's own balance per successful
+// referral. Not a dollar amount — Stripe customer balance only applies to
+// Invoices, and this app never creates one (every purchase is a one-time
+// payment Checkout Session), so a dollar credit there would silently never
+// apply to anything. Hours go through the same ledger every other credit in
+// this app goes through, so they're guaranteed to actually be usable.
+const REFERRAL_BONUS_HOURS = 1;
+
 // ─── processReferralReward ─────────────────────────────────────────────────────
 async function processReferralReward(
-  stripe: Stripe,
   supabaseClient: any,
   referralCodeId: string,
   referrerId: string,
-  newCustomerStripeId: string,
+  newCustomerUserId: string | null,
   newCustomerEmail: string,
-  discountAmount: number,
   sessionId: string
 ) {
   try {
     logStep('Processing referral reward', {
       referralCodeId,
       referrerId,
-      discountAmount,
+      bonusHours: REFERRAL_BONUS_HOURS,
     });
 
     const { data: existingUsage } = await supabaseClient
@@ -911,55 +913,62 @@ async function processReferralReward(
       return;
     }
 
-    const { data: referrerProfile, error: referrerError } = await supabaseClient
-      .from('profiles')
-      .select('id, email')
-      .eq('id', referrerId)
-      .single();
+    const { data: referrerSub, error: referrerSubError } = await supabaseClient
+      .from('student_subscriptions')
+      .select('id')
+      .eq('student_id', referrerId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-    if (referrerError || !referrerProfile) {
-      logStep('ERROR: Referrer not found', { referrerId });
-      return;
-    }
-
-    const referrerCustomers = await stripe.customers.list({
-      email: referrerProfile.email,
-      limit: 1,
-    });
-
-    if (referrerCustomers.data.length === 0) {
-      logStep('ERROR: Referrer has no Stripe customer record', {
-        email: referrerProfile.email,
+    if (referrerSubError || !referrerSub) {
+      logStep('ERROR: Referrer has no subscription record to credit', {
+        referrerId,
       });
       return;
     }
 
-    const referrerCustomerId = referrerCustomers.data[0].id;
-    const creditAmount = Math.round(discountAmount * 100);
+    // Distinct invoice_id from the referee's own purchase credit (which uses
+    // sessionId directly) — reusing sessionId here would make this call look
+    // like a duplicate of that entry and silently no-op via the idempotency
+    // check instead of crediting the referrer.
+    const { data: rpcResult, error: rpcError } = await supabaseClient.rpc(
+      'apply_credit_ledger_entry',
+      {
+        p_student_id: referrerId,
+        p_subscription_id: referrerSub.id,
+        p_transaction_type: 'credit',
+        p_amount: REFERRAL_BONUS_HOURS,
+        p_reason: `Referral reward - ${newCustomerEmail} signed up with your code`,
+        p_invoice_id: `referral_bonus_${sessionId}`,
+      }
+    );
 
-    await stripe.customers.createBalanceTransaction(referrerCustomerId, {
-      amount: -creditAmount,
-      currency: 'usd',
-      description: 'Referral reward - new customer signup',
-    });
+    if (rpcError || !rpcResult?.success) {
+      logStep('ERROR crediting referrer bonus hours', {
+        error: rpcError,
+        result: rpcResult,
+      });
+      return;
+    }
+
+    if (rpcResult.idempotent) {
+      logStep('Referral bonus already credited, skipping rest', { sessionId });
+      return;
+    }
 
     logStep('Referrer credited', {
-      referrerCustomerId,
-      creditAmount: discountAmount,
+      referrerId,
+      bonusHours: REFERRAL_BONUS_HOURS,
+      newBalance: rpcResult.new_balance,
     });
-
-    const { data: newUserProfile } = await supabaseClient
-      .from('profiles')
-      .select('id')
-      .ilike('email', newCustomerEmail)
-      .single();
 
     // The unique index on referral_usage.subscription_id prevents double-inserts on retry
     const { error: usageError } = await supabaseClient
       .from('referral_usage')
       .insert({
         referral_code_id: referralCodeId,
-        used_by_user_id: newUserProfile?.id || referrerId,
+        used_by_user_id: newCustomerUserId || referrerId,
         used_by_email: newCustomerEmail,
         subscription_id: sessionId,
       });
@@ -985,7 +994,7 @@ async function processReferralReward(
 
     await supabaseClient.from('notifications').insert({
       user_id: referrerId,
-      message: `Your referral code was used by ${newCustomerEmail}! You earned a $${discountAmount} credit.`,
+      message: `Your referral code was used by ${newCustomerEmail}! You earned ${REFERRAL_BONUS_HOURS} free hour.`,
       type: 'referral_reward',
     });
 

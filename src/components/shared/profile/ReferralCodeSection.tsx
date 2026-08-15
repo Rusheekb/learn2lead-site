@@ -97,8 +97,8 @@ const ReferralCodeSection: React.FC = () => {
           Referral Program
         </CardTitle>
         <CardDescription>
-          Share your referral code and earn $25 credit for each friend who
-          subscribes
+          Share your referral code and earn 1 free hour for each friend who
+          purchases
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -158,11 +158,9 @@ const ReferralCodeSection: React.FC = () => {
                 </div>
                 <div className="rounded-lg border p-4 text-center">
                   <p className="text-2xl font-bold text-green-600">
-                    ${usageStats?.totalEarnings || 0}
+                    {usageStats?.hoursEarned || 0}
                   </p>
-                  <p className="text-sm text-muted-foreground">
-                    Credits Earned
-                  </p>
+                  <p className="text-sm text-muted-foreground">Hours Earned</p>
                 </div>
               </div>
 
@@ -181,7 +179,7 @@ const ReferralCodeSection: React.FC = () => {
             <TabsContent value="stats" className="mt-4">
               <ReferralStats
                 timesUsed={usageStats?.timesUsed || 0}
-                totalEarnings={usageStats?.totalEarnings || 0}
+                hoursEarned={usageStats?.hoursEarned || 0}
                 usageHistory={usageStats?.usageHistory || []}
                 createdAt={referralCode.createdAt}
               />
@@ -225,11 +223,11 @@ const ReferralCodeSection: React.FC = () => {
             </div>
             {requiresSubscription ? (
               <div className="space-y-3">
-                <h3 className="font-semibold">Subscription Required</h3>
+                <h3 className="font-semibold">Purchase Required</h3>
                 <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                  Generate your unique referral code by subscribing to one of
-                  our plans. Earn $25 for each friend who subscribes using your
-                  code!
+                  Generate your unique referral code by purchasing an hours
+                  pack. Earn 1 free hour for each friend who purchases using
+                  your code!
                 </p>
                 <Button asChild>
                   <Link to="/pricing">View Plans</Link>
@@ -239,8 +237,8 @@ const ReferralCodeSection: React.FC = () => {
               <div className="space-y-2">
                 <h3 className="font-semibold">Get Your Referral Code</h3>
                 <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-                  Generate your unique referral code and earn $25 for each
-                  friend who subscribes using your code.
+                  Generate your unique referral code and earn 1 free hour for
+                  each friend who purchases using your code.
                 </p>
                 <Button
                   onClick={handleGenerateCode}

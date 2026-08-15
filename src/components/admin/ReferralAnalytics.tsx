@@ -305,12 +305,15 @@ const ReferralAnalytics: React.FC = () => {
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-2 mb-2">
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <Gift className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">
-                Credits Awarded
+                Hours Awarded
               </span>
             </div>
-            <p className="text-2xl font-bold">${totalDiscounts.toFixed(0)}</p>
+            {/* Referrers earn a flat REFERRAL_BONUS_HOURS (see
+                stripe-webhooks/index.ts) per successful referral, so total
+                hours awarded is just the referral count. */}
+            <p className="text-2xl font-bold">{totalReferrals}</p>
             <p className="text-xs text-muted-foreground">to referrers</p>
           </CardContent>
         </Card>
@@ -379,7 +382,8 @@ const ReferralAnalytics: React.FC = () => {
                     <div className="text-right">
                       <p className="font-semibold">{referrer.times_used}</p>
                       <p className="text-xs text-green-600">
-                        ${referrer.times_used * referrer.discount_amount} earned
+                        {referrer.times_used} hr
+                        {referrer.times_used === 1 ? '' : 's'} earned
                       </p>
                     </div>
                   </div>

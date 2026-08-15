@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Users, DollarSign, TrendingUp, Clock } from 'lucide-react';
+import { Users, Gift, TrendingUp, Clock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 interface UsageHistory {
@@ -10,14 +10,14 @@ interface UsageHistory {
 
 interface ReferralStatsProps {
   timesUsed: number;
-  totalEarnings: number;
+  hoursEarned: number;
   usageHistory: UsageHistory[];
   createdAt?: string;
 }
 
 const ReferralStats: React.FC<ReferralStatsProps> = ({
   timesUsed,
-  totalEarnings,
+  hoursEarned,
   usageHistory,
   createdAt,
 }) => {
@@ -37,9 +37,9 @@ const ReferralStats: React.FC<ReferralStatsProps> = ({
         </Card>
         <Card className="bg-gradient-to-br from-green-500/5 to-green-500/10 border-green-500/20">
           <CardContent className="pt-4 text-center">
-            <DollarSign className="h-5 w-5 mx-auto mb-2 text-green-600" />
-            <p className="text-2xl font-bold">${totalEarnings}</p>
-            <p className="text-xs text-muted-foreground">Credits Earned</p>
+            <Gift className="h-5 w-5 mx-auto mb-2 text-green-600" />
+            <p className="text-2xl font-bold">{hoursEarned}</p>
+            <p className="text-xs text-muted-foreground">Hours Earned</p>
           </CardContent>
         </Card>
         <Card>
@@ -84,7 +84,7 @@ const ReferralStats: React.FC<ReferralStatsProps> = ({
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-green-600 font-medium">
-                    +$25
+                    +1 hr
                   </span>
                   <span className="text-xs text-muted-foreground">
                     {formatDistanceToNow(new Date(usage.usedAt), {
