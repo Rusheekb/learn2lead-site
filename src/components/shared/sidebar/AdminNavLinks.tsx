@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   Calendar,
@@ -12,8 +12,6 @@ import {
   Mail,
   Gift,
   Webhook,
-  ChevronDown,
-  Wrench,
 } from 'lucide-react';
 import { useSidebarStyles } from './useSidebarStyles';
 
@@ -24,7 +22,6 @@ interface AdminNavLinksProps {
 
 const AdminNavLinks: React.FC<AdminNavLinksProps> = ({ isExpanded }) => {
   const { baseClasses, activeClasses, isLinkActive } = useSidebarStyles();
-  const [toolsOpen, setToolsOpen] = useState(true);
   const pos = isExpanded ? 'justify-start' : 'justify-center';
 
   const cls = (tab: string) => {
@@ -75,46 +72,14 @@ const AdminNavLinks: React.FC<AdminNavLinksProps> = ({ isExpanded }) => {
         {isExpanded && <span className="ml-2.5">Referrals</span>}
       </NavLink>
 
-      {/* ── Tools section ──────────────────────────────────────────────── */}
-      {isExpanded ? (
-        <>
-          <button
-            onClick={() => setToolsOpen((o) => !o)}
-            className={`${baseClasses} ${pos} w-full text-muted-foreground hover:text-foreground`}
-            aria-expanded={toolsOpen}
-          >
-            <Wrench className="h-4 w-4 shrink-0" aria-hidden="true" />
-            <span className="ml-2.5 flex-1 text-left text-xs font-semibold uppercase tracking-wider">
-              Tools
-            </span>
-            <ChevronDown
-              className={`h-3.5 w-3.5 shrink-0 transition-transform ${toolsOpen ? 'rotate-180' : ''}`}
-            />
-          </button>
-          {toolsOpen && (
-            <div className="pl-3">
-              <NavLink
-                to="/admin-dashboard?tab=payments"
-                className={cls('payments')}
-                aria-label="Payments"
-              >
-                <Webhook className="h-4 w-4 shrink-0" aria-hidden="true" />
-                <span className="ml-2.5">Payments</span>
-              </NavLink>
-            </div>
-          )}
-        </>
-      ) : (
-        <>
-          <NavLink
-            to="/admin-dashboard?tab=payments"
-            className={cls('payments')}
-            aria-label="Payments"
-          >
-            <Webhook className="h-4 w-4 shrink-0" aria-hidden="true" />
-          </NavLink>
-        </>
-      )}
+      <NavLink
+        to="/admin-dashboard?tab=payments"
+        className={cls('payments')}
+        aria-label="Payments"
+      >
+        <Webhook className="h-4 w-4 shrink-0" aria-hidden="true" />
+        {isExpanded && <span className="ml-2.5">Payments</span>}
+      </NavLink>
 
       <div className="my-2 mx-1 border-t border-border/60" />
 
