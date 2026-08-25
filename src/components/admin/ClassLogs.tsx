@@ -247,7 +247,7 @@ const ClassLogs: React.FC = () => {
             className="flex items-center gap-2"
             disabled={totals.totalCount === 0}
           >
-            <FileDown className="h-4 w-4" />
+            <Upload className="h-4 w-4" />
             Export
           </Button>
           <Button
@@ -256,7 +256,7 @@ const ClassLogs: React.FC = () => {
             onClick={() => setIsUploadOpen(true)}
             className="flex items-center gap-2"
           >
-            <Upload className="h-4 w-4" />
+            <FileDown className="h-4 w-4" />
             Import
           </Button>
         </div>
