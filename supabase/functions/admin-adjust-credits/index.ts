@@ -125,13 +125,19 @@ Deno.serve(async (req) => {
     // read-then-write from the browser (stale-balance race risk if two
     // adjustments, or an adjustment and a real class completion, land
     // concurrently).
+    //
+    // apply_credit_ledger_entry applies p_amount to the balance by its sign
+    // alone — p_transaction_type is stored only as a display label, it does
+    // not control the arithmetic. Stripping the sign here (Math.abs) while
+    // still labeling negative amounts 'debit' silently turned every removal
+    // into an addition of the same size, labeled as if it had been removed.
     const { data: rpcResult, error: rpcError } = await supabaseAdmin.rpc(
       'apply_credit_ledger_entry',
       {
         p_student_id: student_id,
         p_subscription_id: sub.id,
         p_transaction_type: amount > 0 ? 'credit' : 'debit',
-        p_amount: Math.abs(amount),
+        p_amount: amount,
         p_reason: `Admin adjustment: ${reason.trim()}`,
         p_allow_negative: true,
       }
