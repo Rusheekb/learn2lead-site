@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   Calendar,
-  CreditCard,
   FileText,
   LayoutDashboard,
   Settings,
@@ -95,14 +94,6 @@ const AdminNavLinks: React.FC<AdminNavLinksProps> = ({ isExpanded }) => {
           {toolsOpen && (
             <div className="pl-3">
               <NavLink
-                to="/admin-dashboard?tab=credits"
-                className={cls('credits')}
-                aria-label="Credits"
-              >
-                <CreditCard className="h-4 w-4 shrink-0" aria-hidden="true" />
-                <span className="ml-2.5">Credits</span>
-              </NavLink>
-              <NavLink
                 to="/admin-dashboard?tab=payments"
                 className={cls('payments')}
                 aria-label="Payments"
@@ -115,13 +106,6 @@ const AdminNavLinks: React.FC<AdminNavLinksProps> = ({ isExpanded }) => {
         </>
       ) : (
         <>
-          <NavLink
-            to="/admin-dashboard?tab=credits"
-            className={cls('credits')}
-            aria-label="Credits"
-          >
-            <CreditCard className="h-4 w-4 shrink-0" aria-hidden="true" />
-          </NavLink>
           <NavLink
             to="/admin-dashboard?tab=payments"
             className={cls('payments')}

@@ -27,11 +27,6 @@ const AssignmentManager = lazy(
   () => import('@/components/admin/AssignmentManager')
 );
 const AdminSettings = lazy(() => import('@/pages/AdminSettings'));
-const ManualCreditAllocation = lazy(() =>
-  import('@/components/admin/ManualCreditAllocation').then((m) => ({
-    default: m.ManualCreditAllocation,
-  }))
-);
 const AdminHomeView = lazy(() => import('@/components/admin/AdminHomeView'));
 const QuarterlyReports = lazy(
   () => import('@/components/admin/QuarterlyReports')
@@ -139,12 +134,6 @@ const AdminDashboard: React.FC = () => {
         return (
           <Suspense fallback={<AdminDashboardSkeleton />}>
             <AdminSettings />
-          </Suspense>
-        );
-      case 'credits':
-        return (
-          <Suspense fallback={<TableSkeleton rows={3} columns={3} />}>
-            <ManualCreditAllocation />
           </Suspense>
         );
       case 'reports':
