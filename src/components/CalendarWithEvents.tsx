@@ -15,7 +15,6 @@ interface CalendarWithEventsProps {
   scheduledClasses: ClassEvent[];
   onSelectEvent: (event: ClassEvent) => void;
   onAddEventClick: () => void;
-  getUnreadMessageCount: (classId: string) => number;
 }
 
 // Helper function to get upcoming events for the next 7 days
@@ -52,7 +51,6 @@ const CalendarWithEvents: React.FC<CalendarWithEventsProps> = memo(
     scheduledClasses,
     onSelectEvent,
     onAddEventClick,
-    getUnreadMessageCount,
   }) => {
     const { userRole } = useAuth();
 
@@ -191,7 +189,6 @@ const CalendarWithEvents: React.FC<CalendarWithEventsProps> = memo(
                     key={event.id}
                     event={event}
                     onSelectEvent={onSelectEvent}
-                    getUnreadMessageCount={getUnreadMessageCount}
                     userRole={userRole}
                     onUpdate={handleClassUpdate}
                   />
@@ -211,15 +208,12 @@ CalendarWithEvents.displayName = 'CalendarWithEvents';
 interface EventRowProps {
   event: ClassEvent;
   onSelectEvent: (event: ClassEvent) => void;
-  getUnreadMessageCount: (classId: string) => number;
   userRole: string | null;
   onUpdate: () => void;
 }
 
 const EventRow: React.FC<EventRowProps> = memo(
-  ({ event, onSelectEvent, getUnreadMessageCount, userRole, onUpdate }) => {
-    const unreadCount = getUnreadMessageCount(event.id);
-
+  ({ event, onSelectEvent, userRole, onUpdate }) => {
     return (
       <div
         className={`p-3 sm:p-4 border rounded-lg transition-colors ${event.status === 'completed' ? 'bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-900' : 'hover:bg-muted/50'}`}
@@ -244,11 +238,6 @@ const EventRow: React.FC<EventRowProps> = memo(
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            {unreadCount > 0 && (
-              <span className="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
-                {unreadCount}
-              </span>
-            )}
             <span
               className={`px-2 py-0.5 text-xs rounded-full ${
                 event.status === 'completed'
@@ -277,8 +266,7 @@ const EventRow: React.FC<EventRowProps> = memo(
       prev.event.endTime === next.event.endTime &&
       prev.event.studentName === next.event.studentName &&
       prev.userRole === next.userRole &&
-      prev.onSelectEvent === next.onSelectEvent &&
-      prev.getUnreadMessageCount === next.getUnreadMessageCount
+      prev.onSelectEvent === next.onSelectEvent
     );
   }
 );

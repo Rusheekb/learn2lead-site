@@ -2,20 +2,17 @@ import React, { memo, useMemo } from 'react';
 import VirtualizedDataTable, {
   ColumnDefinition,
 } from '@/components/common/VirtualizedDataTable';
-import { ActionButton } from '@/components/common/ActionButton';
 import { Badge } from '@/components/ui/badge';
-import { Edit2, Trash2, Star } from 'lucide-react';
 import { Tutor } from '@/types/tutorTypes';
 
 interface TutorTableProps {
   tutors: Tutor[];
   isLoading: boolean;
-  onDelete: (tutorId: string) => void;
   onSelect: (tutor: Tutor) => void;
 }
 
 const TutorTable: React.FC<TutorTableProps> = memo(
-  ({ tutors, isLoading, onDelete, onSelect }) => {
+  ({ tutors, isLoading, onSelect }) => {
     const columns: ColumnDefinition<Tutor>[] = useMemo(
       () => [
         {
@@ -69,49 +66,8 @@ const TutorTable: React.FC<TutorTableProps> = memo(
             </span>
           ),
         },
-        {
-          header: 'Rating',
-          className: 'hidden md:table-cell',
-          cell: (tutor) =>
-            tutor.rating != null ? (
-              <div className="flex items-center gap-1">
-                <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-                <span className="text-sm font-medium">
-                  {Number(tutor.rating).toFixed(1)}
-                </span>
-                {tutor.ratingCount != null && (
-                  <span className="text-xs text-muted-foreground">
-                    ({tutor.ratingCount})
-                  </span>
-                )}
-              </div>
-            ) : (
-              <span className="text-sm text-muted-foreground">—</span>
-            ),
-        },
-        {
-          header: 'Actions',
-          cell: (tutor) => (
-            <div className="flex items-center gap-1">
-              <ActionButton variant="ghost" size="icon" tooltip="Edit tutor">
-                <Edit2 className="h-4 w-4" />
-              </ActionButton>
-              <ActionButton
-                variant="ghost"
-                size="icon"
-                tooltip="Delete tutor"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete(tutor.id);
-                }}
-              >
-                <Trash2 className="h-4 w-4 text-destructive" />
-              </ActionButton>
-            </div>
-          ),
-        },
       ],
-      [onDelete]
+      []
     );
 
     return (

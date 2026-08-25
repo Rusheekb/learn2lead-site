@@ -11,7 +11,6 @@ interface StudentCreditRow {
   student_name: string;
   profile_id: string;
   credits: number;
-  class_rate: number | null;
   last_class_date: string | null;
 }
 

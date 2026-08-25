@@ -1,8 +1,6 @@
-import React, { memo, useCallback, useState } from 'react';
+import React, { memo } from 'react';
 import { Student } from '@/types/tutorTypes';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { toast } from 'sonner';
-import { UserCheck } from 'lucide-react';
 import SearchInput from '@/components/shared/filters/SearchInput';
 import PaginationControls from '@/components/common/Pagination';
 import { useStudentsQuery } from '@/hooks/queries/useStudentsQuery';
@@ -14,26 +12,15 @@ import {
   TableBody,
   TableCell,
 } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/contexts/AuthContext';
-import { RolePromotionDialog } from './RolePromotionDialog';
-import { logger } from '@/lib/logger';
-
-const log = logger.create('StudentsManager');
 
 interface StudentsManagerProps {
   onSelect: (student: Student) => void;
 }
 
 const StudentsManager: React.FC<StudentsManagerProps> = memo(({ onSelect }) => {
-  const { userRole } = useAuth();
-  const [promotionStudent, setPromotionStudent] = useState<Student | null>(
-    null
-  );
   const {
     students,
     isLoading,
-    deleteStudent,
     page,
     totalPages,
     hasNextPage,
@@ -43,48 +30,7 @@ const StudentsManager: React.FC<StudentsManagerProps> = memo(({ onSelect }) => {
     goToPage,
     searchTerm,
     setSearchTerm,
-    refetch,
   } = useStudentsQuery();
-
-  const handleDeleteStudent = useCallback(
-    async (studentId: string) => {
-      try {
-        await deleteStudent(studentId);
-        toast.success('Student deleted successfully');
-      } catch (error) {
-        log.error('Error deleting student:', error);
-        toast.error('Failed to delete student');
-      }
-    },
-    [deleteStudent]
-  );
-
-  const handlePromotionSuccess = useCallback(() => {
-    setPromotionStudent(null);
-    refetch();
-  }, [refetch]);
-
-  const handlePromoteClick = useCallback(
-    (e: React.MouseEvent, student: Student) => {
-      e.stopPropagation();
-      setPromotionStudent(student);
-    },
-    []
-  );
-
-  const handleDeleteClick = useCallback(
-    (e: React.MouseEvent, studentId: string) => {
-      e.stopPropagation();
-      handleDeleteStudent(studentId);
-    },
-    [handleDeleteStudent]
-  );
-
-  const handleClosePromotion = useCallback(() => {
-    setPromotionStudent(null);
-  }, []);
-
-  const isAdmin = userRole === 'admin';
 
   return (
     <div className="space-y-6">
@@ -116,7 +62,6 @@ const StudentsManager: React.FC<StudentsManagerProps> = memo(({ onSelect }) => {
                     <TableHead className="hidden sm:table-cell">
                       Email
                     </TableHead>
-                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -134,28 +79,6 @@ const StudentsManager: React.FC<StudentsManagerProps> = memo(({ onSelect }) => {
                       </TableCell>
                       <TableCell className="hidden sm:table-cell">
                         {student.email}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col sm:flex-row gap-1 sm:gap-2">
-                          {isAdmin && (
-                            <Button
-                              variant="default"
-                              size="sm"
-                              onClick={(e) => handlePromoteClick(e, student)}
-                              className="flex items-center gap-1"
-                            >
-                              <UserCheck className="h-3 w-3" />
-                              <span className="hidden sm:inline">Promote</span>
-                            </Button>
-                          )}
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={(e) => handleDeleteClick(e, student.id)}
-                          >
-                            Delete
-                          </Button>
-                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -176,20 +99,6 @@ const StudentsManager: React.FC<StudentsManagerProps> = memo(({ onSelect }) => {
           />
         </CardContent>
       </Card>
-
-      {promotionStudent && (
-        <RolePromotionDialog
-          isOpen={!!promotionStudent}
-          onClose={handleClosePromotion}
-          user={{
-            id: promotionStudent.id,
-            email: promotionStudent.email,
-            name: promotionStudent.name,
-            role: 'student',
-          }}
-          onSuccess={handlePromotionSuccess}
-        />
-      )}
     </div>
   );
 });

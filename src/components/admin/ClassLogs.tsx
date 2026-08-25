@@ -21,7 +21,6 @@ import ClassDetailsDialog from './class-logs/ClassDetailsDialog';
 import CsvUploader from './class-logs/CsvUploader';
 import { ExportDialog } from './class-logs/ExportDialog';
 import TutorPaymentSummary from './class-logs/TutorPaymentSummary';
-import StudentPaymentSummary from './class-logs/StudentPaymentSummary';
 import { useClassLogs } from '@/hooks/useClassLogs';
 import {
   batchUpdateTutorPaymentDate,
@@ -158,13 +157,10 @@ const ClassLogs: React.FC = () => {
     setDateFilter,
     paymentFilter,
     setPaymentFilter,
-    paymentMethodFilter,
-    setPaymentMethodFilter,
     isDetailsOpen,
     setIsDetailsOpen,
     selectedClass,
     studentUploads,
-    studentMessages,
     activeDetailsTab,
     setActiveDetailsTab,
 
@@ -183,6 +179,7 @@ const ClassLogs: React.FC = () => {
     formatTime,
     clearFilters,
     handleDownloadFile,
+    handleViewFile,
 
     handleRefreshData,
     handlePageChange,
@@ -320,7 +317,6 @@ const ClassLogs: React.FC = () => {
 
       {/* Payment Summaries */}
       <TutorPaymentSummary onPaymentUpdated={handleRefreshData} />
-      <StudentPaymentSummary />
 
       <RecentCancellations />
 
@@ -332,8 +328,6 @@ const ClassLogs: React.FC = () => {
         clearFilters={clearFilters}
         paymentFilter={paymentFilter}
         setPaymentFilter={setPaymentFilter}
-        paymentMethodFilter={paymentMethodFilter}
-        setPaymentMethodFilter={setPaymentMethodFilter}
       />
 
       <ClassTable
@@ -361,8 +355,8 @@ const ClassLogs: React.FC = () => {
         activeDetailsTab={activeDetailsTab}
         setActiveDetailsTab={setActiveDetailsTab}
         studentUploads={studentUploads}
-        studentMessages={studentMessages}
-        handleDownloadFile={async () => {}}
+        handleDownloadFile={handleDownloadFile}
+        handleViewFile={handleViewFile}
         formatTime={formatTime}
         onToggleStudentPayment={handleToggleStudentPayment}
         onToggleTutorPayment={handleToggleTutorPayment}

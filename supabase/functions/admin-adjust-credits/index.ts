@@ -5,6 +5,7 @@ import {
   rateLimitResponse,
 } from '../_shared/rateLimiter.ts';
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
+import { resolveOrCreateSubscriptionId } from '../_shared/creditSubscriptionResolver.ts';
 
 Deno.serve(async (req) => {
   const corsResponse = handleCorsPreflightRequest(req);
@@ -97,21 +98,21 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { data: sub, error: subError } = await supabaseAdmin
-      .from('student_subscriptions')
-      .select('id')
-      .eq('student_id', student_id)
-      .in('status', ['active', 'trialing'])
-      .maybeSingle();
-
-    if (subError || !sub) {
+    let subscriptionId: string;
+    try {
+      ({ subscriptionId } = await resolveOrCreateSubscriptionId(
+        supabaseAdmin,
+        student_id
+      ));
+    } catch (resolveError) {
+      console.error('Failed to resolve/bootstrap subscription:', resolveError);
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'No active subscription found for this student',
+          error: 'Failed to set up credit tracking for this student',
         }),
         {
-          status: 404,
+          status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         }
       );
@@ -135,7 +136,7 @@ Deno.serve(async (req) => {
       'apply_credit_ledger_entry',
       {
         p_student_id: student_id,
-        p_subscription_id: sub.id,
+        p_subscription_id: subscriptionId,
         p_transaction_type: amount > 0 ? 'credit' : 'debit',
         p_amount: amount,
         p_reason: `Admin adjustment: ${reason.trim()}`,

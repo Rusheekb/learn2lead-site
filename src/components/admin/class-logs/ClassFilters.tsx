@@ -9,8 +9,6 @@ export interface ClassFiltersProps {
   clearFilters: () => void;
   paymentFilter?: string;
   setPaymentFilter?: (status: string) => void;
-  paymentMethodFilter?: string;
-  setPaymentMethodFilter?: (method: string) => void;
 }
 
 const ClassFilters: React.FC<ClassFiltersProps> = ({
@@ -21,8 +19,6 @@ const ClassFilters: React.FC<ClassFiltersProps> = ({
   clearFilters,
   paymentFilter,
   setPaymentFilter,
-  paymentMethodFilter,
-  setPaymentMethodFilter,
 }) => {
   // Payment filter options
   const paymentOptions = [
@@ -44,7 +40,7 @@ const ClassFilters: React.FC<ClassFiltersProps> = ({
         clearFilters={clearFilters}
       />
 
-      {/* Payment status and method filters */}
+      {/* Payment status filter */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
         {paymentFilter !== undefined && setPaymentFilter && (
           <div className="flex items-center gap-2 min-w-0">
@@ -62,22 +58,6 @@ const ClassFilters: React.FC<ClassFiltersProps> = ({
                   {option.label}
                 </option>
               ))}
-            </select>
-          </div>
-        )}
-        {paymentMethodFilter !== undefined && setPaymentMethodFilter && (
-          <div className="flex items-center gap-2 min-w-0">
-            <label className="text-sm font-medium whitespace-nowrap">
-              Method:
-            </label>
-            <select
-              value={paymentMethodFilter}
-              onChange={(e) => setPaymentMethodFilter(e.target.value)}
-              className="flex-1 sm:flex-none px-3 py-2 border border-border rounded-md text-sm bg-background min-w-0"
-            >
-              <option value="">All Methods</option>
-              <option value="stripe">Stripe</option>
-              <option value="zelle">Zelle</option>
             </select>
           </div>
         )}

@@ -11,7 +11,6 @@ export interface TutorStudentData {
   tutor_name: string;
   subjects: string[];
   grade: string;
-  payment_status: string;
   active: boolean;
   assigned_at: string;
 }

@@ -50,6 +50,9 @@ export interface ClassEvent extends BaseEvent {
   isCodeLog?: boolean;
   disputed?: boolean;
   disputeReason?: string | null;
+  // For completed classes (isCodeLog=true), class_uploads/class_messages are
+  // keyed by the original scheduled_classes.id, not this row's own class_logs.id
+  scheduledClassId?: string;
 }
 
 // Database class log record
@@ -83,7 +86,6 @@ export interface Student {
   grade?: string | null; // Updated to allow null
   active?: boolean;
   enrollmentDate?: string;
-  paymentStatus?: PaymentStatus;
 }
 
 // Material interface
@@ -104,8 +106,6 @@ export interface Tutor {
   name: string;
   email: string;
   subjects: string[];
-  rating?: number;
-  ratingCount?: number;
   classes?: number;
   hourlyRate?: number;
   active?: boolean;

@@ -104,22 +104,6 @@ export const profileSchema = z.object({
   zoom_link: fields.url('Zoom link', true),
 });
 
-export const tutorSchema = z.object({
-  name: fields.name(),
-  email: fields.email(),
-  subjects: fields.text('Subjects'),
-  hourlyRate: fields.positiveNumber('Hourly rate'),
-});
-
-export const studentSchema = z.object({
-  name: fields.name(),
-  email: fields.email(),
-  grade: fields.text('Grade'),
-  subjects: fields.text('Subjects'),
-  paymentMethod: z.enum(['stripe', 'zelle']),
-  classRate: z.string().optional(),
-});
-
 export const assignmentSchema = z.object({
   tutorId: z.string().min(1, validationMessages.required('Tutor')),
   studentId: z.string().min(1, validationMessages.required('Student')),

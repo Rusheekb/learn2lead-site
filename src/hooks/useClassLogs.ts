@@ -1,10 +1,16 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { ClassEvent } from '@/types/tutorTypes';
+import { StudentUpload } from '@/types/classTypes';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { TablesUpdate } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { transformDbRecordToClassEvent } from '@/services/utils/classEventMapper';
+import {
+  fetchClassUploads,
+  downloadClassFile,
+  viewClassFile,
+} from '@/services/classUploadsService';
 import {
   updatePaymentDate,
   updateTutorPaymentStatus,
@@ -128,10 +134,10 @@ export const useClassLogs = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState<Date | null>(null);
   const [paymentFilter, setPaymentFilter] = useState('');
-  const [paymentMethodFilter, setPaymentMethodFilter] = useState('');
   const [activeDetailsTab, setActiveDetailsTab] = useState('details');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [studentUploads, setStudentUploads] = useState<StudentUpload[]>([]);
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
@@ -151,7 +157,7 @@ export const useClassLogs = () => {
   // Reset to page 1 when filters change
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch, dateFilter, paymentFilter, paymentMethodFilter]);
+  }, [debouncedSearch, dateFilter, paymentFilter]);
 
   // ─── Paginated query for table display ───────────────────────────────
   const {
@@ -432,6 +438,24 @@ export const useClassLogs = () => {
     setSelectedClass(null);
   };
 
+  // class_uploads is keyed by the original scheduled_classes.id, which is
+  // carried on completed class_logs rows as scheduledClassId — not this
+  // row's own class_logs.id.
+  useEffect(() => {
+    const scheduledClassId = selectedClass?.scheduledClassId;
+    if (!showDetails || !scheduledClassId) {
+      setStudentUploads([]);
+      return;
+    }
+    let cancelled = false;
+    fetchClassUploads(scheduledClassId).then((uploads) => {
+      if (!cancelled) setStudentUploads(uploads);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [showDetails, selectedClass?.scheduledClassId]);
+
   const refreshData = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: classLogsKeys.all });
   }, [queryClient]);
@@ -515,7 +539,6 @@ export const useClassLogs = () => {
     setSearchTerm('');
     setDateFilter(null);
     setPaymentFilter('');
-    setPaymentMethodFilter('');
   };
 
   return {
@@ -530,16 +553,13 @@ export const useClassLogs = () => {
     setDateFilter,
     paymentFilter,
     setPaymentFilter,
-    paymentMethodFilter,
-    setPaymentMethodFilter,
     clearFilters,
 
     isDetailsOpen: showDetails,
     setIsDetailsOpen: setShowDetails,
     activeDetailsTab,
     setActiveDetailsTab,
-    studentUploads: [],
-    studentMessages: [],
+    studentUploads,
 
     // Server-paginated results for table
     paginatedClasses,
@@ -570,7 +590,12 @@ export const useClassLogs = () => {
     handlePageChange: setPage,
     handlePageSizeChange: setPageSize,
     formatTime,
-    handleDownloadFile: () => {},
+    handleDownloadFile: async (uploadId: string) => {
+      await downloadClassFile(uploadId);
+    },
+    handleViewFile: async (uploadId: string) => {
+      await viewClassFile(uploadId);
+    },
 
     // Payment
     handleToggleStudentPayment,

@@ -17,26 +17,14 @@ const TutorScheduler: React.FC = memo(() => {
     isViewEventOpen,
     setIsViewEventOpen,
     selectedEvent,
-    activeEventTab,
-    setActiveEventTab,
-    isEditMode,
-    setIsEditMode,
     newEvent,
     setNewEvent,
     filteredClasses,
-    studentMessages,
-    studentUploads,
     isLoading,
     currentUser,
     handleSelectEvent,
     handleCreateEvent,
-    handleEditEvent,
-    handleDeleteEvent,
-    resetNewEventForm,
-    handleMarkMessageRead,
-    handleDownloadFile,
-    getUnreadMessageCount,
-    refreshEvent,
+    refreshData,
   } = useTutorScheduler();
 
   // Set tutorId on new event when user is available
@@ -79,7 +67,6 @@ const TutorScheduler: React.FC = memo(() => {
           scheduledClasses={filteredClasses}
           onSelectEvent={handleSelectEvent}
           onAddEventClick={handleAddEventClick}
-          getUnreadMessageCount={getUnreadMessageCount}
         />
       </div>
 
@@ -89,22 +76,10 @@ const TutorScheduler: React.FC = memo(() => {
         isAddEventOpen={isAddEventOpen}
         setIsAddEventOpen={setIsAddEventOpen}
         selectedEvent={selectedEvent}
-        isEditMode={isEditMode}
-        setIsEditMode={setIsEditMode}
         newEvent={newEvent}
         setNewEvent={setNewEvent}
-        activeEventTab={activeEventTab}
-        setActiveEventTab={setActiveEventTab}
-        studentMessages={studentMessages}
-        studentUploads={studentUploads}
         onCreateEvent={handleCreateEvent}
-        onEditEvent={handleEditEvent}
-        onDeleteEvent={handleDeleteEvent}
-        onResetForm={resetNewEventForm}
-        onMarkAsRead={handleMarkMessageRead}
-        onDownloadFile={handleDownloadFile}
-        getUnreadMessageCount={getUnreadMessageCount}
-        refreshEvent={refreshEvent}
+        onRefreshData={refreshData}
         currentUser={currentUser}
       />
     </div>

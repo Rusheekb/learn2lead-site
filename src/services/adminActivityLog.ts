@@ -6,7 +6,8 @@ export type AdminActionType =
   | 'referral_created'
   | 'referral_toggled'
   | 'rates_updated'
-  | 'role_changed';
+  | 'role_changed'
+  | 'user_deleted';
 
 export async function logAdminAction(params: {
   actionType: AdminActionType;

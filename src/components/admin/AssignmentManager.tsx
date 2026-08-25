@@ -12,7 +12,6 @@ import {
 import { Badge } from '@/components/ui/badge';
 import {
   createAssignment,
-  endAssignment,
   TutorStudentAssignment,
 } from '@/services/assignments/assignmentService';
 import { useAuth } from '@/contexts/AuthContext';
@@ -37,6 +36,7 @@ import {
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import SuggestedMatches from './SuggestedMatches';
+import AssignmentDetailsModal from './AssignmentDetailsModal';
 import { assignmentSchema } from '@/lib/validation';
 import { logger } from '@/lib/logger';
 
@@ -64,6 +64,8 @@ const AssignmentManager: React.FC<AssignmentManagerProps> = ({
 }) => {
   const { user } = useAuth();
   const [selectedStudentEmail, setSelectedStudentEmail] = useState<string>('');
+  const [selectedAssignment, setSelectedAssignment] =
+    useState<TutorStudentAssignment | null>(null);
 
   const form = useForm<AssignmentFormValues>({
     resolver: zodResolver(assignmentSchema),
@@ -106,6 +108,13 @@ const AssignmentManager: React.FC<AssignmentManagerProps> = ({
     form.setValue('tutorId', tutorId);
   };
 
+  const getTutorName = (assignment: TutorStudentAssignment) =>
+    tutors.find((t) => t.profileId === assignment.tutor_id)?.name || 'Unknown';
+
+  const getStudentName = (assignment: TutorStudentAssignment) =>
+    students.find((s) => s.profileId === assignment.student_id)?.name ||
+    'Unknown';
+
   const handleCreateAssignment = async (values: AssignmentFormValues) => {
     try {
       // Find the tutor and student to get their profile IDs
@@ -138,15 +147,10 @@ const AssignmentManager: React.FC<AssignmentManagerProps> = ({
     }
   };
 
-  const handleEndAssignment = async (assignmentId: string) => {
-    try {
-      await endAssignment(assignmentId);
-      onAssignmentChange();
-      toast.success('Assignment ended successfully');
-    } catch (error) {
-      log.error('Failed to end assignment:', error);
-      toast.error('Failed to end assignment');
-    }
+  const handleAssignmentEnded = () => {
+    setSelectedAssignment(null);
+    onAssignmentChange();
+    toast.success('Assignment ended successfully');
   };
 
   return (
@@ -235,20 +239,17 @@ const AssignmentManager: React.FC<AssignmentManagerProps> = ({
               <TableHead>Student</TableHead>
               <TableHead>Assigned At</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {assignments.map((assignment) => (
-              <TableRow key={assignment.id}>
-                <TableCell>
-                  {tutors.find((t) => t.profileId === assignment.tutor_id)
-                    ?.name || 'Unknown'}
-                </TableCell>
-                <TableCell>
-                  {students.find((s) => s.profileId === assignment.student_id)
-                    ?.name || 'Unknown'}
-                </TableCell>
+              <TableRow
+                key={assignment.id}
+                className="cursor-pointer hover:bg-muted/60"
+                onClick={() => setSelectedAssignment(assignment)}
+              >
+                <TableCell>{getTutorName(assignment)}</TableCell>
+                <TableCell>{getStudentName(assignment)}</TableCell>
                 <TableCell>
                   {new Date(assignment.assigned_at).toLocaleDateString()}
                 </TableCell>
@@ -257,22 +258,21 @@ const AssignmentManager: React.FC<AssignmentManagerProps> = ({
                     {assignment.active ? 'Active' : 'Inactive'}
                   </Badge>
                 </TableCell>
-                <TableCell>
-                  {assignment.active && (
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleEndAssignment(assignment.id)}
-                    >
-                      End Assignment
-                    </Button>
-                  )}
-                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </CardContent>
+
+      <AssignmentDetailsModal
+        assignment={selectedAssignment}
+        tutorName={selectedAssignment ? getTutorName(selectedAssignment) : ''}
+        studentName={
+          selectedAssignment ? getStudentName(selectedAssignment) : ''
+        }
+        onClose={() => setSelectedAssignment(null)}
+        onEnded={handleAssignmentEnded}
+      />
     </Card>
   );
 };

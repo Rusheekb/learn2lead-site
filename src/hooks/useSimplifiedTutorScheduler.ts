@@ -21,10 +21,7 @@ export const useSimplifiedTutorScheduler = () => {
   const [selectedEvent, setSelectedEvent] = useState<ClassEvent | null>(null);
   const [isViewEventOpen, setIsViewEventOpen] = useState(false);
   const [isAddEventOpen, setIsAddEventOpen] = useState(false);
-  const [isEditEventOpen, setIsEditEventOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [activeEventTab, setActiveEventTab] = useState('details');
-  const [isEditMode, setIsEditMode] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [subjectFilter, setSubjectFilter] = useState('');
   const [studentFilter, setStudentFilter] = useState('');
@@ -131,57 +128,6 @@ export const useSimplifiedTutorScheduler = () => {
     setIsAddEventOpen(true);
   }, []);
 
-  const handleEditEvent = useCallback((event: ClassEvent) => {
-    setSelectedEvent(event);
-    setIsEditEventOpen(true);
-  }, []);
-
-  const handleDeleteEvent = useCallback(
-    async (eventId: string, isRecurring?: boolean): Promise<boolean> => {
-      if (!user?.id) {
-        throw new Error('User not authenticated');
-      }
-
-      // Optimistically remove from local state immediately
-      const previousClasses = scheduledClasses;
-      setScheduledClasses((prev) => prev.filter((c) => c.id !== eventId));
-
-      try {
-        const { error } = await supabase
-          .from('scheduled_classes')
-          .delete()
-          .eq('id', eventId)
-          .eq('tutor_id', user.id);
-
-        if (error) throw error;
-
-        queryClient.invalidateQueries({
-          queryKey: ['scheduled-classes', user.id],
-        });
-
-        toast.success(
-          isRecurring
-            ? 'All recurring classes deleted'
-            : 'Class deleted successfully'
-        );
-        return true;
-      } catch (error) {
-        // Rollback on failure
-        setScheduledClasses(previousClasses);
-        log.error('Error deleting event:', error);
-        throw error;
-      }
-    },
-    [user?.id, scheduledClasses, queryClient]
-  );
-
-  const closeAllDialogs = useCallback(() => {
-    setIsViewEventOpen(false);
-    setIsAddEventOpen(false);
-    setIsEditEventOpen(false);
-    setSelectedEvent(null);
-  }, []);
-
   const refreshData = useCallback(() => {
     refetch();
     queryClient.invalidateQueries({ queryKey: ['scheduled-classes'] });
@@ -259,13 +205,6 @@ export const useSimplifiedTutorScheduler = () => {
     [user?.id, refetch, queryClient]
   );
 
-  const resetNewEventForm = useCallback(() => {}, []);
-  const handleMarkMessageRead = useCallback(async () => {}, []);
-  const handleDownloadFile = useCallback(async () => {}, []);
-  const getUnreadMessageCount = useCallback(() => 0, []);
-  const refreshEvent = useCallback(async () => {}, []);
-  const mockAsyncFunction = useCallback(async () => true, []);
-
   // Fetch real tutor profile
   const { data: currentUser } = useQuery({
     queryKey: ['tutor-profile', user?.id],
@@ -288,15 +227,10 @@ export const useSimplifiedTutorScheduler = () => {
       selectedEvent,
       isViewEventOpen,
       isAddEventOpen,
-      isEditEventOpen,
       selectedDate,
       setSelectedDate,
       setIsAddEventOpen,
       setIsViewEventOpen,
-      activeEventTab,
-      setActiveEventTab,
-      isEditMode,
-      setIsEditMode,
       searchTerm,
       setSearchTerm,
       subjectFilter,
@@ -307,24 +241,11 @@ export const useSimplifiedTutorScheduler = () => {
       setNewEvent,
 
       filteredClasses: [...scheduledClasses, ...loggedClassData],
-      allSubjects: [] as string[],
-      studentMessages: [] as any[],
-      studentUploads: [] as any[],
       isLoading: false,
-      refetchClasses: refreshData,
       currentUser,
 
       handleSelectEvent,
       handleCreateEvent: handleCreateEventActual,
-      handleEditEvent: mockAsyncFunction,
-      handleDeleteEvent,
-      handleDuplicateEvent: resetNewEventForm,
-      resetNewEventForm,
-      handleMarkMessageRead,
-      handleDownloadFile,
-      getUnreadMessageCount,
-      refreshEvent,
-      closeAllDialogs,
       refreshData,
     }),
     [
@@ -332,10 +253,7 @@ export const useSimplifiedTutorScheduler = () => {
       selectedEvent,
       isViewEventOpen,
       isAddEventOpen,
-      isEditEventOpen,
       selectedDate,
-      activeEventTab,
-      isEditMode,
       searchTerm,
       subjectFilter,
       studentFilter,
@@ -344,14 +262,6 @@ export const useSimplifiedTutorScheduler = () => {
       refreshData,
       handleSelectEvent,
       handleCreateEventActual,
-      mockAsyncFunction,
-      handleDeleteEvent,
-      resetNewEventForm,
-      handleMarkMessageRead,
-      handleDownloadFile,
-      getUnreadMessageCount,
-      refreshEvent,
-      closeAllDialogs,
     ]
   );
 };

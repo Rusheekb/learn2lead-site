@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { StudentContent } from '@/components/shared/StudentContent.tsx';
+import { StudentContent } from '@/components/shared/StudentContent';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 
@@ -28,8 +28,8 @@ interface ClassDetailsDialogProps {
   activeDetailsTab: string;
   setActiveDetailsTab: (tab: string) => void;
   studentUploads: any[];
-  studentMessages: any[];
   handleDownloadFile: (uploadId: string) => Promise<void>;
+  handleViewFile: (uploadId: string) => Promise<void>;
   formatTime: (time: string) => string;
   onToggleStudentPayment?: (classId: string, currentlyPaid: boolean) => void;
   onToggleTutorPayment?: (classId: string, currentlyPaid: boolean) => void;
@@ -43,8 +43,8 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
   activeDetailsTab,
   setActiveDetailsTab,
   studentUploads,
-  studentMessages,
   handleDownloadFile,
+  handleViewFile,
   formatTime,
   onToggleStudentPayment,
   onToggleTutorPayment,
@@ -406,6 +406,7 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
                   classId={selectedClass.id}
                   uploads={studentUploads}
                   onDownload={handleDownloadFile}
+                  onView={handleViewFile}
                 />
               </TabsContent>
             </Tabs>

@@ -16,7 +16,7 @@ import {
 import { MoreVertical, Edit2, Trash2, Lock } from 'lucide-react';
 import { ClassEvent } from '@/types/tutorTypes';
 import ClassEventDetails from '../ClassEventDetails';
-import { StudentMessage, StudentUpload } from '@/types/classTypes';
+import { StudentUpload } from '@/types/classTypes';
 import { format } from 'date-fns';
 import ConfirmationDialog from '@/components/shared/ConfirmationDialog';
 import EditClassDialog from './EditClassDialog';
@@ -29,17 +29,12 @@ interface ViewClassDialogProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   selectedEvent: ClassEvent | null;
-  setIsEditMode: (isEdit: boolean) => void;
   activeTab: string;
   setActiveTab: (tab: string) => void;
-  studentMessages: StudentMessage[];
   studentUploads: StudentUpload[];
-  onDuplicateEvent?: (event: ClassEvent) => void;
   onDeleteEvent: (eventId: string, isRecurring?: boolean) => Promise<boolean>;
-  onMarkAsRead: (messageId: string) => Promise<void>;
   onDownloadFile: (uploadId: string) => Promise<void>;
   onViewFile: (uploadId: string) => Promise<void>;
-  getUnreadMessageCount: (classId: string) => number;
   refreshEvent?: () => Promise<void>;
 }
 
@@ -47,17 +42,12 @@ const ViewClassDialog: React.FC<ViewClassDialogProps> = ({
   isOpen,
   setIsOpen,
   selectedEvent,
-  setIsEditMode,
   activeTab,
   setActiveTab,
-  studentMessages,
   studentUploads,
-  onDuplicateEvent,
   onDeleteEvent,
-  onMarkAsRead,
   onDownloadFile,
   onViewFile,
-  getUnreadMessageCount,
   refreshEvent,
 }) => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);

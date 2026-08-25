@@ -7,6 +7,7 @@ import {
   rateLimitResponse,
 } from '../_shared/rateLimiter.ts';
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
+import { resolveClassesPerMonth } from '../_shared/renewalPackMapping.ts';
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -112,21 +113,16 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get the plan details. renewal_pack ('basic'|'standard'|'premium') maps to the
-    // exact same subscription_plans rows customers see when buying a pack manually
-    // (Basic Plan/Standard Plan/Premium Plan = 4/8/12 hours) — exact match, not a
-    // fuzzy ILIKE, so a renamed plan fails loudly instead of silently matching nothing.
-    const packMap: Record<string, string> = {
-      basic: 'Basic Plan',
-      standard: 'Standard Plan',
-      premium: 'Premium Plan',
-    };
-
+    // See renewalPackMapping.ts for why this matches by classes_per_month
+    // rather than plan name. Test-mode duplicate rows share the same
+    // classes_per_month, so exclude them explicitly — this function always
+    // charges through the live Stripe key.
     const { data: plan, error: planError } = await supabaseClient
       .from('subscription_plans')
       .select('*')
-      .eq('name', packMap[renewal_pack] || 'Standard Plan')
+      .eq('classes_per_month', resolveClassesPerMonth(renewal_pack))
       .eq('active', true)
+      .not('name', 'ilike', '%(Test)%')
       .single();
 
     if (planError || !plan) {

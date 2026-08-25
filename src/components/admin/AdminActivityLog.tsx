@@ -27,6 +27,7 @@ const ACTION_COLORS: Record<string, string> = {
   referral_toggled: 'bg-amber-500',
   rates_updated: 'bg-sky-500',
   role_changed: 'bg-orange-500',
+  user_deleted: 'bg-red-500',
 };
 
 const AdminActivityLog: React.FC = () => {

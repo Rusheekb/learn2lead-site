@@ -8,7 +8,6 @@ interface TutorSchedulerCalendarProps {
   scheduledClasses: ClassEvent[];
   onSelectEvent: (event: ClassEvent) => void;
   onAddEventClick: () => void;
-  getUnreadMessageCount: (classId: string) => number;
 }
 
 const TutorSchedulerCalendar: React.FC<TutorSchedulerCalendarProps> = memo(
@@ -18,7 +17,6 @@ const TutorSchedulerCalendar: React.FC<TutorSchedulerCalendarProps> = memo(
     scheduledClasses,
     onSelectEvent,
     onAddEventClick,
-    getUnreadMessageCount,
   }) => {
     return (
       <CalendarWithEvents
@@ -27,7 +25,6 @@ const TutorSchedulerCalendar: React.FC<TutorSchedulerCalendarProps> = memo(
         scheduledClasses={scheduledClasses}
         onSelectEvent={onSelectEvent}
         onAddEventClick={onAddEventClick}
-        getUnreadMessageCount={getUnreadMessageCount}
       />
     );
   }

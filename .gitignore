@@ -25,6 +25,10 @@ dist-ssr
 
 # Local environment variables
 .env.local
+.env.test
 
 # Supabase CLI local runtime cache (machine-specific, not project state)
 supabase/.temp/
+
+# Generated test coverage reports
+coverage/

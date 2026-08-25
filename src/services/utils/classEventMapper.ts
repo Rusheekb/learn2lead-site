@@ -38,6 +38,7 @@ interface DbRecord {
   'Additional Info'?: string | null;
   disputed?: boolean | null;
   dispute_reason?: string | null;
+  'Class ID'?: string | null;
 }
 
 export const transformDbRecordToClassEvent = (record: unknown): ClassEvent => {
@@ -113,6 +114,7 @@ export const transformDbRecordToClassEvent = (record: unknown): ClassEvent => {
       materials: [],
       disputed: !!dbRecord.disputed,
       disputeReason: dbRecord.dispute_reason || null,
+      scheduledClassId: dbRecord['Class ID'] || undefined,
     };
   } catch (error) {
     log.error('Error transforming record', error, { recordId: dbRecord.id });

@@ -48,7 +48,6 @@ export async function fetchStudents(
     grade: student.grade,
     active: student.active,
     enrollmentDate: student.enrollment_date,
-    paymentStatus: student.payment_status as any,
   }));
 
   return {
@@ -73,7 +72,6 @@ export async function createStudent(
     subjects: student.subjects || [],
     grade: student.grade,
     active: student.active !== undefined ? student.active : true,
-    payment_status: student.paymentStatus || 'pending',
   };
 
   const result = await supabase
@@ -95,7 +93,6 @@ export async function createStudent(
     grade: result.data.grade,
     active: result.data.active,
     enrollmentDate: result.data.enrollment_date,
-    paymentStatus: result.data.payment_status as any,
   };
 }
 
@@ -109,8 +106,6 @@ export async function updateStudent(
   if (updates.subjects !== undefined) dbUpdates.subjects = updates.subjects;
   if (updates.grade !== undefined) dbUpdates.grade = updates.grade;
   if (updates.active !== undefined) dbUpdates.active = updates.active;
-  if (updates.paymentStatus !== undefined)
-    dbUpdates.payment_status = updates.paymentStatus;
 
   const result = await supabase
     .from('students')
@@ -132,7 +127,6 @@ export async function updateStudent(
     grade: result.data.grade,
     active: result.data.active,
     enrollmentDate: result.data.enrollment_date,
-    paymentStatus: result.data.payment_status as any,
   };
 }
 
@@ -157,6 +151,5 @@ export async function deleteStudent(id: string): Promise<Student> {
     grade: result.data.grade,
     active: result.data.active,
     enrollmentDate: result.data.enrollment_date,
-    paymentStatus: result.data.payment_status as any,
   };
 }

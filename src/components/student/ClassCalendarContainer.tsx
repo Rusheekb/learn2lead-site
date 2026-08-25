@@ -61,7 +61,6 @@ export const ClassCalendarContainer: React.FC<ClassCalendarContainerProps> =
           scheduledClasses={sessions}
           onSelectEvent={handleClassSelect}
           onAddEventClick={() => {}}
-          getUnreadMessageCount={() => 0}
         />
         <StudentClassDetailsDialog
           open={isDialogOpen}

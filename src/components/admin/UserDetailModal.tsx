@@ -10,13 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   UserCheck,
   Shield,
@@ -25,6 +19,7 @@ import {
   DollarSign,
   Save,
   PlusCircle,
+  Trash2,
 } from 'lucide-react';
 import {
   fetchStudentAnalytics,
@@ -33,11 +28,14 @@ import {
 import { Student, Tutor } from '@/types/tutorTypes';
 import { useAuth } from '@/contexts/AuthContext';
 import { RolePromotionDialog } from './RolePromotionDialog';
+import ConfirmationDialog from '@/components/shared/ConfirmationDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
 import { logAdminAction } from '@/services/adminActivityLog';
 import { useQueryClient } from '@tanstack/react-query';
+import { deleteStudent } from '@/services/students/studentService';
+import { deleteTutor } from '@/services/tutors/tutorService';
 
 const log = logger.create('UserDetailModal');
 
@@ -58,12 +56,12 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
     classesPaid: number;
   } | null>(null);
   const [showRoleDialog, setShowRoleDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isLoadingStats, setIsLoadingStats] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   // Editable rate fields
-  const [classRate, setClassRate] = useState<string>('');
-  const [paymentMethod, setPaymentMethod] = useState<string>('zelle');
   const [hourlyRate, setHourlyRate] = useState<string>('');
   const [prepaidBalance, setPrepaidBalance] = useState<number>(0);
 
@@ -71,6 +69,22 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
   const [creditAmount, setCreditAmount] = useState<string>('');
   const [creditReason, setCreditReason] = useState<string>('');
   const [isAdjustingCredits, setIsAdjustingCredits] = useState(false);
+  // Payment verification calculator — a sanity check for the admin (e.g.
+  // "parent Zelled $300 for 10 classes" -> 10 classes x $30/class = $300
+  // confirms the credit amount above is right).
+  const [costPerClass, setCostPerClass] = useState<string>('');
+
+  // The modal never unmounts (see AdminDashboard.tsx) — it just gets a new
+  // `user` prop or `null` on close. Without this, a half-filled credit
+  // adjustment left over from one student (or from closing without
+  // submitting) would silently carry into the next student's session.
+  useEffect(() => {
+    setCreditAmount('');
+    setCreditReason('');
+    setCostPerClass('');
+    setShowDeleteDialog(false);
+  }, [user]);
+
   // Fetch rate data when user changes
   useEffect(() => {
     if (!user) return;
@@ -79,12 +93,10 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
       if (user.role === 'student') {
         const { data } = await supabase
           .from('students')
-          .select('class_rate, payment_method, prepaid_balance')
+          .select('prepaid_balance')
           .eq('name', user.name)
           .maybeSingle();
         if (data) {
-          setClassRate(data.class_rate?.toString() || '');
-          setPaymentMethod(data.payment_method || 'zelle');
           setPrepaidBalance(Number(data.prepaid_balance) || 0);
         }
       } else if (user.role === 'tutor') {
@@ -143,44 +155,63 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
   const isAdmin = userRole === 'admin';
   const canPromote = isAdmin && user?.role === 'student';
   const canDemote = isAdmin && user?.role === 'tutor';
+  const hasSettingsTab = isAdmin;
 
   const handleRoleSuccess = () => {
     onUserUpdated?.();
   };
 
-  const handleSaveRates = async () => {
+  const handleDeleteUser = async () => {
     if (!user) return;
-    setIsSaving(true);
+    setIsDeleting(true);
     try {
       if (user.role === 'student') {
-        const { error } = await supabase
-          .from('students')
-          .update({
-            class_rate: classRate ? parseFloat(classRate) : null,
-            payment_method: paymentMethod,
-          })
-          .eq('name', user.name);
-        if (error) throw error;
-      } else if (user.role === 'tutor') {
-        const { error } = await supabase
-          .from('tutors')
-          .update({
-            hourly_rate: hourlyRate ? parseFloat(hourlyRate) : null,
-          })
-          .eq('name', user.name);
-        if (error) throw error;
+        await deleteStudent(user.id);
+      } else {
+        await deleteTutor(user.id);
       }
-      toast.success('Rates updated successfully');
+      logAdminAction({
+        actionType: 'user_deleted',
+        description: `Deleted ${user.role} ${user.name || user.email}`,
+        entityType: user.role,
+        entityId: user.id,
+      });
+      toast.success(
+        `${user.role === 'student' ? 'Student' : 'Tutor'} deleted successfully`
+      );
+      setShowDeleteDialog(false);
+      onUserUpdated?.();
+      onClose();
+    } catch (error) {
+      log.error('Error deleting user:', error);
+      toast.error(`Failed to delete ${user.role}`);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleSaveRates = async () => {
+    if (!user || user.role !== 'tutor') return;
+    setIsSaving(true);
+    try {
+      const { error } = await supabase
+        .from('tutors')
+        .update({
+          hourly_rate: hourlyRate ? parseFloat(hourlyRate) : null,
+        })
+        .eq('name', user.name);
+      if (error) throw error;
+      toast.success('Rate updated successfully');
       logAdminAction({
         actionType: 'rates_updated',
-        description: `Updated ${user.role === 'student' ? 'class rate' : 'hourly rate'} for ${user.name || user.email}`,
+        description: `Updated hourly rate for ${user.name || user.email}`,
         entityType: user.role,
         entityId: user.id,
       });
       onUserUpdated?.();
     } catch (error) {
-      log.error('Error saving rates:', error);
-      toast.error('Failed to update rates');
+      log.error('Error saving rate:', error);
+      toast.error('Failed to update rate');
     } finally {
       setIsSaving(false);
     }
@@ -245,6 +276,7 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
       queryClient.invalidateQueries({ queryKey: ['admin-activity-log'] });
       setCreditAmount('');
       setCreditReason('');
+      setCostPerClass('');
       // Refresh stats
       setStats((s) => (s ? { ...s, totalCredits: newBalance } : s));
     } catch (err) {
@@ -259,129 +291,140 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
 
   if (!user) return null;
 
+  const calculatedTotal =
+    Math.abs(parseFloat(creditAmount) || 0) * (parseFloat(costPerClass) || 0);
+
   return (
     <>
       <Dialog open onOpenChange={() => onClose()}>
-        <DialogContent className="max-w-full sm:max-w-md md:max-w-lg w-[calc(100vw-2rem)] sm:w-auto">
+        <DialogContent className="max-w-full sm:max-w-lg md:max-w-xl w-[calc(100vw-2rem)] sm:w-auto">
           <DialogHeader>
             <DialogTitle className="text-lg sm:text-xl break-words pr-8 flex items-center gap-2">
               <Shield className="h-5 w-5" />
-              {user.email}
+              {user.name || user.email}
               <Badge variant={user.role === 'tutor' ? 'default' : 'secondary'}>
                 {user.role}
               </Badge>
             </DialogTitle>
+            <p className="text-xs text-muted-foreground truncate">
+              {user.email} · {user.id}
+            </p>
           </DialogHeader>
 
-          <div className="py-4 space-y-4">
-            <div className="space-y-2">
-              <p className="text-sm">
-                <strong>Name:</strong> {user.name || '—'}
-              </p>
-              <p className="text-sm">
-                <strong>User ID:</strong> {user.id}
-              </p>
-              <p className="text-sm">
-                <strong>Email:</strong> {user.email}
-              </p>
-            </div>
+          <Tabs defaultValue="profile" className="py-2">
+            <TabsList
+              className={`grid w-full ${hasSettingsTab ? 'grid-cols-3' : 'grid-cols-2'}`}
+            >
+              <TabsTrigger value="profile">Profile</TabsTrigger>
+              <TabsTrigger value="billing">Billing</TabsTrigger>
+              {hasSettingsTab && (
+                <TabsTrigger value="settings">Settings</TabsTrigger>
+              )}
+            </TabsList>
 
-            <hr className="my-4" />
+            <TabsContent value="profile" className="space-y-4 pt-4">
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
+                  <History className="h-4 w-4" />
+                  Analytics
+                </h4>
+                {isLoadingStats ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading...
+                  </div>
+                ) : (
+                  <div
+                    className={`grid gap-3 ${user.role === 'student' ? 'grid-cols-3' : 'grid-cols-1'}`}
+                  >
+                    {user.role === 'student' && (
+                      <div className="rounded-lg border p-3">
+                        <p className="text-xs text-muted-foreground">
+                          Classes Paid
+                        </p>
+                        <p className="text-lg font-semibold">
+                          {stats?.classesPaid ?? 0}
+                        </p>
+                      </div>
+                    )}
+                    <div className="rounded-lg border p-3">
+                      <p className="text-xs text-muted-foreground">
+                        Classes Completed
+                      </p>
+                      <p className="text-lg font-semibold">
+                        {stats?.classesCompleted ?? 0}
+                      </p>
+                    </div>
+                    {user.role === 'student' && (
+                      <div className="rounded-lg border p-3">
+                        <p className="text-xs text-muted-foreground">
+                          Remaining Credits
+                        </p>
+                        <p className="text-lg font-semibold">
+                          {stats?.totalCredits ?? 0}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </TabsContent>
 
-            {/* Rate Management Section */}
-            <div className="space-y-3">
-              <h4 className="font-medium flex items-center gap-2">
-                <DollarSign className="h-4 w-4" />
-                Rate Management
-              </h4>
-
-              {user.role === 'student' && (
+            <TabsContent value="billing" className="space-y-4 pt-4">
+              {user.role === 'tutor' && (
                 <div className="space-y-3">
+                  <h4 className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
+                    <DollarSign className="h-4 w-4" />
+                    Rate Management
+                  </h4>
                   <div className="space-y-1.5">
-                    <Label htmlFor="classRate">Class Rate ($)</Label>
+                    <Label htmlFor="hourlyRate">Hourly Rate ($)</Label>
                     <Input
-                      id="classRate"
+                      id="hourlyRate"
                       type="number"
                       step="0.01"
                       min="0"
-                      placeholder="e.g. 50.00"
-                      value={classRate}
-                      onChange={(e) => setClassRate(e.target.value)}
+                      placeholder="e.g. 25.00"
+                      value={hourlyRate}
+                      onChange={(e) => setHourlyRate(e.target.value)}
                     />
                     <p className="text-xs text-muted-foreground">
-                      Auto-fills "Class Cost" on future class logs for this
-                      student.
+                      Auto-fills "Tutor Cost" on future class logs for this
+                      tutor.
                     </p>
                   </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="paymentMethod">Payment Method</Label>
-                    <Select
-                      value={paymentMethod}
-                      onValueChange={setPaymentMethod}
-                    >
-                      <SelectTrigger id="paymentMethod">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="zelle">Zelle</SelectItem>
-                        <SelectItem value="stripe">Stripe</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {prepaidBalance > 0 && (
-                    <div className="space-y-1.5">
-                      <Label>Prepaid Balance</Label>
-                      <p className="text-sm font-medium text-primary">
-                        ${prepaidBalance.toFixed(2)}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Legacy surplus from a past overpayment. Nothing applies
-                        this automatically — factor it in manually if relevant.
-                      </p>
-                    </div>
-                  )}
+                  <Button
+                    size="sm"
+                    onClick={handleSaveRates}
+                    disabled={isSaving}
+                    className="w-full sm:w-auto"
+                  >
+                    {isSaving ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <Save className="h-4 w-4 mr-2" />
+                    )}
+                    Save Rate
+                  </Button>
                 </div>
               )}
 
-              {user.role === 'tutor' && (
-                <div className="space-y-1.5">
-                  <Label htmlFor="hourlyRate">Hourly Rate ($)</Label>
-                  <Input
-                    id="hourlyRate"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    placeholder="e.g. 25.00"
-                    value={hourlyRate}
-                    onChange={(e) => setHourlyRate(e.target.value)}
-                  />
+              {user.role === 'student' && prepaidBalance > 0 && (
+                <div className="space-y-1 rounded-lg border p-3">
+                  <Label>Prepaid Balance</Label>
+                  <p className="text-sm font-medium text-primary">
+                    ${prepaidBalance.toFixed(2)}
+                  </p>
                   <p className="text-xs text-muted-foreground">
-                    Auto-fills "Tutor Cost" on future class logs for this tutor.
+                    Legacy surplus from a past overpayment. Nothing applies this
+                    automatically — factor it in manually if relevant.
                   </p>
                 </div>
               )}
 
-              <Button
-                size="sm"
-                onClick={handleSaveRates}
-                disabled={isSaving}
-                className="w-full sm:w-auto"
-              >
-                {isSaving ? (
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                ) : (
-                  <Save className="h-4 w-4 mr-2" />
-                )}
-                Save Rates
-              </Button>
-            </div>
-
-            {/* Credit Adjustment — students only */}
-            {user.role === 'student' && (
-              <>
-                <hr className="my-4" />
+              {user.role === 'student' && (
                 <div className="space-y-3">
-                  <h4 className="font-medium flex items-center gap-2">
+                  <h4 className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
                     <PlusCircle className="h-4 w-4" />
                     Adjust Credits
                   </h4>
@@ -409,6 +452,29 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
                       />
                     </div>
                   </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="costPerClass">Rate per class ($)</Label>
+                    <Input
+                      id="costPerClass"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="e.g. 30.00"
+                      value={costPerClass}
+                      onChange={(e) => setCostPerClass(e.target.value)}
+                    />
+                    <p className="text-xs text-muted-foreground rounded-md border bg-muted/30 px-2 py-1.5">
+                      {Math.abs(parseFloat(creditAmount) || 0)} classes × $
+                      {(parseFloat(costPerClass) || 0).toFixed(2)} ={' '}
+                      <span className="font-medium text-foreground">
+                        ${calculatedTotal.toFixed(2)}
+                      </span>{' '}
+                      — check this against what was actually paid before
+                      applying.
+                    </p>
+                  </div>
+
                   <Button
                     size="sm"
                     variant="outline"
@@ -426,70 +492,57 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
                     Apply Adjustment
                   </Button>
                 </div>
-              </>
-            )}
-
-            <hr className="my-4" />
-
-            <div className="space-y-2">
-              <h4 className="font-medium flex items-center gap-2">
-                <History className="h-4 w-4" />
-                Analytics
-              </h4>
-              {isLoadingStats ? (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Loading analytics...
-                </div>
-              ) : (
-                <>
-                  {user.role === 'student' && (
-                    <p className="text-sm">
-                      <strong>Classes Paid:</strong> {stats?.classesPaid ?? 0}
-                    </p>
-                  )}
-                  <p className="text-sm">
-                    <strong>Classes Completed:</strong>{' '}
-                    {stats?.classesCompleted ?? 0}
-                  </p>
-                  {user.role === 'student' && (
-                    <p className="text-sm">
-                      <strong>Remaining Credits:</strong>{' '}
-                      {stats?.totalCredits ?? 0}
-                    </p>
-                  )}
-                </>
               )}
-            </div>
+            </TabsContent>
 
-            {isAdmin && (canPromote || canDemote) && (
-              <>
-                <hr className="my-4" />
-                <div className="space-y-2">
-                  <h4 className="font-medium flex items-center gap-2">
-                    <UserCheck className="h-4 w-4" />
-                    Role Management
+            {hasSettingsTab && (
+              <TabsContent value="settings" className="space-y-4 pt-4">
+                {(canPromote || canDemote) && (
+                  <div className="space-y-1.5 rounded-lg border p-3">
+                    <h4 className="text-sm font-medium flex items-center gap-2">
+                      <UserCheck className="h-4 w-4" />
+                      Role Management
+                    </h4>
+                    <p className="text-xs text-muted-foreground">
+                      {canPromote
+                        ? 'Promote this student to tutor role.'
+                        : 'Demote this tutor to student role.'}{' '}
+                      Kept on its own tab, away from Close, so it can't be
+                      clicked by accident.
+                    </p>
+                    <Button
+                      variant={canPromote ? 'default' : 'destructive'}
+                      onClick={() => setShowRoleDialog(true)}
+                      className="w-full sm:w-auto"
+                    >
+                      {canPromote ? 'Promote to Tutor' : 'Demote to Student'}
+                    </Button>
+                  </div>
+                )}
+
+                <div className="space-y-1.5 rounded-lg border border-destructive/30 p-3">
+                  <h4 className="text-sm font-medium flex items-center gap-2 text-destructive">
+                    <Trash2 className="h-4 w-4" />
+                    Delete {user.role === 'student' ? 'Student' : 'Tutor'}
                   </h4>
                   <p className="text-xs text-muted-foreground">
-                    {canPromote
-                      ? 'Promote this student to tutor role'
-                      : 'Demote this tutor to student role'}
+                    Permanently removes this {user.role} record. This cannot be
+                    undone. Kept on its own tab, away from Close, so it can't be
+                    clicked by accident.
                   </p>
+                  <Button
+                    variant="destructive"
+                    onClick={() => setShowDeleteDialog(true)}
+                    className="w-full sm:w-auto"
+                  >
+                    Delete {user.role === 'student' ? 'Student' : 'Tutor'}
+                  </Button>
                 </div>
-              </>
+              </TabsContent>
             )}
-          </div>
+          </Tabs>
 
-          <DialogFooter className="flex-col sm:flex-row gap-2">
-            {isAdmin && (canPromote || canDemote) && (
-              <Button
-                variant={canPromote ? 'default' : 'destructive'}
-                onClick={() => setShowRoleDialog(true)}
-                className="w-full sm:w-auto"
-              >
-                {canPromote ? 'Promote to Tutor' : 'Demote to Student'}
-              </Button>
-            )}
+          <DialogFooter>
             <Button
               onClick={onClose}
               variant="outline"
@@ -506,6 +559,17 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
         onClose={() => setShowRoleDialog(false)}
         user={user}
         onSuccess={handleRoleSuccess}
+      />
+
+      <ConfirmationDialog
+        isOpen={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        onConfirm={handleDeleteUser}
+        title={`Delete ${user.name || user.email}?`}
+        description={`This permanently deletes this ${user.role} record. This cannot be undone.`}
+        confirmText="Delete"
+        variant="destructive"
+        isLoading={isDeleting}
       />
     </>
   );

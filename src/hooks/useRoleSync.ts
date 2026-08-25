@@ -41,7 +41,6 @@ export function useRoleSync() {
             name: email?.split('@')[0] || 'New Tutor',
             email: email || '',
             subjects: [],
-            rating: 0,
             classes: 0,
             hourlyRate: 25,
           });

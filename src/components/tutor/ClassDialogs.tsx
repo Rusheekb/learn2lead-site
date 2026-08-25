@@ -1,9 +1,13 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import AddClassDialog from './dialogs/AddClassDialog';
 import ViewClassDialog from './dialogs/ViewClassDialog';
 import { ClassEvent } from '@/types/tutorTypes';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import { StudentUpload } from '@/types/classTypes';
+import {
+  fetchClassUploads,
+  downloadClassFile,
+  viewClassFile,
+} from '@/services/classUploadsService';
 import { logger } from '@/lib/logger';
 
 const log = logger.create('ClassDialogs');
@@ -33,6 +37,22 @@ export function ClassDialogs({
   onCreateEvent,
   currentUser,
 }: ClassDialogsProps) {
+  const [activeTab, setActiveTab] = useState('details');
+  const [studentUploads, setStudentUploads] = useState<StudentUpload[]>([]);
+
+  const loadUploads = useCallback(async () => {
+    if (!selectedEvent?.id) return;
+    const uploads = await fetchClassUploads(selectedEvent.id);
+    setStudentUploads(uploads);
+  }, [selectedEvent?.id]);
+
+  useEffect(() => {
+    if (isViewEventOpen && selectedEvent?.id) {
+      setActiveTab('details');
+      loadUploads();
+    }
+  }, [isViewEventOpen, selectedEvent?.id, loadUploads]);
+
   const handleDeleteEvent = async (eventId: string, isRecurring?: boolean) => {
     try {
       // Import the delete service
@@ -66,18 +86,20 @@ export function ClassDialogs({
           isOpen={isViewEventOpen}
           setIsOpen={(open: boolean) => !open && onCloseDialogs()}
           selectedEvent={selectedEvent}
-          setIsEditMode={() => {}}
-          activeTab="details"
-          setActiveTab={() => {}}
-          studentMessages={[]}
-          studentUploads={[]}
-          onDuplicateEvent={() => {}}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          studentUploads={studentUploads}
           onDeleteEvent={handleDeleteEvent}
-          onMarkAsRead={async () => {}}
-          onDownloadFile={async () => {}}
-          onViewFile={async () => {}}
-          getUnreadMessageCount={() => 0}
-          refreshEvent={async () => onRefreshData()}
+          onDownloadFile={async (id) => {
+            await downloadClassFile(id);
+          }}
+          onViewFile={async (id) => {
+            await viewClassFile(id);
+          }}
+          refreshEvent={async () => {
+            onRefreshData();
+            await loadUploads();
+          }}
         />
       )}
     </>

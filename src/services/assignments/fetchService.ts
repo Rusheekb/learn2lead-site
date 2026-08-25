@@ -49,7 +49,6 @@ export async function fetchTutorsWithProfileIds(): Promise<
         name: tutor.name,
         email: tutor.email,
         subjects: tutor.subjects || [],
-        rating: 5,
         classes: 0,
         hourlyRate: tutor.hourly_rate || 0,
         active: tutor.active,
@@ -103,7 +102,6 @@ export async function fetchStudentsWithProfileIds(): Promise<
         grade: student.grade,
         active: student.active,
         enrollmentDate: student.enrollment_date,
-        paymentStatus: student.payment_status as any,
       });
     }
   }
