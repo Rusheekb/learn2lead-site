@@ -31,7 +31,6 @@ interface ClassDetailsDialogProps {
   studentMessages: any[];
   handleDownloadFile: (uploadId: string) => Promise<void>;
   formatTime: (time: string) => string;
-  studentPaymentMethod?: string;
   onToggleStudentPayment?: (classId: string, currentlyPaid: boolean) => void;
   onToggleTutorPayment?: (classId: string, currentlyPaid: boolean) => void;
   onCostsUpdated?: () => void;
@@ -47,7 +46,6 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
   studentMessages,
   handleDownloadFile,
   formatTime,
-  studentPaymentMethod,
   onToggleStudentPayment,
   onToggleTutorPayment,
   onCostsUpdated,
@@ -108,7 +106,6 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
     return matches ? matches[0] : decodedFilename;
   };
 
-  const isStripe = studentPaymentMethod === 'stripe';
   const studentPaid = !!selectedClass.studentPaymentDate;
   const tutorPaid = !!selectedClass.tutorPaymentDate;
 
@@ -231,15 +228,6 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
               </TabsContent>
 
               <TabsContent value="payments" className="space-y-6 pt-4">
-                <div className="flex items-center gap-2">
-                  <h4 className="text-sm font-medium text-muted-foreground">
-                    Payment Method:
-                  </h4>
-                  <Badge variant={isStripe ? 'default' : 'secondary'}>
-                    {isStripe ? 'Stripe' : 'Zelle'}
-                  </Badge>
-                </div>
-
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-muted-foreground">
                     Costs

@@ -244,10 +244,6 @@ const ClassLogs: React.FC = () => {
     }
   };
 
-  const selectedStudentMethod = selectedClass?.studentName
-    ? studentPaymentMethods[selectedClass.studentName] || 'zelle'
-    : 'zelle';
-
   const profit = totals.totalClassCost - totals.totalTutorCost;
 
   return (
@@ -399,7 +395,6 @@ const ClassLogs: React.FC = () => {
         studentMessages={studentMessages}
         handleDownloadFile={async () => {}}
         formatTime={formatTime}
-        studentPaymentMethod={selectedStudentMethod}
         onToggleStudentPayment={handleToggleStudentPayment}
         onToggleTutorPayment={handleToggleTutorPayment}
         onCostsUpdated={handleRefreshData}
