@@ -869,7 +869,6 @@ export type Database = {
         Row: {
           active: boolean;
           availability_windows: string[] | null;
-          class_rate: number | null;
           communication_pref:
             | Database['public']['Enums']['communication_style']
             | null;
@@ -881,7 +880,6 @@ export type Database = {
           learning_pace: Database['public']['Enums']['learning_pace'] | null;
           name: string;
           payment_method: string | null;
-          payment_status: string;
           prepaid_balance: number | null;
           prepaid_class_count: number;
           primary_goal: Database['public']['Enums']['student_goal'] | null;
@@ -896,7 +894,6 @@ export type Database = {
         Insert: {
           active?: boolean;
           availability_windows?: string[] | null;
-          class_rate?: number | null;
           communication_pref?:
             | Database['public']['Enums']['communication_style']
             | null;
@@ -908,7 +905,6 @@ export type Database = {
           learning_pace?: Database['public']['Enums']['learning_pace'] | null;
           name: string;
           payment_method?: string | null;
-          payment_status?: string;
           prepaid_balance?: number | null;
           prepaid_class_count?: number;
           primary_goal?: Database['public']['Enums']['student_goal'] | null;
@@ -923,7 +919,6 @@ export type Database = {
         Update: {
           active?: boolean;
           availability_windows?: string[] | null;
-          class_rate?: number | null;
           communication_pref?:
             | Database['public']['Enums']['communication_style']
             | null;
@@ -935,7 +930,6 @@ export type Database = {
           learning_pace?: Database['public']['Enums']['learning_pace'] | null;
           name?: string;
           payment_method?: string | null;
-          payment_status?: string;
           prepaid_balance?: number | null;
           prepaid_class_count?: number;
           primary_goal?: Database['public']['Enums']['student_goal'] | null;
@@ -1214,20 +1208,6 @@ export type Database = {
         Returns: Json;
       };
       generate_class_notifications: { Args: never; Returns: undefined };
-      get_admin_student_overview: {
-        Args: never;
-        Returns: {
-          active: boolean;
-          class_rate: number;
-          credits_remaining: number;
-          email: string;
-          last_class_date: string;
-          name: string;
-          next_class_date: string;
-          profile_id: string;
-          student_id: string;
-        }[];
-      };
       get_at_risk_students: {
         Args: never;
         Returns: {
@@ -1264,10 +1244,10 @@ export type Database = {
           code: string;
           discount_amount: number;
           discount_type: string;
-          expires_at: string | null;
-          max_uses: number | null;
-          referrer_first_name: string | null;
-          referrer_last_name: string | null;
+          expires_at: string;
+          max_uses: number;
+          referrer_first_name: string;
+          referrer_last_name: string;
           times_used: number;
         }[];
       };
@@ -1302,21 +1282,9 @@ export type Database = {
         Args: { p_student_id: string };
         Returns: number;
       };
-      get_student_unpaid_summary: {
-        Args: never;
-        Returns: {
-          class_ids: string[];
-          class_rate: number;
-          last_payment_date: string;
-          student_name: string;
-          total_owed: number;
-          unpaid_count: number;
-        }[];
-      };
       get_students_credit_summary: {
         Args: never;
         Returns: {
-          class_rate: number;
           credits: number;
           last_class_date: string;
           profile_id: string;
@@ -1340,14 +1308,6 @@ export type Database = {
           zoom_link: string;
         }[];
       };
-      get_tutor_ratings: {
-        Args: never;
-        Returns: {
-          avg_rating: number;
-          rating_count: number;
-          tutor_name: string;
-        }[];
-      };
       get_tutor_student_relationships: {
         Args: { tutor_uuid: string };
         Returns: {
@@ -1357,27 +1317,12 @@ export type Database = {
           tutor_id: string;
         }[];
       };
-      get_tutor_students: {
-        Args: { requesting_user_id?: string };
-        Returns: {
-          active: boolean;
-          assigned_at: string;
-          grade: string;
-          payment_status: string;
-          student_id: string;
-          student_name: string;
-          subjects: string[];
-          tutor_id: string;
-          tutor_name: string;
-        }[];
-      };
       get_tutor_students_by_email: {
         Args: { requesting_user_id?: string };
         Returns: {
           active: boolean;
           assigned_at: string;
           grade: string;
-          payment_status: string;
           student_email: string;
           student_id: string;
           student_name: string;
