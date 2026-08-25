@@ -2,13 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  FileDown,
-  Upload,
-  DollarSign,
-  ChevronDown,
-  AlertTriangle,
-} from 'lucide-react';
+import { FileDown, Upload, ChevronDown, AlertTriangle } from 'lucide-react';
 import { exportClassLogsToCSV } from '@/utils/csvExport';
 import { toast } from 'sonner';
 import {
@@ -28,7 +22,6 @@ import CsvUploader from './class-logs/CsvUploader';
 import { ExportDialog } from './class-logs/ExportDialog';
 import TutorPaymentSummary from './class-logs/TutorPaymentSummary';
 import StudentPaymentSummary from './class-logs/StudentPaymentSummary';
-import StudentPaymentRecorder from './class-logs/StudentPaymentRecorder';
 import { useClassLogs } from '@/hooks/useClassLogs';
 import {
   batchUpdateTutorPaymentDate,
@@ -157,10 +150,6 @@ const log = logger.create('ClassLogs');
 const ClassLogs: React.FC = () => {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [isExportOpen, setIsExportOpen] = useState(false);
-  const [isPaymentOpen, setIsPaymentOpen] = useState(false);
-  const [initialPaymentStudent, setInitialPaymentStudent] = useState<
-    string | undefined
-  >();
 
   const {
     searchTerm,
@@ -252,18 +241,6 @@ const ClassLogs: React.FC = () => {
         <h2 className="text-xl sm:text-2xl font-bold">Class Logs & Payments</h2>
         <div className="flex flex-wrap items-center gap-2">
           <Button
-            variant="default"
-            size="sm"
-            onClick={() => {
-              setInitialPaymentStudent(undefined);
-              setIsPaymentOpen(true);
-            }}
-            className="flex items-center gap-2"
-          >
-            <DollarSign className="h-4 w-4" />
-            Add Credits
-          </Button>
-          <Button
             variant="outline"
             size="sm"
             onClick={() => setIsExportOpen(true)}
@@ -344,12 +321,7 @@ const ClassLogs: React.FC = () => {
 
       {/* Payment Summaries */}
       <TutorPaymentSummary onPaymentUpdated={handleRefreshData} />
-      <StudentPaymentSummary
-        onAddCredits={(studentName) => {
-          setInitialPaymentStudent(studentName);
-          setIsPaymentOpen(true);
-        }}
-      />
+      <StudentPaymentSummary />
 
       <RecentCancellations />
 
@@ -420,16 +392,6 @@ const ClassLogs: React.FC = () => {
         onExport={handleExportCSV}
         totalRecords={totals.totalCount}
         isLoading={isExportLoading}
-      />
-
-      <StudentPaymentRecorder
-        open={isPaymentOpen}
-        onOpenChange={(open) => {
-          setIsPaymentOpen(open);
-          if (!open) setInitialPaymentStudent(undefined);
-        }}
-        onPaymentRecorded={handleRefreshData}
-        initialStudentName={initialPaymentStudent}
       />
     </div>
   );

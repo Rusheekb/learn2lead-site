@@ -13,7 +13,6 @@ import {
   AdminDashboardSkeleton,
   TableSkeleton,
 } from '@/components/shared/skeletons';
-import StudentPaymentRecorder from '@/components/admin/class-logs/StudentPaymentRecorder';
 import { ContentTransition } from '@/components/shared/PageTransition';
 import ProfilePage from '@/components/shared/ProfilePage';
 
@@ -60,10 +59,6 @@ const AdminDashboard: React.FC = () => {
   const [searchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'schedule';
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [isPaymentOpen, setIsPaymentOpen] = useState(false);
-  const [initialPaymentStudent, setInitialPaymentStudent] = useState<
-    string | undefined
-  >();
 
   const {
     data: assignments = [],
@@ -166,12 +161,7 @@ const AdminDashboard: React.FC = () => {
       default:
         return (
           <Suspense fallback={<AdminDashboardSkeleton />}>
-            <AdminHomeView
-              onAddCredits={(name) => {
-                setInitialPaymentStudent(name);
-                setIsPaymentOpen(true);
-              }}
-            />
+            <AdminHomeView />
           </Suspense>
         );
     }
@@ -188,16 +178,6 @@ const AdminDashboard: React.FC = () => {
       <UserDetailModal
         user={selectedUser}
         onClose={() => setSelectedUser(null)}
-      />
-
-      <StudentPaymentRecorder
-        open={isPaymentOpen}
-        onOpenChange={(open) => {
-          setIsPaymentOpen(open);
-          if (!open) setInitialPaymentStudent(undefined);
-        }}
-        onPaymentRecorded={() => {}}
-        initialStudentName={initialPaymentStudent}
       />
     </div>
   );

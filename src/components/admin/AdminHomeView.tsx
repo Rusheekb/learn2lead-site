@@ -1,7 +1,6 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   AlertTriangle,
@@ -87,9 +86,7 @@ const today = new Date().toISOString().split('T')[0];
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-const AdminHomeView: React.FC<{ onAddCredits?: (name: string) => void }> = ({
-  onAddCredits,
-}) => {
+const AdminHomeView: React.FC = () => {
   // Today's classes
   const { data: todayClasses = [], isLoading: loadingToday } = useQuery<
     TodayClass[]
@@ -239,16 +236,6 @@ const AdminHomeView: React.FC<{ onAddCredits?: (name: string) => void }> = ({
                         {format(parseISO(row.next_class_date), 'EEE, MMM d')}
                       </p>
                     </div>
-                    {onAddCredits && (
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        className="shrink-0"
-                        onClick={() => onAddCredits(row.student_name)}
-                      >
-                        Add Credits
-                      </Button>
-                    )}
                   </div>
                 ))}
               </div>
@@ -259,7 +246,7 @@ const AdminHomeView: React.FC<{ onAddCredits?: (name: string) => void }> = ({
 
       {/* ── Payment Summaries ─────────────────────────────────────────────── */}
       <TutorPaymentSummary onPaymentUpdated={() => {}} />
-      <StudentPaymentSummary onAddCredits={(name) => onAddCredits?.(name)} />
+      <StudentPaymentSummary />
 
       {/* ── At-risk Students ──────────────────────────────────────────────── */}
       <Card>

@@ -1,16 +1,11 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clock, CheckCircle2, AlertCircle, AlertTriangle } from 'lucide-react';
+import { Clock, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { classLogsKeys } from '@/hooks/useClassLogs';
 import { format, parseISO } from 'date-fns';
-
-interface StudentPaymentSummaryProps {
-  onAddCredits: (studentName: string) => void;
-}
 
 interface StudentCreditRow {
   student_name: string;
@@ -34,9 +29,7 @@ function formatLastClass(date: string | null): string {
   }
 }
 
-const StudentPaymentSummary: React.FC<StudentPaymentSummaryProps> = ({
-  onAddCredits,
-}) => {
+const StudentPaymentSummary: React.FC = () => {
   const { data: rows = [], isError } = useQuery<StudentCreditRow[]>({
     queryKey: [...classLogsKeys.all, 'student-credit-summary'],
     queryFn: async () => {
@@ -91,41 +84,22 @@ const StudentPaymentSummary: React.FC<StudentPaymentSummaryProps> = ({
               className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 p-3 rounded-lg border border-border bg-muted/30"
             >
               <div className="min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-medium truncate">
-                    {row.student_name}
-                  </span>
-                  {!row.class_rate && (
-                    <span title="No class rate set">
-                      <AlertTriangle className="h-3.5 w-3.5 text-amber-500 flex-shrink-0" />
-                    </span>
-                  )}
-                </div>
+                <span className="font-medium truncate">{row.student_name}</span>
                 <div className="text-sm text-muted-foreground">
                   {formatLastClass(row.last_class_date)}
                 </div>
               </div>
-              <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-4">
-                <Badge
-                  variant={creditBadgeVariant(Number(row.credits))}
-                  className={
-                    Number(row.credits) > 0
-                      ? 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400'
-                      : ''
-                  }
-                >
-                  {Number(row.credits)} hr{Number(row.credits) !== 1 ? 's' : ''}{' '}
-                  left
-                </Badge>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => onAddCredits(row.student_name)}
-                  className="whitespace-nowrap"
-                >
-                  Add Credits
-                </Button>
-              </div>
+              <Badge
+                variant={creditBadgeVariant(Number(row.credits))}
+                className={
+                  Number(row.credits) > 0
+                    ? 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400'
+                    : ''
+                }
+              >
+                {Number(row.credits)} hr{Number(row.credits) !== 1 ? 's' : ''}{' '}
+                left
+              </Badge>
             </div>
           ))}
         </div>
