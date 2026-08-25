@@ -7,7 +7,6 @@ import {
   LayoutDashboard,
   FileText,
   Calendar,
-  CreditCard,
   BarChart2,
   Gift,
   Users,
@@ -84,13 +83,6 @@ const NAV_ITEMS: Omit<SearchResult, 'id'>[] = [
     type: 'nav',
     url: '/admin-dashboard?tab=referrals',
     icon: <Gift className="h-4 w-4" />,
-  },
-  {
-    label: 'Credit Tools',
-    sublabel: 'Manual credit allocation',
-    type: 'nav',
-    url: '/admin-dashboard?tab=credits',
-    icon: <CreditCard className="h-4 w-4" />,
   },
   {
     label: 'Payments',

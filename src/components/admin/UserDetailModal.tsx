@@ -335,8 +335,8 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
                         ${prepaidBalance.toFixed(2)}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Surplus from overpayment, auto-applied to future
-                        classes.
+                        Legacy surplus from a past overpayment. Nothing applies
+                        this automatically — factor it in manually if relevant.
                       </p>
                     </div>
                   )}

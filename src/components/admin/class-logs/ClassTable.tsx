@@ -52,8 +52,6 @@ interface ClassTableProps {
   totalFiltered: number;
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
-  studentPaymentMethods?: Record<string, string>;
-  onToggleStudentPayment?: (classId: string, currentlyPaid: boolean) => void;
   onToggleTutorPayment?: (classId: string, currentlyPaid: boolean) => void;
   onBulkAction?: (action: BulkAction, classIds: string[]) => Promise<void>;
 }

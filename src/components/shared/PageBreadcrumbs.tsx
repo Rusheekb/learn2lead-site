@@ -42,7 +42,6 @@ const tabLabels: Record<string, Record<string, string>> = {
     tutors: 'Tutors',
     students: 'Students',
     assignments: 'Assignments',
-    credits: 'Credits',
     reports: 'Reports',
     settings: 'Settings',
   },

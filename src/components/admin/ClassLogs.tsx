@@ -188,7 +188,6 @@ const ClassLogs: React.FC = () => {
     handlePageChange,
     handlePageSizeChange,
 
-    studentPaymentMethods,
     handleToggleStudentPayment,
     handleToggleTutorPayment,
   } = useClassLogs();
@@ -351,8 +350,6 @@ const ClassLogs: React.FC = () => {
         totalFiltered={totals.totalCount}
         onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}
-        studentPaymentMethods={studentPaymentMethods}
-        onToggleStudentPayment={handleToggleStudentPayment}
         onToggleTutorPayment={handleToggleTutorPayment}
         onBulkAction={handleBulkAction}
       />

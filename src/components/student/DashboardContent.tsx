@@ -18,9 +18,6 @@ const DashboardContent: React.FC<DashboardContentProps> = memo(
   ({ studentId, selectedSubject, onSubjectClick }) => {
     return (
       <>
-        <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
-          My Learning Portal
-        </h2>
         <GettingStartedCard />
         <SimpleCreditsCounter />
         <div className="mt-6 sm:mt-8">

@@ -233,38 +233,6 @@ export const useClassLogs = () => {
     enabled: false, // Only fetch on demand
   });
 
-  // ─── Student payment methods ─────────────────────────────────────────
-  const { data: studentPaymentMethods = {} } = useQuery({
-    queryKey: ['student-payment-methods'],
-    queryFn: async () => {
-      // Fetch students and profiles to map profile ID -> payment_method
-      const { data: students, error: sErr } = await supabase
-        .from('students')
-        .select('email, payment_method');
-      if (sErr) throw sErr;
-
-      const { data: profiles, error: pErr } = await supabase
-        .from('profiles')
-        .select('id, email')
-        .eq('role', 'student');
-      if (pErr) throw pErr;
-
-      // Build email -> payment_method, then profileId -> payment_method
-      const emailToMethod: Record<string, string> = {};
-      students?.forEach((s: any) => {
-        if (s.email) emailToMethod[s.email] = s.payment_method || 'zelle';
-      });
-
-      const map: Record<string, string> = {};
-      profiles?.forEach((p: any) => {
-        if (p.email && emailToMethod[p.email]) {
-          map[p.id] = emailToMethod[p.email];
-        }
-      });
-      return map;
-    },
-  });
-
   // ─── Realtime: invalidate queries on changes ─────────────────────────
   useEffect(() => {
     const channel = supabase
@@ -605,7 +573,6 @@ export const useClassLogs = () => {
     handleDownloadFile: () => {},
 
     // Payment
-    studentPaymentMethods,
     handleToggleStudentPayment,
     handleToggleTutorPayment,
 
