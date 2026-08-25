@@ -325,33 +325,24 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
                       </span>
                     </div>
                   </div>
-                  {isStripe ? (
-                    <p className="text-sm text-muted-foreground">
-                      Managed by Stripe — no manual action needed.
-                    </p>
-                  ) : (
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">
-                        {studentPaid && selectedClass.studentPaymentDate
-                          ? `Paid on ${format(selectedClass.studentPaymentDate, 'M/d/yy')}`
-                          : 'Not yet received'}
-                      </span>
-                      {onToggleStudentPayment && (
-                        <Button
-                          size="sm"
-                          variant={studentPaid ? 'outline' : 'default'}
-                          onClick={() =>
-                            onToggleStudentPayment(
-                              selectedClass.id,
-                              studentPaid
-                            )
-                          }
-                        >
-                          {studentPaid ? 'Mark Unpaid' : 'Mark Paid'}
-                        </Button>
-                      )}
-                    </div>
-                  )}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">
+                      {studentPaid && selectedClass.studentPaymentDate
+                        ? `Paid on ${format(selectedClass.studentPaymentDate, 'M/d/yy')}`
+                        : 'Not yet received'}
+                    </span>
+                    {onToggleStudentPayment && (
+                      <Button
+                        size="sm"
+                        variant={studentPaid ? 'outline' : 'default'}
+                        onClick={() =>
+                          onToggleStudentPayment(selectedClass.id, studentPaid)
+                        }
+                      >
+                        {studentPaid ? 'Mark Unpaid' : 'Mark Paid'}
+                      </Button>
+                    )}
+                  </div>
                 </div>
 
                 <div className="p-4 rounded-lg border border-border space-y-2">

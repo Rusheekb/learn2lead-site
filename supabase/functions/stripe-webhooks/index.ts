@@ -475,13 +475,15 @@ async function allocateCreditsFromCheckout(
   }
 
   let profileId = userId;
+  let profileEmail = customerEmail;
   if (!profileId && customerEmail) {
     const { data: profile } = await supabaseClient
       .from('profiles')
-      .select('id')
+      .select('id, email')
       .ilike('email', customerEmail)
       .single();
     profileId = profile?.id;
+    profileEmail = profile?.email || customerEmail;
   }
 
   if (!profileId) {
@@ -493,6 +495,17 @@ async function allocateCreditsFromCheckout(
       `Cannot find user for credit allocation — email: ${customerEmail}, userId: ${userId} — Stripe will retry`
     );
   }
+
+  if (!profileEmail) {
+    const { data: profile } = await supabaseClient
+      .from('profiles')
+      .select('email')
+      .eq('id', profileId)
+      .single();
+    profileEmail = profile?.email;
+  }
+
+  await markStudentAsStripePayer(supabaseClient, profileEmail || '');
 
   const { data: existingSub } = await supabaseClient
     .from('student_subscriptions')
@@ -605,6 +618,37 @@ async function allocateCreditsFromCheckout(
       );
     }
   }
+}
+
+// ─── markStudentAsStripePayer ──────────────────────────────────────────────────
+// Runs on every successful credit-pack purchase so students.payment_method stays
+// accurate (it's purely informational display now — complete_class_atomic no
+// longer branches on it — but the "Payment Method: Stripe/Zelle" badge in the
+// admin Class Logs UI still reads it) without an admin needing to flip the
+// manual dropdown in UserDetailModal/StudentForm. Matched by email — students
+// has no profile_id column, same join direction complete_class_atomic uses
+// (profiles.id -> profiles.email -> students.email). No .neq('payment_method',
+// 'stripe') guard: the column is nullable, and neq against NULL evaluates to
+// unknown (skipped) in Postgres/PostgREST, which would miss exactly the rows
+// most likely to need this. Unconditional + idempotent is simpler and correct.
+// No-ops quietly if there's no matching students row.
+async function markStudentAsStripePayer(supabaseClient: any, email: string) {
+  if (!email) {
+    logStep('WARNING: no email resolved, cannot set payment_method=stripe');
+    return;
+  }
+  const { error } = await supabaseClient
+    .from('students')
+    .update({ payment_method: 'stripe' })
+    .ilike('email', email);
+  if (error) {
+    logStep('WARNING: failed to set students.payment_method=stripe', {
+      email,
+      error: error.message,
+    });
+    return;
+  }
+  logStep('students.payment_method set to stripe', { email });
 }
 
 // ─── refund.created ─────────────────────────────────────────────────────────────
