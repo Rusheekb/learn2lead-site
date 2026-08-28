@@ -203,38 +203,40 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
               <h4 className="text-sm font-medium text-gray-500 mb-2">
                 Class Materials
               </h4>
-              {selectedEvent.materialsUrl &&
-              selectedEvent.materialsUrl.length > 0 ? (
-                <ul className="space-y-2">
-                  {selectedEvent.materialsUrl.map((url, index) => (
-                    <li
-                      key={index}
-                      className="flex items-center justify-between p-2 border rounded-md"
-                    >
-                      <a
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-tutoring-blue hover:underline flex items-center"
+              <div className="max-h-[240px] overflow-y-auto border rounded-md p-3">
+                {selectedEvent.materialsUrl &&
+                selectedEvent.materialsUrl.length > 0 ? (
+                  <div className="space-y-2">
+                    {selectedEvent.materialsUrl.map((url, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between border p-2 rounded"
                       >
-                        <FileText className="h-4 w-4 mr-2" />
-                        <span>{getFilenameFromUrl(url || '')}</span>
-                      </a>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleRemoveMaterial(url)}
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-gray-500">
-                  No materials uploaded for this class.
-                </p>
-              )}
+                        <a
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-tutoring-blue hover:underline flex items-center"
+                        >
+                          <FileText className="h-4 w-4 mr-2" />
+                          <span>{getFilenameFromUrl(url || '')}</span>
+                        </a>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveMaterial(url)}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-center py-4">
+                    No materials uploaded
+                  </p>
+                )}
+              </div>
             </div>
 
             <Separator />

@@ -438,33 +438,35 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
                   <h4 className="text-sm font-medium text-muted-foreground">
                     Class Materials
                   </h4>
-                  {selectedClass.materialsUrl &&
-                  selectedClass.materialsUrl.length > 0 ? (
-                    <ul className="mt-2 space-y-2">
-                      {selectedClass.materialsUrl.map(
-                        (url: string, index: number) => (
-                          <li
-                            key={index}
-                            className="p-2 border border-border rounded-md"
-                          >
-                            <a
-                              href={url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-primary hover:underline flex items-center gap-1"
+                  <div className="mt-2 max-h-[240px] overflow-y-auto border rounded-md p-3">
+                    {selectedClass.materialsUrl &&
+                    selectedClass.materialsUrl.length > 0 ? (
+                      <div className="space-y-2">
+                        {selectedClass.materialsUrl.map(
+                          (url: string, index: number) => (
+                            <div
+                              key={index}
+                              className="border p-2 rounded flex items-center"
                             >
-                              <span>{getFilenameFromUrl(url)}</span>
-                              <ExternalLink className="h-3 w-3" />
-                            </a>
-                          </li>
-                        )
-                      )}
-                    </ul>
-                  ) : (
-                    <p className="text-muted-foreground mt-2">
-                      No materials uploaded for this class.
-                    </p>
-                  )}
+                              <a
+                                href={url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-primary hover:underline flex items-center gap-1"
+                              >
+                                <span>{getFilenameFromUrl(url)}</span>
+                                <ExternalLink className="h-3 w-3" />
+                              </a>
+                            </div>
+                          )
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground text-center py-4">
+                        No materials uploaded
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 <div>
