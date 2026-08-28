@@ -1,6 +1,11 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 import { Resend } from 'npm:resend@2.0.0';
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
+import {
+  getRateLimitKey,
+  checkRateLimit,
+  rateLimitResponse,
+} from '../_shared/rateLimiter.ts';
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   console.log(
@@ -14,6 +19,13 @@ Deno.serve(async (req) => {
 
   const origin = req.headers.get('origin');
   const corsHeaders = getCorsHeaders(origin);
+
+  const rateLimitKey = getRateLimitKey(req, 'notify-assignment');
+  const { limited, retryAfterMs } = checkRateLimit(rateLimitKey, {
+    maxRequests: 20,
+    windowMs: 60_000,
+  });
+  if (limited) return rateLimitResponse(retryAfterMs!, corsHeaders);
 
   try {
     const supabase = createClient(
