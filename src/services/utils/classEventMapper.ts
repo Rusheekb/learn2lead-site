@@ -32,6 +32,7 @@ interface DbRecord {
   HW?: string | null;
   'Class Cost'?: number | null;
   'Tutor Cost'?: number | null;
+  student_user_id?: string | null;
   student_payment_date?: string | Date | null;
   tutor_payment_date?: string | Date | null;
   tutor_is_paid?: boolean | null;
@@ -105,6 +106,7 @@ export const transformDbRecordToClassEvent = (record: unknown): ClassEvent => {
       notes: dbRecord['Additional Info'] || '',
       classCost,
       tutorCost,
+      studentId: dbRecord.student_user_id || undefined,
       studentPaymentDate,
       tutorPaymentDate,
       tutorIsPaid,

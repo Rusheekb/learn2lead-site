@@ -54,6 +54,11 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
   const [classCost, setClassCost] = useState('');
   const [tutorCost, setTutorCost] = useState('');
   const [savingCosts, setSavingCosts] = useState(false);
+  const [lastStripePayment, setLastStripePayment] = useState<{
+    date: Date;
+    amount: number;
+  } | null>(null);
+  const [loadingStripePayment, setLoadingStripePayment] = useState(false);
 
   useEffect(() => {
     if (selectedClass) {
@@ -62,6 +67,55 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
       setEditingCosts(false);
     }
   }, [selectedClass]);
+
+  useEffect(() => {
+    const studentId = selectedClass?.studentId;
+    if (!studentId) {
+      setLastStripePayment(null);
+      return;
+    }
+
+    let cancelled = false;
+    setLoadingStripePayment(true);
+    // class_logs.student_payment_date only reflects when this class was
+    // logged (always today, by design — see complete_class_atomic), not
+    // when the student actually paid. Credits are a pooled balance, not
+    // tracked per-class to a specific purchase, so the most honest "real"
+    // date we can show is the student's most recent genuine Stripe
+    // payment — a 'credit' ledger row with a real dollar_amount (excludes
+    // admin manual adjustments and referral bonuses, neither of which set
+    // dollar_amount).
+    supabase
+      .from('class_credits_ledger')
+      .select('created_at, dollar_amount')
+      .eq('student_id', studentId)
+      .eq('transaction_type', 'credit')
+      .not('dollar_amount', 'is', null)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (cancelled) return;
+        if (error) {
+          log.error('Error fetching last Stripe payment:', error);
+          setLastStripePayment(null);
+        } else {
+          setLastStripePayment(
+            data
+              ? {
+                  date: new Date(data.created_at as string),
+                  amount: data.dollar_amount as number,
+                }
+              : null
+          );
+        }
+        setLoadingStripePayment(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedClass?.studentId]);
 
   if (!selectedClass) return null;
 
@@ -315,9 +369,13 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">
-                      {studentPaid && selectedClass.studentPaymentDate
-                        ? `Paid on ${format(selectedClass.studentPaymentDate, 'M/d/yy')}`
-                        : 'Not yet received'}
+                      {!studentPaid
+                        ? 'Not yet received'
+                        : loadingStripePayment
+                          ? 'Checking Stripe…'
+                          : lastStripePayment
+                            ? `Last Stripe payment: ${format(lastStripePayment.date, 'M/d/yy')} ($${lastStripePayment.amount.toFixed(2)})`
+                            : 'Paid via credit adjustment (no Stripe payment on record)'}
                     </span>
                     {onToggleStudentPayment && (
                       <Button
