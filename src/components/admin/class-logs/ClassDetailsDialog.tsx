@@ -173,11 +173,10 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
 
           <div className="flex-1 overflow-y-auto py-4">
             <Tabs value={activeDetailsTab} onValueChange={setActiveDetailsTab}>
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="details">Details</TabsTrigger>
                 <TabsTrigger value="payments">Payments</TabsTrigger>
                 <TabsTrigger value="materials">Materials</TabsTrigger>
-                <TabsTrigger value="student-content">Student</TabsTrigger>
               </TabsList>
 
               <TabsContent value="details" className="space-y-4 pt-4">
@@ -424,7 +423,7 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
                 </div>
               </TabsContent>
 
-              <TabsContent value="materials" className="space-y-4 pt-4">
+              <TabsContent value="materials" className="space-y-6 pt-4">
                 <div>
                   <h4 className="text-sm font-medium text-muted-foreground">
                     Class Materials
@@ -457,15 +456,20 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
                     </p>
                   )}
                 </div>
-              </TabsContent>
 
-              <TabsContent value="student-content" className="space-y-4 pt-4">
-                <StudentContent
-                  classId={selectedClass.id}
-                  uploads={studentUploads}
-                  onDownload={handleDownloadFile}
-                  onView={handleViewFile}
-                />
+                <div>
+                  <h4 className="text-sm font-medium text-muted-foreground">
+                    Student Uploads
+                  </h4>
+                  <div className="mt-2">
+                    <StudentContent
+                      classId={selectedClass.id}
+                      uploads={studentUploads}
+                      onDownload={handleDownloadFile}
+                      onView={handleViewFile}
+                    />
+                  </div>
+                </div>
               </TabsContent>
             </Tabs>
           </div>

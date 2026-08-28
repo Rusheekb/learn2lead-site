@@ -106,10 +106,9 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
       />
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3 bg-white">
+        <TabsList className="grid w-full grid-cols-2 bg-white">
           <TabsTrigger value="details">Class Details</TabsTrigger>
           <TabsTrigger value="materials">Materials</TabsTrigger>
-          <TabsTrigger value="student-content">Student Content</TabsTrigger>
         </TabsList>
 
         <TabsContent value="details" className="space-y-4 pt-4">
@@ -237,16 +236,21 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
                 </p>
               )}
             </div>
-          </div>
-        </TabsContent>
 
-        <TabsContent value="student-content" className="space-y-4 pt-4">
-          <StudentContent
-            classId={selectedEvent.id}
-            uploads={studentUploads}
-            onDownload={onDownloadFile}
-            onView={onViewFile}
-          />
+            <Separator />
+
+            <div>
+              <h4 className="text-sm font-medium text-gray-500 mb-2">
+                Student Uploads
+              </h4>
+              <StudentContent
+                classId={selectedEvent.id}
+                uploads={studentUploads}
+                onDownload={onDownloadFile}
+                onView={onViewFile}
+              />
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
