@@ -154,6 +154,11 @@ export const completeClass = async (
         p_content: data.content,
         p_hw: data.hw,
         p_additional_info: data.additionalInfo,
+        // Same rounded duration deduct-class-credit just charged (see
+        // creditsDeducted above) — reused here so Class Cost/Tutor Cost
+        // scale by the exact same number, instead of re-deriving duration
+        // a second time and risking drift for odd durations.
+        p_credits_charged: creditsDeducted,
       }
     );
 

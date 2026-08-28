@@ -218,6 +218,16 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
                       {formatTime(selectedClass.endTime)}
                     </p>
                   </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-muted-foreground">
+                      Duration
+                    </h4>
+                    <p className="text-foreground">
+                      {selectedClass.duration
+                        ? `${selectedClass.duration} hr${selectedClass.duration === 1 ? '' : 's'}`
+                        : 'Not available'}
+                    </p>
+                  </div>
                 </div>
 
                 {selectedClass.zoomLink && (

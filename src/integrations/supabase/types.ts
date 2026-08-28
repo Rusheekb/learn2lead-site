@@ -1198,6 +1198,7 @@ export type Database = {
           p_class_id: string;
           p_class_number: string;
           p_content: string;
+          p_credits_charged?: number;
           p_date: string;
           p_day: string;
           p_hw: string;
