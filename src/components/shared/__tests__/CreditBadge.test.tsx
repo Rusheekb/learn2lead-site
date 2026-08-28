@@ -28,19 +28,19 @@ describe('CreditBadge', () => {
   });
 
   it('calculates and displays amount owed for negative credits', () => {
-    render(<CreditBadge credits={-3} pricePerClass={20} />);
+    render(<CreditBadge credits={-3} pricePerHour={20} />);
     expect(
       screen.getByText(/3 hours overdrawn \(\$60 owed\)/)
     ).toBeInTheDocument();
   });
 
   it('hides amount when hideAmount prop is true', () => {
-    render(<CreditBadge credits={-3} pricePerClass={20} hideAmount />);
+    render(<CreditBadge credits={-3} pricePerHour={20} hideAmount />);
     expect(screen.getByText('3 hours overdrawn')).toBeInTheDocument();
     expect(screen.queryByText(/\$60/)).not.toBeInTheDocument();
   });
 
-  it('does not show amount owed without pricePerClass', () => {
+  it('does not show amount owed without pricePerHour', () => {
     render(<CreditBadge credits={-3} />);
     expect(screen.getByText('3 hours overdrawn')).toBeInTheDocument();
     expect(screen.queryByText(/owed/)).not.toBeInTheDocument();

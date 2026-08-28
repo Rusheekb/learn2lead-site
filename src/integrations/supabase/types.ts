@@ -820,7 +820,7 @@ export type Database = {
           current_period_end: string | null;
           current_period_start: string | null;
           id: string;
-          manual_price_per_class: number | null;
+          manual_price_per_hour: number | null;
           manual_priced_classes_remaining: number | null;
           plan_id: string | null;
           status: string;
@@ -836,7 +836,7 @@ export type Database = {
           current_period_end?: string | null;
           current_period_start?: string | null;
           id?: string;
-          manual_price_per_class?: number | null;
+          manual_price_per_hour?: number | null;
           manual_priced_classes_remaining?: number | null;
           plan_id?: string | null;
           status: string;
@@ -852,7 +852,7 @@ export type Database = {
           current_period_end?: string | null;
           current_period_start?: string | null;
           id?: string;
-          manual_price_per_class?: number | null;
+          manual_price_per_hour?: number | null;
           manual_priced_classes_remaining?: number | null;
           plan_id?: string | null;
           status?: string;
@@ -959,7 +959,7 @@ export type Database = {
           id: string;
           monthly_price: number;
           name: string;
-          price_per_class: number;
+          price_per_hour: number;
           stripe_price_id: string;
           stripe_product_id: string;
         };
@@ -972,7 +972,7 @@ export type Database = {
           id?: string;
           monthly_price: number;
           name: string;
-          price_per_class: number;
+          price_per_hour: number;
           stripe_price_id: string;
           stripe_product_id: string;
         };
@@ -985,7 +985,7 @@ export type Database = {
           id?: string;
           monthly_price?: number;
           name?: string;
-          price_per_class?: number;
+          price_per_hour?: number;
           stripe_price_id?: string;
           stripe_product_id?: string;
         };

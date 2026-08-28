@@ -6,7 +6,7 @@ import { CreditBadge } from '@/components/shared/CreditBadge';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export const SimpleCreditsCounter: React.FC = memo(() => {
-  const { creditsRemaining, pricePerClass, isLoading } = useSubscription();
+  const { creditsRemaining, pricePerHour, isLoading } = useSubscription();
 
   if (isLoading) {
     return (
@@ -25,7 +25,7 @@ export const SimpleCreditsCounter: React.FC = memo(() => {
         <Link to="/pricing" className="rounded-full">
           <CreditBadge
             credits={creditsRemaining}
-            pricePerClass={pricePerClass}
+            pricePerHour={pricePerHour}
             hideAmount
             className="cursor-pointer hover:opacity-80 transition-opacity"
           />

@@ -15,7 +15,7 @@ export interface SubscriptionState {
   subscribed: boolean;
   creditsRemaining: number | null;
   planName: string | null;
-  pricePerClass: number | null;
+  pricePerHour: number | null;
   isLoading: boolean;
   error: string | null;
 }
@@ -38,7 +38,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({
     subscribed: false,
     creditsRemaining: null,
     planName: null,
-    pricePerClass: null,
+    pricePerHour: null,
     isLoading: true,
     error: null,
   });
@@ -72,7 +72,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({
         subscribed: false,
         creditsRemaining: null,
         planName: null,
-        pricePerClass: null,
+        pricePerHour: null,
         isLoading: false,
         error: null,
       });
@@ -105,7 +105,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({
             subscribed: false,
             creditsRemaining: null,
             planName: null,
-            pricePerClass: null,
+            pricePerHour: null,
             isLoading: false,
             error: 'Session expired. Please refresh the page.',
           });
@@ -126,7 +126,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({
             subscribed: false,
             creditsRemaining: null,
             planName: null,
-            pricePerClass: null,
+            pricePerHour: null,
             isLoading: false,
             error: 'Session expired. Please refresh the page.',
           });
@@ -140,7 +140,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({
         subscribed: data.subscribed || false,
         creditsRemaining: data.credits_remaining ?? null,
         planName: data.plan_name || null,
-        pricePerClass: data.price_per_class ?? null,
+        pricePerHour: data.price_per_hour ?? null,
         isLoading: false,
         error: null,
       });

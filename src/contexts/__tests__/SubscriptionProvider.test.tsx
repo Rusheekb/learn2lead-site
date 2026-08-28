@@ -101,7 +101,7 @@ describe('SubscriptionProvider', () => {
           subscribed: true,
           credits_remaining: 8,
           plan_name: 'Standard',
-          price_per_class: 20,
+          price_per_hour: 20,
           product_id: 'prod_123',
           subscription_end: '2025-01-15',
           is_paused: false,
@@ -124,7 +124,7 @@ describe('SubscriptionProvider', () => {
 
       expect(capturedContext?.creditsRemaining).toBe(8);
       expect(capturedContext?.planName).toBe('Standard');
-      expect(capturedContext?.pricePerClass).toBe(20);
+      expect(capturedContext?.pricePerHour).toBe(20);
       expect(capturedContext?.isLoading).toBe(false);
     });
 

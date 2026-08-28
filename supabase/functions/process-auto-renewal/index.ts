@@ -495,8 +495,8 @@ async function sendAutoRenewalEmail(
               <table style="width: 100%; border-collapse: collapse;">
                 <tr><td style="padding: 8px 0;">Pack</td><td style="text-align: right; font-weight: bold;">${planName}</td></tr>
                 <tr><td style="padding: 8px 0;">Amount Charged</td><td style="text-align: right; font-weight: bold;">$${amountCharged.toFixed(2)}</td></tr>
-                <tr><td style="padding: 8px 0;">Credits Added</td><td style="text-align: right; font-weight: bold; color: #16a34a;">+${creditsAdded}</td></tr>
-                <tr><td style="padding: 8px 0;">Available Balance</td><td style="text-align: right; font-weight: bold; color: #16a34a;">${totalCredits} classes</td></tr>
+                <tr><td style="padding: 8px 0;">Credits Added</td><td style="text-align: right; font-weight: bold; color: #16a34a;">+${creditsAdded} hrs</td></tr>
+                <tr><td style="padding: 8px 0;">Available Balance</td><td style="text-align: right; font-weight: bold; color: #16a34a;">${totalCredits} hrs</td></tr>
               </table>
             </div>
             <p>You can manage your auto-renewal settings from your dashboard at any time.</p>

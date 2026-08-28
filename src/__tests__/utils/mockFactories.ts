@@ -20,7 +20,7 @@ export interface MockSubscription {
   credits_remaining: number;
   credits_allocated: number;
   plan_name?: string;
-  price_per_class?: number;
+  price_per_hour?: number;
   is_paused?: boolean;
   pause_resumes_at?: string | null;
 }
@@ -59,7 +59,7 @@ export function createMockSubscription(
     credits_remaining: 10,
     credits_allocated: 12,
     plan_name: 'Standard',
-    price_per_class: 20,
+    price_per_hour: 20,
     is_paused: false,
     pause_resumes_at: null,
     ...overrides,

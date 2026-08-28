@@ -37,7 +37,7 @@ export interface CheckSubscriptionResponse {
   subscribed: boolean;
   credits_remaining: number;
   plan_name: string | null;
-  price_per_class: number | null;
+  price_per_hour: number | null;
   subscription_end?: string;
   product_id?: string;
   is_paused?: boolean;
@@ -120,7 +120,7 @@ export const edgeFunctionMocks = {
         subscribed: true,
         credits_remaining: credits,
         plan_name: planName,
-        price_per_class: 20,
+        price_per_hour: 20,
         is_paused: false,
         pause_resumes_at: null,
       },
@@ -132,7 +132,7 @@ export const edgeFunctionMocks = {
         subscribed: false,
         credits_remaining: 0,
         plan_name: null,
-        price_per_class: null,
+        price_per_hour: null,
       },
       error: null,
     }),
@@ -145,7 +145,7 @@ export const edgeFunctionMocks = {
         subscribed: true,
         credits_remaining: credits,
         plan_name: 'Standard',
-        price_per_class: 20,
+        price_per_hour: 20,
         is_paused: true,
         pause_resumes_at: resumesAt,
       },
@@ -159,7 +159,7 @@ export const edgeFunctionMocks = {
         subscribed: true,
         credits_remaining: credits,
         plan_name: 'Basic',
-        price_per_class: 17.5,
+        price_per_hour: 17.5,
         is_paused: false,
       },
       error: null,
@@ -172,7 +172,7 @@ export const edgeFunctionMocks = {
         subscribed: true,
         credits_remaining: credits,
         plan_name: 'Standard',
-        price_per_class: 20,
+        price_per_hour: 20,
         is_paused: false,
       },
       error: null,

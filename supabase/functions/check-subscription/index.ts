@@ -149,12 +149,12 @@ Deno.serve(async (req) => {
     let creditsRemaining = 0;
     let hasAccount = false;
     let planName = null;
-    let pricePerClass = null;
+    let pricePerHour = null;
 
     const { data: subData, error: subError } = await supabaseClient
       .from('student_subscriptions')
       .select(
-        'id, status, credits_remaining, plan_id, subscription_plans(name, price_per_class)'
+        'id, status, credits_remaining, plan_id, subscription_plans(name, price_per_hour)'
       )
       .eq('student_id', userId)
       .order('created_at', { ascending: false })
@@ -165,10 +165,10 @@ Deno.serve(async (req) => {
       hasAccount = true;
       creditsRemaining = subData.credits_remaining || 0;
       planName = subData.subscription_plans?.name || 'Direct Payment';
-      pricePerClass = subData.subscription_plans?.price_per_class || null;
+      pricePerHour = subData.subscription_plans?.price_per_hour || null;
       logStep('Found subscription record', {
         planName,
-        pricePerClass,
+        pricePerHour,
         creditsRemaining,
       });
     } else {
@@ -187,7 +187,7 @@ Deno.serve(async (req) => {
         hasAccount = true;
         creditsRemaining = ledgerData.balance_after || 0;
         planName = 'Direct Payment';
-        pricePerClass = 35;
+        pricePerHour = 35;
         logStep(
           'No subscription record but has ledger entries - manual/Zelle user',
           { creditsRemaining }
@@ -202,7 +202,7 @@ Deno.serve(async (req) => {
         subscribed: hasAccount,
         credits_remaining: creditsRemaining,
         plan_name: planName,
-        price_per_class: pricePerClass,
+        price_per_hour: pricePerHour,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

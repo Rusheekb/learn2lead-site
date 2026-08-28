@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { student_id, amount, reason, rate_per_class } = await req.json();
+    const { student_id, amount, reason, rate_per_hour } = await req.json();
 
     if (!student_id || typeof amount !== 'number' || amount === 0) {
       return new Response(
@@ -98,14 +98,14 @@ Deno.serve(async (req) => {
       );
     }
     if (
-      rate_per_class !== undefined &&
-      rate_per_class !== null &&
-      (typeof rate_per_class !== 'number' || rate_per_class <= 0)
+      rate_per_hour !== undefined &&
+      rate_per_hour !== null &&
+      (typeof rate_per_hour !== 'number' || rate_per_hour <= 0)
     ) {
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'rate_per_class must be a positive number when provided',
+          error: 'rate_per_hour must be a positive number when provided',
         }),
         {
           status: 400,
@@ -185,15 +185,11 @@ Deno.serve(async (req) => {
     // classes at this rate, then self-reverts to Stripe-derived pricing.
     // Best-effort — the credit adjustment itself already succeeded above, so
     // a failure here doesn't roll that back, just logs for follow-up.
-    if (
-      amount > 0 &&
-      typeof rate_per_class === 'number' &&
-      rate_per_class > 0
-    ) {
+    if (amount > 0 && typeof rate_per_hour === 'number' && rate_per_hour > 0) {
       const { error: rateError } = await supabaseAdmin
         .from('student_subscriptions')
         .update({
-          manual_price_per_class: rate_per_class,
+          manual_price_per_hour: rate_per_hour,
           manual_priced_classes_remaining: amount,
         })
         .eq('id', subscriptionId);

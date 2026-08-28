@@ -5,14 +5,14 @@ import { cn } from '@/lib/utils';
 
 interface CreditBadgeProps {
   credits: number | null;
-  pricePerClass?: number | null;
+  pricePerHour?: number | null;
   className?: string;
   hideAmount?: boolean;
 }
 
 export const CreditBadge: React.FC<CreditBadgeProps> = ({
   credits,
-  pricePerClass,
+  pricePerHour,
   className,
   hideAmount,
 }) => {
@@ -32,8 +32,8 @@ export const CreditBadge: React.FC<CreditBadgeProps> = ({
   const hourLabel = Math.abs(credits) === 1 ? 'hour' : 'hours';
 
   const amountOwed =
-    isOverdrawn && !hideAmount && pricePerClass != null
-      ? ` ($${(Math.abs(credits) * pricePerClass).toFixed(0)} owed)`
+    isOverdrawn && !hideAmount && pricePerHour != null
+      ? ` ($${(Math.abs(credits) * pricePerHour).toFixed(0)} owed)`
       : '';
 
   return (

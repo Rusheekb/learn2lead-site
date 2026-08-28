@@ -72,7 +72,7 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
   // Payment verification calculator — a sanity check for the admin (e.g.
   // "parent Zelled $300 for 10 classes" -> 10 classes x $30/class = $300
   // confirms the credit amount above is right).
-  const [costPerClass, setCostPerClass] = useState<string>('');
+  const [costPerHour, setCostPerHour] = useState<string>('');
 
   // The modal never unmounts (see AdminDashboard.tsx) — it just gets a new
   // `user` prop or `null` on close. Without this, a half-filled credit
@@ -81,7 +81,7 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
   useEffect(() => {
     setCreditAmount('');
     setCreditReason('');
-    setCostPerClass('');
+    setCostPerHour('');
     setShowDeleteDialog(false);
   }, [user]);
 
@@ -242,7 +242,7 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
       // Row-locked, atomic write via edge function (service role) — avoids the
       // stale-balance race of reading credits_remaining and writing it back
       // from the browser, especially against a concurrent class completion.
-      const rate = parseFloat(costPerClass);
+      const rate = parseFloat(costPerHour);
       const { data: sessionData } = await supabase.auth.getSession();
       const { data: result, error } = await supabase.functions.invoke(
         'admin-adjust-credits',
@@ -251,7 +251,7 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
             student_id: profile.id,
             amount,
             reason: creditReason.trim(),
-            rate_per_class:
+            rate_per_hour:
               amount > 0 && !isNaN(rate) && rate > 0 ? rate : undefined,
           },
           headers: {
@@ -279,7 +279,7 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
       queryClient.invalidateQueries({ queryKey: ['admin-activity-log'] });
       setCreditAmount('');
       setCreditReason('');
-      setCostPerClass('');
+      setCostPerHour('');
       // Refresh stats
       setStats((s) => (s ? { ...s, totalCredits: newBalance } : s));
     } catch (err) {
@@ -295,7 +295,7 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
   if (!user) return null;
 
   const calculatedTotal =
-    Math.abs(parseFloat(creditAmount) || 0) * (parseFloat(costPerClass) || 0);
+    Math.abs(parseFloat(creditAmount) || 0) * (parseFloat(costPerHour) || 0);
 
   return (
     <>
@@ -457,21 +457,21 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="costPerClass">
-                      Rate per class ($) — optional, one-off
+                    <Label htmlFor="costPerHour">
+                      Rate per hour ($) — optional, one-off
                     </Label>
                     <Input
-                      id="costPerClass"
+                      id="costPerHour"
                       type="number"
                       step="0.01"
                       min="0"
                       placeholder="e.g. 30.00"
-                      value={costPerClass}
-                      onChange={(e) => setCostPerClass(e.target.value)}
+                      value={costPerHour}
+                      onChange={(e) => setCostPerHour(e.target.value)}
                     />
                     <p className="text-xs text-muted-foreground rounded-md border bg-muted/30 px-2 py-1.5">
                       {Math.abs(parseFloat(creditAmount) || 0)} classes × $
-                      {(parseFloat(costPerClass) || 0).toFixed(2)} ={' '}
+                      {(parseFloat(costPerHour) || 0).toFixed(2)} ={' '}
                       <span className="font-medium text-foreground">
                         ${calculatedTotal.toFixed(2)}
                       </span>{' '}

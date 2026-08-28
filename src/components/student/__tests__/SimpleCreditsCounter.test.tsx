@@ -19,7 +19,7 @@ describe('SimpleCreditsCounter', () => {
   it('shows skeleton during loading', () => {
     mockUseSubscription.mockReturnValue({
       creditsRemaining: null,
-      pricePerClass: null,
+      pricePerHour: null,
       isLoading: true,
     });
 
@@ -33,7 +33,7 @@ describe('SimpleCreditsCounter', () => {
   it('renders CreditBadge with subscription data', () => {
     mockUseSubscription.mockReturnValue({
       creditsRemaining: 8,
-      pricePerClass: 20,
+      pricePerHour: 20,
       isLoading: false,
     });
 
@@ -45,7 +45,7 @@ describe('SimpleCreditsCounter', () => {
   it('shows Hours Available label', () => {
     mockUseSubscription.mockReturnValue({
       creditsRemaining: 5,
-      pricePerClass: 17.5,
+      pricePerHour: 17.5,
       isLoading: false,
     });
 
@@ -57,7 +57,7 @@ describe('SimpleCreditsCounter', () => {
   it('hides amount in CreditBadge (student privacy)', () => {
     mockUseSubscription.mockReturnValue({
       creditsRemaining: -3,
-      pricePerClass: 20,
+      pricePerHour: 20,
       isLoading: false,
     });
 
@@ -71,7 +71,7 @@ describe('SimpleCreditsCounter', () => {
   it('renders correctly with zero credits', () => {
     mockUseSubscription.mockReturnValue({
       creditsRemaining: 0,
-      pricePerClass: 20,
+      pricePerHour: 20,
       isLoading: false,
     });
 
@@ -83,7 +83,7 @@ describe('SimpleCreditsCounter', () => {
   it('handles null credits when not loading', () => {
     mockUseSubscription.mockReturnValue({
       creditsRemaining: null,
-      pricePerClass: null,
+      pricePerHour: null,
       isLoading: false,
     });
 
@@ -96,7 +96,7 @@ describe('SimpleCreditsCounter', () => {
   it('links the credit badge to the pricing page', () => {
     mockUseSubscription.mockReturnValue({
       creditsRemaining: 0,
-      pricePerClass: 20,
+      pricePerHour: 20,
       isLoading: false,
     });
 

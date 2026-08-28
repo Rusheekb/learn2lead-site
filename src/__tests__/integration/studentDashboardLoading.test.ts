@@ -69,7 +69,7 @@ describe('Student Dashboard Loading', () => {
           subscribed: true,
           credits_remaining: 8,
           plan_name: 'Standard',
-          price_per_class: 35,
+          price_per_hour: 35,
           is_paused: false,
         },
         error: null,
