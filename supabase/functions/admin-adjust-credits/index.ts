@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { student_id, amount, reason } = await req.json();
+    const { student_id, amount, reason, rate_per_class } = await req.json();
 
     if (!student_id || typeof amount !== 'number' || amount === 0) {
       return new Response(
@@ -91,6 +91,22 @@ Deno.serve(async (req) => {
     if (!reason || typeof reason !== 'string' || !reason.trim()) {
       return new Response(
         JSON.stringify({ success: false, error: 'reason is required' }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+    if (
+      rate_per_class !== undefined &&
+      rate_per_class !== null &&
+      (typeof rate_per_class !== 'number' || rate_per_class <= 0)
+    ) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'rate_per_class must be a positive number when provided',
+        }),
         {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -160,6 +176,30 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         }
       );
+    }
+
+    // One-off manual pricing: only meaningful when credits are being added
+    // with a declared rate (e.g. a Zelle side agreement priced outside
+    // Stripe). Sets/replaces the pending manual-rate batch on the
+    // subscription; complete_class_atomic prices exactly `amount` upcoming
+    // classes at this rate, then self-reverts to Stripe-derived pricing.
+    // Best-effort — the credit adjustment itself already succeeded above, so
+    // a failure here doesn't roll that back, just logs for follow-up.
+    if (
+      amount > 0 &&
+      typeof rate_per_class === 'number' &&
+      rate_per_class > 0
+    ) {
+      const { error: rateError } = await supabaseAdmin
+        .from('student_subscriptions')
+        .update({
+          manual_price_per_class: rate_per_class,
+          manual_priced_classes_remaining: amount,
+        })
+        .eq('id', subscriptionId);
+      if (rateError) {
+        console.error('Failed to set manual class rate:', rateError);
+      }
     }
 
     return new Response(

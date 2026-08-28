@@ -242,6 +242,7 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
       // Row-locked, atomic write via edge function (service role) — avoids the
       // stale-balance race of reading credits_remaining and writing it back
       // from the browser, especially against a concurrent class completion.
+      const rate = parseFloat(costPerClass);
       const { data: sessionData } = await supabase.auth.getSession();
       const { data: result, error } = await supabase.functions.invoke(
         'admin-adjust-credits',
@@ -250,6 +251,8 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
             student_id: profile.id,
             amount,
             reason: creditReason.trim(),
+            rate_per_class:
+              amount > 0 && !isNaN(rate) && rate > 0 ? rate : undefined,
           },
           headers: {
             Authorization: `Bearer ${sessionData.session?.access_token}`,
@@ -454,7 +457,9 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="costPerClass">Rate per class ($)</Label>
+                    <Label htmlFor="costPerClass">
+                      Rate per class ($) — optional, one-off
+                    </Label>
                     <Input
                       id="costPerClass"
                       type="number"
@@ -470,8 +475,10 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
                       <span className="font-medium text-foreground">
                         ${calculatedTotal.toFixed(2)}
                       </span>{' '}
-                      — check this against what was actually paid before
-                      applying.
+                      — check this against what was actually paid. Only used
+                      when adding credits; applies to that many upcoming
+                      classes, then Class Cost reverts to the student's normal
+                      Stripe rate.
                     </p>
                   </div>
 
