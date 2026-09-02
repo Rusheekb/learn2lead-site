@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
 
     logStep('User authenticated', { userId: user.id, email: user.email });
 
-    const { priceId, referralCode } = await req.json();
+    const { priceId, referralCode, autoRenewOptIn } = await req.json();
     if (!priceId) throw new Error('Price ID is required');
 
     // Don't rely on a manually-toggled STRIPE_MODE secret staying in sync with
@@ -209,6 +209,9 @@ Deno.serve(async (req) => {
         referral_code_id: referralCodeId || '',
         referrer_id: referrerId || '',
         discount_amount: discountAmount?.toString() || '',
+        // Stripe metadata values are strings only — read back as a string
+        // comparison in allocateCreditsFromCheckout, not a real boolean.
+        auto_renew_opt_in: autoRenewOptIn === true ? 'true' : 'false',
       },
     };
 

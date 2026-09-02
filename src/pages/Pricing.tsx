@@ -21,6 +21,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 
@@ -90,6 +91,7 @@ const Pricing = () => {
   const { user, session } = useAuth();
   const [loadingIndex, setLoadingIndex] = useState<number | null>(null);
   const [welcomeBackIndex, setWelcomeBackIndex] = useState<number | null>(null);
+  const [autoRenewOptIn, setAutoRenewOptIn] = useState(false);
 
   // Arrived here after finishing login/signup with a pending purchase intent —
   // make it unmistakable what to do next instead of leaving them to guess.
@@ -144,6 +146,7 @@ const Pricing = () => {
           body: {
             priceId: tier.priceId,
             referralCode: refCode ? refCode.toUpperCase() : undefined,
+            autoRenewOptIn,
           },
           headers: {
             Authorization: `Bearer ${session.access_token}`,
@@ -219,6 +222,27 @@ const Pricing = () => {
             </p>
           </div>
         )}
+
+        {/* Auto-renewal opt-in — applies to whichever pack is purchased below */}
+        <div className="max-w-5xl mx-auto mb-6 flex items-start gap-3 rounded-xl border border-gray-200 bg-white px-5 py-4">
+          <Checkbox
+            id="auto-renew-opt-in"
+            checked={autoRenewOptIn}
+            onCheckedChange={(checked) => setAutoRenewOptIn(checked === true)}
+            className="mt-0.5"
+          />
+          <label
+            htmlFor="auto-renew-opt-in"
+            className="text-sm text-gray-700 cursor-pointer"
+          >
+            <span className="font-medium text-gray-900">
+              Automatically buy more hours when I run low.
+            </span>{' '}
+            When my balance drops to 1 hour, automatically buy the same pack
+            again, charged to the card I use now. I can turn this off anytime in
+            Settings.
+          </label>
+        </div>
 
         {/* Pricing cards */}
         <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 items-stretch">

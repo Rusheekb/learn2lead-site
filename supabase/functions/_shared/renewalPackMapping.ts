@@ -19,3 +19,20 @@ const FALLBACK_CLASSES_PER_MONTH = 8;
 export function resolveClassesPerMonth(renewalPack: string): number {
   return PACK_TO_CLASSES_PER_MONTH[renewalPack] ?? FALLBACK_CLASSES_PER_MONTH;
 }
+
+const CLASSES_PER_MONTH_TO_PACK: Record<number, string> = {
+  4: 'basic',
+  8: 'standard',
+  12: 'premium',
+};
+
+const FALLBACK_PACK = 'standard';
+
+/** Inverse of resolveClassesPerMonth — used to default a checkout purchase's
+ * tier into an auto_renewal_settings.renewal_pack value when a student opts
+ * into auto-renewal at checkout. */
+export function resolvePackFromClassesPerMonth(
+  classesPerMonth: number
+): string {
+  return CLASSES_PER_MONTH_TO_PACK[classesPerMonth] ?? FALLBACK_PACK;
+}

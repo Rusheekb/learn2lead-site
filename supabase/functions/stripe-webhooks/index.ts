@@ -1,6 +1,7 @@
 import Stripe from 'https://esm.sh/stripe@18.5.0';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 import { Resend } from 'npm:resend@2.0.0';
+import { resolvePackFromClassesPerMonth } from '../_shared/renewalPackMapping.ts';
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -617,6 +618,83 @@ async function allocateCreditsFromCheckout(
         plan.classes_per_month
       );
     }
+  }
+
+  if (metadata.auto_renew_opt_in === 'true') {
+    await enableAutoRenewalFromCheckout(
+      stripe,
+      supabaseClient,
+      session,
+      profileId,
+      customerId,
+      plan.classes_per_month
+    );
+  }
+}
+
+// ─── enableAutoRenewalFromCheckout ──────────────────────────────────────────────
+// Best-effort only — credits from this purchase are already allocated by the
+// time this runs, so a failure here (e.g. a transient DB error) shouldn't
+// throw and trigger a Stripe webhook retry, which would just re-run credit
+// allocation into its own idempotency guard for no benefit. Logs and moves on.
+async function enableAutoRenewalFromCheckout(
+  stripe: Stripe,
+  supabaseClient: any,
+  session: Stripe.Checkout.Session,
+  studentId: string,
+  customerId: string,
+  classesPerMonth: number
+) {
+  try {
+    // setup_future_usage on the checkout session (see create-checkout) attaches
+    // the payment method to the customer, but doesn't reliably set it as the
+    // customer's default for future off-session charges — process-auto-renewal
+    // reads exactly that field, so set it explicitly rather than relying on
+    // unstated Stripe default behavior.
+    if (session.payment_intent && customerId) {
+      const paymentIntentId =
+        typeof session.payment_intent === 'string'
+          ? session.payment_intent
+          : session.payment_intent.id;
+      const paymentIntent =
+        await stripe.paymentIntents.retrieve(paymentIntentId);
+      const paymentMethodId =
+        typeof paymentIntent.payment_method === 'string'
+          ? paymentIntent.payment_method
+          : paymentIntent.payment_method?.id;
+
+      if (paymentMethodId) {
+        await stripe.customers.update(customerId, {
+          invoice_settings: { default_payment_method: paymentMethodId },
+        });
+      }
+    }
+
+    const { error } = await supabaseClient.from('auto_renewal_settings').upsert(
+      {
+        student_id: studentId,
+        enabled: true,
+        renewal_pack: resolvePackFromClassesPerMonth(classesPerMonth),
+        threshold: 1,
+        stripe_customer_id: customerId,
+      },
+      { onConflict: 'student_id' }
+    );
+
+    if (error) {
+      logStep('WARNING: Failed to enable auto-renewal from checkout opt-in', {
+        studentId,
+        error: error.message,
+      });
+      return;
+    }
+
+    logStep('Auto-renewal enabled from checkout opt-in', { studentId });
+  } catch (err) {
+    logStep('WARNING: enableAutoRenewalFromCheckout failed', {
+      studentId,
+      error: err instanceof Error ? err.message : String(err),
+    });
   }
 }
 
