@@ -67,9 +67,18 @@ export const useNotifications = () => {
     // Initial load
     loadNotifications();
 
-    // Set up realtime subscription
+    // Set up realtime subscription. Channel name must be unique per mount —
+    // DashboardShell keeps a desktop AppSidebar (CSS-hidden, not unmounted)
+    // and a mobile-Sheet AppSidebar simultaneously, so this hook mounts
+    // twice at once on every dashboard page. A shared literal name here
+    // meant the second .subscribe() call collided with the first (Supabase
+    // realtime returns the same channel object for a repeated name and
+    // throws on adding a callback to an already-subscribed channel) — the
+    // resulting uncaught error was breaking the mobile sidebar drawer
+    // (it never opened at all, reproduced directly: opening the drawer
+    // mounts the second instance and throws immediately).
     const channel = supabase
-      .channel('notifications-channel')
+      .channel(`notifications-${user.id}-${crypto.randomUUID()}`)
       .on(
         'postgres_changes',
         {

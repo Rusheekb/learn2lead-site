@@ -37,7 +37,12 @@ const MobileMenu: React.FC<MobileMenuProps> = ({
   };
 
   const handleDashboard = () => {
-    if (!userRole) return;
+    // getDashboardPath falls back to '/login' when userRole hasn't resolved
+    // yet — matches every other "go to dashboard" caller (UserMenu, Logo,
+    // SidebarLogo). Previously this early-returned on a falsy role, making
+    // the button a silent no-op with no feedback — the exact window a user
+    // could hit right after a fresh page load/tab resume, mobile-only since
+    // desktop's UserMenu never had this guard.
     const dashboardPath = getDashboardPath(userRole);
     navigate(dashboardPath, { replace: true });
   };

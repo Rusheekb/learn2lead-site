@@ -50,7 +50,7 @@ const DashboardShell: React.FC<DashboardShellProps> = ({ title, children }) => {
             </Button>
           </SheetTrigger>
           <SheetContent side="left" className="p-0 w-[80%] max-w-[280px]">
-            <AppSidebar className="h-full border-0" />
+            <AppSidebar className="h-full border-0" forceExpanded />
           </SheetContent>
         </Sheet>
         <h1 className="text-lg font-bold mx-auto truncate">{title}</h1>

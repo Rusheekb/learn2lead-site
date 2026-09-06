@@ -8,11 +8,23 @@ import SidebarNavLinks from './sidebar/SidebarNavLinks';
 
 interface AppSidebarProps {
   className?: string;
+  // Mobile's drawer is a temporary overlay, not a persistent rail — the
+  // desktop icon-only "collapsed" state doesn't make sense there, and the
+  // toggle to undo it is desktop-only (see SidebarLogo), so a mobile user
+  // whose stored preference happened to be collapsed would otherwise have
+  // no way back to a usable sidebar. Callers rendering this inside a mobile
+  // drawer should force full-expanded rendering regardless of that stored
+  // preference.
+  forceExpanded?: boolean;
 }
 
-const AppSidebar: React.FC<AppSidebarProps> = ({ className = '' }) => {
+const AppSidebar: React.FC<AppSidebarProps> = ({
+  className = '',
+  forceExpanded = false,
+}) => {
   const { userRole, signOut } = useAuth();
-  const { isExpanded, toggleSidebar } = useSidebar();
+  const { isExpanded: storedExpanded, toggleSidebar } = useSidebar();
+  const isExpanded = forceExpanded || storedExpanded;
 
   if (!userRole) return null;
 
