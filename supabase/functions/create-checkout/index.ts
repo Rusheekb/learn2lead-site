@@ -116,7 +116,19 @@ Deno.serve(async (req) => {
       customerId = customers.data[0].id;
       logStep('Existing customer found', { customerId });
     } else {
-      logStep('Creating new customer');
+      // Previously this branch only logged and left customerId undefined,
+      // relying on customer_email + setup_future_usage to make Stripe attach
+      // a customer to the session automatically. Confirmed via a real test
+      // checkout that this doesn't reliably happen — session.customer came
+      // back null in the completed webhook, silently breaking auto-renewal
+      // (no customer to attach a default payment method to) and leaving
+      // student_subscriptions.stripe_customer_id on the synthetic
+      // `checkout_${profileId}` fallback in stripe-webhooks instead of a
+      // real Stripe id. Creating it explicitly guarantees a real customer
+      // exists before the session does.
+      const newCustomer = await stripe.customers.create({ email: user.email });
+      customerId = newCustomer.id;
+      logStep('Created new customer', { customerId });
     }
 
     // Validate referral code if provided
@@ -190,8 +202,10 @@ Deno.serve(async (req) => {
 
     // Build checkout session config - ONE-TIME PAYMENT (not subscription)
     const sessionConfig: Stripe.Checkout.SessionCreateParams = {
+      // customerId is always a real Stripe customer id by this point —
+      // either found above or just created — so customer_email (Stripe's
+      // guest-checkout field) is never needed here.
       customer: customerId,
-      customer_email: customerId ? undefined : user.email,
       line_items: [
         {
           price: priceId,

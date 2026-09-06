@@ -86,14 +86,49 @@ Deno.serve(async (req) => {
     // class completion.
     const claimedAt = new Date().toISOString();
     const oneHourAgoIso = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-    const { data: claimed, error: claimError } = await supabaseClient
+
+    // Two sequential single-predicate atomic UPDATE...WHERE...RETURNING
+    // statements instead of one .or()-based UPDATE. .or() takes a raw,
+    // client-interpolated filter string that supabase-js does not encode
+    // the way .eq()/.is()/.lt() do — confirmed live: chaining .or() onto
+    // this .update() reliably throws a genuine Postgres 42703 "column does
+    // not exist" error for a column that demonstrably exists, and it's the
+    // only place in this codebase .or() is combined with .update() (every
+    // other .or() usage is a plain .select() and works fine).
+    //
+    // Splitting the OR into two mutually-exclusive attempts preserves the
+    // original atomicity guarantee: last_renewal_at has exactly one value
+    // at any instant (NULL or a timestamp), so only one of these two
+    // predicates can ever match a given row version. A concurrent
+    // invocation whose statement loses Postgres's row-lock race
+    // re-evaluates its own WHERE clause against the winner's freshly
+    // committed timestamp and correctly fails to match either predicate on
+    // retry — no window exists where two concurrent callers can both win a
+    // claim and both charge the student's card.
+    //
+    // TODO: once direct-DB migrations are reliably deployable again,
+    // replace this with a claim_auto_renewal_slot(p_student_id) RPC (same
+    // pattern as apply_credit_ledger_entry / complete_class_atomic) to
+    // remove PostgREST filter-string construction from this path entirely.
+    let { data: claimed, error: claimError } = await supabaseClient
       .from('auto_renewal_settings')
       .update({ last_renewal_at: claimedAt })
       .eq('student_id', student_id)
       .eq('enabled', true)
-      .or(`last_renewal_at.is.null,last_renewal_at.lt.${oneHourAgoIso}`)
+      .is('last_renewal_at', null)
       .select('id')
       .maybeSingle();
+
+    if (!claimError && !claimed) {
+      ({ data: claimed, error: claimError } = await supabaseClient
+        .from('auto_renewal_settings')
+        .update({ last_renewal_at: claimedAt })
+        .eq('student_id', student_id)
+        .eq('enabled', true)
+        .lt('last_renewal_at', oneHourAgoIso)
+        .select('id')
+        .maybeSingle());
+    }
 
     if (claimError) {
       logStep('ERROR: Failed to claim renewal slot', { error: claimError });
