@@ -349,8 +349,8 @@ const ClassCard: React.FC<{ cls: ClassEvent }> = ({ cls }) => (
     <div className="flex-1 min-w-0">
       <p className="font-medium truncate">{cls.title || cls.subject}</p>
       <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1 text-xs text-muted-foreground">
-        <span>Tutor: {cls.tutorName}</span>
         <span>Student: {cls.studentName}</span>
+        <span>Tutor: {cls.tutorName}</span>
       </div>
     </div>
     <div className="flex flex-col items-end gap-1">

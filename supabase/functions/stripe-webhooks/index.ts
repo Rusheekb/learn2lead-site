@@ -510,12 +510,26 @@ async function allocateCreditsFromCheckout(
 
   const { data: existingSub } = await supabaseClient
     .from('student_subscriptions')
-    .select('id')
+    .select('id, plan_id')
     .eq('student_id', profileId)
     .in('status', ['active', 'trialing'])
     .maybeSingle();
 
   if (existingSub) {
+    // Keep plan_id in sync with what was just purchased — this only topped
+    // up credits before, leaving plan_id (and therefore per-class pricing
+    // in complete_class_atomic) frozen at whatever it was when the row was
+    // first created. A row bootstrapped manually with no plan (e.g. credits
+    // added by an admin before the student's first real Stripe purchase)
+    // would otherwise never get priced, silently producing a $0 Class Cost
+    // on every class from then on regardless of what the student actually paid for.
+    if (existingSub.plan_id !== plan.id) {
+      await supabaseClient
+        .from('student_subscriptions')
+        .update({ plan_id: plan.id })
+        .eq('id', existingSub.id);
+    }
+
     // Atomic: row-locks the subscription and no-ops if this sessionId was already
     // processed, so a duplicate webhook delivery can't double-credit.
     const { data: rpcResult, error: rpcError } = await supabaseClient.rpc(
