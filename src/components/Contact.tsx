@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Mail, Phone, MapPin, Loader2 } from 'lucide-react';
+import { Mail, Phone, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { contactSchema, validateForm } from '@/lib/validation';
@@ -120,14 +120,6 @@ const Contact = () => {
                   <div>
                     <p className="font-medium">Call Us</p>
                     <p className="mt-1">(925) 854-7020</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start">
-                  <MapPin className="h-6 w-6 mr-4 mt-1" aria-hidden="true" />
-                  <div>
-                    <p className="font-medium">Location</p>
-                    <p className="mt-1">Dallas Area</p>
                   </div>
                 </div>
               </div>
