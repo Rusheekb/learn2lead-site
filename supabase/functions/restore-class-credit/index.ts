@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'Only tutors and admins can restore credits',
+          error: 'Only tutors and admins can restore hours',
         }),
         {
           status: 403,
@@ -113,14 +113,14 @@ Deno.serve(async (req) => {
       {
         p_student_id: student_id,
         p_class_id: class_id,
-        p_reason: reason || 'Credit restored - class completion error recovery',
+        p_reason: reason || 'Hours restored - class completion error recovery',
       }
     );
 
     if (rpcError) {
       console.error('reverse_class_debit RPC failed:', rpcError);
       return new Response(
-        JSON.stringify({ success: false, error: 'Failed to restore credit' }),
+        JSON.stringify({ success: false, error: 'Failed to restore hours' }),
         {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -155,7 +155,10 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Error in restore-class-credit:', error);
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
+      JSON.stringify({
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

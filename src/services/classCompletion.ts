@@ -5,6 +5,7 @@ import { addBreadcrumb, captureException } from '@/lib/sentry';
 import { retryEdgeFunction } from '@/utils/retryWithBackoff';
 import { logger } from '@/lib/logger';
 import { format } from 'date-fns';
+import { formatHours } from '@/lib/hours';
 
 const log = logger.create('classCompletion');
 
@@ -25,8 +26,6 @@ export interface CompleteClassData {
   hw: string;
   additionalInfo: string;
 }
-
-const formatHours = (n: number) => `${n} hour${n === 1 ? '' : 's'}`;
 
 const ADMIN_CONTACT = 'learn2leadtutoring@gmail.com';
 
@@ -309,7 +308,7 @@ async function restoreCredit(
         body: {
           student_id: data.studentId,
           class_id: data.classId,
-          reason: `Credit restored - atomic class completion failed for ${data.classNumber}`,
+          reason: `Hours restored - class completion failed for ${data.classNumber}`,
         },
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -335,7 +334,7 @@ async function restoreCredit(
       try {
         await supabase.from('notifications').insert({
           user_id: data.studentId,
-          message: `ADMIN ALERT: Credit restore failed for class ${data.classNumber} (${data.classId}). Student ${data.studentName} may be missing ${durationHours}h of credit. Manual restoration required.`,
+          message: `ADMIN ALERT: Hours restore failed for class ${data.classNumber} (${data.classId}). Student ${data.studentName} may be missing ${formatHours(durationHours)}. Manual restoration required.`,
           type: 'admin_alert',
         });
       } catch (_) {
@@ -343,14 +342,14 @@ async function restoreCredit(
       }
 
       toast.error(
-        'Class completion failed and credit could not be restored automatically',
+        'Class completion failed and the hours could not be restored automatically',
         {
-          description: 'Please contact admin to restore the credit manually',
+          description: 'Please contact admin to restore the hours manually',
         }
       );
     } else {
       log.info('Credit successfully restored after completion failure');
-      toast.error('Failed to complete class - credit has been restored', {
+      toast.error('Failed to complete class - the hours have been restored', {
         description:
           'Please try again or contact support if the issue persists',
       });
@@ -358,9 +357,9 @@ async function restoreCredit(
   } catch (restoreErr) {
     log.error('Exception restoring credit', restoreErr);
     toast.error(
-      'Class completion failed and credit restoration encountered an error',
+      'Class completion failed and restoring the hours encountered an error',
       {
-        description: 'Please contact admin to restore the credit manually',
+        description: 'Please contact admin to restore the hours manually',
       }
     );
   }

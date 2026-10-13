@@ -14,6 +14,7 @@ import {
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/logger';
+import { describeHoursActivity } from '@/lib/hours';
 
 const log = logger.create('CreditHistory');
 
@@ -74,7 +75,7 @@ export const CreditHistory: React.FC = () => {
       >
         <div className="flex items-center gap-2 min-w-0">
           <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
-          <span className="text-sm font-medium">Credit History</span>
+          <span className="text-sm font-medium">Hours History</span>
           {countLabel && (
             <span className="text-xs text-muted-foreground">
               ({countLabel})
@@ -101,12 +102,11 @@ export const CreditHistory: React.FC = () => {
           ) : error ? (
             <div className="flex items-center gap-2 text-destructive p-4">
               <AlertCircle className="h-4 w-4 shrink-0" />
-              <p className="text-sm">Failed to load credit history</p>
+              <p className="text-sm">Failed to load your hours history</p>
             </div>
           ) : transactions.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-6 px-4">
-              No credit transactions yet. Complete a class to see your history
-              here.
+              No activity yet. Purchases and completed classes will appear here.
             </p>
           ) : (
             <div className="max-h-80 overflow-y-auto divide-y divide-border">
@@ -131,7 +131,9 @@ export const CreditHistory: React.FC = () => {
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm truncate">{t.reason}</p>
+                      <p className="text-sm truncate">
+                        {describeHoursActivity(t.reason)}
+                      </p>
                       <p className="text-xs text-muted-foreground">
                         {format(new Date(t.created_at), 'MMM d, yyyy')}
                       </p>
@@ -162,7 +164,7 @@ export const CreditHistory: React.FC = () => {
                       variant={isDebit ? 'destructive' : 'default'}
                       className="shrink-0 text-xs capitalize"
                     >
-                      {t.transaction_type === 'credit' ? 'Credit' : 'Debit'}
+                      {t.transaction_type === 'credit' ? 'Added' : 'Used'}
                     </Badge>
                   </div>
                 );

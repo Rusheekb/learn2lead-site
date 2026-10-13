@@ -25,7 +25,7 @@ const faqs = [
   {
     question: 'What is your pricing structure?',
     answer:
-      'We offer simple, one-time credit packs — no subscriptions or recurring commitments. Choose from 4, 8, or 12-hour packs and use them whenever your schedule allows. Visit our pricing page for detailed plan information.',
+      'We offer simple, one-time hour packs — no subscriptions or recurring commitments. Choose from 4, 8, or 12-hour packs and use them whenever your schedule allows. Visit our pricing page for detailed plan information.',
   },
   {
     question: 'Do unused hours expire?',

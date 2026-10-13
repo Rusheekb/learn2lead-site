@@ -28,7 +28,7 @@ const Dashboard = () => {
   useEffect(() => {
     if (searchParams.get('purchase') === 'success') {
       toast.success(
-        'Payment successful! Your credits have been added and are ready to use.',
+        'Payment successful! Your hours have been added and are ready to use.',
         {
           duration: 6000,
         }

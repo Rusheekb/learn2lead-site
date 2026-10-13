@@ -66,9 +66,9 @@ const NotificationPreferences: React.FC<NotificationPreferencesProps> = ({
           <div className="flex items-center gap-3">
             <CreditCard className="h-4 w-4 text-muted-foreground shrink-0" />
             <div>
-              <p className="text-sm font-medium">Low-credit alerts</p>
+              <p className="text-sm font-medium">Low-balance alerts</p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Notified when your credit balance runs low
+                Notified when your hours balance runs low
               </p>
             </div>
           </div>

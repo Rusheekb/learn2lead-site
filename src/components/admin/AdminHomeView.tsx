@@ -216,7 +216,7 @@ const AdminHomeView: React.FC = () => {
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-lg text-destructive">
               <AlertTriangle className="h-5 w-5" />
-              No Credits — Session Coming Up
+              No Hours Left — Session Coming Up
               {criticalCount > 0 && (
                 <Badge variant="destructive" className="ml-1">
                   {criticalCount}

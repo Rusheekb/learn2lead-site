@@ -385,7 +385,7 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
                           ? 'Checking Stripe…'
                           : lastStripePayment
                             ? `Last Stripe payment: ${format(lastStripePayment.date, 'M/d/yy')} ($${lastStripePayment.amount.toFixed(2)})`
-                            : 'Paid via credit adjustment (no Stripe payment on record)'}
+                            : 'Paid via manual hours adjustment (no Stripe payment on record)'}
                     </span>
                     {onToggleStudentPayment && (
                       <Button

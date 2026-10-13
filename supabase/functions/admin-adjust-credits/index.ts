@@ -125,7 +125,7 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'Failed to set up credit tracking for this student',
+          error: 'Failed to set up hours tracking for this student',
         }),
         {
           status: 500,
@@ -169,7 +169,7 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({
           success: false,
-          error: rpcResult?.error || 'Failed to adjust credits',
+          error: rpcResult?.error || 'Failed to adjust hours',
         }),
         {
           status: 500,
@@ -209,7 +209,10 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Error in admin-adjust-credits:', error);
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
+      JSON.stringify({
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

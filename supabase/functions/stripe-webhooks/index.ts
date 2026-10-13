@@ -2,6 +2,7 @@ import Stripe from 'https://esm.sh/stripe@18.5.0';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 import { Resend } from 'npm:resend@2.0.0';
 import { resolvePackFromClassesPerMonth } from '../_shared/renewalPackMapping.ts';
+import { formatHours } from '../_shared/hours.ts';
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -293,15 +294,15 @@ async function handleAutoRenewalPaymentFailed(
         <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
           <h2 style="color:#dc2626;">Auto-Renewal Failed</h2>
           <p>Hi ${studentName},</p>
-          <p>We were unable to charge your saved payment method for your credit pack renewal.</p>
+          <p>We were unable to charge your saved payment method for your hour pack renewal.</p>
           <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:16px;margin:16px 0;">
             <p style="margin:0;font-weight:bold;">Reason: ${stripeReason}</p>
           </div>
-          <p>To keep your tutoring sessions uninterrupted, please update your payment method and purchase credits:</p>
+          <p>To keep your tutoring sessions uninterrupted, please update your payment method and purchase more hours:</p>
           <div style="text-align:center;margin:24px 0;">
             <a href="https://learn2lead.page/pricing"
                style="background:#2D46B9;color:white;padding:12px 28px;text-decoration:none;border-radius:6px;font-weight:bold;display:inline-block;">
-              Buy Credits
+              Buy Hours
             </a>
           </div>
           <p style="font-size:13px;color:#666;">
@@ -325,9 +326,10 @@ async function handleAutoRenewalRecovery(
   pi: Stripe.PaymentIntent
 ) {
   const studentId = pi.metadata?.user_id;
+  const planId = pi.metadata?.plan_id;
   const planName = pi.metadata?.plan_name;
 
-  if (!studentId || !planName) {
+  if (!studentId || (!planId && !planName)) {
     logStep('payment_intent.succeeded: missing metadata, skipping recovery', {
       id: pi.id,
     });
@@ -343,12 +345,39 @@ async function handleAutoRenewalRecovery(
     }
   );
 
-  const { data: plan } = await supabaseClient
-    .from('subscription_plans')
-    .select('*')
-    .ilike('name', planName)
-    .eq('active', true)
-    .single();
+  // Look the plan up by its stable id. Payments created before plan_id was
+  // added only carry the name, and plan names were later reworded ("12 Credit
+  // Pack" -> "12-Hour Pack"), so fall back to the name, then to the hour count
+  // embedded in it — never let a rename strand a paid renewal.
+  let plan: any = null;
+  if (planId) {
+    ({ data: plan } = await supabaseClient
+      .from('subscription_plans')
+      .select('*')
+      .eq('id', planId)
+      .maybeSingle());
+  }
+  if (!plan && planName) {
+    ({ data: plan } = await supabaseClient
+      .from('subscription_plans')
+      .select('*')
+      .ilike('name', planName)
+      .eq('active', true)
+      .maybeSingle());
+  }
+  const hoursInName = Number(planName?.match(/^\s*(\d+)/)?.[1]);
+  if (!plan && hoursInName) {
+    const isTestPlan = !pi.livemode;
+    const { data: candidates } = await supabaseClient
+      .from('subscription_plans')
+      .select('*')
+      .eq('classes_per_month', hoursInName)
+      .eq('active', true);
+    plan =
+      (candidates ?? []).find(
+        (p: any) => /\(Test\)/i.test(p.name) === isTestPlan
+      ) ?? null;
+  }
 
   if (!plan) {
     logStep('payment_intent.succeeded: plan not found for recovery', {
@@ -406,7 +435,7 @@ async function handleAutoRenewalRecovery(
 
   await supabaseClient.from('notifications').insert({
     user_id: studentId,
-    message: `${plan.classes_per_month} credits added from your recent auto-renewal (${plan.name}).`,
+    message: `${formatHours(plan.classes_per_month)} added from your recent auto-renewal (${plan.name}).`,
     type: 'auto_renewal_success',
   });
 
@@ -539,7 +568,7 @@ async function allocateCreditsFromCheckout(
         p_subscription_id: existingSub.id,
         p_transaction_type: 'credit',
         p_amount: plan.classes_per_month,
-        p_reason: `Credit pack purchase - ${plan.name}`,
+        p_reason: `Purchased ${plan.name}`,
         p_invoice_id: sessionId,
         p_dollar_amount: (session.amount_total || 0) / 100,
       }
@@ -595,7 +624,7 @@ async function allocateCreditsFromCheckout(
         p_subscription_id: newSub.id,
         p_transaction_type: 'credit',
         p_amount: plan.classes_per_month,
-        p_reason: `Initial credit pack purchase - ${plan.name}`,
+        p_reason: `Purchased ${plan.name}`,
         p_invoice_id: sessionId,
         p_dollar_amount: (session.amount_total || 0) / 100,
       }
@@ -879,7 +908,7 @@ async function handleRefundCreated(
 
   await supabaseClient.from('notifications').insert({
     user_id: originalEntry.student_id,
-    message: `${creditsToDeduct} hour${creditsToDeduct === 1 ? '' : 's'} removed from your balance following a $${(refund.amount / 100).toFixed(2)} refund.`,
+    message: `${formatHours(creditsToDeduct)} removed from your balance following a $${(refund.amount / 100).toFixed(2)} refund.`,
     type: 'refund_processed',
   });
 
@@ -929,8 +958,8 @@ async function sendRefundNotificationEmail(
 
     const balanceLine =
       newBalance < 0
-        ? `<p style="margin:0;font-weight:bold;color:#dc2626;">Your balance is now ${Math.abs(newBalance)} hour${Math.abs(newBalance) === 1 ? '' : 's'} overdrawn.</p>`
-        : `<p style="margin:0;font-weight:bold;">Remaining balance: ${newBalance} hour${newBalance === 1 ? '' : 's'}</p>`;
+        ? `<p style="margin:0;font-weight:bold;color:#dc2626;">Your balance is now ${formatHours(Math.abs(newBalance))} overdrawn.</p>`
+        : `<p style="margin:0;font-weight:bold;">Remaining balance: ${formatHours(newBalance)}</p>`;
 
     const resend = new Resend(resendApiKey);
     await resend.emails.send({
@@ -1185,10 +1214,10 @@ async function sendPurchaseConfirmationEmail(
     await resend.emails.send({
       from: 'Learn2Lead <noreply@learn2lead.page>',
       to: [customerEmail],
-      subject: 'Your Credit Pack Purchase Confirmation',
+      subject: 'Your Tutoring Hours Purchase Confirmation',
       html: `
         <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
-          <h2 style="color:#16a34a;">Credits Added!</h2>
+          <h2 style="color:#16a34a;">Hours Added!</h2>
           <p>Dear ${studentName},</p>
           <p>Thank you for purchasing the ${planName}!</p>
           <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:20px;margin:20px 0;">
@@ -1196,11 +1225,11 @@ async function sendPurchaseConfirmationEmail(
             <table style="width:100%;border-collapse:collapse;">
               <tr><td style="padding:6px 0;border-bottom:1px solid #dcfce7;">Pack</td><td style="text-align:right;font-weight:bold;border-bottom:1px solid #dcfce7;">${planName}</td></tr>
               <tr><td style="padding:6px 0;border-bottom:1px solid #dcfce7;">Amount Paid</td><td style="text-align:right;font-weight:bold;border-bottom:1px solid #dcfce7;">$${amountPaid.toFixed(2)}</td></tr>
-              <tr><td style="padding:6px 0;border-bottom:1px solid #dcfce7;">Credits Added</td><td style="text-align:right;font-weight:bold;color:#16a34a;border-bottom:1px solid #dcfce7;">+${creditsAdded} hrs</td></tr>
-              <tr><td style="padding:6px 0;">Available Balance</td><td style="text-align:right;font-weight:bold;color:#16a34a;">${totalCredits} hrs</td></tr>
+              <tr><td style="padding:6px 0;border-bottom:1px solid #dcfce7;">Hours Added</td><td style="text-align:right;font-weight:bold;color:#16a34a;border-bottom:1px solid #dcfce7;">+${formatHours(creditsAdded)}</td></tr>
+              <tr><td style="padding:6px 0;">Available Balance</td><td style="text-align:right;font-weight:bold;color:#16a34a;">${formatHours(totalCredits)}</td></tr>
             </table>
           </div>
-          <p>Your credits never expire — use them at your own pace.</p>
+          <p>Your hours never expire — use them at your own pace.</p>
           <div style="text-align:center;margin:28px 0;">
             <a href="https://learn2lead.page/dashboard"
                style="background:#2D46B9;color:white;padding:12px 28px;text-decoration:none;border-radius:6px;font-weight:bold;display:inline-block;">

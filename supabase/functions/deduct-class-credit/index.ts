@@ -12,6 +12,7 @@ import {
   buildBlockedClassLogEmail,
   buildBlockedClassLogAdminEmail,
 } from '../_shared/creditEmails.ts';
+import { formatHours } from '../_shared/hours.ts';
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -58,11 +59,11 @@ async function sendCompletionEmail(
             <p style="margin: 4px 0;"><strong>Class:</strong> ${classTitle}</p>
             <p style="margin: 4px 0;"><strong>Subject:</strong> ${subject}</p>
             <p style="margin: 4px 0;"><strong>Tutor:</strong> ${tutorName}</p>
-            <p style="margin: 4px 0;"><strong>Duration:</strong> ${hoursUsed} hour${hoursUsed !== 1 ? 's' : ''}</p>
+            <p style="margin: 4px 0;"><strong>Duration:</strong> ${formatHours(hoursUsed)}</p>
           </div>
           ${notesSection}
           <div style="background-color: #f0f9ff; padding: 12px 16px; border-radius: 6px; margin: 16px 0;">
-            <p style="margin: 0;"><strong>Credits remaining:</strong> ${creditsRemaining} hour${creditsRemaining !== 1 ? 's' : ''}</p>
+            <p style="margin: 0;"><strong>Hours remaining:</strong> ${formatHours(creditsRemaining)}</p>
           </div>
           <p style="text-align: center; margin-top: 20px;">
             <a href="https://learn2lead.page/dashboard" style="background-color: #6366f1; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; display: inline-block;">View Dashboard</a>
@@ -86,14 +87,14 @@ async function sendLowCreditWarning(
     await resend.emails.send({
       from: 'Learn2Lead <noreply@learn2lead.page>',
       to: studentEmail,
-      subject: `⚠️ Low Credit Balance: ${creditsRemaining} hour${creditsRemaining !== 1 ? 's' : ''} remaining`,
+      subject: `⚠️ Running low on tutoring hours: ${formatHours(creditsRemaining)} left`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 8px;">
-          <h2 style="color: #ef4444;">⚠️ Low Credit Balance</h2>
+          <h2 style="color: #ef4444;">⚠️ Running Low on Hours</h2>
           <p>Hello ${studentName},</p>
-          <p>Your tutoring credit balance is running low.</p>
+          <p>Your tutoring hours are running low.</p>
           <div style="background-color: #fef2f2; padding: 16px; border-radius: 6px; margin: 16px 0; border-left: 4px solid #ef4444;">
-            <p style="margin: 0; font-size: 20px; font-weight: bold;">${creditsRemaining} hour${creditsRemaining !== 1 ? 's' : ''} remaining</p>
+            <p style="margin: 0; font-size: 20px; font-weight: bold;">${formatHours(creditsRemaining)} remaining</p>
           </div>
           <p>To ensure uninterrupted tutoring, please purchase more hours:</p>
           <p style="text-align: center; margin-top: 16px;">
@@ -399,7 +400,7 @@ Deno.serve(async (req) => {
           credits_remaining: rpcResult.new_balance,
           transaction_id: rpcResult.ledger_id,
           idempotent: true,
-          message: `Class already completed. ${rpcResult.new_balance} hour${rpcResult.new_balance === 1 ? '' : 's'} remaining.`,
+          message: `Class already completed. ${formatHours(rpcResult.new_balance)} remaining.`,
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -417,9 +418,9 @@ Deno.serve(async (req) => {
 
     let message = '';
     if (newBalance === 0) {
-      message = `${creditsToDeduct} hour${creditsToDeduct === 1 ? '' : 's'} deducted. No hours remaining. Purchase more to continue.`;
+      message = `${formatHours(creditsToDeduct)} deducted. No hours remaining. Purchase more to continue.`;
     } else {
-      message = `${creditsToDeduct} hour${creditsToDeduct === 1 ? '' : 's'} deducted. ${newBalance} hour${newBalance === 1 ? '' : 's'} remaining.`;
+      message = `${formatHours(creditsToDeduct)} deducted. ${formatHours(newBalance)} remaining.`;
     }
 
     // ── Fire-and-forget notification emails ──

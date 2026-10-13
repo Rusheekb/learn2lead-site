@@ -39,7 +39,7 @@ export function buildDigestCreditSection(balance: number | null): string {
   const color = balance <= 2 ? '#ef4444' : balance <= 4 ? '#f59e0b' : '#22c55e';
 
   return `
-        <h3 style="color: #1a1a2e; margin-top: 24px;">💰 Credit Balance</h3>
+        <h3 style="color: #1a1a2e; margin-top: 24px;">💰 Hours Balance</h3>
         <div style="background: #f8f9fa; padding: 12px 16px; border-radius: 6px; border-left: 4px solid ${color};">
           <p style="margin: 0; font-size: 18px;"><strong>${balance}</strong> hour${balance !== 1 ? 's' : ''} remaining</p>
           ${balance <= 2 ? `<p style="margin: 4px 0; color: #ef4444; font-size: 13px;">⚠️ Low balance — <a href="${PRICING_URL}" style="color: #6366f1;">purchase more hours</a></p>` : ''}

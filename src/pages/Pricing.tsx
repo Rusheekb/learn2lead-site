@@ -59,14 +59,14 @@ const HOW_IT_WORKS = [
 
 const FAQ_ITEMS = [
   {
-    question: 'What is a credit?',
+    question: 'How do hours work?',
     answer:
-      'Each credit equals one hour of tutoring. A 1.5-hour session uses 1.5 credits, and a 30-minute session uses 0.5 credits.',
+      'You buy tutoring time in hours. Each session uses exactly as many hours as it lasts: a 1-hour session uses 1 hour, a 1.5-hour session uses 1.5 hours, and a 30-minute session uses 0.5 hours.',
   },
   {
     question: 'What if my session is shorter or longer than an hour?',
     answer:
-      'Credits are deducted in half-hour increments. A 30-minute session uses 0.5 credits, a 90-minute session uses 1.5 credits, and a 2-hour session uses 2 credits.',
+      'Hours are deducted in half-hour increments. A 30-minute session uses 0.5 hours, a 90-minute session uses 1.5 hours, and a 2-hour session uses 2 hours.',
   },
   {
     question: 'Do unused hours expire?',

@@ -9,6 +9,7 @@ import {
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 import { resolveClassesPerMonth } from '../_shared/renewalPackMapping.ts';
 import { safeEqual } from '../_shared/cronAuth.ts';
+import { formatHours } from '../_shared/hours.ts';
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -328,6 +329,9 @@ Deno.serve(async (req) => {
         metadata: {
           user_id: student_id,
           auto_renewal: 'true',
+          // plan_id is what recovery looks up; plan_name is kept for
+          // readability in the Stripe dashboard (names can change).
+          plan_id: plan.id,
           plan_name: plan.name,
         },
       },
@@ -434,7 +438,7 @@ Deno.serve(async (req) => {
 
         await supabaseClient.from('notifications').insert({
           user_id: student_id,
-          message: `Auto-renewal successful! ${plan.classes_per_month} credits added (${plan.name} - $${plan.monthly_price}).`,
+          message: `Auto-renewal successful! ${formatHours(plan.classes_per_month)} added (${plan.name} - $${plan.monthly_price}).`,
           type: 'auto_renewal_success',
         });
 
@@ -503,7 +507,7 @@ Deno.serve(async (req) => {
 
         await supabaseClient.from('notifications').insert({
           user_id: student_id,
-          message: `Auto-renewal failed: ${errorMessage}. Please update your payment method or purchase credits manually.`,
+          message: `Auto-renewal failed: ${errorMessage}. Please update your payment method or purchase more hours.`,
           type: 'auto_renewal_failed',
         });
 
@@ -562,18 +566,18 @@ async function sendAutoRenewalEmail(
       await resend.emails.send({
         from: 'Learn2Lead <noreply@learn2lead.page>',
         to: [profile.email],
-        subject: 'Auto-Renewal: Credits Added!',
+        subject: 'Auto-Renewal: Hours Added!',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h1 style="color: #16a34a;">Auto-Renewal Successful!</h1>
             <p>Dear ${studentName},</p>
-            <p>Your credit pack was automatically renewed as configured.</p>
+            <p>Your hour pack was automatically renewed as configured.</p>
             <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 20px; margin: 20px 0;">
               <table style="width: 100%; border-collapse: collapse;">
                 <tr><td style="padding: 8px 0;">Pack</td><td style="text-align: right; font-weight: bold;">${planName}</td></tr>
                 <tr><td style="padding: 8px 0;">Amount Charged</td><td style="text-align: right; font-weight: bold;">$${amountCharged.toFixed(2)}</td></tr>
-                <tr><td style="padding: 8px 0;">Credits Added</td><td style="text-align: right; font-weight: bold; color: #16a34a;">+${creditsAdded} hrs</td></tr>
-                <tr><td style="padding: 8px 0;">Available Balance</td><td style="text-align: right; font-weight: bold; color: #16a34a;">${totalCredits} hrs</td></tr>
+                <tr><td style="padding: 8px 0;">Hours Added</td><td style="text-align: right; font-weight: bold; color: #16a34a;">+${formatHours(creditsAdded)}</td></tr>
+                <tr><td style="padding: 8px 0;">Available Balance</td><td style="text-align: right; font-weight: bold; color: #16a34a;">${formatHours(totalCredits)}</td></tr>
               </table>
             </div>
             <p>You can manage your auto-renewal settings from your dashboard at any time.</p>
@@ -591,10 +595,10 @@ async function sendAutoRenewalEmail(
             <h1 style="color: #dc2626;">Auto-Renewal Failed</h1>
             <p>Dear ${studentName},</p>
             <p>We were unable to process your auto-renewal. This may be due to an expired or declined payment method.</p>
-            <p>Please update your payment method or purchase credits manually:</p>
+            <p>Please update your payment method or purchase more hours:</p>
             <div style="text-align: center; margin: 30px 0;">
               <a href="https://learn2lead.page/pricing" style="background: #3b5bdb; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
-                Buy Credits
+                Buy Hours
               </a>
             </div>
             <p><strong>The Learn2Lead Team</strong></p>

@@ -44,7 +44,7 @@ const StudentPaymentSummary: React.FC = () => {
       <Card>
         <CardContent className="py-8 text-center text-muted-foreground">
           <AlertCircle className="h-8 w-8 mx-auto mb-2 text-destructive" />
-          <p className="text-sm">Could not load credit summary.</p>
+          <p className="text-sm">Could not load hours summary.</p>
           <p className="text-xs mt-1">
             Push the latest migrations to Supabase to enable this feature.
           </p>
@@ -69,7 +69,7 @@ const StudentPaymentSummary: React.FC = () => {
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg">
           <Clock className="h-5 w-5" />
-          Student Credits
+          Student Hours
           <span className="text-muted-foreground font-normal text-base">
             — {rows.length} student{rows.length !== 1 ? 's' : ''} running low
           </span>

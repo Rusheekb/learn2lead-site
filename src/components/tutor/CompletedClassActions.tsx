@@ -311,9 +311,9 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
                   This action is permanent
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Credits will be deducted from the student's account and cannot
-                  be automatically restored. Please verify all class information
-                  is correct before completing.
+                  These hours will be deducted from the student's balance and
+                  cannot be automatically restored. Please verify all class
+                  information is correct before completing.
                 </p>
               </div>
             </div>
@@ -360,9 +360,9 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
                 className="w-32"
               />
               <p className="text-xs text-muted-foreground mt-1">
-                Credits are deducted based on this number, in half-hour
-                increments. If the session ran longer or shorter than scheduled,
-                correct it here.
+                The student's hours are deducted based on this number, in
+                half-hour increments. If the session ran longer or shorter than
+                scheduled, correct it here.
               </p>
               {hoursDeviatesSignificantly && (
                 <div className="mt-2 flex items-start gap-2 rounded-md bg-amber-50 border border-amber-200 dark:bg-amber-950/30 dark:border-amber-800 px-3 py-2">

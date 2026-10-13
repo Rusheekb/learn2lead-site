@@ -118,7 +118,7 @@ const WebhookEventLog: React.FC = () => {
           <h3 className="text-base font-semibold">Stripe Webhook Events</h3>
           <p className="text-sm text-muted-foreground mt-0.5">
             Audit log of every incoming Stripe event — use this to diagnose
-            missing credits or failed payments.
+            missing hours or failed payments.
           </p>
         </div>
         <Button

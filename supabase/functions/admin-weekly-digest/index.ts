@@ -123,7 +123,7 @@ Deno.serve(async (req) => {
     // Build HTML sections
     const zeroCreditHtml =
       zeroCredit.length > 0
-        ? `<h3 style="color:#ef4444;margin-top:24px;">🚨 No Credits — Upcoming Session (${zeroCredit.length})</h3>
+        ? `<h3 style="color:#ef4444;margin-top:24px;">🚨 No Hours Left — Upcoming Session (${zeroCredit.length})</h3>
          <table style="width:100%;border-collapse:collapse;margin:8px 0;">
            <thead><tr style="background:#fef2f2;">
              <th style="padding:8px;text-align:left;font-size:12px;">Student</th>
@@ -149,7 +149,7 @@ Deno.serve(async (req) => {
            <thead><tr style="background:#fffbeb;">
              <th style="padding:8px;text-align:left;font-size:12px;">Student</th>
              <th style="padding:8px;text-align:left;font-size:12px;">Last Class</th>
-             <th style="padding:8px;text-align:left;font-size:12px;">Credits Left</th>
+             <th style="padding:8px;text-align:left;font-size:12px;">Hours Left</th>
            </tr></thead>
            <tbody>${atRisk
              .map(

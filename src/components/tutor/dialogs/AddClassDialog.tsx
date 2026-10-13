@@ -20,6 +20,7 @@ import { ErrorHandler } from '@/services/errorHandling';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle } from 'lucide-react';
 import { logger } from '@/lib/logger';
+import { formatHours } from '@/lib/hours';
 
 const log = logger.create('AddClassDialog');
 
@@ -185,7 +186,7 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
         );
         if (error) {
           log.error('Error checking credit balance:', error);
-          toast.error('Could not check student credit balance');
+          toast.error("Could not check the student's hours balance");
         } else {
           setStudentCredits(data ?? 0);
         }
@@ -221,6 +222,17 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
   };
 
   const classCount = newEvent.recurring ? getRecurringClassCount() : 1;
+  // Hours the new class(es) will use, rounded to the half hour the same way
+  // logging deducts — a weekly 1.5-hour class needs 1.5 hours per class, not 1.
+  const hoursPerClass = (() => {
+    const [sh, sm] = (newEvent.startTime || '').split(':').map(Number);
+    const [eh, em] = (newEvent.endTime || '').split(':').map(Number);
+    if ([sh, sm, eh, em].some((n) => Number.isNaN(n))) return 1;
+    let minutes = eh * 60 + em - (sh * 60 + sm);
+    if (minutes <= 0) minutes += 24 * 60;
+    return Math.max(0.5, Math.round((minutes / 60) * 2) / 2);
+  })();
+  const hoursNeeded = classCount * hoursPerClass;
 
   const handleSubmit = async () => {
     if (isSubmitting) return;
@@ -278,38 +290,35 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
                 <Alert variant="destructive" className="mb-4">
                   <AlertTriangle className="h-4 w-4" />
                   <AlertDescription>
-                    This student has <strong>no credits remaining</strong>. They
-                    need to purchase credits before a class can be scheduled.
+                    This student has <strong>no hours remaining</strong>. They
+                    need to purchase more hours before a class can be scheduled.
                   </AlertDescription>
                 </Alert>
               )}
               {studentCredits !== null &&
                 studentCredits > 0 &&
-                studentCredits < classCount && (
+                studentCredits < hoursNeeded && (
                   <Alert className="mb-4 border-amber-500/50 text-amber-700 [&>svg]:text-amber-600">
                     <AlertTriangle className="h-4 w-4" />
                     <AlertDescription>
                       This student has{' '}
-                      <strong>
-                        {studentCredits} credit{studentCredits === 1 ? '' : 's'}
-                      </strong>{' '}
-                      but scheduling {classCount} classes requires {classCount}{' '}
-                      credits.
+                      <strong>{formatHours(studentCredits)}</strong> left, but{' '}
+                      {classCount === 1
+                        ? 'this class needs'
+                        : `these ${classCount} classes need`}{' '}
+                      {formatHours(hoursNeeded)}.
                     </AlertDescription>
                   </Alert>
                 )}
               {studentCredits !== null &&
                 studentCredits > 0 &&
-                studentCredits >= classCount &&
+                studentCredits >= hoursNeeded &&
                 studentCredits <= 2 && (
                   <Alert className="mb-4 border-amber-500/50 text-amber-700 [&>svg]:text-amber-600">
                     <AlertTriangle className="h-4 w-4" />
                     <AlertDescription>
                       This student only has{' '}
-                      <strong>
-                        {studentCredits} credit{studentCredits === 1 ? '' : 's'}
-                      </strong>{' '}
-                      remaining.
+                      <strong>{formatHours(studentCredits)}</strong> remaining.
                     </AlertDescription>
                   </Alert>
                 )}
@@ -336,7 +345,7 @@ const AddClassDialog: React.FC<AddClassDialogProps> = ({
                   }
                 >
                   {isCheckingCredits
-                    ? 'Checking credits...'
+                    ? 'Checking hours...'
                     : isSubmitting
                       ? 'Creating...'
                       : 'Schedule Class'}

@@ -190,7 +190,7 @@ export const AutoRenewalSettings: React.FC = () => {
               'Renewal failed — please check your payment method.';
         toast.error(reason);
       } else {
-        toast.success('Renewal successful! Credits have been added.');
+        toast.success('Renewal successful! Your hours have been added.');
         setLastRenewalError(null);
         await fetchSettings();
       }

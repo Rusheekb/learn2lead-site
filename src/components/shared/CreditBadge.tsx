@@ -2,6 +2,7 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { CreditCard } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatHours } from '@/lib/hours';
 
 interface CreditBadgeProps {
   credits: number | null;
@@ -26,11 +27,6 @@ export const CreditBadge: React.FC<CreditBadgeProps> = ({
     return 'default';
   };
 
-  const displayCredits = Number.isInteger(Math.abs(credits))
-    ? Math.abs(credits)
-    : Math.abs(credits).toFixed(1);
-  const hourLabel = Math.abs(credits) === 1 ? 'hour' : 'hours';
-
   const amountOwed =
     isOverdrawn && !hideAmount && pricePerHour != null
       ? ` ($${(Math.abs(credits) * pricePerHour).toFixed(0)} owed)`
@@ -43,7 +39,8 @@ export const CreditBadge: React.FC<CreditBadgeProps> = ({
     >
       <CreditCard className="h-3.5 w-3.5" />
       <span>
-        {displayCredits} {hourLabel} {isOverdrawn ? 'overdrawn' : 'remaining'}
+        {formatHours(Math.abs(credits))}{' '}
+        {isOverdrawn ? 'overdrawn' : 'remaining'}
         {amountOwed}
       </span>
     </Badge>

@@ -66,7 +66,7 @@ const GettingStartedCard: React.FC = () => {
     },
     {
       label: 'Buy your first hours',
-      description: 'Purchase a credit pack to get started.',
+      description: 'Purchase an hour pack to get started.',
       done: (creditsRemaining ?? 0) > 0,
       icon: <CreditCard className="h-4 w-4" />,
       cta: { label: 'Buy Hours', to: '/pricing' },

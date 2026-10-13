@@ -283,7 +283,7 @@ describe('completeClass', () => {
         expect.any(Object)
       );
       expect(mockToastError).toHaveBeenCalledWith(
-        'Failed to complete class - credit has been restored',
+        'Failed to complete class - the hours have been restored',
         expect.any(Object)
       );
     });
@@ -382,7 +382,7 @@ describe('completeClass', () => {
         })
       );
       expect(mockToastError).toHaveBeenCalledWith(
-        'Class completion failed and credit could not be restored automatically',
+        'Class completion failed and the hours could not be restored automatically',
         expect.any(Object)
       );
     });

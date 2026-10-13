@@ -268,7 +268,7 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
       );
       if (error) throw error;
       if (!result?.success)
-        throw new Error(result?.error || 'Failed to adjust credits');
+        throw new Error(result?.error || 'Failed to adjust hours');
 
       const newBalance = result.new_balance;
 
@@ -292,7 +292,7 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
     } catch (err) {
       log.error('Credit adjustment failed:', err);
       toast.error(
-        err instanceof Error ? err.message : 'Failed to adjust credits'
+        err instanceof Error ? err.message : 'Failed to adjust hours'
       );
     } finally {
       setIsAdjustingCredits(false);
@@ -368,7 +368,7 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
                     {user.role === 'student' && (
                       <div className="rounded-lg border p-3">
                         <p className="text-xs text-muted-foreground">
-                          Remaining Credits
+                          Hours Remaining
                         </p>
                         <p className="text-lg font-semibold">
                           {stats?.totalCredits ?? 0}
@@ -436,7 +436,7 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
                 <div className="space-y-3">
                   <h4 className="text-sm font-medium flex items-center gap-2 text-muted-foreground">
                     <PlusCircle className="h-4 w-4" />
-                    Adjust Credits
+                    Adjust Hours
                   </h4>
                   <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
@@ -477,15 +477,15 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
                       onChange={(e) => setCostPerHour(e.target.value)}
                     />
                     <p className="text-xs text-muted-foreground rounded-md border bg-muted/30 px-2 py-1.5">
-                      {Math.abs(parseFloat(creditAmount) || 0)} classes × $
+                      {Math.abs(parseFloat(creditAmount) || 0)} hours × $
                       {(parseFloat(costPerHour) || 0).toFixed(2)} ={' '}
                       <span className="font-medium text-foreground">
                         ${calculatedTotal.toFixed(2)}
                       </span>{' '}
                       — check this against what was actually paid. Only used
-                      when adding credits; applies to that many upcoming
-                      classes, then Class Cost reverts to the student's normal
-                      Stripe rate.
+                      when adding hours; prices that many upcoming class hours,
+                      then Class Cost reverts to the student's normal Stripe
+                      rate.
                     </p>
                   </div>
 

@@ -158,7 +158,7 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
       {profile.role === 'student' && (
         <SettingsSection
           title="Subscription & Hours"
-          description="Manage your plan, auto-renewal, and credit history."
+          description="Manage your plan, auto-renewal, and hours history."
         >
           <div className="p-6 space-y-4">
             <SubscriptionStatusCard />
