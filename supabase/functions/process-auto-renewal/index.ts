@@ -8,6 +8,7 @@ import {
 } from '../_shared/rateLimiter.ts';
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 import { resolveClassesPerMonth } from '../_shared/renewalPackMapping.ts';
+import { safeEqual } from '../_shared/cronAuth.ts';
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -45,13 +46,54 @@ Deno.serve(async (req) => {
   try {
     logStep('Function started');
 
-    // This function is called internally by deduct-class-credit, validate via service role key
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) throw new Error('No authorization header');
-
     const { student_id, renewal_pack } = await req.json();
     if (!student_id || !renewal_pack) {
       throw new Error('Missing required fields: student_id, renewal_pack');
+    }
+
+    // This charges a saved card, so the caller must be one of exactly two
+    // things: the backend itself (deduct-class-credit, which sends the
+    // service-role key), or the student retrying their own renewal from
+    // AutoRenewalSettings (or an admin). It previously only checked that an
+    // Authorization header existed — any value — so anyone who knew a
+    // student's id could charge that family's card. Rejected callers get a
+    // 401/403 before the error path below can touch settings or send email.
+    const token = (req.headers.get('Authorization') ?? '').replace(
+      /^Bearer\s+/i,
+      ''
+    );
+    const isBackend = safeEqual(
+      token,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    );
+    if (!isBackend) {
+      const { data: userData } = token
+        ? await supabaseClient.auth.getUser(token)
+        : { data: { user: null } };
+      const caller = userData?.user;
+      if (!caller) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 401,
+        });
+      }
+      if (caller.id !== student_id) {
+        const { data: callerProfile } = await supabaseClient
+          .from('profiles')
+          .select('role')
+          .eq('id', caller.id)
+          .single();
+        if (callerProfile?.role !== 'admin') {
+          logStep('Rejected renewal for another student', {
+            caller: caller.id,
+            student_id,
+          });
+          return new Response(JSON.stringify({ error: 'Forbidden' }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 403,
+          });
+        }
+      }
     }
 
     logStep('Processing auto-renewal', { student_id, renewal_pack });

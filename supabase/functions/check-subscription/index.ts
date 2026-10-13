@@ -71,36 +71,14 @@ Deno.serve(async (req) => {
 
     logStep('Authenticating user with token');
 
-    // Decode JWT payload to extract user info
-    let jwtPayload: any;
-    try {
-      const payloadBase64 = token.split('.')[1];
-      if (!payloadBase64) throw new Error('Invalid JWT format');
-      jwtPayload = JSON.parse(atob(payloadBase64));
-      if (!jwtPayload.sub) throw new Error('No sub claim in JWT');
-    } catch (e) {
-      logStep('JWT decode failed', {
-        error: e instanceof Error ? e.message : String(e),
-      });
-      return new Response(
-        JSON.stringify({
-          subscribed: false,
-          credits_remaining: 0,
-          auth_error: true,
-          error: 'Invalid authentication token',
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 401,
-        }
-      );
-    }
-
-    // Verify user exists via admin API
+    // Verify the token with Supabase Auth. This used to base64-decode the
+    // JWT and trust its `sub` claim without checking the signature, so a
+    // forged token naming any user id returned that user's subscription
+    // and balance.
     const { data: adminUserData, error: adminError } =
-      await supabaseClient.auth.admin.getUserById(jwtPayload.sub);
+      await supabaseClient.auth.getUser(token);
     if (adminError || !adminUserData?.user) {
-      logStep('Admin user verification failed', { error: adminError?.message });
+      logStep('Token verification failed', { error: adminError?.message });
       return new Response(
         JSON.stringify({
           subscribed: false,

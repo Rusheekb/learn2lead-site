@@ -16,7 +16,7 @@ export const CRON_SECRET_HEADER = 'x-cron-secret';
  * guessed secret was right. Fails closed when the expected secret isn't
  * configured, rather than letting every request through.
  */
-export function isValidCronSecret(
+export function safeEqual(
   provided: string | null | undefined,
   expected: string | null | undefined
 ): boolean {
@@ -29,6 +29,8 @@ export function isValidCronSecret(
   }
   return diff === 0;
 }
+
+export const isValidCronSecret = safeEqual;
 
 /**
  * Returns a 401 Response when the request lacks the valid cron secret, or
