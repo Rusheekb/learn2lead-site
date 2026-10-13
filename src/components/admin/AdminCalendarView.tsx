@@ -5,7 +5,7 @@ import {
   getViewerTimezone,
   zonesDiffer,
 } from '@/lib/time';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -35,6 +35,7 @@ import {
   Users,
 } from 'lucide-react';
 import { fetchScheduledClasses } from '@/services/class/fetch';
+import CompletedClassActions from '@/components/tutor/CompletedClassActions';
 import { supabase } from '@/integrations/supabase/client';
 import { transformDbRecordToClassEvent } from '@/services/utils/classEventMapper';
 import { format, isSameDay } from 'date-fns';
@@ -354,49 +355,68 @@ const studentLocalTime = (cls: ClassEvent): string | null => {
   return formatTimeWithZone(cls.startAt, studentTz);
 };
 
-const ClassCard: React.FC<{ cls: ClassEvent }> = ({ cls }) => (
-  <div
-    className={`flex items-start gap-3 rounded-lg border p-3 text-sm ${cls.isCodeLog ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-900' : ''}`}
-  >
-    <div className="flex flex-col items-center text-muted-foreground">
-      <Clock className="h-4 w-4 mb-0.5" />
-      <span className="text-xs">{cls.startTime}</span>
-      <span className="text-xs">{cls.endTime}</span>
-      {cls.tzAbbr && (
-        <span className="text-[10px] uppercase tracking-wide">
-          {cls.tzAbbr}
-        </span>
-      )}
-    </div>
-    <div className="flex-1 min-w-0">
-      <p className="font-medium truncate">{cls.title || cls.subject}</p>
-      <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1 text-xs text-muted-foreground">
-        <span>Student: {cls.studentName}</span>
-        {studentLocalTime(cls) && (
-          <span>Student's time: {studentLocalTime(cls)}</span>
+const ClassCard: React.FC<{ cls: ClassEvent }> = ({ cls }) => {
+  const queryClient = useQueryClient();
+  // Admins can log a class on a tutor's behalf (e.g. an unresponsive or
+  // departing tutor) once its start time has passed — same flow, credit
+  // deduction and checks as the tutor's own "Mark Complete".
+  const canLogForTutor =
+    !cls.isCodeLog &&
+    cls.status !== 'cancelled' &&
+    !!cls.startAt &&
+    new Date(cls.startAt).getTime() <= Date.now();
+  const refresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['admin-all-classes'] });
+    queryClient.invalidateQueries({ queryKey: ['admin-all-class-logs'] });
+  };
+
+  return (
+    <div
+      className={`flex items-start gap-3 rounded-lg border p-3 text-sm ${cls.isCodeLog ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-900' : ''}`}
+    >
+      <div className="flex flex-col items-center text-muted-foreground">
+        <Clock className="h-4 w-4 mb-0.5" />
+        <span className="text-xs">{cls.startTime}</span>
+        <span className="text-xs">{cls.endTime}</span>
+        {cls.tzAbbr && (
+          <span className="text-[10px] uppercase tracking-wide">
+            {cls.tzAbbr}
+          </span>
         )}
-        <span>Tutor: {cls.tutorName}</span>
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="font-medium truncate">{cls.title || cls.subject}</p>
+        <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1 text-xs text-muted-foreground">
+          <span>Student: {cls.studentName}</span>
+          {studentLocalTime(cls) && (
+            <span>Student's time: {studentLocalTime(cls)}</span>
+          )}
+          <span>Tutor: {cls.tutorName}</span>
+        </div>
+      </div>
+      <div className="flex flex-col items-end gap-1">
+        <Badge variant="outline" className="text-xs">
+          {cls.subject}
+        </Badge>
+        <Badge
+          variant={
+            cls.isCodeLog
+              ? 'default'
+              : cls.status === 'cancelled'
+                ? 'destructive'
+                : 'secondary'
+          }
+          className={`text-xs ${cls.isCodeLog ? 'bg-emerald-600 hover:bg-emerald-600' : ''}`}
+        >
+          {cls.isCodeLog ? 'logged' : cls.status}
+        </Badge>
+        {canLogForTutor && (
+          <CompletedClassActions classEvent={cls} onUpdate={refresh} />
+        )}
       </div>
     </div>
-    <div className="flex flex-col items-end gap-1">
-      <Badge variant="outline" className="text-xs">
-        {cls.subject}
-      </Badge>
-      <Badge
-        variant={
-          cls.isCodeLog
-            ? 'default'
-            : cls.status === 'cancelled'
-              ? 'destructive'
-              : 'secondary'
-        }
-        className={`text-xs ${cls.isCodeLog ? 'bg-emerald-600 hover:bg-emerald-600' : ''}`}
-      >
-        {cls.isCodeLog ? 'logged' : cls.status}
-      </Badge>
-    </div>
-  </div>
-);
+  );
+};
 
 interface MultiSelectFilterProps {
   label: string;

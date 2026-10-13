@@ -94,7 +94,7 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
         const { data } = await supabase
           .from('students')
           .select('prepaid_balance')
-          .eq('name', user.name)
+          .eq('email', user.email)
           .maybeSingle();
         if (data) {
           setPrepaidBalance(Number(data.prepaid_balance) || 0);
@@ -103,7 +103,7 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
         const { data } = await supabase
           .from('tutors')
           .select('hourly_rate')
-          .eq('name', user.name)
+          .eq('email', user.email)
           .maybeSingle();
         if (data) {
           setHourlyRate(data.hourly_rate?.toString() || '');
@@ -194,13 +194,20 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
     if (!user || user.role !== 'tutor') return;
     setIsSaving(true);
     try {
-      const { error } = await supabase
+      // Matched by email (how class pay is calculated too). This used to
+      // match by name, which silently updated nothing whenever the display
+      // name differed from the tutors row — while still reporting success.
+      const { data: updated, error } = await supabase
         .from('tutors')
         .update({
           hourly_rate: hourlyRate ? parseFloat(hourlyRate) : null,
         })
-        .eq('name', user.name);
+        .eq('email', user.email)
+        .select('id');
       if (error) throw error;
+      if (!updated || updated.length === 0) {
+        throw new Error('No tutor record found for this email');
+      }
       toast.success('Rate updated successfully');
       logAdminAction({
         actionType: 'rates_updated',

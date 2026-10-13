@@ -120,6 +120,27 @@ export type Database = {
         };
         Relationships: [];
       };
+      calendar_feed_tokens: {
+        Row: {
+          created_at: string;
+          rotated_at: string | null;
+          token: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          rotated_at?: string | null;
+          token?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          rotated_at?: string | null;
+          token?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       class_cancellations: {
         Row: {
           cancelled_at: string;
@@ -519,7 +540,6 @@ export type Database = {
         Row: {
           avatar_url: string | null;
           bio: string | null;
-          calendar_feed_id: string | null;
           created_at: string;
           email: string;
           first_name: string;
@@ -535,7 +555,6 @@ export type Database = {
         Insert: {
           avatar_url?: string | null;
           bio?: string | null;
-          calendar_feed_id?: string | null;
           created_at?: string;
           email: string;
           first_name: string;
@@ -551,7 +570,6 @@ export type Database = {
         Update: {
           avatar_url?: string | null;
           bio?: string | null;
-          calendar_feed_id?: string | null;
           created_at?: string;
           email?: string;
           first_name?: string;
@@ -1268,7 +1286,7 @@ export type Database = {
         Args: { p_date?: string; p_payment_filter?: string; p_search?: string };
         Returns: Json;
       };
-      get_ics_feed: { Args: { feed_id: string }; Returns: string };
+      get_my_calendar_feed_token: { Args: never; Returns: string };
       get_my_payroll_history: {
         Args: never;
         Returns: {
@@ -1339,14 +1357,18 @@ export type Database = {
           class_date: string;
           class_id: string;
           class_start: string;
+          end_at: string;
+          start_at: string;
           student_email: string;
           student_name: string;
           student_notify_reminders: boolean;
+          student_timezone: string;
           subject: string;
           title: string;
           tutor_email: string;
           tutor_name: string;
           tutor_notify_reminders: boolean;
+          tutor_timezone: string;
           zoom_link: string;
         }[];
       };
@@ -1384,7 +1406,6 @@ export type Database = {
           unpaid_count: number;
         }[];
       };
-      get_user_calendar_events: { Args: { user_id: string }; Returns: string };
       get_zero_credit_upcoming_students: {
         Args: never;
         Returns: {
@@ -1414,6 +1435,7 @@ export type Database = {
         Args: { p_class_id: string; p_reason: string; p_student_id: string };
         Returns: Json;
       };
+      rotate_my_calendar_feed_token: { Args: never; Returns: string };
       sync_user_roles: { Args: never; Returns: Json };
     };
     Enums: {

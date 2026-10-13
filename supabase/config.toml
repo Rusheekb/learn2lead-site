@@ -34,6 +34,9 @@ project_id = "lnhtlbatcufmsyoujuqh"
   verify_jwt = false
 [functions.admin-weekly-digest]
   verify_jwt = false
+# Polled by calendar apps with no login; the per-user token is the credential.
+[functions.calendar-feed]
+  verify_jwt = false
 
 [auth]
   enabled = true

@@ -121,11 +121,16 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
         throw new Error('Failed to fetch tutor profile for logging');
       }
 
-      // Improve name matching for RLS policies
+      // When an admin logs a class on a tutor's behalf, the class ID must use
+      // the class's own tutor (e.g. "AR-HQ-…"), not the admin's initials.
+      const loggingForAnotherTutor =
+        !!classEvent.tutorId && classEvent.tutorId !== user.id;
       const tutorName =
-        currentUserProfile?.first_name && currentUserProfile?.last_name
-          ? `${currentUserProfile.first_name} ${currentUserProfile.last_name}`.trim()
-          : currentUserProfile?.email || 'Unknown Tutor';
+        loggingForAnotherTutor && classEvent.tutorName
+          ? classEvent.tutorName
+          : currentUserProfile?.first_name && currentUserProfile?.last_name
+            ? `${currentUserProfile.first_name} ${currentUserProfile.last_name}`.trim()
+            : currentUserProfile?.email || 'Unknown Tutor';
 
       // Reuse the duration calculated above for optimistic deduction
 

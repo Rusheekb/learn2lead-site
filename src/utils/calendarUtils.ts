@@ -1,4 +1,5 @@
 import { logger } from '@/lib/logger';
+import { supabase, SUPABASE_URL } from '@/integrations/supabase/client';
 import { classInstantsFromInput, getViewerTimezone } from '@/lib/time';
 
 const log = logger.create('calendarUtils');
@@ -106,19 +107,41 @@ const describe = (event: CalendarEventInput) => {
   return description;
 };
 
+const feedUrlForToken = (token: string) =>
+  `${SUPABASE_URL}/functions/v1/calendar-feed?token=${token}`;
+
 /**
- * Returns the calendar feed URL for a given user
+ * The signed-in user's private calendar feed URL (served by the
+ * calendar-feed edge function). The token is the only credential — calendar
+ * apps poll it without logging in — so it's random, per user, and resettable.
  */
-export const getUserCalendarFeedUrl = async (
-  userId: string
-): Promise<string> => {
-  try {
-    const baseUrl = window.location.origin;
-    return `${baseUrl}/api/calendar/ics/${userId}`;
-  } catch (error) {
-    log.error('Error getting calendar feed URL', error);
-    return '';
+export const getMyCalendarFeedUrl = async (): Promise<string | null> => {
+  const { data, error } = await supabase.rpc('get_my_calendar_feed_token');
+  if (error || !data) {
+    log.error('Error getting calendar feed token', error);
+    return null;
   }
+  return feedUrlForToken(data);
+};
+
+/** Replace the feed token; any previously shared link stops working. */
+export const resetMyCalendarFeedUrl = async (): Promise<string | null> => {
+  const { data, error } = await supabase.rpc('rotate_my_calendar_feed_token');
+  if (error || !data) {
+    log.error('Error resetting calendar feed token', error);
+    return null;
+  }
+  return feedUrlForToken(data);
+};
+
+/** One-tap subscribe links for a feed URL. */
+export const calendarSubscribeLinks = (feedUrl: string) => {
+  const webcal = feedUrl.replace(/^https?:\/\//, 'webcal://');
+  return {
+    // Apple Calendar (and most desktop apps) handle webcal:// directly.
+    apple: webcal,
+    google: `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(webcal)}`,
+  };
 };
 
 /**

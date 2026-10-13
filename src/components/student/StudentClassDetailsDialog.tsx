@@ -27,6 +27,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { viewClassFile, deleteClassFile } from '@/services/classUploadsService';
 import { logger } from '@/lib/logger';
+import CalendarLinks from '@/components/shared/CalendarLinks';
 
 const log = logger.create('StudentClassDetailsDialog');
 
@@ -329,6 +330,21 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
                   </div>
 
                   <div className="space-y-3">
+                    <CalendarLinks
+                      dropdownOnly
+                      classEvent={{
+                        id: classSession.id,
+                        title: classSession.title,
+                        date: classSession.date,
+                        startTime: classSession.startTime,
+                        endTime: classSession.endTime,
+                        startAt: classSession.startAt,
+                        endAt: classSession.endAt,
+                        subject: classSession.subjectId,
+                        zoomLink: classSession.zoomLink || null,
+                        notes: null,
+                      }}
+                    />
                     {classSession.zoomLink && (
                       <Button className="w-full" asChild>
                         <a

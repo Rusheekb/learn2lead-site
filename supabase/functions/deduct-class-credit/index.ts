@@ -158,23 +158,24 @@ async function notifyBlockedClassLog(
       return;
     }
 
-    const [studentRes, tutorRes, classRes] = await Promise.all([
+    const [studentRes, classRes] = await Promise.all([
       supabaseClient
         .from('profiles')
         .select('email, first_name, last_name')
         .eq('id', args.studentId)
         .single(),
       supabaseClient
-        .from('profiles')
-        .select('email, first_name, last_name')
-        .eq('id', args.tutorUserId)
-        .single(),
-      supabaseClient
         .from('scheduled_classes')
-        .select('date, subject')
+        .select('date, subject, tutor_id')
         .eq('id', args.classId)
         .maybeSingle(),
     ]);
+    // Name the class's own tutor — an admin may be logging on their behalf.
+    const tutorRes = await supabaseClient
+      .from('profiles')
+      .select('email, first_name, last_name')
+      .eq('id', classRes.data?.tutor_id ?? args.tutorUserId)
+      .single();
 
     const student = studentRes.data;
     if (!student?.email) {

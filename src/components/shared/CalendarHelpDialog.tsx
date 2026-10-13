@@ -8,12 +8,8 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Calendar, ExternalLink, Download, Copy } from 'lucide-react';
-import { copyToClipboard } from '@/utils/clipboardUtils';
-import { getUserCalendarFeedUrl } from '@/utils/calendarUtils';
-import { toast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
+import { Calendar, ExternalLink, Download } from 'lucide-react';
+import CalendarFeedLink from './CalendarFeedLink';
 
 interface CalendarHelpDialogProps {
   isOpen: boolean;
@@ -24,28 +20,6 @@ const CalendarHelpDialog: React.FC<CalendarHelpDialogProps> = ({
   isOpen,
   setIsOpen,
 }) => {
-  const { user } = useAuth();
-  const [feedUrl, setFeedUrl] = React.useState<string | null>(null);
-
-  React.useEffect(() => {
-    if (isOpen && user?.id) {
-      getUserCalendarFeedUrl(user.id).then((url) => {
-        setFeedUrl(url);
-      });
-    }
-  }, [isOpen, user?.id]);
-
-  const handleCopyFeedUrl = async () => {
-    if (!feedUrl) return;
-
-    const success = await copyToClipboard(feedUrl);
-    if (success) {
-      toast.success('Calendar feed URL copied to clipboard');
-    } else {
-      toast.error('Please select and copy the URL manually');
-    }
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-lg max-h-[90vh]">
@@ -107,27 +81,9 @@ const CalendarHelpDialog: React.FC<CalendarHelpDialogProps> = ({
                     <h4 className="text-md font-medium">
                       Your Calendar Feed URL
                     </h4>
-                    {feedUrl ? (
-                      <div className="flex mt-2">
-                        <Input
-                          value={feedUrl}
-                          readOnly
-                          className="flex-1 text-xs font-mono"
-                        />
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={handleCopyFeedUrl}
-                          className="ml-2"
-                        >
-                          <Copy className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-gray-500">
-                        Loading your feed URL...
-                      </p>
-                    )}
+                    <div className="mt-2">
+                      <CalendarFeedLink />
+                    </div>
                   </div>
 
                   <div className="space-y-3">
