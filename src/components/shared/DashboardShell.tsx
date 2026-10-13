@@ -2,7 +2,6 @@ import React, { ReactNode, useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import AppSidebar from './AppSidebar';
 import PageBreadcrumbs from './PageBreadcrumbs';
-import { useClassNotifications } from '@/hooks/useClassNotifications';
 import { Menu, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -19,8 +18,6 @@ const DashboardShell: React.FC<DashboardShellProps> = ({ title, children }) => {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const { userRole } = useAuth();
-
-  useClassNotifications();
 
   // Cmd+K / Ctrl+K — admin only
   useEffect(() => {

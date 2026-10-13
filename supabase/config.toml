@@ -8,8 +8,6 @@ project_id = "lnhtlbatcufmsyoujuqh"
 [functions]
 [functions.check-subscription]
   verify_jwt = false
-[functions.check-upcoming-classes]
-  verify_jwt = true
 [functions.secure-file-upload]
   verify_jwt = true
 [functions.manual-credit-allocation]
