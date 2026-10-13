@@ -1,0 +1,12 @@
+-- validate_file_access_permissions(file_path, requested_by) confirmed dead:
+-- no application code calls it, and no RLS policy (public or storage)
+-- references it — real file access control lives entirely in the separate
+-- storage.objects policies already in place. It also had a real logic flaw
+-- (requested_by defaults to auth.uid() but any caller can pass a different
+-- uuid explicitly, letting a tutor claim to be a different tutor for the
+-- ownership check) and was anon-executable (SECURITY DEFINER, PUBLIC
+-- execute grant, no internal auth check). Since nothing calls it, the
+-- correct fix is removal rather than hardening unreachable code — same
+-- reasoning as the other unauthenticated-RPC lockdown, but here the
+-- function isn't needed at all.
+DROP FUNCTION IF EXISTS public.validate_file_access_permissions(text, uuid);
