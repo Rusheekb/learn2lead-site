@@ -140,6 +140,7 @@ const Features = () => {
                   'Science',
                   'English & Writing',
                   'Test Prep',
+                  'LSAT',
                   'Speech & Debate',
                   'History',
                   'Foreign Languages',
