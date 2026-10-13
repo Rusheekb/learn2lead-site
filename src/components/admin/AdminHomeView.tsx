@@ -15,6 +15,13 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { format, parseISO } from 'date-fns';
 import { Link } from 'react-router-dom';
+import {
+  formatTime12,
+  formatTimeWithZone,
+  getViewerTimezone,
+  instantToZonedParts,
+  zonedToInstant,
+} from '@/lib/time';
 import TutorPaymentSummary from './class-logs/TutorPaymentSummary';
 import StudentPaymentSummary from './class-logs/StudentPaymentSummary';
 import RevenueOverview from './RevenueOverview';
@@ -26,8 +33,8 @@ interface TodayClass {
   id: string;
   title: string;
   subject: string;
-  start_time: string;
-  end_time: string;
+  start_at: string;
+  end_at: string;
   student: {
     first_name: string | null;
     last_name: string | null;
@@ -72,38 +79,39 @@ const displayName = (
   return full || p.email;
 };
 
-const formatTime = (t: string) => {
-  try {
-    const [h, m] = t.split(':').map(Number);
-    const ampm = h >= 12 ? 'PM' : 'AM';
-    return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${ampm}`;
-  } catch {
-    return t;
-  }
-};
-
-const today = new Date().toISOString().split('T')[0];
-
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const AdminHomeView: React.FC = () => {
+  // "Today" is the viewer's calendar day in their own time zone. (This used
+  // to be the UTC date, so after 7 PM Central it showed tomorrow's classes.)
+  const tz = getViewerTimezone();
+  const today = instantToZonedParts(new Date(), tz).date;
+  const dayStart = zonedToInstant(today, '00:00', tz);
+  const [y, m, d] = today.split('-').map(Number);
+  const tomorrow = new Date(Date.UTC(y, m - 1, d + 1))
+    .toISOString()
+    .slice(0, 10);
+  // Next local midnight, so 23- and 25-hour DST days are handled exactly.
+  const dayEnd = zonedToInstant(tomorrow, '00:00', tz);
+
   // Today's classes
   const { data: todayClasses = [], isLoading: loadingToday } = useQuery<
     TodayClass[]
   >({
-    queryKey: ['admin-today-classes', today],
+    queryKey: ['admin-today-classes', today, tz],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('scheduled_classes')
         .select(
           `
-          id, title, subject, start_time, end_time,
+          id, title, subject, start_at, end_at,
           student:profiles!scheduled_classes_student_id_fkey(first_name, last_name, email),
           tutor:profiles!scheduled_classes_tutor_id_fkey(first_name, last_name, email)
         `
         )
-        .eq('date', today)
-        .order('start_time');
+        .gte('start_at', dayStart.toISOString())
+        .lt('start_at', dayEnd.toISOString())
+        .order('start_at');
       if (error) throw error;
       return (data as unknown as TodayClass[]) || [];
     },
@@ -192,7 +200,8 @@ const AdminHomeView: React.FC = () => {
                     </div>
                   </div>
                   <span className="text-sm text-muted-foreground whitespace-nowrap shrink-0">
-                    {formatTime(cls.start_time)} – {formatTime(cls.end_time)}
+                    {formatTime12(cls.start_at, tz)} –{' '}
+                    {formatTimeWithZone(cls.end_at, tz)}
                   </span>
                 </div>
               ))}

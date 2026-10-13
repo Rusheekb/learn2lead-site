@@ -23,9 +23,20 @@ export interface ClassEvent extends BaseEvent {
   tutorName?: string;
   studentId?: string;
   studentName?: string;
+  /** Class date in the viewer's time zone (see src/lib/time.ts). */
   date: Date | string;
+  /** HH:mm in the viewer's time zone. */
   startTime: string;
+  /** HH:mm in the viewer's time zone. */
   endTime: string;
+  /** Exact start (ISO). Source of truth when present. */
+  startAt?: string | null;
+  /** Exact end (ISO). */
+  endAt?: string | null;
+  /** Viewer's zone abbreviation for this class's date, e.g. "CDT". */
+  tzAbbr?: string;
+  /** The student's saved time zone (admin/tutor views). */
+  studentTimezone?: string | null;
   subject: string;
   zoomLink?: string | null;
   notes: string | null;

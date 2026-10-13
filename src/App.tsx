@@ -18,6 +18,7 @@ const ReferralLanding = React.lazy(() => import('./pages/ReferralLanding'));
 import { AuthProvider } from './contexts/AuthContext';
 import { SubscriptionProvider } from './contexts/SubscriptionContext';
 import { useRoleSync } from './hooks/useRoleSync';
+import TimezoneSync from './components/shared/TimezoneSync';
 import PostHogPageView from './components/shared/PostHogPageView';
 import ErrorBoundary from './components/ErrorBoundary';
 import InlineErrorFallback from './components/shared/InlineErrorFallback';
@@ -265,6 +266,7 @@ function App() {
             <AuthProvider>
               <SubscriptionProvider>
                 <RoutePersistence />
+                <TimezoneSync />
                 <PostHogPageView />
                 <Toaster />
                 <Sonner />

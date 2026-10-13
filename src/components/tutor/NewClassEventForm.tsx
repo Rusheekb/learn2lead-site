@@ -21,6 +21,7 @@ import { Calendar as CalendarIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import ClassTimezoneHint from '@/components/tutor/forms/ClassTimezoneHint';
 import {
   addWeeks,
   eachWeekOfInterval,
@@ -232,6 +233,15 @@ const NewClassEventForm: React.FC<NewClassEventFormProps> = ({
           {!newEvent.endTime && (
             <p className="text-sm text-red-600">End time is required</p>
           )}
+        </div>
+        <div className="col-span-2">
+          <ClassTimezoneHint
+            studentId={newEvent.studentId}
+            studentName={newEvent.studentName}
+            date={newEvent.date as Date | string | null}
+            startTime={newEvent.startTime}
+            endTime={newEvent.endTime}
+          />
         </div>
       </div>
 

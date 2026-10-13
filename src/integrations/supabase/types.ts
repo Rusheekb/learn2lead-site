@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: '12.2.3 (519615d)';
+    PostgrestVersion: '12.2.3';
   };
   public: {
     Tables: {
@@ -101,6 +101,24 @@ export type Database = {
             referencedColumns: ['id'];
           },
         ];
+      };
+      blocked_log_notifications: {
+        Row: {
+          class_id: string;
+          created_at: string;
+          student_id: string;
+        };
+        Insert: {
+          class_id: string;
+          created_at?: string;
+          student_id: string;
+        };
+        Update: {
+          class_id?: string;
+          created_at?: string;
+          student_id?: string;
+        };
+        Relationships: [];
       };
       class_cancellations: {
         Row: {
@@ -227,6 +245,7 @@ export type Database = {
           disputed: boolean | null;
           HW: string | null;
           id: string;
+          start_at: string | null;
           'Student Name': string | null;
           student_feedback: string | null;
           student_payment_date: string | null;
@@ -235,6 +254,7 @@ export type Database = {
           Subject: string | null;
           'Time (CST)': string | null;
           'Time (hrs)': string | null;
+          timezone: string;
           Title: string | null;
           'Tutor Cost': number | null;
           'Tutor Name': string | null;
@@ -256,6 +276,7 @@ export type Database = {
           disputed?: boolean | null;
           HW?: string | null;
           id?: string;
+          start_at?: string | null;
           'Student Name'?: string | null;
           student_feedback?: string | null;
           student_payment_date?: string | null;
@@ -264,6 +285,7 @@ export type Database = {
           Subject?: string | null;
           'Time (CST)'?: string | null;
           'Time (hrs)'?: string | null;
+          timezone?: string;
           Title?: string | null;
           'Tutor Cost'?: number | null;
           'Tutor Name'?: string | null;
@@ -285,6 +307,7 @@ export type Database = {
           disputed?: boolean | null;
           HW?: string | null;
           id?: string;
+          start_at?: string | null;
           'Student Name'?: string | null;
           student_feedback?: string | null;
           student_payment_date?: string | null;
@@ -293,6 +316,7 @@ export type Database = {
           Subject?: string | null;
           'Time (CST)'?: string | null;
           'Time (hrs)'?: string | null;
+          timezone?: string;
           Title?: string | null;
           'Tutor Cost'?: number | null;
           'Tutor Name'?: string | null;
@@ -498,12 +522,13 @@ export type Database = {
           calendar_feed_id: string | null;
           created_at: string;
           email: string;
-          first_name: string | null;
+          first_name: string;
           id: string;
           last_name: string | null;
           notify_class_reminders: boolean | null;
           notify_low_credits: boolean | null;
           role: Database['public']['Enums']['app_role'];
+          timezone: string | null;
           updated_at: string;
           zoom_link: string | null;
         };
@@ -513,12 +538,13 @@ export type Database = {
           calendar_feed_id?: string | null;
           created_at?: string;
           email: string;
-          first_name?: string | null;
+          first_name: string;
           id: string;
           last_name?: string | null;
           notify_class_reminders?: boolean | null;
           notify_low_credits?: boolean | null;
           role?: Database['public']['Enums']['app_role'];
+          timezone?: string | null;
           updated_at?: string;
           zoom_link?: string | null;
         };
@@ -528,12 +554,13 @@ export type Database = {
           calendar_feed_id?: string | null;
           created_at?: string;
           email?: string;
-          first_name?: string | null;
+          first_name?: string;
           id?: string;
           last_name?: string | null;
           notify_class_reminders?: boolean | null;
           notify_low_credits?: boolean | null;
           role?: Database['public']['Enums']['app_role'];
+          timezone?: string | null;
           updated_at?: string;
           zoom_link?: string | null;
         };
@@ -669,6 +696,7 @@ export type Database = {
           attendance: string | null;
           created_at: string;
           date: string;
+          end_at: string;
           end_time: string;
           id: string;
           materials_url: string[] | null;
@@ -676,10 +704,12 @@ export type Database = {
           relationship_id: string | null;
           reminder_24h_sent: boolean | null;
           reminder_sent: boolean | null;
+          start_at: string;
           start_time: string;
           status: string;
           student_id: string;
           subject: string;
+          timezone: string;
           title: string;
           tutor_id: string;
           updated_at: string;
@@ -689,6 +719,7 @@ export type Database = {
           attendance?: string | null;
           created_at?: string;
           date: string;
+          end_at: string;
           end_time: string;
           id?: string;
           materials_url?: string[] | null;
@@ -696,10 +727,12 @@ export type Database = {
           relationship_id?: string | null;
           reminder_24h_sent?: boolean | null;
           reminder_sent?: boolean | null;
+          start_at: string;
           start_time: string;
           status?: string;
           student_id: string;
           subject: string;
+          timezone?: string;
           title: string;
           tutor_id: string;
           updated_at?: string;
@@ -709,6 +742,7 @@ export type Database = {
           attendance?: string | null;
           created_at?: string;
           date?: string;
+          end_at?: string;
           end_time?: string;
           id?: string;
           materials_url?: string[] | null;
@@ -716,10 +750,12 @@ export type Database = {
           relationship_id?: string | null;
           reminder_24h_sent?: boolean | null;
           reminder_sent?: boolean | null;
+          start_at?: string;
           start_time?: string;
           status?: string;
           student_id?: string;
           subject?: string;
+          timezone?: string;
           title?: string;
           tutor_id?: string;
           updated_at?: string;
@@ -1191,7 +1227,6 @@ export type Database = {
         };
         Returns: Json;
       };
-      check_upcoming_classes: { Args: never; Returns: undefined };
       complete_class_atomic: {
         Args: {
           p_additional_info: string;
@@ -1380,10 +1415,6 @@ export type Database = {
         Returns: Json;
       };
       sync_user_roles: { Args: never; Returns: Json };
-      validate_file_access_permissions: {
-        Args: { file_path: string; requested_by?: string };
-        Returns: boolean;
-      };
     };
     Enums: {
       app_role: 'student' | 'tutor' | 'admin';

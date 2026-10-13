@@ -2,6 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 import { Resend } from 'npm:resend@2.0.0';
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 import { requireCronSecret } from '../_shared/cronAuth.ts';
+import { formatDateInZone, formatTimeInZone } from '../_shared/timeFormat.ts';
 import {
   getRateLimitKey,
   checkRateLimit,
@@ -20,7 +21,11 @@ interface ScheduledClass {
   title: string;
   subject: string;
   class_date: string; // DATE as ISO string e.g. "2026-07-03"
-  class_start: string; // TIME e.g. "14:00:00"
+  class_start: string; // TIME e.g. "14:00:00" (Central)
+  start_at: string; // exact start (ISO)
+  end_at: string;
+  student_timezone: string | null;
+  tutor_timezone: string | null;
   student_name: string;
   student_email: string;
   tutor_name: string;
@@ -30,28 +35,17 @@ interface ScheduledClass {
   tutor_notify_reminders: boolean;
 }
 
-function formatClassTime(timeStr: string): string {
-  // timeStr = "14:00:00"
-  const [h, m] = timeStr.split(':').map(Number);
-  const ampm = h >= 12 ? 'PM' : 'AM';
-  const hour12 = h % 12 || 12;
-  return `${hour12}:${String(m).padStart(2, '0')} ${ampm} CST`;
-}
-
-function formatClassDate(dateStr: string): string {
-  // dateStr = "2026-07-03" — parse as local date to avoid UTC-shift
-  const [y, mo, d] = dateStr.split('-').map(Number);
-  const date = new Date(y, mo - 1, d);
-  return date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  });
-}
+// Each recipient sees the class in their own time zone (profiles.timezone,
+// falling back to Central), with a DST-correct label — this used to append a
+// hardcoded "CST" to the Central clock time for everyone.
+const timeFor = (cls: ScheduledClass, tz: string | null) =>
+  formatTimeInZone(cls.start_at, tz ?? '');
+const dateFor = (cls: ScheduledClass, tz: string | null) =>
+  formatDateInZone(cls.start_at, tz ?? '');
 
 async function sendStudentReminder(cls: ScheduledClass): Promise<void> {
-  const dateStr = formatClassDate(cls.class_date);
-  const timeStr = formatClassTime(cls.class_start);
+  const dateStr = dateFor(cls, cls.student_timezone);
+  const timeStr = timeFor(cls, cls.student_timezone);
 
   const zoomSection = cls.zoom_link
     ? `<p style="text-align:center;margin:16px 0;">
@@ -91,8 +85,8 @@ async function sendStudentReminder(cls: ScheduledClass): Promise<void> {
 }
 
 async function sendTutorReminder(cls: ScheduledClass): Promise<void> {
-  const dateStr = formatClassDate(cls.class_date);
-  const timeStr = formatClassTime(cls.class_start);
+  const dateStr = dateFor(cls, cls.tutor_timezone);
+  const timeStr = timeFor(cls, cls.tutor_timezone);
 
   const zoomSection = cls.zoom_link
     ? `<p style="text-align:center;margin:16px 0;">

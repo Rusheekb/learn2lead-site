@@ -2,6 +2,25 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { ensureDateFormat } from '@/utils/safeDateUtils';
 import { retryWithBackoff } from '@/utils/retryWithBackoff';
+import { BUSINESS_TIMEZONE, classInstantsFromInput } from '@/lib/time';
+
+/**
+ * Exact start/end for a class entered as date + clock times. `timezone` is
+ * the zone those clock times were entered in (the scheduler's); when absent
+ * they're Central, which is what the form has always meant.
+ */
+const instantsFor = (
+  date: string,
+  startTime: string,
+  endTime: string,
+  timezone?: string
+) => {
+  const tz = timezone || BUSINESS_TIMEZONE;
+  return {
+    ...classInstantsFromInput(date, startTime, endTime, tz),
+    timezone: tz,
+  };
+};
 
 export const createScheduledClassBatch = async (
   sharedData: Record<string, any>,
@@ -9,9 +28,17 @@ export const createScheduledClassBatch = async (
 ): Promise<number> => {
   try {
     const rows = dates.map((date) => ({
+      ...instantsFor(
+        ensureDateFormat(date),
+        sharedData.start_time,
+        sharedData.end_time,
+        sharedData.timezone
+      ),
       title: sharedData.title,
       tutor_id: sharedData.tutor_id,
       student_id: sharedData.student_id,
+      // Kept for the legacy columns; the database trigger overwrites them
+      // with the Central clock time derived from start_at.
       date: ensureDateFormat(date),
       start_time: sharedData.start_time,
       end_time: sharedData.end_time,
@@ -61,6 +88,12 @@ export const createScheduledClass = async (
 
     // Create a properly typed object for insertion
     const insertData = {
+      ...instantsFor(
+        ensureDateFormat(classData.date),
+        classData.start_time,
+        classData.end_time,
+        classData.timezone
+      ),
       title: classData.title,
       tutor_id: classData.tutor_id,
       student_id: classData.student_id,

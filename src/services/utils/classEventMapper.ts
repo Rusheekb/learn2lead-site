@@ -15,6 +15,11 @@ import { parseNumericString } from '@/utils/numberUtils';
 import { parseStartTime } from './timeFormatUtils';
 import { parseDateToLocal } from '@/utils/safeDateUtils';
 import { logger } from '@/lib/logger';
+import {
+  classTimesForViewer,
+  instantToZonedParts,
+  getViewerTimezone,
+} from '@/lib/time';
 
 const log = logger.create('classEventMapper');
 
@@ -40,6 +45,7 @@ interface DbRecord {
   disputed?: boolean | null;
   dispute_reason?: string | null;
   'Class ID'?: string | null;
+  start_at?: string | null;
 }
 
 export const transformDbRecordToClassEvent = (record: unknown): ClassEvent => {
@@ -50,23 +56,37 @@ export const transformDbRecordToClassEvent = (record: unknown): ClassEvent => {
 
   const dbRecord = record as DbRecord;
   try {
-    let dateObj: Date;
+    const duration = parseNumericString(dbRecord['Time (hrs)']);
 
-    if (dbRecord.Date) {
+    // Shown in the viewer's time zone. start_at is the exact start; older
+    // rows without it fall back to Date + "Time (CST)" as Central time.
+    const rawStartTime = dbRecord['Time (CST)'] || '';
+    const times = classTimesForViewer({
+      start_at: dbRecord.start_at,
+      date: dbRecord.Date,
+      start_time: rawStartTime ? parseStartTime(rawStartTime) : null,
+    });
+    const startTime = times.startTime || parseStartTime(rawStartTime);
+    const endAt =
+      times.startAt && duration
+        ? new Date(new Date(times.startAt).getTime() + duration * 3600_000)
+        : null;
+    const endTime = endAt
+      ? instantToZonedParts(endAt, getViewerTimezone()).time
+      : calculateEndTime(startTime, duration);
+
+    let dateObj: Date;
+    const dateSource = times.date || dbRecord.Date;
+    if (dateSource) {
       try {
-        dateObj = parseDateWithFormats(dbRecord.Date);
+        dateObj = parseDateWithFormats(dateSource);
       } catch (e) {
-        log.error('Error parsing date', e, { date: dbRecord.Date });
+        log.error('Error parsing date', e, { date: dateSource });
         dateObj = new Date();
       }
     } else {
       dateObj = new Date();
     }
-
-    const duration = parseNumericString(dbRecord['Time (hrs)']);
-    const rawStartTime = dbRecord['Time (CST)'] || '';
-    const startTime = parseStartTime(rawStartTime);
-    const endTime = calculateEndTime(startTime, duration);
 
     const studentPaymentDate = dbRecord.student_payment_date
       ? typeof dbRecord.student_payment_date === 'string'
@@ -96,6 +116,9 @@ export const transformDbRecordToClassEvent = (record: unknown): ClassEvent => {
       date: dateObj,
       startTime,
       endTime,
+      startAt: times.startAt,
+      endAt: endAt ? endAt.toISOString() : null,
+      tzAbbr: times.tzAbbr,
       duration,
       subject: dbRecord.Subject || '',
       content: dbRecord.Content || '',

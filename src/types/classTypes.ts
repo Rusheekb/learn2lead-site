@@ -6,6 +6,9 @@ export interface ClassSession {
   date: Date | string;
   startTime: string;
   endTime: string;
+  startAt?: string | null;
+  endAt?: string | null;
+  tzAbbr?: string;
   zoomLink: string;
   recurring: boolean;
   recurringDays?: string[];

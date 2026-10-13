@@ -310,6 +310,7 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
                       <span>
                         {formatTime(classSession.startTime)} -{' '}
                         {formatTime(classSession.endTime)}
+                        {classSession.tzAbbr ? ` ${classSession.tzAbbr}` : ''}
                       </span>
                     </div>
 

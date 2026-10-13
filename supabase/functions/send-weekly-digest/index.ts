@@ -8,6 +8,7 @@ import {
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 import { requireCronSecret } from '../_shared/cronAuth.ts';
 import { buildDigestCreditSection } from '../_shared/creditEmails.ts';
+import { formatDateInZone, formatTimeInZone } from '../_shared/timeFormat.ts';
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -15,12 +16,6 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
 };
 
 const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
-
-const formatTime12h = (time24: string): string => {
-  const [hour, minute] = time24.split(':');
-  const h = parseInt(hour, 10);
-  return `${h % 12 || 12}:${minute} ${h >= 12 ? 'PM' : 'AM'}`;
-};
 
 Deno.serve(async (req) => {
   const corsResponse = handleCorsPreflightRequest(req);
@@ -62,7 +57,9 @@ Deno.serve(async (req) => {
     // Get all students with active profiles who have reminders enabled
     const { data: students, error: studentsError } = await supabase
       .from('profiles')
-      .select('id, email, first_name, last_name, notify_class_reminders')
+      .select(
+        'id, email, first_name, last_name, notify_class_reminders, timezone'
+      )
       .eq('role', 'student')
       .neq('notify_class_reminders', false);
 
@@ -93,13 +90,12 @@ Deno.serve(async (req) => {
       // Get upcoming classes for this student
       const { data: upcomingClasses } = await supabase
         .from('scheduled_classes')
-        .select('title, date, start_time, end_time, subject')
+        .select('title, date, start_time, end_time, start_at, subject')
         .eq('student_id', student.id)
         .eq('status', 'scheduled')
         .gte('date', todayStr)
         .lte('date', nextWeekStr)
-        .order('date')
-        .order('start_time');
+        .order('start_at');
 
       // Get completed classes from last week
       const { data: completedLogs } = await supabase
@@ -149,8 +145,10 @@ Deno.serve(async (req) => {
       if (upcomingClasses && upcomingClasses.length > 0) {
         const rows = upcomingClasses
           .map((cls) => {
-            const date = new Date(cls.date + 'T12:00:00').toLocaleDateString(
-              'en-US',
+            // In the student's own time zone (falls back to Central).
+            const date = formatDateInZone(
+              cls.start_at,
+              student.timezone ?? '',
               {
                 weekday: 'short',
                 month: 'short',
@@ -159,7 +157,7 @@ Deno.serve(async (req) => {
             );
             return `<tr>
             <td style="padding: 8px; border-bottom: 1px solid #eee;">${date}</td>
-            <td style="padding: 8px; border-bottom: 1px solid #eee;">${formatTime12h(cls.start_time)}</td>
+            <td style="padding: 8px; border-bottom: 1px solid #eee;">${formatTimeInZone(cls.start_at, student.timezone ?? '')}</td>
             <td style="padding: 8px; border-bottom: 1px solid #eee;">${cls.subject}</td>
             <td style="padding: 8px; border-bottom: 1px solid #eee;">${cls.title}</td>
           </tr>`;

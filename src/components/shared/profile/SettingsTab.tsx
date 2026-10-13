@@ -11,6 +11,7 @@ import { AutoRenewalSettings } from '@/components/student/AutoRenewalSettings';
 import ReferralCodeSection from './ReferralCodeSection';
 import SettingsSection from './SettingsSection';
 import NotificationPreferences from './NotificationPreferences';
+import TimezoneSettings from './TimezoneSettings';
 import AppearanceToggle from './AppearanceToggle';
 import PasswordChangeCard from './PasswordChangeCard';
 import { getUserCalendarFeedUrl } from '@/utils/calendarUtils';
@@ -110,6 +111,14 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
           profile={profile}
           updateProfile={updateProfile}
         />
+      </SettingsSection>
+
+      {/* Time zone */}
+      <SettingsSection
+        title="Time Zone"
+        description="Choose the time zone your classes are shown in."
+      >
+        <TimezoneSettings profile={profile} updateProfile={updateProfile} />
       </SettingsSection>
 
       {/* Integrations — tutors only */}

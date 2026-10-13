@@ -1,4 +1,10 @@
 import React, { useState, useMemo } from 'react';
+import {
+  BUSINESS_TIMEZONE,
+  formatTimeWithZone,
+  getViewerTimezone,
+  zonesDiffer,
+} from '@/lib/time';
 import { useQuery } from '@tanstack/react-query';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -337,6 +343,17 @@ const AdminCalendarView: React.FC = () => {
   );
 };
 
+/**
+ * The student's own local start time, when their zone differs from the
+ * viewer's (e.g. an admin in Central looking at a Pacific student's class).
+ */
+const studentLocalTime = (cls: ClassEvent): string | null => {
+  if (cls.isCodeLog || !cls.startAt) return null;
+  const studentTz = cls.studentTimezone || BUSINESS_TIMEZONE;
+  if (!zonesDiffer(cls.startAt, getViewerTimezone(), studentTz)) return null;
+  return formatTimeWithZone(cls.startAt, studentTz);
+};
+
 const ClassCard: React.FC<{ cls: ClassEvent }> = ({ cls }) => (
   <div
     className={`flex items-start gap-3 rounded-lg border p-3 text-sm ${cls.isCodeLog ? 'bg-emerald-50 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-900' : ''}`}
@@ -345,11 +362,19 @@ const ClassCard: React.FC<{ cls: ClassEvent }> = ({ cls }) => (
       <Clock className="h-4 w-4 mb-0.5" />
       <span className="text-xs">{cls.startTime}</span>
       <span className="text-xs">{cls.endTime}</span>
+      {cls.tzAbbr && (
+        <span className="text-[10px] uppercase tracking-wide">
+          {cls.tzAbbr}
+        </span>
+      )}
     </div>
     <div className="flex-1 min-w-0">
       <p className="font-medium truncate">{cls.title || cls.subject}</p>
       <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1 text-xs text-muted-foreground">
         <span>Student: {cls.studentName}</span>
+        {studentLocalTime(cls) && (
+          <span>Student's time: {studentLocalTime(cls)}</span>
+        )}
         <span>Tutor: {cls.tutorName}</span>
       </div>
     </div>

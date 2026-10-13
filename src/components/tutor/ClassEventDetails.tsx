@@ -129,6 +129,7 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
               <h4 className="text-sm font-medium text-gray-500">Time</h4>
               <p>
                 {selectedEvent.startTime} - {selectedEvent.endTime}
+                {selectedEvent.tzAbbr ? ` ${selectedEvent.tzAbbr}` : ''}
               </p>
             </div>
           </div>

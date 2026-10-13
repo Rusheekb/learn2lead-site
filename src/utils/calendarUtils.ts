@@ -1,9 +1,22 @@
-import { parseDateToLocal } from './safeDateUtils';
 import { logger } from '@/lib/logger';
+import { classInstantsFromInput, getViewerTimezone } from '@/lib/time';
 
 const log = logger.create('calendarUtils');
 
 // Utility functions for calendar integration
+
+interface CalendarEventInput {
+  title: string;
+  date: string | Date;
+  startTime: string;
+  endTime: string;
+  /** Exact start (ISO). Preferred: correct in every time zone. */
+  startAt?: string | null;
+  /** Exact end (ISO). */
+  endAt?: string | null;
+  zoomLink?: string | null;
+  notes?: string | null;
+}
 
 /**
  * Safely parse HH:mm time string and return hours and minutes
@@ -40,6 +53,59 @@ const parseHHMM = (
   return { hours, minutes };
 };
 
+const localYmd = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+/**
+ * The event's exact start and end. Calendar exports used to send a "floating"
+ * local time with no zone, so a calendar app read it in the *user's* zone —
+ * a 4:15 PM Central class landed at 4:15 PM Pacific for a Pacific user. We now
+ * always export exact UTC moments, which every calendar app converts to the
+ * user's own time. Uses startAt/endAt when present; otherwise the date and
+ * HH:mm fields, which are in the viewer's time zone.
+ */
+export const resolveEventRange = (
+  event: CalendarEventInput
+): { start: Date; end: Date } | null => {
+  if (event.startAt && event.endAt) {
+    const start = new Date(event.startAt);
+    const end = new Date(event.endAt);
+    if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+      return { start, end };
+    }
+  }
+
+  if (!parseHHMM(event.startTime) || !parseHHMM(event.endTime)) return null;
+  const day =
+    event.date instanceof Date
+      ? localYmd(event.date)
+      : String(event.date).slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return null;
+
+  const { start_at, end_at } = classInstantsFromInput(
+    day,
+    event.startTime,
+    event.endTime,
+    getViewerTimezone()
+  );
+  return { start: new Date(start_at), end: new Date(end_at) };
+};
+
+/** 2026-10-15T21:15:00.000Z → 20261015T211500Z (iCalendar / Google UTC form) */
+const toUtcBasic = (d: Date) =>
+  d
+    .toISOString()
+    .replace(/[-:]/g, '')
+    .replace(/\.\d{3}/, '');
+
+const describe = (event: CalendarEventInput) => {
+  let description = event.notes || '';
+  if (event.zoomLink) {
+    description += `\n\nJoin Zoom Meeting: ${event.zoomLink}`;
+  }
+  return description;
+};
+
 /**
  * Returns the calendar feed URL for a given user
  */
@@ -58,53 +124,22 @@ export const getUserCalendarFeedUrl = async (
 /**
  * Creates a Google Calendar event URL
  */
-export const createGoogleCalendarUrl = (event: {
-  title: string;
-  date: string | Date;
-  startTime: string;
-  endTime: string;
-  zoomLink?: string | null;
-  notes?: string | null;
-}): string => {
+export const createGoogleCalendarUrl = (event: CalendarEventInput): string => {
   try {
-    const baseDate = parseDateToLocal(event.date);
-    const startParsed = parseHHMM(event.startTime);
-    const endParsed = parseHHMM(event.endTime);
-
-    if (!startParsed || !endParsed) {
+    const range = resolveEventRange(event);
+    if (!range) {
       log.warn('Invalid start or end time for calendar URL');
       return '#';
-    }
-
-    const startDate = new Date(baseDate);
-    startDate.setHours(startParsed.hours, startParsed.minutes, 0, 0);
-
-    const endDate = new Date(baseDate);
-    endDate.setHours(endParsed.hours, endParsed.minutes, 0, 0);
-
-    const formatLocal = (d: Date) => {
-      const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
-      const hours = String(d.getHours()).padStart(2, '0');
-      const minutes = String(d.getMinutes()).padStart(2, '0');
-      const seconds = String(d.getSeconds()).padStart(2, '0');
-      return `${year}${month}${day}T${hours}${minutes}${seconds}`;
-    };
-
-    const start = formatLocal(startDate);
-    const end = formatLocal(endDate);
-
-    let description = event.notes || '';
-    if (event.zoomLink) {
-      description += `\n\nJoin Zoom Meeting: ${event.zoomLink}`;
     }
 
     const url = new URL('https://www.google.com/calendar/event');
     url.searchParams.append('action', 'TEMPLATE');
     url.searchParams.append('text', event.title);
-    url.searchParams.append('dates', `${start}/${end}`);
-    url.searchParams.append('details', description);
+    url.searchParams.append(
+      'dates',
+      `${toUtcBasic(range.start)}/${toUtcBasic(range.end)}`
+    );
+    url.searchParams.append('details', describe(event));
     if (event.zoomLink) {
       url.searchParams.append('location', 'Zoom Meeting');
     }
@@ -119,45 +154,21 @@ export const createGoogleCalendarUrl = (event: {
 /**
  * Creates an Outlook Calendar event URL
  */
-export const createOutlookCalendarUrl = (event: {
-  title: string;
-  date: string | Date;
-  startTime: string;
-  endTime: string;
-  zoomLink?: string | null;
-  notes?: string | null;
-}): string => {
+export const createOutlookCalendarUrl = (event: CalendarEventInput): string => {
   try {
-    const baseDate = parseDateToLocal(event.date);
-    const startParsed = parseHHMM(event.startTime);
-    const endParsed = parseHHMM(event.endTime);
-
-    if (!startParsed || !endParsed) {
+    const range = resolveEventRange(event);
+    if (!range) {
       log.warn('Invalid start or end time for calendar URL');
       return '#';
-    }
-
-    const startDate = new Date(baseDate);
-    startDate.setHours(startParsed.hours, startParsed.minutes, 0, 0);
-
-    const endDate = new Date(baseDate);
-    endDate.setHours(endParsed.hours, endParsed.minutes, 0, 0);
-
-    const start = startDate.toISOString();
-    const end = endDate.toISOString();
-
-    let description = event.notes || '';
-    if (event.zoomLink) {
-      description += `\n\nJoin Zoom Meeting: ${event.zoomLink}`;
     }
 
     const url = new URL(
       'https://outlook.office.com/calendar/0/deeplink/compose'
     );
     url.searchParams.append('subject', event.title);
-    url.searchParams.append('startdt', start);
-    url.searchParams.append('enddt', end);
-    url.searchParams.append('body', description);
+    url.searchParams.append('startdt', range.start.toISOString());
+    url.searchParams.append('enddt', range.end.toISOString());
+    url.searchParams.append('body', describe(event));
     if (event.zoomLink) {
       url.searchParams.append('location', 'Zoom Meeting');
     }
@@ -170,75 +181,53 @@ export const createOutlookCalendarUrl = (event: {
 };
 
 /**
+ * Builds the text of an .ics file for one event (UTC times).
+ */
+export const buildIcsContent = (
+  event: CalendarEventInput & { id: string }
+): string | null => {
+  const range = resolveEventRange(event);
+  if (!range) return null;
+
+  const escapeIcs = (str: string) =>
+    str.replace(/[,;\\]/g, '\\$&').replace(/\n/g, '\\n');
+
+  return [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Learn2Lead//Tutoring Platform//EN',
+    'BEGIN:VEVENT',
+    `UID:${event.id}@learn2lead.page`,
+    `DTSTAMP:${toUtcBasic(new Date())}`,
+    `DTSTART:${toUtcBasic(range.start)}`,
+    `DTEND:${toUtcBasic(range.end)}`,
+    `SUMMARY:${escapeIcs(event.title)}`,
+    `DESCRIPTION:${escapeIcs(event.notes || '')}${event.zoomLink ? '\\n\\nJoin Zoom Meeting: ' + escapeIcs(event.zoomLink) : ''}`,
+    event.zoomLink ? `LOCATION:Zoom Meeting` : '',
+    'END:VEVENT',
+    'END:VCALENDAR',
+  ]
+    .filter(Boolean)
+    .join('\r\n');
+};
+
+/**
  * Creates a download URL for an ICS file
  */
-export const createIcsDownloadUrl = (event: {
-  id: string;
-  title: string;
-  date: string | Date;
-  startTime: string;
-  endTime: string;
-  zoomLink?: string | null;
-  notes?: string | null;
-}): string => {
+export const createIcsDownloadUrl = (
+  event: CalendarEventInput & { id: string }
+): string => {
   try {
-    const baseDate = parseDateToLocal(event.date);
-    const startParsed = parseHHMM(event.startTime);
-    const endParsed = parseHHMM(event.endTime);
-
-    if (!startParsed || !endParsed) {
+    const icsContent = buildIcsContent(event);
+    if (!icsContent) {
       log.warn('Invalid start or end time for ICS file');
       return '#';
     }
 
-    const startDate = new Date(baseDate);
-    startDate.setHours(startParsed.hours, startParsed.minutes, 0, 0);
-
-    const endDate = new Date(baseDate);
-    endDate.setHours(endParsed.hours, endParsed.minutes, 0, 0);
-
-    const formatLocal = (d: Date) => {
-      const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
-      const hours = String(d.getHours()).padStart(2, '0');
-      const minutes = String(d.getMinutes()).padStart(2, '0');
-      const seconds = String(d.getSeconds()).padStart(2, '0');
-      return `${year}${month}${day}T${hours}${minutes}${seconds}`;
-    };
-
-    const start = formatLocal(startDate);
-    const end = formatLocal(endDate);
-    const now = formatLocal(new Date());
-
-    const eventUid = `${event.id}@learn2lead.page`;
-    const escapeIcs = (str: string) =>
-      str.replace(/[,;\\]/g, '\\$&').replace(/\n/g, '\\n');
-
-    const icsContent = [
-      'BEGIN:VCALENDAR',
-      'VERSION:2.0',
-      'PRODID:-//Learn2Lead//Tutoring Platform//EN',
-      'BEGIN:VEVENT',
-      `UID:${eventUid}`,
-      `DTSTAMP:${now}`,
-      `DTSTART:${start}`,
-      `DTEND:${end}`,
-      `SUMMARY:${escapeIcs(event.title)}`,
-      `DESCRIPTION:${escapeIcs(event.notes || '')}${event.zoomLink ? '\\n\\nJoin Zoom Meeting: ' + escapeIcs(event.zoomLink) : ''}`,
-      event.zoomLink ? `LOCATION:Zoom Meeting` : '',
-      'END:VEVENT',
-      'END:VCALENDAR',
-    ]
-      .filter(Boolean)
-      .join('\r\n');
-
     const blob = new Blob([icsContent], {
       type: 'text/calendar;charset=utf-8',
     });
-    const url = URL.createObjectURL(blob);
-
-    return url;
+    return URL.createObjectURL(blob);
   } catch (error) {
     log.warn('Error creating ICS download URL', { error });
     return '#';

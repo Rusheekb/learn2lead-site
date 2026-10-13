@@ -183,6 +183,7 @@ const ClassTable: React.FC<ClassTableProps> = memo(
               <div>{formatDate(cls.date)}</div>
               <div className="text-sm text-muted-foreground">
                 {formatTimeRange(cls.startTime, cls.endTime)}
+                {cls.tzAbbr ? ` ${cls.tzAbbr}` : ''}
                 {cls.duration ? (
                   <span className="ml-1.5 text-xs">
                     ({cls.duration} hr{cls.duration === 1 ? '' : 's'})

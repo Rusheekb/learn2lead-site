@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import type { TablesUpdate } from '@/integrations/supabase/types';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
@@ -18,6 +19,8 @@ export interface Profile {
   bio: string | null;
   avatar_url: string | null;
   zoom_link: string | null;
+  /** IANA zone, e.g. America/Los_Angeles; null until first detected. */
+  timezone?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -56,7 +59,9 @@ export const useProfile = () => {
     mutationFn: async (updates: Partial<Profile>): Promise<Profile> => {
       const { data, error } = await supabase
         .from('profiles')
-        .update(updates)
+        // Profile allows a null first_name for display, but the column is
+        // NOT NULL — callers never clear it, so narrow to the table's type.
+        .update(updates as TablesUpdate<'profiles'>)
         .eq('id', user!.id)
         .select()
         .single();

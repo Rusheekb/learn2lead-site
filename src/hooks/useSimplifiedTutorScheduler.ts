@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useRealtimeManager } from './useRealtimeManager';
 import { useAuth } from '@/contexts/AuthContext';
 import { logger } from '@/lib/logger';
+import { classTimesForViewer, getViewerTimezone } from '@/lib/time';
 
 const log = logger.create('useSimplifiedTutorScheduler');
 import { toast } from 'sonner';
@@ -46,7 +47,7 @@ export const useSimplifiedTutorScheduler = () => {
         )
         .eq('tutor_id', user.id)
         .neq('status', 'completed')
-        .order('start_time', { ascending: true });
+        .order('start_at', { ascending: true });
 
       if (error) throw error;
 
@@ -64,12 +65,17 @@ export const useSimplifiedTutorScheduler = () => {
             ? `${tutor.first_name || ''} ${tutor.last_name || ''}`.trim()
             : tutor.email || 'Unknown Tutor';
 
+        const times = classTimesForViewer(record);
+
         return {
           id: record.id,
           title: record.title,
-          date: record.date,
-          startTime: record.start_time?.substring(0, 5) || '00:00',
-          endTime: record.end_time?.substring(0, 5) || '00:00',
+          date: times.date,
+          startTime: times.startTime || '00:00',
+          endTime: times.endTime || '00:00',
+          startAt: times.startAt,
+          endAt: times.endAt,
+          tzAbbr: times.tzAbbr,
           subject: record.subject || '',
           studentId: record.student_id,
           studentName,
@@ -151,6 +157,10 @@ export const useSimplifiedTutorScheduler = () => {
           zoom_link: event.zoomLink,
           notes: event.notes,
           relationship_id: event.relationshipId,
+          // The form's date and times are in the tutor's own time zone; each
+          // occurrence is converted to an exact moment from that zone, so a
+          // weekly class stays at the same local time across DST changes.
+          timezone: getViewerTimezone(),
         };
 
         let success = false;

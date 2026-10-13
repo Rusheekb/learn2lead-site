@@ -216,6 +216,7 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
                     <p className="text-foreground">
                       {formatTime(selectedClass.startTime)} -{' '}
                       {formatTime(selectedClass.endTime)}
+                      {selectedClass.tzAbbr ? ` ${selectedClass.tzAbbr}` : ''}
                     </p>
                   </div>
                   <div>

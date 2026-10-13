@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { classTimesForViewer } from '@/lib/time';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import {
@@ -160,12 +161,17 @@ const fetchAndMapScheduledClass = async (
       ? `${tutor.first_name || ''} ${tutor.last_name || ''}`.trim()
       : tutor.email || 'Unknown Tutor';
 
+  const times = classTimesForViewer(record);
+
   return {
     id: record.id,
     title: record.title,
-    date: record.date,
-    startTime: record.start_time?.substring(0, 5) || '00:00',
-    endTime: record.end_time?.substring(0, 5) || '00:00',
+    date: times.date,
+    startTime: times.startTime || '00:00',
+    endTime: times.endTime || '00:00',
+    startAt: times.startAt,
+    endAt: times.endAt,
+    tzAbbr: times.tzAbbr,
     subject: record.subject || '',
     studentId: record.student_id,
     studentName,

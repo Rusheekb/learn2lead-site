@@ -24,6 +24,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { ErrorHandler } from '@/services/errorHandling';
 import { parseDateToLocal } from '@/utils/safeDateUtils';
+import { classInstantsFromInput, getViewerTimezone } from '@/lib/time';
+import ClassTimezoneHint from '@/components/tutor/forms/ClassTimezoneHint';
 
 interface EditClassDialogProps {
   isOpen: boolean;
@@ -116,13 +118,23 @@ const EditClassDialog: React.FC<EditClassDialogProps> = ({
     setIsLoading(true);
 
     try {
+      // The form shows the class in the tutor's own time zone, so convert the
+      // edited date/times back to exact moments from that same zone. The
+      // database trigger keeps the legacy Central columns in sync.
+      const timezone = getViewerTimezone();
+      const { start_at, end_at } = classInstantsFromInput(
+        format(formData.date, 'yyyy-MM-dd'),
+        formData.startTime,
+        formData.endTime,
+        timezone
+      );
       const { error } = await supabase
         .from('scheduled_classes')
         .update({
           title: formData.title.trim(),
-          date: format(formData.date, 'yyyy-MM-dd'),
-          start_time: formData.startTime,
-          end_time: formData.endTime,
+          start_at,
+          end_at,
+          timezone,
           subject: formData.subject.trim(),
           zoom_link: formData.zoomLink || null,
           notes: formData.notes || null,
@@ -250,6 +262,15 @@ const EditClassDialog: React.FC<EditClassDialogProps> = ({
                 {errors.endTime && (
                   <p className="text-sm text-red-500 mt-1">{errors.endTime}</p>
                 )}
+              </div>
+              <div className="col-span-2">
+                <ClassTimezoneHint
+                  studentId={classEvent?.studentId}
+                  studentName={classEvent?.studentName}
+                  date={formData.date}
+                  startTime={formData.startTime}
+                  endTime={formData.endTime}
+                />
               </div>
             </div>
 

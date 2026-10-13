@@ -9,6 +9,7 @@ import { parseTime24to12 } from '@/utils/dateTimeUtils';
 import { parse } from 'date-fns';
 import { Profile } from './types';
 import { logger } from '@/lib/logger';
+import { classTimesForViewer } from '@/lib/time';
 
 const log = logger.create('classFetch');
 
@@ -27,9 +28,7 @@ export const fetchScheduledClasses = async (
       query = query.eq('student_id', studentId);
     }
 
-    const { data, error } = await query
-      .order('date', { ascending: true })
-      .order('start_time');
+    const { data, error } = await query.order('start_at', { ascending: true });
 
     if (error) throw error;
 
@@ -51,9 +50,16 @@ export const fetchScheduledClasses = async (
         .in('id', tutorIds),
       supabase
         .from('profiles')
-        .select('id, first_name, last_name, email')
+        .select('id, first_name, last_name, email, timezone')
         .in('id', studentIds),
     ]);
+
+    const studentTimezoneMap = new Map(
+      (studentProfilesResponse.data || []).map((profile) => [
+        profile.id,
+        profile.timezone,
+      ])
+    );
 
     const tutorProfileMap = new Map(
       (tutorProfilesResponse.data || []).map((profile) => [
@@ -81,8 +87,10 @@ export const fetchScheduledClasses = async (
       const status = cls.status || 'scheduled';
       const attendance = cls.attendance || 'pending';
 
-      const dateObj = cls.date
-        ? parse(cls.date, 'yyyy-MM-dd', new Date())
+      // Date and times as the viewer should see them (their time zone).
+      const times = classTimesForViewer(cls);
+      const dateObj = times.date
+        ? parse(times.date, 'yyyy-MM-dd', new Date())
         : new Date();
 
       return {
@@ -91,8 +99,12 @@ export const fetchScheduledClasses = async (
         tutorName,
         studentName,
         date: dateObj,
-        startTime: cls.start_time ? cls.start_time.substring(0, 5) : '',
-        endTime: cls.end_time ? cls.end_time.substring(0, 5) : '',
+        startTime: times.startTime,
+        endTime: times.endTime,
+        startAt: times.startAt,
+        endAt: times.endAt,
+        tzAbbr: times.tzAbbr,
+        studentTimezone: studentTimezoneMap.get(cls.student_id) ?? null,
         subject: cls.subject || '',
         zoomLink: cls.zoom_link || '',
         notes: cls.notes || '',

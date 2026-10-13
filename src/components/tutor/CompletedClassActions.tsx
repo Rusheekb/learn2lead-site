@@ -23,6 +23,7 @@ import { ErrorHandler } from '@/services/errorHandling';
 import { completeClass, CompleteClassData } from '@/services/classCompletion';
 import { parseDateToLocal, formatDateForDatabase } from '@/utils/safeDateUtils';
 import { generateClassId } from '@/utils/classIdGenerator';
+import { BUSINESS_TIMEZONE, instantToZonedParts } from '@/lib/time';
 
 interface CompletedClassActionsProps {
   classEvent: ClassEvent;
@@ -129,7 +130,14 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
       // Reuse the duration calculated above for optimistic deduction
 
       // Fetch existing class IDs for the same date to ensure unique ID generation
-      const localDate = parseDateToLocal(classEvent.date);
+      // Class logs record the class's Central date and time (the database
+      // derives them from the exact start), so the class ID and the
+      // duplicate lookup use the Central date too — not the date as shown in
+      // the tutor's own zone, which can differ for late-evening classes.
+      const central = classEvent.startAt
+        ? instantToZonedParts(classEvent.startAt, BUSINESS_TIMEZONE)
+        : null;
+      const localDate = parseDateToLocal(central?.date ?? classEvent.date);
       const dateStr = formatDateForDatabase(localDate);
 
       const { data: existingLogs } = await supabase
@@ -161,7 +169,7 @@ const CompletedClassActions: React.FC<CompletedClassActionsProps> = ({
         tutorId: classEvent.tutorId || '', // Required for RLS
         date: dateStr,
         day: localDate.toLocaleDateString('en-US', { weekday: 'long' }),
-        timeCst: classEvent.startTime,
+        timeCst: central?.time ?? classEvent.startTime,
         timeHrs: duration.toString(),
         subject: classEvent.subject,
         content: content.trim(),
