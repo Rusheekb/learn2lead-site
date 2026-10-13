@@ -3,6 +3,11 @@
 // expect(element).toHaveTextContent(/react/i)
 // learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom';
+import { TextEncoder, TextDecoder } from 'util';
+
+// React Router 7 uses TextEncoder/TextDecoder at import time; jsdom doesn't
+// provide them, so borrow Node's.
+Object.assign(globalThis, { TextEncoder, TextDecoder });
 
 // Mock the supabase client with enhanced Edge Function support
 const mockFunctionsInvoke = jest.fn();
