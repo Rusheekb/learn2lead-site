@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 import { Resend } from 'npm:resend@2.0.0';
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
+import { requireCronSecret } from '../_shared/cronAuth.ts';
 import {
   getRateLimitKey,
   checkRateLimit,
@@ -78,7 +79,9 @@ async function sendStudentReminder(cls: ScheduledClass): Promise<void> {
         </div>
         ${zoomSection}
         <p style="margin-top:16px;font-size:14px;color:#666;">
-          Need to reschedule? Contact your admin as soon as possible.
+          Need to reschedule? Email us at
+          <a href="mailto:learn2leadtutoring@gmail.com" style="color:#6366f1;">learn2leadtutoring@gmail.com</a>
+          as soon as possible.
         </p>
         <p style="margin-top:24px;font-size:12px;color:#888;text-align:center;">
           Learn2Lead · Automated reminder
@@ -90,6 +93,15 @@ async function sendStudentReminder(cls: ScheduledClass): Promise<void> {
 async function sendTutorReminder(cls: ScheduledClass): Promise<void> {
   const dateStr = formatClassDate(cls.class_date);
   const timeStr = formatClassTime(cls.class_start);
+
+  const zoomSection = cls.zoom_link
+    ? `<p style="text-align:center;margin:16px 0;">
+         <a href="${cls.zoom_link}"
+            style="background:#22c55e;color:#fff;padding:10px 24px;border-radius:6px;text-decoration:none;display:inline-block;">
+           Open Zoom Meeting
+         </a>
+       </p>`
+    : '';
 
   await resend.emails.send({
     from: 'Learn2Lead <noreply@learn2lead.page>',
@@ -106,6 +118,7 @@ async function sendTutorReminder(cls: ScheduledClass): Promise<void> {
           <p style="margin:4px 0;"><strong>Date:</strong> ${dateStr}</p>
           <p style="margin:4px 0;"><strong>Time:</strong> ${timeStr}</p>
         </div>
+        ${zoomSection}
         <p style="margin-top:16px;font-size:14px;color:#666;">
           Please log into the dashboard to complete the session when it's done.
         </p>
@@ -122,6 +135,14 @@ Deno.serve(async (req) => {
 
   const origin = req.headers.get('origin');
   const corsHeaders = getCorsHeaders(origin);
+
+  // Cron-only endpoint: reject anything without the shared cron secret.
+  const unauthorized = requireCronSecret(
+    req,
+    corsHeaders,
+    Deno.env.get('CRON_SECRET')
+  );
+  if (unauthorized) return unauthorized;
 
   const rlKey = getRateLimitKey(req, 'class-reminder');
   const rl = checkRateLimit(rlKey, {

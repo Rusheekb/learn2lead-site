@@ -10,10 +10,6 @@ project_id = "lnhtlbatcufmsyoujuqh"
   verify_jwt = false
 [functions.check-upcoming-classes]
   verify_jwt = true
-[functions.send-class-reminders]
-  verify_jwt = true
-[functions.cron-class-reminders]
-  verify_jwt = false
 [functions.secure-file-upload]
   verify_jwt = true
 [functions.manual-credit-allocation]
@@ -32,9 +28,13 @@ project_id = "lnhtlbatcufmsyoujuqh"
   verify_jwt = false
 [functions.process-auto-renewal]
   verify_jwt = false
-[functions.send-24h-reminders]
-  verify_jwt = false
 [functions.send-weekly-digest]
+  verify_jwt = false
+# Cron-triggered: authenticated by the shared x-cron-secret header instead
+# (see _shared/cronAuth.ts), since a cron job has no user JWT.
+[functions.class-reminder]
+  verify_jwt = false
+[functions.admin-weekly-digest]
   verify_jwt = false
 
 [auth]

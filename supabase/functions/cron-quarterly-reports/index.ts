@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
+import { requireCronSecret } from '../_shared/cronAuth.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -7,6 +8,10 @@ const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 serve(async (req) => {
+  // Cron-only endpoint: reject anything without the shared cron secret.
+  const unauthorized = requireCronSecret(req, {}, Deno.env.get('CRON_SECRET'));
+  if (unauthorized) return unauthorized;
+
   try {
     console.log('Cron job triggered: Generating quarterly reports');
 

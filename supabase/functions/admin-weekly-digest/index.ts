@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 import { Resend } from 'npm:resend@2.0.0';
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
+import { requireCronSecret } from '../_shared/cronAuth.ts';
 import {
   getRateLimitKey,
   checkRateLimit,
@@ -37,6 +38,14 @@ Deno.serve(async (req) => {
   const origin = req.headers.get('origin');
   const corsHeaders = getCorsHeaders(origin);
 
+  // Cron-only endpoint: reject anything without the shared cron secret.
+  const unauthorized = requireCronSecret(
+    req,
+    corsHeaders,
+    Deno.env.get('CRON_SECRET')
+  );
+  if (unauthorized) return unauthorized;
+
   const rlKey = getRateLimitKey(req, 'admin-weekly-digest');
   const rl = checkRateLimit(rlKey, {
     maxRequests: 5,
@@ -67,6 +76,16 @@ Deno.serve(async (req) => {
 
     if (adminRes.error)
       throw new Error(`Failed to fetch admins: ${adminRes.error.message}`);
+
+    // A failed lookup must not be reported as "nothing to flag" — fail loudly
+    // instead of emailing an all-clear built from missing data.
+    for (const [name, res] of [
+      ['get_zero_credit_upcoming_students', zeroCreditRes],
+      ['get_at_risk_students', atRiskRes],
+      ['get_tutor_unpaid_summary', tutorSummaryRes],
+    ] as const) {
+      if (res.error) throw new Error(`${name} failed: ${res.error.message}`);
+    }
 
     const admins = adminRes.data ?? [];
     if (admins.length === 0) {

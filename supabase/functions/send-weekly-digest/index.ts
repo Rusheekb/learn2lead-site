@@ -6,6 +6,7 @@ import {
   rateLimitResponse,
 } from '../_shared/rateLimiter.ts';
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
+import { requireCronSecret } from '../_shared/cronAuth.ts';
 import { buildDigestCreditSection } from '../_shared/creditEmails.ts';
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
@@ -27,6 +28,14 @@ Deno.serve(async (req) => {
 
   const origin = req.headers.get('origin');
   const corsHeaders = getCorsHeaders(origin);
+
+  // Cron-only endpoint: reject anything without the shared cron secret.
+  const unauthorized = requireCronSecret(
+    req,
+    corsHeaders,
+    Deno.env.get('CRON_SECRET')
+  );
+  if (unauthorized) return unauthorized;
 
   const rateLimitKey = getRateLimitKey(req, 'send-weekly-digest');
   const { limited, retryAfterMs } = checkRateLimit(rateLimitKey, {
