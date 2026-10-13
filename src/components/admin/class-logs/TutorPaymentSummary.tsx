@@ -129,16 +129,27 @@ const TutorPaymentSummary: React.FC<TutorPaymentSummaryProps> = ({
     const ok = await batchUpdateTutorPaymentDate(classIds, new Date());
     if (ok) {
       const today = format(new Date(), 'yyyy-MM-dd');
-      await supabase.from('tutor_payroll_runs').insert(
-        confirmTargets.map((t) => ({
-          tutor_name: t.tutor_name,
-          tutor_user_id: t.tutor_user_id ?? null,
-          paid_at: today,
-          amount_paid: Number(t.total_owed),
-          class_count: t.unpaid_count,
-          class_ids: t.class_ids,
-        }))
-      );
+      const { error: historyError } = await supabase
+        .from('tutor_payroll_runs')
+        .insert(
+          confirmTargets.map((t) => ({
+            tutor_name: t.tutor_name,
+            tutor_user_id: t.tutor_user_id ?? null,
+            paid_at: today,
+            amount_paid: Number(t.total_owed),
+            class_count: t.unpaid_count,
+            class_ids: t.class_ids,
+          }))
+        );
+
+      // The classes are already marked paid at this point (the per-class
+      // paid dates remain the source of truth), so this is a warning, not a
+      // failure — but without it a missing Payroll History entry is silent.
+      if (historyError) {
+        toast.warning(
+          'Classes were marked paid, but this run could not be saved to Payroll History.'
+        );
+      }
 
       const names =
         confirmTargets.length === 1

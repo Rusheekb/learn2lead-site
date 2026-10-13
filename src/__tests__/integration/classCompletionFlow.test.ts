@@ -141,7 +141,7 @@ describe('Class Completion Flow Integration', () => {
   });
 
   describe('Subscription Required Flow', () => {
-    it('shows subscription required message and never reaches the atomic RPC', async () => {
+    it('explains the student has no hours and never reaches the atomic RPC', async () => {
       mockFunctionsInvoke.mockResolvedValueOnce({
         data: { success: false, code: 'NO_SUBSCRIPTION' },
         error: null,
@@ -151,7 +151,10 @@ describe('Class Completion Flow Integration', () => {
 
       expect(result).toBe(false);
       const errorToast = toastCalls.find((t) => t.type === 'error');
-      expect(errorToast?.message).toContain('no active subscription');
+      expect(errorToast?.message).toContain('out of hours');
+      expect(
+        (errorToast?.options as { description?: string })?.description
+      ).toContain("hasn't purchased any hours yet");
       expect(errorToast?.options).toHaveProperty('action');
       expect(mockRpc).not.toHaveBeenCalled();
     });

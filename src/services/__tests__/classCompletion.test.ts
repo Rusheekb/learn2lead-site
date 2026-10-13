@@ -185,23 +185,55 @@ describe('completeClass', () => {
   });
 
   describe('error handling - credit deduction', () => {
-    it('handles NO_SUBSCRIPTION error with pricing CTA', async () => {
-      mockFunctionsInvoke.mockResolvedValueOnce({
-        data: { success: false, code: 'NO_SUBSCRIPTION' },
-        error: null,
-      });
+    // supabase-js returns data: null for non-2xx responses (deduct-class-credit
+    // uses 402 for out-of-hours) and exposes the JSON body via error.context —
+    // mock that real shape, not data-populated errors.
+    const httpError = (body: object, status = 402) => ({
+      data: null,
+      error: {
+        message: 'Edge Function returned a non-2xx status code',
+        context: { status, json: () => Promise.resolve(body) },
+      },
+    });
+
+    it('explains out-of-hours to the tutor with exact hours from a 402 body', async () => {
+      mockFunctionsInvoke.mockResolvedValueOnce(
+        httpError({
+          success: false,
+          code: 'NO_CREDITS',
+          credits_needed: 1,
+          credits_remaining: 0,
+        })
+      );
 
       const result = await completeClass(validClassData);
 
       expect(result).toBe(false);
-      expect(mockToastError).toHaveBeenCalledWith(
-        'Student has no active subscription',
-        expect.objectContaining({ action: expect.any(Object) })
-      );
+      const [title, opts] = mockToastError.mock.calls[0];
+      expect(title).toContain('out of hours');
+      expect(opts.description).toContain('needs 1 hour');
+      expect(opts.description).toContain('only has 0 hours left');
+      expect(opts.description).toContain('Nothing was charged');
+      expect(opts.description).toContain('learn2leadtutoring@gmail.com');
+      expect(opts.action.label).toBe('Copy details');
       expect(mockRpc).not.toHaveBeenCalled();
     });
 
-    it('handles INSUFFICIENT_CREDITS error', async () => {
+    it('explains a student with no hours ever purchased (NO_SUBSCRIPTION)', async () => {
+      mockFunctionsInvoke.mockResolvedValueOnce(
+        httpError({ success: false, code: 'NO_SUBSCRIPTION' })
+      );
+
+      const result = await completeClass(validClassData);
+
+      expect(result).toBe(false);
+      const [title, opts] = mockToastError.mock.calls[0];
+      expect(title).toContain('out of hours');
+      expect(opts.description).toContain("hasn't purchased any hours yet");
+      expect(mockRpc).not.toHaveBeenCalled();
+    });
+
+    it('still explains out-of-hours when the body lacks hour counts', async () => {
       mockFunctionsInvoke.mockResolvedValueOnce({
         data: { success: false, code: 'INSUFFICIENT_CREDITS' },
         error: null,
@@ -210,10 +242,9 @@ describe('completeClass', () => {
       const result = await completeClass(validClassData);
 
       expect(result).toBe(false);
-      expect(mockToastError).toHaveBeenCalledWith(
-        'Student has insufficient hours remaining',
-        expect.any(Object)
-      );
+      const [title, opts] = mockToastError.mock.calls[0];
+      expect(title).toContain('out of hours');
+      expect(opts.description).toContain("doesn't have enough hours left");
     });
 
     it('shows a generic error for an unrecognized failure code', async () => {

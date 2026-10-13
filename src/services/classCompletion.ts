@@ -28,6 +28,48 @@ export interface CompleteClassData {
 
 const formatHours = (n: number) => `${n} hour${n === 1 ? '' : 's'}`;
 
+const ADMIN_CONTACT = 'learn2leadtutoring@gmail.com';
+
+/**
+ * Tutor-facing explanation for a class that couldn't be logged because the
+ * student has no hours left. Tutors can't fix this themselves (only the
+ * family can buy hours), so the message says exactly what's wrong, confirms
+ * nothing was charged, and tells them who to raise it with — plus a one-tap
+ * copy of the details to paste into that message. Kept on screen until
+ * dismissed so it can be read (or screenshotted) rather than flashing past.
+ */
+function showOutOfHoursError(
+  data: CompleteClassData,
+  errorCode: string,
+  durationHours: number,
+  body: { credits_needed?: number; credits_remaining?: number } | null
+) {
+  const name = data.studentName || 'This student';
+  const needed = body?.credits_needed ?? durationHours;
+  const remaining = body?.credits_remaining;
+
+  const reason =
+    errorCode === 'NO_SUBSCRIPTION'
+      ? `${name} hasn't purchased any hours yet.`
+      : remaining !== undefined
+        ? `This class needs ${formatHours(needed)}, but ${name} only has ${formatHours(remaining)} left.`
+        : `${name} doesn't have enough hours left to cover this ${formatHours(needed)} class.`;
+
+  const details = `Couldn't log ${data.subject} class with ${name} on ${data.date} — ${reason}`;
+
+  toast.error(`Class not logged: ${name} is out of hours`, {
+    description: `${reason} Nothing was charged. Please let the admin know at ${ADMIN_CONTACT} so the family can add hours — you can log this class once they do.`,
+    duration: Infinity,
+    closeButton: true,
+    action: {
+      label: 'Copy details',
+      onClick: () => {
+        navigator.clipboard?.writeText(details).catch(() => {});
+      },
+    },
+  });
+}
+
 export const completeClass = async (
   data: CompleteClassData
 ): Promise<boolean> => {
@@ -82,8 +124,18 @@ export const completeClass = async (
         }
       );
 
-    if (creditError || !creditResult?.success) {
-      const errorCode = creditResult?.code || 'UNKNOWN';
+    // supabase-js returns data: null for any non-2xx response and puts the
+    // body on error.context instead — and deduct-class-credit answers "student
+    // is out of hours" with a 402. Without reading the body from there, the
+    // out-of-hours branch below could never match and tutors only ever saw a
+    // generic "Failed to deduct class credit".
+    let creditBody = creditResult;
+    if (!creditBody && typeof creditError?.context?.json === 'function') {
+      creditBody = await creditError.context.json().catch(() => null);
+    }
+
+    if (creditError || !creditBody?.success) {
+      const errorCode = creditBody?.code || 'UNKNOWN';
 
       addBreadcrumb({
         category: 'class.completion',
@@ -98,29 +150,16 @@ export const completeClass = async (
         class_id: data.classId,
       });
 
-      if (errorCode === 'NO_SUBSCRIPTION') {
-        toast.error('Student has no active subscription', {
-          description: 'Please purchase hours to continue taking classes',
-          action: {
-            label: 'Buy Hours',
-            onClick: () => (window.location.href = '/pricing'),
-          },
-        });
+      if (
+        errorCode === 'NO_CREDITS' ||
+        errorCode === 'INSUFFICIENT_CREDITS' ||
+        errorCode === 'NO_SUBSCRIPTION'
+      ) {
+        showOutOfHoursError(data, errorCode, durationHours, creditBody);
         return false;
       }
 
-      if (errorCode === 'INSUFFICIENT_CREDITS' || errorCode === 'NO_CREDITS') {
-        toast.error('Student has insufficient hours remaining', {
-          description: 'Please purchase more hours to continue',
-          action: {
-            label: 'Buy Hours',
-            onClick: () => (window.location.href = '/pricing'),
-          },
-        });
-        return false;
-      }
-
-      throw new Error(creditResult?.error || 'Failed to deduct class credit');
+      throw new Error(creditBody?.error || 'Failed to deduct class credit');
     }
 
     addBreadcrumb({

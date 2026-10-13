@@ -241,6 +241,8 @@ Deno.serve(async (req) => {
             success: false,
             error: `Insufficient hours. Need ${creditsToDeduct} but only ${rpcResult.current_balance} remaining. Please purchase more hours.`,
             code: 'NO_CREDITS',
+            credits_needed: creditsToDeduct,
+            credits_remaining: Number(rpcResult.current_balance),
           }),
           {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
