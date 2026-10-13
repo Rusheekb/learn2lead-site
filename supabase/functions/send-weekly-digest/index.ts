@@ -6,6 +6,7 @@ import {
   rateLimitResponse,
 } from '../_shared/rateLimiter.ts';
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
+import { buildDigestCreditSection } from '../_shared/creditEmails.ts';
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -40,8 +41,14 @@ Deno.serve(async (req) => {
     { auth: { persistSession: false } }
   );
 
+  // dry_run: compute every digest without sending, logging each balance
+  // server-side only (this endpoint has no caller auth, so the response
+  // never includes per-family data).
+  const body = await req.json().catch(() => ({}));
+  const dryRun = body?.dry_run === true;
+
   try {
-    logStep('Starting weekly digest');
+    logStep('Starting weekly digest', { dryRun });
 
     // Get all students with active profiles who have reminders enabled
     const { data: students, error: studentsError } = await supabase
@@ -93,13 +100,32 @@ Deno.serve(async (req) => {
         .gte('Date', lastWeekStr)
         .lt('Date', todayStr);
 
-      // Get credit balance
-      const { data: balance } = await supabase.rpc(
-        'get_student_credit_balance',
-        { p_student_id: student.id }
-      );
+      // Read the balance straight from the subscription row — the same balance
+      // class logging debits. This used to call get_student_credit_balance,
+      // which since the Aug 28 RPC lockdown only answers for the student,
+      // their tutor, or an admin; this job has no user, so every call raised,
+      // the error was ignored, and `?? 0` told every family they had 0 hours.
+      // null = couldn't read it, and the digest then omits the section.
+      const { data: sub, error: subError } = await supabase
+        .from('student_subscriptions')
+        .select('credits_remaining')
+        .eq('student_id', student.id)
+        .in('status', ['active', 'trialing'])
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-      const creditBalance = balance ?? 0;
+      let creditBalance: number | null;
+      if (subError) {
+        logStep('WARNING: balance lookup failed, omitting balance section', {
+          studentId: student.id,
+          error: subError.message,
+        });
+        creditBalance = null;
+      } else {
+        // No subscription row means no hours were ever purchased.
+        creditBalance = sub ? Number(sub.credits_remaining) : 0;
+      }
 
       // Skip students with no activity and no upcoming classes
       if (
@@ -169,19 +195,7 @@ Deno.serve(async (req) => {
           </div>`;
       }
 
-      // Credit balance section
-      const creditColor =
-        creditBalance <= 2
-          ? '#ef4444'
-          : creditBalance <= 4
-            ? '#f59e0b'
-            : '#22c55e';
-      const creditHtml = `
-        <h3 style="color: #1a1a2e; margin-top: 24px;">💰 Credit Balance</h3>
-        <div style="background: #f8f9fa; padding: 12px 16px; border-radius: 6px; border-left: 4px solid ${creditColor};">
-          <p style="margin: 0; font-size: 18px;"><strong>${creditBalance}</strong> hour${creditBalance !== 1 ? 's' : ''} remaining</p>
-          ${creditBalance <= 2 ? `<p style="margin: 4px 0; color: #ef4444; font-size: 13px;">⚠️ Low balance — <a href="https://learn2lead.page/pricing" style="color: #6366f1;">purchase more hours</a></p>` : ''}
-        </div>`;
+      const creditHtml = buildDigestCreditSection(creditBalance);
 
       const html = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 8px;">
@@ -199,6 +213,17 @@ Deno.serve(async (req) => {
             This is an automated weekly digest from Learn2Lead. Please do not reply to this email.
           </p>
         </div>`;
+
+      if (dryRun) {
+        logStep('DRY RUN: would send digest', {
+          studentId: student.id,
+          creditBalance,
+          upcoming: upcomingClasses?.length ?? 0,
+          completed: completedLogs?.length ?? 0,
+        });
+        emailsSent++;
+        continue;
+      }
 
       try {
         await resend.emails.send({
@@ -219,6 +244,7 @@ Deno.serve(async (req) => {
     logStep('Completed', {
       studentsProcessed: students?.length ?? 0,
       emailsSent,
+      dryRun,
     });
 
     return new Response(
@@ -226,6 +252,7 @@ Deno.serve(async (req) => {
         success: true,
         students_processed: students?.length ?? 0,
         emails_sent: emailsSent,
+        dry_run: dryRun,
       }),
       {
         status: 200,

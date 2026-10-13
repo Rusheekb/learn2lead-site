@@ -6,6 +6,12 @@ import {
   checkRateLimit,
   rateLimitResponse,
 } from '../_shared/rateLimiter.ts';
+import {
+  shouldSendOutOfHoursEmail,
+  buildOutOfHoursEmail,
+  buildBlockedClassLogEmail,
+  buildBlockedClassLogAdminEmail,
+} from '../_shared/creditEmails.ts';
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -105,6 +111,116 @@ async function sendLowCreditWarning(
   }
 }
 
+const ADMIN_EMAIL = 'learn2leadtutoring@gmail.com';
+
+const fullName = (
+  p: { first_name?: string | null; last_name?: string | null } | null,
+  fallback: string
+) => `${p?.first_name || ''} ${p?.last_name || ''}`.trim() || fallback;
+
+/**
+ * A tutor's log attempt was rejected because the student is out of hours.
+ * Email the family (and admin) so it doesn't depend on the tutor relaying
+ * it — once per class: tutors often retry, and the blocked_log_notifications
+ * primary key makes the insert the dedupe. Always sent regardless of the
+ * low-credit opt-out, since it concerns a session that already happened.
+ * Never throws: a notification failure must not change the 402 the tutor
+ * gets back.
+ */
+async function notifyBlockedClassLog(
+  supabaseClient: any,
+  args: {
+    studentId: string;
+    classId: string;
+    tutorUserId: string;
+    subject: string | undefined;
+    hoursNeeded: number;
+    hoursRemaining: number | null;
+  }
+) {
+  try {
+    const { data: claimed, error: claimError } = await supabaseClient
+      .from('blocked_log_notifications')
+      .upsert(
+        { class_id: args.classId, student_id: args.studentId },
+        { onConflict: 'class_id', ignoreDuplicates: true }
+      )
+      .select('class_id');
+
+    if (claimError) {
+      logStep('WARNING: blocked-log dedupe insert failed', {
+        error: claimError.message,
+      });
+      return;
+    }
+    if (!claimed || claimed.length === 0) {
+      logStep('Blocked-log email already sent for this class, skipping');
+      return;
+    }
+
+    const [studentRes, tutorRes, classRes] = await Promise.all([
+      supabaseClient
+        .from('profiles')
+        .select('email, first_name, last_name')
+        .eq('id', args.studentId)
+        .single(),
+      supabaseClient
+        .from('profiles')
+        .select('email, first_name, last_name')
+        .eq('id', args.tutorUserId)
+        .single(),
+      supabaseClient
+        .from('scheduled_classes')
+        .select('date, subject')
+        .eq('id', args.classId)
+        .maybeSingle(),
+    ]);
+
+    const student = studentRes.data;
+    if (!student?.email) {
+      logStep('WARNING: no student email for blocked-log notice');
+      return;
+    }
+
+    const details = {
+      studentName: fullName(student, 'there'),
+      tutorName: fullName(tutorRes.data, tutorRes.data?.email || 'Your tutor'),
+      subject: classRes.data?.subject || args.subject || 'tutoring',
+      classDate: classRes.data?.date || '',
+      hoursNeeded: args.hoursNeeded,
+      hoursRemaining: args.hoursRemaining,
+    };
+
+    const familyEmail = buildBlockedClassLogEmail(details);
+    const adminEmail = buildBlockedClassLogAdminEmail({
+      ...details,
+      studentName: fullName(student, student.email),
+      studentEmail: student.email,
+    });
+
+    const results = await Promise.allSettled([
+      resend.emails.send({
+        from: 'Learn2Lead <noreply@learn2lead.page>',
+        to: student.email,
+        subject: familyEmail.subject,
+        html: familyEmail.html,
+      }),
+      resend.emails.send({
+        from: 'Learn2Lead <noreply@learn2lead.page>',
+        to: ADMIN_EMAIL,
+        subject: adminEmail.subject,
+        html: adminEmail.html,
+      }),
+    ]);
+    logStep('Blocked-log notices sent', {
+      family: results[0].status,
+      admin: results[1].status,
+    });
+  } catch (e) {
+    logStep('WARNING: blocked-log notification failed', { error: String(e) });
+  }
+}
+
 Deno.serve(async (req) => {
   const corsResponse = handleCorsPreflightRequest(req);
   if (corsResponse) return corsResponse;
@@ -193,6 +309,14 @@ Deno.serve(async (req) => {
 
     if (subError || !subscription) {
       logStep('No active subscription found', { student_id });
+      await notifyBlockedClassLog(supabaseClient, {
+        studentId: student_id,
+        classId: class_id,
+        tutorUserId: userData.user.id,
+        subject: classSubject,
+        hoursNeeded: creditsToDeduct,
+        hoursRemaining: null,
+      });
       return new Response(
         JSON.stringify({
           success: false,
@@ -235,6 +359,14 @@ Deno.serve(async (req) => {
         logStep('Insufficient credits, blocking deduction', {
           credits: rpcResult.current_balance,
           required: creditsToDeduct,
+        });
+        await notifyBlockedClassLog(supabaseClient, {
+          studentId: student_id,
+          classId: class_id,
+          tutorUserId: userData.user.id,
+          subject: classSubject,
+          hoursNeeded: creditsToDeduct,
+          hoursRemaining: Number(rpcResult.current_balance),
         });
         return new Response(
           JSON.stringify({
@@ -331,8 +463,64 @@ Deno.serve(async (req) => {
         hw
       );
 
+      // Hitting exactly 0 gets its own "out of hours" email, separate from the
+      // low-credit warning below — that warning is throttled to once per 7
+      // days, so a family warned at 2 hours earlier in the week previously
+      // got nothing when they actually ran out.
+      let sentOutOfHours = false;
+      if (Number(newBalance) === 0) {
+        const [{ data: autoRenew }, { count: upcomingCount }] =
+          await Promise.all([
+            supabaseClient
+              .from('auto_renewal_settings')
+              .select('enabled')
+              .eq('student_id', student_id)
+              .eq('enabled', true)
+              .maybeSingle(),
+            supabaseClient
+              .from('scheduled_classes')
+              .select('id', { count: 'exact', head: true })
+              .eq('student_id', student_id)
+              .eq('status', 'scheduled')
+              .gte('date', new Date().toISOString().split('T')[0])
+              .neq('id', class_id),
+          ]);
+
+        if (
+          shouldSendOutOfHoursEmail({
+            newBalance: Number(newBalance),
+            autoRenewEnabled: !!autoRenew,
+            notifyLowCredits: sp.notify_low_credits,
+          })
+        ) {
+          const email = buildOutOfHoursEmail({
+            studentName,
+            upcomingClassCount: upcomingCount ?? 0,
+          });
+          try {
+            await resend.emails.send({
+              from: 'Learn2Lead <noreply@learn2lead.page>',
+              to: sp.email,
+              subject: email.subject,
+              html: email.html,
+            });
+            sentOutOfHours = true;
+            logStep('Out-of-hours email sent', { to: sp.email });
+          } catch (e) {
+            logStep('WARNING: Failed to send out-of-hours email', {
+              error: String(e),
+            });
+          }
+        }
+      }
+
       // Send low credit warning if balance <= 2 hours and user has notifications enabled
-      if (newBalance <= 2 && sp.notify_low_credits !== false) {
+      // (skipped when the out-of-hours email just went out, to avoid two emails at once)
+      if (
+        !sentOutOfHours &&
+        newBalance <= 2 &&
+        sp.notify_low_credits !== false
+      ) {
         // Check if we already sent a warning recently (within 7 days) to avoid spam
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
