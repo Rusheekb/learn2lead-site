@@ -10,6 +10,7 @@ import { signInSchema, signUpSchema, validateForm } from '@/lib/validation';
 import { addBreadcrumb, captureException } from '@/lib/sentry';
 import { useRateLimiter } from '@/hooks/useRateLimiter';
 import { logger } from '@/lib/logger';
+import { isSafeReturnPath } from '@/utils/authNavigation';
 
 const log = logger.create('Login');
 
@@ -63,10 +64,9 @@ const Login = () => {
     if (user && userRole) {
       // Honor an explicit returnUrl (e.g. someone sent here from Pricing to buy
       // hours) over the generic saved-route/dashboard default — only accept a
-      // same-origin relative path to avoid an open-redirect via this param.
+      // same-origin path (see isSafeReturnPath) to avoid an open redirect.
       const returnUrl = searchParams.get('returnUrl');
-      const isSafeReturnUrl =
-        !!returnUrl && returnUrl.startsWith('/') && !returnUrl.startsWith('//');
+      const isSafeReturnUrl = isSafeReturnPath(returnUrl);
 
       const savedRoute = getSavedRoute(user.id);
 
