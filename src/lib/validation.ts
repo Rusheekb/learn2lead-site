@@ -9,7 +9,8 @@ export const validationMessages = {
     `${field} must be less than ${max} characters`,
   email: 'Please enter a valid email address',
   url: 'Please enter a valid URL',
-  password: 'Password must be at least 6 characters',
+  password:
+    'Password must be at least 6 characters and include a letter and a number.',
   positiveNumber: (field: string) => `${field} must be a positive number`,
 } as const;
 
@@ -37,7 +38,14 @@ export const fields = {
       .email({ message: validationMessages.email })
       .max(255, { message: validationMessages.maxLength('Email', 255) }),
 
-  password: () => z.string().min(6, { message: validationMessages.password }),
+  // Mirrors the Supabase Auth password policy (letters + digits, 6+ chars) so
+  // people see the rule before submitting instead of Supabase's raw message.
+  password: () =>
+    z
+      .string()
+      .min(6, { message: validationMessages.password })
+      .regex(/[A-Za-z]/, { message: validationMessages.password })
+      .regex(/[0-9]/, { message: validationMessages.password }),
 
   url: (label = 'URL', optional = false) => {
     const base = z.string().url({ message: validationMessages.url });
@@ -76,8 +84,46 @@ export const fields = {
 
 // ─── Composite schemas ──────────────────────────────────────────────────────
 
+/** Usernames: 3–30 letters, numbers, dots or underscores (mirrors the DB). */
+export const USERNAME_HINT =
+  '3–30 characters: letters, numbers, dots or underscores.';
+const USERNAME_RE = /^[a-z0-9](?!.*[._]{2})[a-z0-9._]{1,28}[a-z0-9]$/;
+
+/**
+ * A username suggested from a name ("Maya Lee" → maya.lee, then maya.lee2,
+ * maya.lee3… for `n` > 1). Same shape as generate_username in the database.
+ * Empty when the name is too short to suggest anything.
+ */
+export function suggestUsername(first: string, last: string, n = 1): string {
+  let base = [first, last]
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .join('.')
+    .toLowerCase()
+    .replace(/[^a-z0-9.]+/g, '')
+    .replace(/\.{2,}/g, '.')
+    .replace(/^\.+|\.+$/g, '');
+  base = base.slice(0, 24).replace(/\.+$/, '');
+  if (base.length < 3) return '';
+  if (!/^[a-z0-9]/.test(base)) base = `u${base}`;
+  return n > 1 ? `${base}${n}` : base;
+}
+
+export const usernameField = () =>
+  z
+    .string()
+    .trim()
+    .transform((v) => v.toLowerCase())
+    .refine((v) => USERNAME_RE.test(v), {
+      message: `Username: ${USERNAME_HINT}`,
+    });
+
 export const signInSchema = z.object({
-  email: fields.email(),
+  // Email or username.
+  identifier: z
+    .string()
+    .trim()
+    .min(1, { message: validationMessages.required('Email or username') }),
   password: z
     .string()
     .min(1, { message: validationMessages.required('Password') }),
@@ -86,6 +132,7 @@ export const signInSchema = z.object({
 export const signUpSchema = z.object({
   firstName: fields.shortName('First name'),
   lastName: fields.shortName('Last name'),
+  username: usernameField(),
   email: fields.email(),
   password: fields.password(),
 });
@@ -132,4 +179,14 @@ export function validateForm<T extends z.ZodSchema>(
     if (!errors[key]) errors[key] = err.message;
   }
   return { success: false, errors, firstError: getFirstError(result.error) };
+}
+
+/** Short rule shown under password fields. */
+export const PASSWORD_HINT =
+  'At least 6 characters, including a letter and a number.';
+
+/** The problem with a new password, or null when it meets the policy. */
+export function passwordProblem(password: string): string | null {
+  const result = fields.password().safeParse(password);
+  return result.success ? null : validationMessages.password;
 }

@@ -13,6 +13,19 @@ import {
   buildBlockedClassLogAdminEmail,
 } from '../_shared/creditEmails.ts';
 import { formatHours } from '../_shared/hours.ts';
+import {
+  audienceFor,
+  fullName,
+  getBillingAccountId,
+  isSendableEmail,
+} from '../_shared/recipients.ts';
+import { getTargetsForStudent, NotifyTarget } from '../_shared/notify.ts';
+import { makeSenders } from '../_shared/senders.ts';
+import {
+  classLoggedText,
+  lowHoursText,
+  outOfHoursText,
+} from '../_shared/smsTexts.ts';
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -24,8 +37,13 @@ const roundToHalfHour = (hours: number): number =>
   Math.max(0.5, Math.round(hours * 2) / 2);
 
 const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
+const senders = makeSenders();
 
-/** Send class completion summary email to student */
+/**
+ * Send class completion summary email. `intro` and `showBalance` default to
+ * the student's own copy; a parent's copy names the child, and a student who
+ * has a parent doesn't see the (family) balance.
+ */
 async function sendCompletionEmail(
   studentEmail: string,
   studentName: string,
@@ -35,8 +53,17 @@ async function sendCompletionEmail(
   creditsRemaining: number,
   tutorName: string,
   content?: string,
-  hw?: string
+  hw?: string,
+  opts: { intro?: string; showBalance?: boolean } = {}
 ) {
+  const intro =
+    opts.intro ?? "Your class has been marked as completed. Here's a summary:";
+  const balanceSection =
+    opts.showBalance === false
+      ? ''
+      : `<div style="background-color: #f0f9ff; padding: 12px 16px; border-radius: 6px; margin: 16px 0;">
+            <p style="margin: 0;"><strong>Hours remaining:</strong> ${formatHours(creditsRemaining)}</p>
+          </div>`;
   const notesSection =
     content || hw
       ? `<div style="background-color: #f8f9fa; padding: 16px; border-radius: 6px; margin: 16px 0; border-left: 4px solid #6366f1;">
@@ -54,7 +81,7 @@ async function sendCompletionEmail(
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 8px;">
           <h2 style="color: #1a1a2e;">✅ Class Completed</h2>
           <p>Hello ${studentName},</p>
-          <p>Your class has been marked as completed. Here's a summary:</p>
+          <p>${intro}</p>
           <div style="background-color: #f8f9fa; padding: 16px; border-radius: 6px; margin: 16px 0; border-left: 4px solid #22c55e;">
             <p style="margin: 4px 0;"><strong>Class:</strong> ${classTitle}</p>
             <p style="margin: 4px 0;"><strong>Subject:</strong> ${subject}</p>
@@ -62,9 +89,7 @@ async function sendCompletionEmail(
             <p style="margin: 4px 0;"><strong>Duration:</strong> ${formatHours(hoursUsed)}</p>
           </div>
           ${notesSection}
-          <div style="background-color: #f0f9ff; padding: 12px 16px; border-radius: 6px; margin: 16px 0;">
-            <p style="margin: 0;"><strong>Hours remaining:</strong> ${formatHours(creditsRemaining)}</p>
-          </div>
+          ${balanceSection}
           <p style="text-align: center; margin-top: 20px;">
             <a href="https://learn2lead.page/dashboard" style="background-color: #6366f1; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; display: inline-block;">View Dashboard</a>
           </p>
@@ -114,11 +139,6 @@ async function sendLowCreditWarning(
 
 const ADMIN_EMAIL = 'learn2leadtutoring@gmail.com';
 
-const fullName = (
-  p: { first_name?: string | null; last_name?: string | null } | null,
-  fallback: string
-) => `${p?.first_name || ''} ${p?.last_name || ''}`.trim() || fallback;
-
 /**
  * A tutor's log attempt was rejected because the student is out of hours.
  * Email the family (and admin) so it doesn't depend on the tutor relaying
@@ -132,6 +152,8 @@ async function notifyBlockedClassLog(
   supabaseClient: any,
   args: {
     studentId: string;
+    /** who gets the family copy (the payer); null = look up as before */
+    payers: NotifyTarget[] | null;
     classId: string;
     tutorUserId: string;
     subject: string | undefined;
@@ -193,20 +215,43 @@ async function notifyBlockedClassLog(
       hoursRemaining: args.hoursRemaining,
     };
 
-    const familyEmail = buildBlockedClassLogEmail(details);
+    // The family copy goes to whoever pays: the student, or their parent.
+    const payers = (
+      args.payers ?? [
+        {
+          email: student.email,
+          first_name: student.first_name,
+          last_name: student.last_name,
+          is_guardian: false,
+        },
+      ]
+    ).filter((p) => isSendableEmail(p.email));
+    const familySends = payers.map((payer) => {
+      const familyEmail = buildBlockedClassLogEmail(
+        payer.is_guardian
+          ? {
+              ...details,
+              studentName: audienceFor(payer, student.first_name).greetingName,
+              childName: student.first_name || 'your child',
+            }
+          : details
+      );
+      return resend.emails.send({
+        from: 'Learn2Lead <noreply@learn2lead.page>',
+        to: payer.email!,
+        subject: familyEmail.subject,
+        html: familyEmail.html,
+      });
+    });
+
     const adminEmail = buildBlockedClassLogAdminEmail({
       ...details,
       studentName: fullName(student, student.email),
-      studentEmail: student.email,
+      studentEmail: payers[0]?.email || student.email,
     });
 
     const results = await Promise.allSettled([
-      resend.emails.send({
-        from: 'Learn2Lead <noreply@learn2lead.page>',
-        to: student.email,
-        subject: familyEmail.subject,
-        html: familyEmail.html,
-      }),
+      ...familySends,
       resend.emails.send({
         from: 'Learn2Lead <noreply@learn2lead.page>',
         to: ADMIN_EMAIL,
@@ -215,8 +260,8 @@ async function notifyBlockedClassLog(
       }),
     ]);
     logStep('Blocked-log notices sent', {
-      family: results[0].status,
-      admin: results[1].status,
+      family: results.slice(0, -1).map((r) => r.status),
+      admin: results[results.length - 1].status,
     });
   } catch (e) {
     logStep('WARNING: blocked-log notification failed', { error: String(e) });
@@ -301,11 +346,29 @@ Deno.serve(async (req) => {
       creditsToDeduct,
     });
 
+    // Whose balance pays: the student's parent if they have one, else the
+    // student (every account without a parent, as before).
+    const billingId = await getBillingAccountId(supabaseClient, student_id);
+    if (billingId !== student_id) {
+      logStep('Billing to parent account', { billing_id: billingId });
+    }
+
+    // Who hears about money (the payer), with their channels. Best-effort: a
+    // failed lookup falls back to the student's own profile below.
+    const payers = await getTargetsForStudent(
+      supabaseClient,
+      student_id,
+      'billing'
+    ).catch((e) => {
+      logStep('WARNING: payer lookup failed', { error: String(e) });
+      return null;
+    });
+
     // Get active subscription (just the id/status — balance is read under lock below)
     const { data: subscription, error: subError } = await supabaseClient
       .from('student_subscriptions')
       .select('id, status')
-      .eq('student_id', student_id)
+      .eq('student_id', billingId)
       .in('status', ['active', 'trialing'])
       .single();
 
@@ -313,6 +376,7 @@ Deno.serve(async (req) => {
       logStep('No active subscription found', { student_id });
       await notifyBlockedClassLog(supabaseClient, {
         studentId: student_id,
+        payers,
         classId: class_id,
         tutorUserId: userData.user.id,
         subject: classSubject,
@@ -364,6 +428,7 @@ Deno.serve(async (req) => {
         });
         await notifyBlockedClassLog(supabaseClient, {
           studentId: student_id,
+          payers,
           classId: class_id,
           tutorUserId: userData.user.id,
           subject: classSubject,
@@ -424,7 +489,9 @@ Deno.serve(async (req) => {
     }
 
     // ── Fire-and-forget notification emails ──
-    // Get student profile for email notifications
+    // Class-logged email: the student (at a real address) and their parent.
+    // Money emails (out of hours, running low): whoever pays. Without a
+    // parent both are just the student, exactly as before.
     const studentProfilePromise = supabaseClient
       .from('profiles')
       .select('email, first_name, last_name, notify_low_credits')
@@ -438,10 +505,23 @@ Deno.serve(async (req) => {
       .eq('id', userData.user.id)
       .single();
 
-    const [studentProfileRes, tutorProfileRes] = await Promise.all([
-      studentProfilePromise,
-      tutorProfilePromise,
-    ]);
+    const classRecipientsPromise = getTargetsForStudent(
+      supabaseClient,
+      student_id,
+      'class_updates'
+    ).catch((e) => {
+      logStep('WARNING: class email recipient lookup failed', {
+        error: String(e),
+      });
+      return null;
+    });
+
+    const [studentProfileRes, tutorProfileRes, classRecipients] =
+      await Promise.all([
+        studentProfilePromise,
+        tutorProfilePromise,
+        classRecipientsPromise,
+      ]);
 
     if (studentProfileRes.data) {
       const sp = studentProfileRes.data;
@@ -452,18 +532,64 @@ Deno.serve(async (req) => {
           tutorProfileRes.data.email
         : 'Your tutor';
 
+      // The student's own profile, used when a lookup failed — the
+      // pre-family-accounts behaviour.
+      const self: NotifyTarget = {
+        user_id: student_id,
+        email: sp.email,
+        phone: null,
+        first_name: sp.first_name,
+        last_name: sp.last_name,
+        timezone: null,
+        is_guardian: false,
+        email_enabled: true,
+        sms_enabled: false,
+      };
+      const hasParent = billingId !== student_id;
+      // Each person by their own channels; never a child's placeholder
+      // address, even on the fallback path.
+      const reachable = (r: NotifyTarget) =>
+        (r.email_enabled && isSendableEmail(r.email)) ||
+        (r.sms_enabled && !!r.phone);
+      const toNotifyOfClass = (classRecipients ?? [self]).filter(reachable);
+      const toNotifyOfMoney = (
+        payers ?? [{ ...self, email_enabled: sp.notify_low_credits !== false }]
+      ).filter(reachable);
+      const emailOk = (r: NotifyTarget) =>
+        r.email_enabled && isSendableEmail(r.email);
+
       // Send completion summary email (fire-and-forget) including any notes from the tutor
-      sendCompletionEmail(
-        sp.email,
-        studentName,
-        class_title,
-        classSubject || class_title,
-        creditsToDeduct,
-        newBalance,
-        tutorName,
-        content,
-        hw
-      );
+      for (const r of toNotifyOfClass) {
+        const a = audienceFor(r, sp.first_name);
+        if (r.sms_enabled && r.phone) {
+          senders.sendSms(
+            r.phone,
+            classLoggedText({
+              isGuardian: r.is_guardian,
+              studentFirstName: sp.first_name || '',
+              subject: classSubject || class_title,
+              homework: hw,
+            })
+          );
+        }
+        if (!emailOk(r)) continue;
+        sendCompletionEmail(
+          r.email!,
+          r.is_guardian ? a.greetingName : studentName,
+          class_title,
+          classSubject || class_title,
+          creditsToDeduct,
+          newBalance,
+          tutorName,
+          content,
+          hw,
+          r.is_guardian
+            ? {
+                intro: `${a.possessive.charAt(0).toUpperCase()}${a.possessive.slice(1)} class has been marked as completed. Here's a summary:`,
+              }
+            : { showBalance: !hasParent }
+        );
+      }
 
       // Hitting exactly 0 gets its own "out of hours" email, separate from the
       // low-credit warning below — that warning is throttled to once per 7
@@ -471,43 +597,76 @@ Deno.serve(async (req) => {
       // got nothing when they actually ran out.
       let sentOutOfHours = false;
       if (Number(newBalance) === 0) {
+        // The payer's auto-renew; classes coming up for everyone they pay
+        // for (just this student when there's no parent).
+        const { data: children } = await supabaseClient
+          .from('guardian_links')
+          .select('student_id')
+          .eq('guardian_id', billingId);
+        const familyIds = [
+          ...new Set([
+            student_id,
+            ...(children ?? []).map(
+              (c: { student_id: string }) => c.student_id
+            ),
+          ]),
+        ];
+
         const [{ data: autoRenew }, { count: upcomingCount }] =
           await Promise.all([
             supabaseClient
               .from('auto_renewal_settings')
               .select('enabled')
-              .eq('student_id', student_id)
+              .eq('student_id', billingId)
               .eq('enabled', true)
               .maybeSingle(),
             supabaseClient
               .from('scheduled_classes')
               .select('id', { count: 'exact', head: true })
-              .eq('student_id', student_id)
+              .in('student_id', familyIds)
               .eq('status', 'scheduled')
               .gte('date', new Date().toISOString().split('T')[0])
               .neq('id', class_id),
           ]);
 
-        if (
-          shouldSendOutOfHoursEmail({
-            newBalance: Number(newBalance),
-            autoRenewEnabled: !!autoRenew,
-            notifyLowCredits: sp.notify_low_credits,
-          })
-        ) {
+        for (const r of toNotifyOfMoney) {
+          if (
+            Number(newBalance) === 0 &&
+            !autoRenew &&
+            r.sms_enabled &&
+            r.phone
+          ) {
+            senders.sendSms(r.phone, outOfHoursText());
+            sentOutOfHours = true;
+          }
+          if (
+            !emailOk(r) ||
+            !shouldSendOutOfHoursEmail({
+              newBalance: Number(newBalance),
+              autoRenewEnabled: !!autoRenew,
+              notifyLowCredits: r.email_enabled,
+            })
+          ) {
+            continue;
+          }
           const email = buildOutOfHoursEmail({
-            studentName,
+            studentName: r.is_guardian
+              ? audienceFor(r, sp.first_name).greetingName
+              : studentName,
             upcomingClassCount: upcomingCount ?? 0,
+            childName: r.is_guardian
+              ? sp.first_name || 'your child'
+              : undefined,
           });
           try {
             await resend.emails.send({
               from: 'Learn2Lead <noreply@learn2lead.page>',
-              to: sp.email,
+              to: r.email!,
               subject: email.subject,
               html: email.html,
             });
             sentOutOfHours = true;
-            logStep('Out-of-hours email sent', { to: sp.email });
+            logStep('Out-of-hours email sent', { to: r.email });
           } catch (e) {
             logStep('WARNING: Failed to send out-of-hours email', {
               error: String(e),
@@ -516,30 +675,44 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Send low credit warning if balance <= 2 hours and user has notifications enabled
+      // Send low credit warning if balance <= 2 hours and the payer has notifications enabled
       // (skipped when the out-of-hours email just went out, to avoid two emails at once)
+      const lowCreditRecipients = toNotifyOfMoney;
       if (
         !sentOutOfHours &&
         newBalance <= 2 &&
-        sp.notify_low_credits !== false
+        lowCreditRecipients.length > 0
       ) {
         // Check if we already sent a warning recently (within 7 days) to avoid spam
+        // — throttled per paying account, so siblings share one warning.
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
         const { data: recentWarning } = await supabaseClient
           .from('overdraw_reminders_sent')
           .select('id')
-          .eq('student_id', student_id)
+          .eq('student_id', billingId)
           .gte('sent_at', sevenDaysAgo.toISOString())
           .limit(1);
 
         if (!recentWarning || recentWarning.length === 0) {
-          sendLowCreditWarning(sp.email, studentName, newBalance);
+          for (const r of lowCreditRecipients) {
+            if (r.sms_enabled && r.phone) {
+              senders.sendSms(r.phone, lowHoursText(Number(newBalance)));
+            }
+            if (!emailOk(r)) continue;
+            sendLowCreditWarning(
+              r.email!,
+              r.is_guardian
+                ? audienceFor(r, sp.first_name).greetingName
+                : studentName,
+              newBalance
+            );
+          }
 
           // Log the warning to prevent spam
           await supabaseClient.from('overdraw_reminders_sent').insert({
-            student_id,
+            student_id: billingId,
             threshold: 2,
             amount_owed: 0,
           });
@@ -554,7 +727,7 @@ Deno.serve(async (req) => {
       const { data: renewalSettings } = await supabaseClient
         .from('auto_renewal_settings')
         .select('enabled, renewal_pack, threshold')
-        .eq('student_id', student_id)
+        .eq('student_id', billingId)
         .eq('enabled', true)
         .maybeSingle();
 
@@ -575,7 +748,7 @@ Deno.serve(async (req) => {
             Authorization: `Bearer ${serviceKey}`,
           },
           body: JSON.stringify({
-            student_id,
+            student_id: billingId,
             renewal_pack: renewalSettings.renewal_pack,
           }),
         }).catch((err) => {

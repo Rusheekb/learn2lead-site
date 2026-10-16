@@ -9,6 +9,12 @@ import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 import { requireCronSecret } from '../_shared/cronAuth.ts';
 import { buildDigestCreditSection } from '../_shared/creditEmails.ts';
 import { formatDateInZone, formatTimeInZone } from '../_shared/timeFormat.ts';
+import {
+  buildFamilyDigestEmail,
+  childHasActivity,
+  DigestChild,
+} from '../_shared/familyEmails.ts';
+import { isSendableEmail } from '../_shared/recipients.ts';
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -68,6 +74,26 @@ Deno.serve(async (req) => {
 
     logStep('Found students', { count: students?.length ?? 0 });
 
+    // Family accounts: a student with a parent gets no digest of their own —
+    // their parent gets one family digest below. Students without a parent
+    // (every account before family accounts) are unaffected.
+    const { data: links, error: linksError } = await supabase
+      .from('guardian_links')
+      .select('guardian_id, student_id, created_at')
+      .order('created_at');
+    if (linksError)
+      throw new Error(`Failed to fetch guardian links: ${linksError.message}`);
+    const studentsWithParent = new Set((links ?? []).map((l) => l.student_id));
+
+    // People who turned summary emails off (Settings → Notifications).
+    const { data: optedOut } = await supabase
+      .from('notification_preferences')
+      .select('profile_id')
+      .eq('category', 'summaries')
+      .eq('channel', 'email')
+      .eq('enabled', false);
+    const noSummaries = new Set((optedOut ?? []).map((r) => r.profile_id));
+
     // Date range: next 7 days
     const today = new Date();
     const nextWeek = new Date();
@@ -83,6 +109,13 @@ Deno.serve(async (req) => {
     let emailsSent = 0;
 
     for (const student of students ?? []) {
+      if (
+        studentsWithParent.has(student.id) ||
+        noSummaries.has(student.id) ||
+        !isSendableEmail(student.email)
+      )
+        continue;
+
       const studentName =
         `${student.first_name || ''} ${student.last_name || ''}`.trim() ||
         'Student';
@@ -248,8 +281,148 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ── Family digests ──
+    const childrenByParent = new Map<string, string[]>();
+    for (const l of links ?? []) {
+      const list = childrenByParent.get(l.guardian_id) ?? [];
+      list.push(l.student_id);
+      childrenByParent.set(l.guardian_id, list);
+    }
+
+    let familiesProcessed = 0;
+    if (childrenByParent.size > 0) {
+      const { data: parents, error: parentsError } = await supabase
+        .from('profiles')
+        .select('id, email, first_name, last_name, timezone')
+        .in('id', [...childrenByParent.keys()])
+        .neq('notify_class_reminders', false);
+      if (parentsError)
+        throw new Error(`Failed to fetch parents: ${parentsError.message}`);
+
+      for (const parent of parents ?? []) {
+        familiesProcessed++;
+        if (!isSendableEmail(parent.email) || noSummaries.has(parent.id))
+          continue;
+        const childIds = childrenByParent.get(parent.id) ?? [];
+
+        const [{ data: childProfiles }, { data: upcoming }, { data: logs }] =
+          await Promise.all([
+            supabase
+              .from('profiles')
+              .select('id, first_name, last_name')
+              .in('id', childIds),
+            supabase
+              .from('scheduled_classes')
+              .select('student_id, title, start_at, subject')
+              .in('student_id', childIds)
+              .eq('status', 'scheduled')
+              .gte('date', todayStr)
+              .lte('date', nextWeekStr)
+              .order('start_at'),
+            supabase
+              .from('class_logs')
+              .select('student_user_id, "Subject", "Time (hrs)"')
+              .in('student_user_id', childIds)
+              .gte('Date', lastWeekStr)
+              .lt('Date', todayStr),
+          ]);
+
+        const tz = parent.timezone ?? '';
+        const children: DigestChild[] = (childProfiles ?? []).map((c) => {
+          const childLogs = (logs ?? []).filter(
+            (l) => l.student_user_id === c.id
+          );
+          const hours = childLogs.reduce((sum, l) => {
+            const hrs = parseFloat(l['Time (hrs)'] || '0');
+            return sum + (isNaN(hrs) ? 0 : hrs);
+          }, 0);
+          return {
+            name:
+              `${c.first_name || ''} ${c.last_name || ''}`.trim() || 'Student',
+            upcoming: (upcoming ?? [])
+              .filter((u) => u.student_id === c.id)
+              .map((u) => ({
+                date: formatDateInZone(u.start_at, tz, {
+                  weekday: 'short',
+                  month: 'short',
+                  day: 'numeric',
+                }),
+                time: formatTimeInZone(u.start_at, tz),
+                subject: u.subject || '',
+                title: u.title || '',
+              })),
+            completed:
+              childLogs.length > 0
+                ? {
+                    count: childLogs.length,
+                    hours,
+                    subjects: [
+                      ...new Set(
+                        childLogs.map((l) => l['Subject']).filter(Boolean)
+                      ),
+                    ] as string[],
+                  }
+                : null,
+          };
+        });
+
+        if (!children.some(childHasActivity)) continue;
+
+        const { data: sub, error: subError } = await supabase
+          .from('student_subscriptions')
+          .select('credits_remaining')
+          .eq('student_id', parent.id)
+          .in('status', ['active', 'trialing'])
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        const familyBalance = subError
+          ? null
+          : sub
+            ? Number(sub.credits_remaining)
+            : 0;
+
+        const email = buildFamilyDigestEmail({
+          parentName: parent.first_name || 'there',
+          weekOf: today.toLocaleDateString('en-US', {
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric',
+          }),
+          children,
+          creditHtml: buildDigestCreditSection(familyBalance),
+        });
+
+        if (dryRun) {
+          logStep('DRY RUN: would send family digest', {
+            parentId: parent.id,
+            familyBalance,
+            children: children.length,
+          });
+          emailsSent++;
+          continue;
+        }
+
+        try {
+          await resend.emails.send({
+            from: 'Learn2Lead <noreply@learn2lead.page>',
+            to: parent.email,
+            subject: email.subject,
+            html: email.html,
+          });
+          emailsSent++;
+        } catch (e) {
+          logStep('Failed to send family digest', {
+            email: parent.email,
+            error: String(e),
+          });
+        }
+      }
+    }
+
     logStep('Completed', {
       studentsProcessed: students?.length ?? 0,
+      familiesProcessed,
       emailsSent,
       dryRun,
     });
@@ -258,6 +431,7 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: true,
         students_processed: students?.length ?? 0,
+        families_processed: familiesProcessed,
         emails_sent: emailsSent,
         dry_run: dryRun,
       }),

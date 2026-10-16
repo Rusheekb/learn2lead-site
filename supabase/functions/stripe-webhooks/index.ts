@@ -536,6 +536,7 @@ async function allocateCreditsFromCheckout(
   }
 
   await markStudentAsStripePayer(supabaseClient, profileEmail || '');
+  await markChildrenAsStripePayers(supabaseClient, profileId);
 
   const { data: existingSub } = await supabaseClient
     .from('student_subscriptions')
@@ -770,6 +771,38 @@ async function markStudentAsStripePayer(supabaseClient: any, email: string) {
     return;
   }
   logStep('students.payment_method set to stripe', { email });
+}
+
+// ─── markChildrenAsStripePayers ─────────────────────────────────────────────────
+// A parent's purchase pays for their children, so keep each child's "Payment
+// Method" badge accurate too. Best-effort and a no-op for anyone without
+// children (every account that isn't a family parent).
+async function markChildrenAsStripePayers(
+  supabaseClient: any,
+  parentId: string
+) {
+  try {
+    const { data: links } = await supabaseClient
+      .from('guardian_links')
+      .select('student_id')
+      .eq('guardian_id', parentId);
+    if (!links || links.length === 0) return;
+    const { data: children } = await supabaseClient
+      .from('profiles')
+      .select('email')
+      .in(
+        'id',
+        links.map((l: { student_id: string }) => l.student_id)
+      );
+    for (const child of children ?? []) {
+      await markStudentAsStripePayer(supabaseClient, child.email);
+    }
+  } catch (err) {
+    logStep('WARNING: failed to mark children as Stripe payers', {
+      parentId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
 }
 
 // ─── refund.created ─────────────────────────────────────────────────────────────

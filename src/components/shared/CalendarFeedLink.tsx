@@ -6,15 +6,23 @@ import { Input } from '@/components/ui/input';
 import { copyToClipboard } from '@/utils/clipboardUtils';
 import {
   calendarSubscribeLinks,
+  getChildCalendarFeedUrl,
   getMyCalendarFeedUrl,
+  resetChildCalendarFeedUrl,
   resetMyCalendarFeedUrl,
 } from '@/utils/calendarUtils';
 
+interface CalendarFeedLinkProps {
+  /** A parent showing one child's own feed instead of their own. */
+  studentId?: string;
+}
+
 /**
- * The signed-in user's private calendar feed: the link, one-tap subscribe
- * buttons, and a reset for when a link has been shared by mistake.
+ * The signed-in user's private calendar feed (or, for a parent, one child's):
+ * the link, one-tap subscribe buttons, and a reset for when a link has been
+ * shared by mistake.
  */
-const CalendarFeedLink: React.FC = () => {
+const CalendarFeedLink: React.FC<CalendarFeedLinkProps> = ({ studentId }) => {
   const [feedUrl, setFeedUrl] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
   const [confirmingReset, setConfirmingReset] = useState(false);
@@ -22,7 +30,10 @@ const CalendarFeedLink: React.FC = () => {
 
   useEffect(() => {
     let cancelled = false;
-    getMyCalendarFeedUrl().then((url) => {
+    (studentId
+      ? getChildCalendarFeedUrl(studentId)
+      : getMyCalendarFeedUrl()
+    ).then((url) => {
       if (cancelled) return;
       if (url) setFeedUrl(url);
       else setFailed(true);
@@ -30,7 +41,7 @@ const CalendarFeedLink: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [studentId]);
 
   const handleCopy = async () => {
     if (!feedUrl) return;
@@ -40,7 +51,9 @@ const CalendarFeedLink: React.FC = () => {
 
   const handleReset = async () => {
     setIsResetting(true);
-    const url = await resetMyCalendarFeedUrl();
+    const url = studentId
+      ? await resetChildCalendarFeedUrl(studentId)
+      : await resetMyCalendarFeedUrl();
     setIsResetting(false);
     setConfirmingReset(false);
     if (url) {
@@ -97,9 +110,11 @@ const CalendarFeedLink: React.FC = () => {
         </Button>
       </div>
       <p className="text-xs text-muted-foreground">
-        This link is private to you — anyone who has it can see your class
-        schedule. New and changed classes appear automatically (calendar apps
-        refresh every few hours).
+        {studentId
+          ? 'This link is private — anyone who has it can see this student’s class schedule.'
+          : 'This link is private to you — anyone who has it can see your class schedule.'}{' '}
+        New and changed classes appear automatically (calendar apps refresh
+        every few hours).
       </p>
       {confirmingReset ? (
         <div className="flex flex-wrap items-center gap-2 text-xs">

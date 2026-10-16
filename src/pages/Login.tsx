@@ -5,6 +5,12 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import NavBar from '@/components/NavBar';
 import AuthTabs from '@/components/auth/AuthTabs';
+import type { SignUpAccountType } from '@/components/auth/SignUpForm';
+import { isFamilySignupEnabled } from '@/config/features';
+import {
+  clearFamilySignupIntent,
+  setFamilySignupIntent,
+} from '@/lib/familySignupIntent';
 import { getSavedRoute } from '@/hooks/useRoutePersistence';
 import { signInSchema, signUpSchema, validateForm } from '@/lib/validation';
 import { addBreadcrumb, captureException } from '@/lib/sentry';
@@ -19,11 +25,14 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [username, setUsername] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { signIn, signUp, signInWithOAuth, user, userRole } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [authError, setAuthError] = useState<string | null>(null);
+  const showAccountType = isFamilySignupEnabled();
+  const [accountType, setAccountType] = useState<SignUpAccountType>('self');
 
   // Rate limit: 5 attempts per 2 minutes, 60s lockout
   const signInLimiter = useRateLimiter({
@@ -74,6 +83,7 @@ const Login = () => {
         student: '/dashboard',
         tutor: '/tutor-dashboard',
         admin: '/admin-dashboard',
+        parent: '/family',
       };
 
       const path =
@@ -89,7 +99,8 @@ const Login = () => {
     e.preventDefault();
     setAuthError(null);
 
-    const result = validateForm(signInSchema, { email, password });
+    // The sign-in box takes an email or a username.
+    const result = validateForm(signInSchema, { identifier: email, password });
     if (!result.success) {
       toast.error(result.firstError);
       return;
@@ -110,7 +121,7 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      await signIn(result.data.email, result.data.password);
+      await signIn(result.data.identifier, result.data.password);
     } catch (error) {
       log.error('Login error:', error);
       if (error instanceof Error) {
@@ -129,6 +140,7 @@ const Login = () => {
     const result = validateForm(signUpSchema, {
       firstName,
       lastName,
+      username,
       email,
       password,
     });
@@ -158,6 +170,10 @@ const Login = () => {
       await signUp(result.data.email, result.data.password, {
         first_name: result.data.firstName,
         last_name: result.data.lastName,
+        username: result.data.username,
+        ...(showAccountType && accountType === 'parent'
+          ? { account_type: 'parent' as const }
+          : {}),
       });
     } catch (error) {
       log.error('Registration error:', error);
@@ -168,6 +184,13 @@ const Login = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // From the sign-up tab: remember a family choice across Google's redirect.
+  const handleGoogleSignUp = async () => {
+    if (showAccountType && accountType === 'parent') setFamilySignupIntent();
+    else clearFamilySignupIntent();
+    await handleGoogleSignIn();
   };
 
   const handleGoogleSignIn = async () => {
@@ -214,11 +237,20 @@ const Login = () => {
                 setFirstName={setFirstName}
                 lastName={lastName}
                 setLastName={setLastName}
+                username={username}
+                setUsername={setUsername}
                 isLoading={isLoading}
                 authError={authError}
                 handleSignIn={handleSignIn}
                 handleSignUp={handleSignUp}
                 handleGoogleSignIn={handleGoogleSignIn}
+                handleGoogleSignUp={handleGoogleSignUp}
+                defaultTab={
+                  searchParams.get('mode') === 'signup' ? 'signup' : 'signin'
+                }
+                showAccountType={showAccountType}
+                accountType={accountType}
+                setAccountType={setAccountType}
               />
             </CardContent>
           </Card>

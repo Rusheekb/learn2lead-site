@@ -36,6 +36,8 @@ import { logAdminAction } from '@/services/adminActivityLog';
 import { useQueryClient } from '@tanstack/react-query';
 import { deleteStudent } from '@/services/students/studentService';
 import { deleteTutor } from '@/services/tutors/tutorService';
+import AdminFamilySection from './AdminFamilySection';
+import { displayEmail } from '@/lib/managedEmail';
 
 const log = logger.create('UserDetailModal');
 
@@ -140,6 +142,17 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
         const fn =
           user.role === 'student' ? fetchStudentAnalytics : fetchTutorAnalytics;
         const analytics = await fn(profile.id);
+        if (user.role === 'student') {
+          // The balance that actually pays for this student: their own, or
+          // their parent's family balance (same lookup the tutor sees).
+          const { data: balance, error: balanceError } = await supabase.rpc(
+            'get_student_credit_balance',
+            { p_student_id: profile.id }
+          );
+          if (!balanceError && balance !== null) {
+            analytics.totalCredits = Number(balance);
+          }
+        }
         setStats(analytics);
       } catch (error) {
         log.error('Error fetching user analytics:', error);
@@ -317,7 +330,7 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
               </Badge>
             </DialogTitle>
             <p className="text-xs text-muted-foreground truncate">
-              {user.email} · {user.id}
+              {displayEmail(user.email)} · {user.id}
             </p>
           </DialogHeader>
 
@@ -511,6 +524,13 @@ export function UserDetailModal({ user, onClose, onUserUpdated }: Props) {
 
             {hasSettingsTab && (
               <TabsContent value="settings" className="space-y-4 pt-4">
+                {user.role === 'student' && (
+                  <AdminFamilySection
+                    studentEmail={user.email}
+                    onChanged={() => onUserUpdated?.()}
+                  />
+                )}
+
                 {(canPromote || canDemote) && (
                   <div className="space-y-1.5 rounded-lg border p-3">
                     <h4 className="text-sm font-medium flex items-center gap-2">

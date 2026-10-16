@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { passwordProblem } from '@/lib/validation';
+import { friendlyAuthError } from '@/utils/authErrors';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,8 +28,9 @@ const PasswordChangeCard: React.FC<PasswordChangeCardProps> = ({
       toast.error('Passwords do not match');
       return;
     }
-    if (passwords.new.length < 6) {
-      toast.error('Password must be at least 6 characters');
+    const problem = passwordProblem(passwords.new);
+    if (problem) {
+      toast.error(problem);
       return;
     }
 
@@ -37,7 +40,7 @@ const PasswordChangeCard: React.FC<PasswordChangeCardProps> = ({
         password: passwords.new,
       });
       if (error) {
-        toast.error('Failed to update password');
+        toast.error(friendlyAuthError(error));
         log.error('Password update error:', error);
       } else {
         toast.success('Password updated successfully');
@@ -53,17 +56,19 @@ const PasswordChangeCard: React.FC<PasswordChangeCardProps> = ({
 
   return (
     <>
-      {/* Email row */}
-      <div className="flex items-start justify-between px-6 py-4">
-        <div className="flex items-center gap-3">
-          <Mail className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
-          <div>
-            <p className="text-sm font-medium">Email address</p>
-            <p className="text-sm text-muted-foreground mt-0.5">{email}</p>
-            <p className="text-xs text-muted-foreground mt-1">{emailNote}</p>
+      {/* Email row (a parent-added student signs in with a username only) */}
+      {email && (
+        <div className="flex items-start justify-between px-6 py-4">
+          <div className="flex items-center gap-3">
+            <Mail className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium">Email address</p>
+              <p className="text-sm text-muted-foreground mt-0.5">{email}</p>
+              <p className="text-xs text-muted-foreground mt-1">{emailNote}</p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Password row */}
       <div className="px-6 py-5 space-y-4">

@@ -6,6 +6,7 @@ import { Menu, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import CommandPalette from './CommandPalette';
+import ChooseOwnPassword from './ChooseOwnPassword';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface DashboardShellProps {
@@ -38,6 +39,7 @@ const DashboardShell: React.FC<DashboardShellProps> = ({ title, children }) => {
       role="application"
       aria-label={`${title} dashboard`}
     >
+      <ChooseOwnPassword />
       {/* Mobile Navigation Trigger */}
       <div className="md:hidden flex items-center p-3 border-b bg-card">
         <Sheet open={isMobileNavOpen} onOpenChange={setIsMobileNavOpen}>

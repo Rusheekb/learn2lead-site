@@ -4,6 +4,7 @@ import SignInForm from './SignInForm';
 import SignUpForm from './SignUpForm';
 import AuthError from './AuthError';
 import ForgotPasswordForm from './ForgotPasswordForm';
+import type { SignUpAccountType } from './SignUpForm';
 
 interface AuthTabsProps {
   email: string;
@@ -14,11 +15,19 @@ interface AuthTabsProps {
   setFirstName: (firstName: string) => void;
   lastName: string;
   setLastName: (lastName: string) => void;
+  username: string;
+  setUsername: (username: string) => void;
   isLoading: boolean;
   authError: string | null;
   handleSignIn: (e: React.FormEvent) => Promise<void>;
   handleSignUp: (e: React.FormEvent) => Promise<void>;
   handleGoogleSignIn: () => Promise<void>;
+  /** Google from the sign-up tab (carries the account-type choice). */
+  handleGoogleSignUp?: () => Promise<void>;
+  defaultTab?: 'signin' | 'signup';
+  showAccountType?: boolean;
+  accountType?: SignUpAccountType;
+  setAccountType?: (type: SignUpAccountType) => void;
 }
 
 const AuthTabs: React.FC<AuthTabsProps> = ({
@@ -30,11 +39,18 @@ const AuthTabs: React.FC<AuthTabsProps> = ({
   setFirstName,
   lastName,
   setLastName,
+  username,
+  setUsername,
   isLoading,
   authError,
   handleSignIn,
   handleSignUp,
   handleGoogleSignIn,
+  handleGoogleSignUp,
+  defaultTab = 'signin',
+  showAccountType,
+  accountType,
+  setAccountType,
 }) => {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
 
@@ -43,7 +59,7 @@ const AuthTabs: React.FC<AuthTabsProps> = ({
   }
 
   return (
-    <Tabs defaultValue="signin" className="w-full">
+    <Tabs defaultValue={defaultTab} className="w-full">
       <TabsList className="grid w-full grid-cols-2 mb-6">
         <TabsTrigger value="signin">Sign In</TabsTrigger>
         <TabsTrigger value="signup">Sign Up</TabsTrigger>
@@ -74,9 +90,14 @@ const AuthTabs: React.FC<AuthTabsProps> = ({
           setFirstName={setFirstName}
           lastName={lastName}
           setLastName={setLastName}
+          username={username}
+          setUsername={setUsername}
           isLoading={isLoading}
           handleSubmit={handleSignUp}
-          handleGoogleSignIn={handleGoogleSignIn}
+          handleGoogleSignIn={handleGoogleSignUp ?? handleGoogleSignIn}
+          showAccountType={showAccountType}
+          accountType={accountType}
+          setAccountType={setAccountType}
         />
       </TabsContent>
     </Tabs>

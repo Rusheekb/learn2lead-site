@@ -35,15 +35,18 @@ const SignInForm: React.FC<SignInFormProps> = ({
       noValidate
     >
       <div className="space-y-2">
-        <Label htmlFor="email-signin">Email</Label>
+        <Label htmlFor="email-signin">Email or username</Label>
         <Input
           id="email-signin"
-          type="email"
-          placeholder="your@email.com"
+          type="text"
+          inputMode="email"
+          autoCapitalize="none"
+          spellCheck={false}
+          placeholder="your@email.com or username"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          autoComplete="email"
+          autoComplete="username"
           aria-required="true"
         />
       </div>

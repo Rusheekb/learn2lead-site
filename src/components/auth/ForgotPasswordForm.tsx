@@ -32,6 +32,13 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBack }) => {
       toast.error('Please enter your email address');
       return;
     }
+    // A username alone can't receive a reset link.
+    if (!email.includes('@')) {
+      toast.info(
+        'Enter the email on your account. Students who sign in with a username: ask your parent to reset your password.'
+      );
+      return;
+    }
 
     if (!limiter.recordAttempt()) {
       toast.error(

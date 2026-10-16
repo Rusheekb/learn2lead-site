@@ -68,20 +68,24 @@ export function shouldSendOutOfHoursEmail(args: {
 export function buildOutOfHoursEmail(args: {
   studentName: string;
   upcomingClassCount: number;
+  /** Set for a parent's copy: whose class just used the last hours. */
+  childName?: string;
 }): { subject: string; html: string } {
   const name = escapeHtml(args.studentName || 'there');
   const n = args.upcomingClassCount;
+  const child = args.childName ? escapeHtml(args.childName) : null;
   const upcoming =
     n > 0
-      ? `<p>You have <strong>${n} upcoming class${n === 1 ? '' : 'es'}</strong> on your schedule. Your tutor won't be able to log ${n === 1 ? 'it' : 'them'} until more hours are added.</p>`
-      : `<p>Add more hours to keep booking classes with your tutor.</p>`;
+      ? `<p>${child ? 'Your family has' : 'You have'} <strong>${n} upcoming class${n === 1 ? '' : 'es'}</strong> on ${child ? 'the' : 'your'} schedule. ${child ? 'The tutor' : 'Your tutor'} won't be able to log ${n === 1 ? 'it' : 'them'} until more hours are added.</p>`
+      : `<p>Add more hours to keep booking classes with ${child ? 'the' : 'your'} tutor.</p>`;
+  const lastClass = child ? `${child}'s last class` : 'Your last class';
 
   return {
     subject: "You're out of tutoring hours",
     html: wrap(`
       <h2 style="color: #ef4444;">You're out of tutoring hours</h2>
       <p>Hello ${name},</p>
-      <p>Your last class used your remaining hours, so your balance is now <strong>0 hours</strong>.</p>
+      <p>${lastClass} used your remaining hours, so your balance is now <strong>0 hours</strong>.</p>
       ${upcoming}
       ${buyHoursButton}
       <p style="font-size: 13px; color: #555;">Tip: you can turn on auto-renew in your account settings so this doesn't happen again.</p>`),
@@ -95,8 +99,12 @@ export function buildBlockedClassLogEmail(args: {
   classDate: string; // YYYY-MM-DD
   hoursNeeded: number;
   hoursRemaining: number | null; // null = no hours ever purchased
+  /** Set for a parent's copy: whose class couldn't be recorded. */
+  childName?: string;
 }): { subject: string; html: string } {
   const name = escapeHtml(args.studentName || 'there');
+  const whose = args.childName ? `${escapeHtml(args.childName)}'s` : 'your';
+  const whoseTitle = args.childName ? `${args.childName}'s` : 'your';
   const tutor = escapeHtml(args.tutorName || 'Your tutor');
   const subj = escapeHtml(args.subject || 'tutoring');
   const date = formatClassDate(args.classDate);
@@ -107,11 +115,11 @@ export function buildBlockedClassLogEmail(args: {
       : `<p>This class needs <strong>${hoursLabel(args.hoursNeeded)}</strong>, but your balance is <strong>${hoursLabel(args.hoursRemaining)}</strong>.</p>`;
 
   return {
-    subject: `Action needed: your ${args.subject || 'tutoring'} class on ${date} couldn't be recorded`,
+    subject: `Action needed: ${whoseTitle} ${args.subject || 'tutoring'} class on ${date} couldn't be recorded`,
     html: wrap(`
-      <h2 style="color: #1a1a2e;">Your class couldn't be recorded</h2>
+      <h2 style="color: #1a1a2e;">${args.childName ? `${escapeHtml(args.childName)}'s` : 'Your'} class couldn't be recorded</h2>
       <p>Hello ${name},</p>
-      <p>${tutor} tried to log your <strong>${subj}</strong> class from <strong>${escapeHtml(date)}</strong>, but there aren't enough hours on your account.</p>
+      <p>${tutor} tried to log ${whose} <strong>${subj}</strong> class from <strong>${escapeHtml(date)}</strong>, but there aren't enough hours on your account.</p>
       ${balanceLine}
       <p>The session won't be recorded until more hours are added. Once they are, your tutor can log it.</p>
       ${buyHoursButton}`),

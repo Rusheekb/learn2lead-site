@@ -28,6 +28,8 @@ const ACTION_COLORS: Record<string, string> = {
   rates_updated: 'bg-sky-500',
   role_changed: 'bg-orange-500',
   user_deleted: 'bg-red-500',
+  parent_unlinked: 'bg-amber-500',
+  converted_to_family: 'bg-violet-500',
 };
 
 const AdminActivityLog: React.FC = () => {

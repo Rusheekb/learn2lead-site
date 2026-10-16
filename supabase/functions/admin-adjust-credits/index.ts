@@ -6,6 +6,7 @@ import {
 } from '../_shared/rateLimiter.ts';
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 import { resolveOrCreateSubscriptionId } from '../_shared/creditSubscriptionResolver.ts';
+import { getBillingAccountId } from '../_shared/recipients.ts';
 
 Deno.serve(async (req) => {
   const corsResponse = handleCorsPreflightRequest(req);
@@ -114,11 +115,14 @@ Deno.serve(async (req) => {
       );
     }
 
+    // A student with a parent shares the family balance: adjust that one.
+    // (The history entry still names the student.)
     let subscriptionId: string;
     try {
+      const billingId = await getBillingAccountId(supabaseAdmin, student_id);
       ({ subscriptionId } = await resolveOrCreateSubscriptionId(
         supabaseAdmin,
-        student_id
+        billingId
       ));
     } catch (resolveError) {
       console.error('Failed to resolve/bootstrap subscription:', resolveError);

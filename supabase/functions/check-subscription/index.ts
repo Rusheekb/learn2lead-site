@@ -6,6 +6,7 @@ import {
   checkRateLimit,
   rateLimitResponse,
 } from '../_shared/rateLimiter.ts';
+import { fullName, getBillingAccountId } from '../_shared/recipients.ts';
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -129,12 +130,44 @@ Deno.serve(async (req) => {
     let planName = null;
     let pricePerHour = null;
 
+    // A student whose parent pays sees the family balance, and who manages
+    // it. Everyone else (no parent) reads their own, as before.
+    // Loaded on every dashboard visit, so a failed lookup falls back to the
+    // caller's own balance rather than erroring.
+    const billingId = await getBillingAccountId(supabaseClient, userId).catch(
+      (e) => {
+        logStep('WARNING: billing account lookup failed', {
+          error: String(e),
+        });
+        return userId;
+      }
+    );
+    let managedBy: { name: string } | null = null;
+    let hoursHidden = false;
+    if (billingId !== userId) {
+      const [{ data: guardian }, { data: me }] = await Promise.all([
+        supabaseClient
+          .from('profiles')
+          .select('first_name, last_name')
+          .eq('id', billingId)
+          .maybeSingle(),
+        supabaseClient
+          .from('profiles')
+          .select('hide_hours_from_student')
+          .eq('id', userId)
+          .maybeSingle(),
+      ]);
+      managedBy = { name: fullName(guardian, 'your parent') };
+      hoursHidden = !!me?.hide_hours_from_student;
+      logStep('Balance managed by parent', { billingId, hoursHidden });
+    }
+
     const { data: subData, error: subError } = await supabaseClient
       .from('student_subscriptions')
       .select(
         'id, status, credits_remaining, plan_id, subscription_plans(name, price_per_hour)'
       )
-      .eq('student_id', userId)
+      .eq('student_id', billingId)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -156,7 +189,7 @@ Deno.serve(async (req) => {
       const { data: ledgerData, error: ledgerError } = await supabaseClient
         .from('class_credits_ledger')
         .select('balance_after')
-        .eq('student_id', userId)
+        .eq('student_id', billingId)
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -175,12 +208,32 @@ Deno.serve(async (req) => {
       }
     }
 
+    // A student whose parent pays gets hours only (or nothing, if the parent
+    // hides them) — never the plan, the price or anything else about billing.
+    if (managedBy) {
+      return new Response(
+        JSON.stringify({
+          subscribed: hasAccount,
+          credits_remaining: hoursHidden ? null : creditsRemaining,
+          plan_name: null,
+          price_per_hour: null,
+          managed_by: managedBy,
+          hours_hidden: hoursHidden,
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      );
+    }
+
     return new Response(
       JSON.stringify({
         subscribed: hasAccount,
         credits_remaining: creditsRemaining,
         plan_name: planName,
         price_per_hour: pricePerHour,
+        managed_by: null,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

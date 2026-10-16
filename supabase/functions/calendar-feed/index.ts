@@ -13,8 +13,8 @@ import { buildIcsCalendar, IcsEvent } from '../_shared/ics.ts';
  * token is the only credential: a random per-user value from
  * calendar_feed_tokens, readable only by its owner and resettable from
  * Settings. verify_jwt is off for that reason. Returns that user's classes
- * (as tutor or student) from the last 30 days onward, as exact UTC times.
- * Private class notes are deliberately left out.
+ * (as tutor or student, or a parent's children's) from the last 30 days
+ * onward, as exact UTC times. Private class notes are deliberately left out.
  */
 
 const logStep = (step: string, details?: Record<string, unknown>) => {
@@ -69,6 +69,19 @@ Deno.serve(async (req) => {
     const userId = owner.user_id as string;
     const since = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString();
 
+    // A parent's feed also carries each child's classes.
+    const { data: children } = await supabase
+      .from('guardian_links')
+      .select('student_id')
+      .eq('guardian_id', userId);
+    const childIds = (children ?? []).map(
+      (c: { student_id: string }) => c.student_id
+    );
+    const studentFilter =
+      childIds.length > 0
+        ? `student_id.in.(${[userId, ...childIds].join(',')})`
+        : `student_id.eq.${userId}`;
+
     const { data: classes, error } = await supabase
       .from('scheduled_classes')
       .select(
@@ -76,7 +89,7 @@ Deno.serve(async (req) => {
          student:profiles!scheduled_classes_student_id_fkey(first_name, last_name),
          tutor:profiles!scheduled_classes_tutor_id_fkey(first_name, last_name)`
       )
-      .or(`tutor_id.eq.${userId},student_id.eq.${userId}`)
+      .or(`tutor_id.eq.${userId},${studentFilter}`)
       .eq('status', 'scheduled')
       .gte('start_at', since)
       .order('start_at');
@@ -86,9 +99,14 @@ Deno.serve(async (req) => {
       const isTutor = c.tutor_id === userId;
       const other = displayName(isTutor ? c.student : c.tutor);
       const subject = c.subject || c.title || 'Tutoring';
+      // For a parent: "Maya: Math with Ms. Lee".
+      const child = childIds.includes(c.student_id)
+        ? c.student?.first_name || displayName(c.student)
+        : '';
+      const title = other ? `${subject} with ${other}` : subject;
       return {
         id: c.id,
-        title: other ? `${subject} with ${other}` : subject,
+        title: child ? `${child}: ${title}` : title,
         startAt: c.start_at,
         endAt: c.end_at,
         description: c.zoom_link

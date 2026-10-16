@@ -24,8 +24,19 @@ export function useRoleSync() {
 
       const { id, email, user_metadata } = user;
       const role = user_metadata.role as 'student' | 'tutor';
+      if (role !== 'student' && role !== 'tutor') return;
 
       try {
+        // Family accounts: a parent (or an admin-converted account whose
+        // old metadata still says "student") must never get a student or
+        // tutor row, so the database role wins over metadata.
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', id)
+          .maybeSingle();
+        if (profile?.role === 'parent') return;
+
         if (role === 'student') {
           await createStudent({
             // Remove 'id' as it's not expected in Omit<Student, "id">

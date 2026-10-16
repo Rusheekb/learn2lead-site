@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Learn2Lead is a tutoring platform: students buy hourly credit packs (Stripe, one-time purchases — not subscriptions), get matched with tutors, book/complete classes, and credits are debited per class. There are three roles — student, tutor, admin — each with its own dashboard and route tree. React/Vite SPA on the frontend, Supabase (Postgres + Auth + Edge Functions) on the backend.
+Learn2Lead is a tutoring platform: students buy hourly credit packs (Stripe, one-time purchases — not subscriptions), get matched with tutors, book/complete classes, and credits are debited per class. There are four roles — student, tutor, parent, admin — each with its own dashboard and route tree (parents: see Family accounts below). React/Vite SPA on the frontend, Supabase (Postgres + Auth + Edge Functions) on the backend.
 
 ## Commands
 
@@ -53,6 +53,18 @@ All routes are lazy-loaded. Route tree is flat, gated by `PrivateRoute` with an 
 - Credit balance mutations (purchase, class deduction, refund/restore, auto-renewal) all funnel through `apply_credit_ledger_entry` (see `supabase/migrations/20260728000002_atomic_credit_ledger.sql`), which takes a row lock on the subscription before computing the new balance — this exists specifically to prevent lost updates when two credit/debit events race (e.g. a class completion and an auto-renewal webhook landing concurrently). Any new code path that changes a student's credit balance must go through this function rather than doing read-then-write in application code.
 - `deduct-class-credit` / `restore-class-credit` edge functions handle the debit-on-completion / refund-on-failure pair; `retryWithBackoff` (`src/utils/retryWithBackoff.ts`) wraps these for transient-failure resilience.
 - Referral system: self-service discount codes, referrer rewards in hours (not dollars) — see `src/components/referral/`, `src/hooks/useReferralCode.ts`, `src/utils/referralDiscount.ts`, and the `referral_*` migrations.
+
+### Family accounts (parents)
+
+See `docs/family-accounts-plan.md`. A `parent` role logs in and pays; it's linked to students through `guardian_links` and grants nothing without a link. Children a parent adds are "managed" students: a normal student identity (auth user + profile + `students` row) with no login, a placeholder address `student-<uuid>@managed.learn2lead.page` that must never be emailed, and an optional `profiles.notification_email`.
+
+- **Billing:** any code that finds a student's balance must use `billing_account_for(student)`, i.e. the parent if linked, else the student. In edge functions that's `getBillingAccountId` in `_shared/recipients.ts`. Ledger rows keep `student_id` = the student while `subscription_id` is the payer's.
+- **Email:** any email about a student must get its recipients from `student_notification_recipients(student, 'student' | 'parent_only')`, via `getStudentRecipients` in edge functions. Never send to a profile's `email` directly, which could be a placeholder.
+- **Existing accounts:** for every account without a parent, both resolve to the student themself, exactly as before.
+- **Students with a parent never see billing.** The database enforces it (`has_guardian()` in the billing RLS policies; `check-subscription` returns hours only). Don't add billing UI or queries reachable by a student without the same check.
+- **Sign-in:** everyone has a unique `profiles.username` and signs in with "Email or username". Usernames resolve to an account only on the server (`username-login` → `login_email_for_username`, service role only); never expose that lookup to clients.
+- **Notifications:** new notifications about a student go through `_shared/notify.ts` (`getTargetsForStudent` / `getTargetForProfile`, then `deliver`), so family routing, each person's per-channel preferences (`notification_preferences`) and text opt-outs apply. Texts need a verified, opted-in number in `contact_methods`; the texting UI is behind `VITE_ENABLE_SMS`.
+- **Messaging:** one conversation per student + tutor (`message_threads`). The student's parent(s) and admins can always read it (safeguarding); don't add private tutor–student channels. Reads go through the `get_my_threads` / `get_thread_messages` RPCs; posts only through the `send-message` function, which posts as the user and sends alerts.
 
 ### Services layer (`src/services/`)
 

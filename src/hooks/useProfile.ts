@@ -8,7 +8,7 @@ import { logger } from '@/lib/logger';
 
 const log = logger.create('useProfile');
 
-export type AppRole = 'student' | 'tutor' | 'admin';
+export type AppRole = 'student' | 'tutor' | 'admin' | 'parent';
 
 export interface Profile {
   id: string;
@@ -19,6 +19,12 @@ export interface Profile {
   bio: string | null;
   avatar_url: string | null;
   zoom_link: string | null;
+  /** Unique sign-in name (lowercase). */
+  username?: string;
+  /** A parent set this student's password; they must choose their own. */
+  must_change_password?: boolean;
+  /** Added by a parent (family accounts). */
+  managed?: boolean;
   /** IANA zone, e.g. America/Los_Angeles; null until first detected. */
   timezone?: string | null;
   created_at: string;

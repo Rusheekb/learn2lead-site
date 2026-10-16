@@ -16,6 +16,7 @@ import {
   Webhook,
   Search,
   User,
+  MessageSquare,
 } from 'lucide-react';
 
 interface SearchResult {
@@ -69,6 +70,13 @@ const NAV_ITEMS: Omit<SearchResult, 'id'>[] = [
     type: 'nav',
     url: '/admin-dashboard?tab=assignments',
     icon: <UsersRound className="h-4 w-4" />,
+  },
+  {
+    label: 'Messages',
+    sublabel: 'Student-tutor conversations',
+    type: 'nav',
+    url: '/admin-dashboard?tab=messages',
+    icon: <MessageSquare className="h-4 w-4" />,
   },
   {
     label: 'Reports',

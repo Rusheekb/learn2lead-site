@@ -7,6 +7,8 @@ import {
   rateLimitResponse,
 } from '../_shared/rateLimiter.ts';
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
+import { isSendableEmail } from '../_shared/recipients.ts';
+import { getTargetsForStudent } from '../_shared/notify.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -471,17 +473,43 @@ async function generateReportForStudent(
     // Generate HTML report
     const htmlContent = generateReportHTML(reportData, aiRecommendations);
 
-    // Send email via Resend
-    const recipientEmail = testEmail || profile.email;
+    // Send email via Resend — to the student's parent if they have one,
+    // else the student (as before family accounts).
+    let recipientEmails: string[];
+    let toParent = false;
+    if (testEmail) {
+      recipientEmails = [testEmail];
+    } else {
+      // Whoever pays, unless they've turned summaries off.
+      const recipients = await getTargetsForStudent(
+        supabase,
+        studentId,
+        'summaries'
+      ).catch((e) => {
+        console.error('Recipient lookup failed, student only:', e);
+        return null;
+      });
+      toParent = !!recipients?.some((r) => r.is_guardian);
+      recipientEmails = recipients
+        ? recipients
+            .filter((r) => r.email_enabled && isSendableEmail(r.email))
+            .map((r) => r.email!)
+        : [profile.email].filter((e) => isSendableEmail(e));
+    }
+
+    if (recipientEmails.length === 0) {
+      console.log(`No address to send ${studentName}'s report to, skipping`);
+      return true;
+    }
 
     console.log(
-      `Sending quarterly report to: ${recipientEmail}${testEmail ? ' (TEST MODE)' : ''}`
+      `Sending quarterly report to: ${recipientEmails.join(', ')}${testEmail ? ' (TEST MODE)' : ''}`
     );
 
     const emailResult = await resend.emails.send({
       from: 'Learn2Lead <noreply@learn2lead.page>',
-      to: [recipientEmail],
-      subject: `${testEmail ? '[TEST] ' : ''}Your Quarterly Progress Report - ${quarterLabel}`,
+      to: recipientEmails,
+      subject: `${testEmail ? '[TEST] ' : ''}${toParent ? `${profile.first_name || studentName}'s` : 'Your'} Quarterly Progress Report - ${quarterLabel}`,
       html: htmlContent,
     });
 
@@ -526,6 +554,32 @@ Deno.serve(async (req) => {
     windowMs: 60_000,
   });
   if (limited) return rateLimitResponse(retryAfterMs!, corsHeaders);
+
+  // Only the quarterly cron (service role) or an admin may generate reports.
+  // verify_jwt alone let anyone holding the public anon key email any
+  // student's report — class notes and tutor notes included — to any
+  // address via test_email.
+  const token = (req.headers.get('Authorization') ?? '')
+    .replace('Bearer ', '')
+    .trim();
+  let authorized = !!token && token === supabaseServiceKey;
+  if (!authorized && token) {
+    const { data: caller } = await supabase.auth.getUser(token);
+    if (caller?.user) {
+      const { data: callerProfile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', caller.user.id)
+        .maybeSingle();
+      authorized = callerProfile?.role === 'admin';
+    }
+  }
+  if (!authorized) {
+    return new Response(JSON.stringify({ error: 'Admin access required' }), {
+      status: 403,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
 
   try {
     const { student_id, report_quarter, test_email } = await req.json();

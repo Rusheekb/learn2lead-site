@@ -21,11 +21,13 @@ export const ClassCalendarContainer: React.FC<ClassCalendarContainerProps> =
     );
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const { user } = useAuth();
+    // A parent views one child's calendar; a student their own.
+    const targetId = studentId || user?.id;
 
     const { data: sessions = [], isLoading } = useQuery({
-      queryKey: ['student-classes', user?.id],
-      queryFn: () => fetchScheduledClasses(undefined, user!.id),
-      enabled: !!user?.id,
+      queryKey: ['student-classes', targetId],
+      queryFn: () => fetchScheduledClasses(undefined, targetId!),
+      enabled: !!targetId,
       staleTime: 2 * 60 * 1000, // 2 minutes
     });
 

@@ -1,4 +1,5 @@
 import React from 'react';
+import { displayEmail } from '@/lib/managedEmail';
 import { Button } from '@/components/ui/button';
 import { MessageSquare, FileText } from 'lucide-react';
 import { Student } from '@/types/sharedTypes';
@@ -19,7 +20,7 @@ const StudentOverview: React.FC<StudentOverviewProps> = ({
       <div className="grid grid-cols-2 gap-4">
         <div>
           <h4 className="text-sm font-medium text-gray-500">Email</h4>
-          <p>{student.email}</p>
+          <p>{displayEmail(student.email)}</p>
         </div>
         <div>
           <h4 className="text-sm font-medium text-gray-500">Subjects</h4>

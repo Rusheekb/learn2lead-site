@@ -15,6 +15,7 @@ const Login = React.lazy(() => import('./pages/Login'));
 const ResetPassword = React.lazy(() => import('./pages/ResetPassword'));
 const Pricing = React.lazy(() => import('./pages/Pricing'));
 const ReferralLanding = React.lazy(() => import('./pages/ReferralLanding'));
+const AcceptInvite = React.lazy(() => import('./pages/AcceptInvite'));
 import { AuthProvider } from './contexts/AuthContext';
 import { SubscriptionProvider } from './contexts/SubscriptionContext';
 import { useRoleSync } from './hooks/useRoleSync';
@@ -50,6 +51,7 @@ const Profile = React.lazy(() => import('./pages/Profile'));
 const TutorDashboard = React.lazy(() => import('./pages/TutorDashboard'));
 const Dashboard = React.lazy(() => import('./pages/Dashboard'));
 const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
+const FamilyDashboard = React.lazy(() => import('./pages/FamilyDashboard'));
 
 // Create a client
 const queryClient = new QueryClient({
@@ -120,6 +122,20 @@ const AdminDashboardWrapper = ({ children }: { children: React.ReactNode }) => (
   </DashboardShell>
 );
 
+const ParentDashboardWrapper = ({
+  children,
+}: {
+  children: React.ReactNode;
+}) => (
+  <DashboardShell title="Family Portal">
+    <OptimizedSuspense>
+      <SectionErrorBoundary>
+        <AnimatedPage>{children}</AnimatedPage>
+      </SectionErrorBoundary>
+    </OptimizedSuspense>
+  </DashboardShell>
+);
+
 // Animated routes component
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -178,6 +194,16 @@ const AnimatedRoutes = () => {
             </OptimizedSuspense>
           }
         />
+        <Route
+          path="/accept-invite"
+          element={
+            <OptimizedSuspense>
+              <AnimatedPage>
+                <AcceptInvite />
+              </AnimatedPage>
+            </OptimizedSuspense>
+          }
+        />
 
         {/* Private routes */}
         <Route element={<PrivateRoute />}>
@@ -215,6 +241,17 @@ const AnimatedRoutes = () => {
                 <TutorDashboardWrapper>
                   <Profile />
                 </TutorDashboardWrapper>
+              }
+            />
+          </Route>
+
+          <Route element={<PrivateRoute allowedRoles={['parent']} />}>
+            <Route
+              path="/family"
+              element={
+                <ParentDashboardWrapper>
+                  <FamilyDashboard />
+                </ParentDashboardWrapper>
               }
             />
           </Route>
