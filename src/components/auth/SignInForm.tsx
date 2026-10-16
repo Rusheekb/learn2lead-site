@@ -3,8 +3,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import AuthButton from './AuthButton';
-import SocialAuthButton from './SocialAuthButton';
-import GoogleIcon from './GoogleIcon';
+import GoogleAuthButton from './GoogleAuthButton';
+import type { GoogleCredential } from '@/lib/googleIdentity';
 
 interface SignInFormProps {
   email: string;
@@ -13,7 +13,7 @@ interface SignInFormProps {
   setPassword: (password: string) => void;
   isLoading: boolean;
   handleSubmit: (e: React.FormEvent) => Promise<void>;
-  handleGoogleSignIn: () => Promise<void>;
+  handleGoogleSignIn: (credential?: GoogleCredential) => Promise<void>;
   onForgotPassword?: () => void;
 }
 
@@ -91,11 +91,10 @@ const SignInForm: React.FC<SignInFormProps> = ({
         </div>
       </div>
 
-      <SocialAuthButton
-        provider="Google"
+      <GoogleAuthButton
         isLoading={isLoading}
-        onClick={handleGoogleSignIn}
-        icon={<GoogleIcon />}
+        onSignIn={handleGoogleSignIn}
+        text="signin_with"
       />
     </form>
   );

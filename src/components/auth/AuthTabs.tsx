@@ -4,6 +4,7 @@ import SignInForm from './SignInForm';
 import SignUpForm from './SignUpForm';
 import AuthError from './AuthError';
 import ForgotPasswordForm from './ForgotPasswordForm';
+import type { GoogleCredential } from '@/lib/googleIdentity';
 import type { SignUpAccountType } from './SignUpForm';
 
 interface AuthTabsProps {
@@ -21,9 +22,9 @@ interface AuthTabsProps {
   authError: string | null;
   handleSignIn: (e: React.FormEvent) => Promise<void>;
   handleSignUp: (e: React.FormEvent) => Promise<void>;
-  handleGoogleSignIn: () => Promise<void>;
+  handleGoogleSignIn: (credential?: GoogleCredential) => Promise<void>;
   /** Google from the sign-up tab (carries the account-type choice). */
-  handleGoogleSignUp?: () => Promise<void>;
+  handleGoogleSignUp?: (credential?: GoogleCredential) => Promise<void>;
   defaultTab?: 'signin' | 'signup';
   showAccountType?: boolean;
   accountType?: SignUpAccountType;

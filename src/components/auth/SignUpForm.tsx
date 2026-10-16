@@ -12,8 +12,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import AuthButton from './AuthButton';
-import SocialAuthButton from './SocialAuthButton';
-import GoogleIcon from './GoogleIcon';
+import GoogleAuthButton from './GoogleAuthButton';
+import type { GoogleCredential } from '@/lib/googleIdentity';
 
 /** Who the classes are for: the person signing up, or their child(ren). */
 export type SignUpAccountType = 'self' | 'parent';
@@ -31,7 +31,7 @@ interface SignUpFormProps {
   setUsername: (username: string) => void;
   isLoading: boolean;
   handleSubmit: (e: React.FormEvent) => Promise<void>;
-  handleGoogleSignIn: () => Promise<void>;
+  handleGoogleSignIn: (credential?: GoogleCredential) => Promise<void>;
   /** Shown only when family sign-up is enabled (see config/features). */
   showAccountType?: boolean;
   accountType?: SignUpAccountType;
@@ -248,11 +248,10 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
         </div>
       </div>
 
-      <SocialAuthButton
-        provider="Google"
+      <GoogleAuthButton
         isLoading={isLoading}
-        onClick={handleGoogleSignIn}
-        icon={<GoogleIcon />}
+        onSignIn={handleGoogleSignIn}
+        text="signup_with"
       />
     </form>
   );

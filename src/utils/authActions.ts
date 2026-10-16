@@ -255,6 +255,34 @@ export const signInWithProvider = async (provider: 'google') => {
 };
 
 /**
+ * Google's own sign-in button (see GoogleAuthButton): exchange the Google ID
+ * token for a Supabase session. No redirect, so Google never shows the
+ * Supabase project address.
+ */
+export const signInWithGoogleIdToken = async (credential: {
+  token: string;
+  nonce: string;
+}) => {
+  addBreadcrumb({
+    category: 'auth',
+    message: 'Google ID-token sign-in attempt',
+    level: 'info',
+  });
+  const { error } = await supabase.auth.signInWithIdToken({
+    provider: 'google',
+    token: credential.token,
+    nonce: credential.nonce,
+  });
+  if (error) {
+    log.error('Google ID-token sign-in failed', error);
+    captureException(error, { context: 'signInWithGoogleIdToken' });
+    const message = friendlyAuthError(error);
+    toast.error(message);
+    throw new Error(message);
+  }
+};
+
+/**
  * Signs out the current user.
  */
 export const signOut = async () => {

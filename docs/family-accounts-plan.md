@@ -1,6 +1,6 @@
 # Family Accounts — Implementation Plan
 
-Status: **built and tested locally, not deployed** (2026-10-16). This covers family accounts plus the follow-on work: billing isolation, usernames and student logins, the notification foundation, and messaging (Phases A–D below). Nothing is committed, migrated or deployed yet. The "As built" section is current; the plans that follow it are the design record, and "As built" wins where they differ.
+Status: **shipped to production 2026-10-16** (PR #6). This covers family accounts plus the follow-on work: billing isolation, usernames and student logins, the notification foundation, and messaging (Phases A–D below). Runbook steps 1–5 are done: migrations dry-run then applied, functions deployed, types regenerated, front end live with both flags off. Next: the pilot (step 6), then the family sign-up flag (step 7); texting (step 8) waits on Twilio. The "As built" section is current; the plans that follow it are the design record, and "As built" wins where they differ.
 
 ## As built
 
@@ -148,7 +148,7 @@ Status: **built and tested locally, not deployed** (2026-10-16). This covers fam
 
 ## Next phase: student logins and account separation (proposed 2026-10-16)
 
-Status: **A–D built and tested locally (2026-10-16), not deployed.** See "As built" above for where the build differs from this proposal. It replaces decision D2 ("no child logins in v1").
+Status: **A–D shipped 2026-10-16.** See "As built" above for where the build differs from this proposal. It replaces decision D2 ("no child logins in v1").
 
 ### Principle
 
