@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { smoothScrollToSection } from '@/utils/scrollUtils';
 
 const Footer = () => {
@@ -73,6 +74,12 @@ const Footer = () => {
             <p className="text-gray-400 text-sm mb-4 md:mb-0">
               © 2025 Learn2Lead. All rights reserved.
             </p>
+            <Link
+              to="/privacy"
+              className="text-gray-400 text-sm hover:text-white transition-colors"
+            >
+              Privacy Policy
+            </Link>
           </div>
         </div>
       </div>
