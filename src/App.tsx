@@ -14,6 +14,7 @@ const NotFound = React.lazy(() => import('./pages/NotFound'));
 const Login = React.lazy(() => import('./pages/Login'));
 const ResetPassword = React.lazy(() => import('./pages/ResetPassword'));
 const Pricing = React.lazy(() => import('./pages/Pricing'));
+const PrivacyPolicy = React.lazy(() => import('./pages/PrivacyPolicy'));
 const ReferralLanding = React.lazy(() => import('./pages/ReferralLanding'));
 const AcceptInvite = React.lazy(() => import('./pages/AcceptInvite'));
 import { AuthProvider } from './contexts/AuthContext';
@@ -170,6 +171,16 @@ const AnimatedRoutes = () => {
             <OptimizedSuspense>
               <AnimatedPage>
                 <ResetPassword />
+              </AnimatedPage>
+            </OptimizedSuspense>
+          }
+        />
+        <Route
+          path="/privacy"
+          element={
+            <OptimizedSuspense>
+              <AnimatedPage>
+                <PrivacyPolicy />
               </AnimatedPage>
             </OptimizedSuspense>
           }
