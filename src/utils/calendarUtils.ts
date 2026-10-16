@@ -134,6 +134,37 @@ export const resetMyCalendarFeedUrl = async (): Promise<string | null> => {
   return feedUrlForToken(data);
 };
 
+/**
+ * A child's own feed (family accounts): created and reset by their parent,
+ * for the child's own device. Same token rules as the user's own feed.
+ */
+export const getChildCalendarFeedUrl = async (
+  studentId: string
+): Promise<string | null> => {
+  const { data, error } = await supabase.rpc('get_child_calendar_feed_token', {
+    p_student_id: studentId,
+  });
+  if (error || !data) {
+    log.error('Error getting child calendar feed token', error);
+    return null;
+  }
+  return feedUrlForToken(data);
+};
+
+export const resetChildCalendarFeedUrl = async (
+  studentId: string
+): Promise<string | null> => {
+  const { data, error } = await supabase.rpc(
+    'rotate_child_calendar_feed_token',
+    { p_student_id: studentId }
+  );
+  if (error || !data) {
+    log.error('Error resetting child calendar feed token', error);
+    return null;
+  }
+  return feedUrlForToken(data);
+};
+
 /** One-tap subscribe links for a feed URL. */
 export const calendarSubscribeLinks = (feedUrl: string) => {
   const webcal = feedUrl.replace(/^https?:\/\//, 'webcal://');

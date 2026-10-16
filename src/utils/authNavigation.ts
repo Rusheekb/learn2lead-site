@@ -10,6 +10,8 @@ export const getDashboardPath = (role: AppRole | null): string => {
       return '/tutor-dashboard';
     case 'admin':
       return '/admin-dashboard';
+    case 'parent':
+      return '/family';
     default:
       return '/login';
   }

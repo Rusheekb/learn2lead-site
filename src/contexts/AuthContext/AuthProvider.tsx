@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import {
   signInWithEmail,
+  signInWithUsername,
   signUpWithEmail,
   signOut,
   signInWithProvider,
@@ -16,6 +17,9 @@ import { AuthContextType } from '@/types/auth';
 import { getSavedRoute, clearSavedRoute } from '@/hooks/useRoutePersistence';
 import { setUser as setSentryUser, addBreadcrumb } from '@/lib/sentry';
 import { identifyUser, resetUser } from '@/lib/posthog';
+import { consumeFamilySignupIntent } from '@/lib/familySignupIntent';
+import { becomeFamilyAccount } from '@/services/family/mutations';
+import type { AppRole } from '@/hooks/useProfile';
 import { logger } from '@/lib/logger';
 
 const log = logger.create('AuthProvider');
@@ -89,6 +93,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 id: u.id,
                 email: u.email!,
                 role: defaultRole,
+                username: '', // the database generates one
                 first_name: firstName,
                 last_name: lastName,
               });
@@ -103,7 +108,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
               setUserRole(defaultRole);
             } else {
-              setUserRole(existingProfile.role);
+              let role: AppRole = existingProfile.role;
+              // A Google sign-up that chose "My child" (see
+              // familySignupIntent): turn the brand-new account into a
+              // family account. The database refuses for any account with
+              // student history, so a returning student is never changed.
+              if (role === 'student' && consumeFamilySignupIntent()) {
+                if (await becomeFamilyAccount()) {
+                  role = 'parent';
+                } else {
+                  toast.info(
+                    'This Google account already has a student account, so it stays a student account.'
+                  );
+                }
+              }
+              existingProfile.role = role;
+              setUserRole(role);
             }
 
             // Try to restore saved route, otherwise go to default dashboard
@@ -160,14 +180,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, [navigate, setIsLoading, setSession, setUser, setUserRole]);
 
-  const handleSignIn = async (email: string, password: string) => {
-    await signInWithEmail(email, password);
+  // One box takes either: anything with an @ is an email.
+  const handleSignIn = async (identifier: string, password: string) => {
+    const id = identifier.trim();
+    if (id.includes('@')) await signInWithEmail(id, password);
+    else await signInWithUsername(id, password);
   };
 
   const handleSignUp = async (
     email: string,
     password: string,
-    userData?: { first_name?: string; last_name?: string }
+    userData?: {
+      first_name?: string;
+      last_name?: string;
+      account_type?: 'parent';
+      username?: string;
+    }
   ) => {
     await signUpWithEmail(email, password, userData);
   };

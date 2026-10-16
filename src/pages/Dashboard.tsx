@@ -17,6 +17,7 @@ import {
   SubjectResourcesPage,
 } from '@/components/student/resources';
 import ProfilePage from '@/components/shared/ProfilePage';
+import MessagesPage from '@/components/shared/messages/MessagesPage';
 
 const Dashboard = () => {
   const [selectedSubject, setSelectedSubject] = useState<number | null>(null);
@@ -47,6 +48,8 @@ const Dashboard = () => {
         return <Navigate to="/tutor-dashboard" replace />;
       case 'admin':
         return <Navigate to="/admin-dashboard" replace />;
+      case 'parent':
+        return <Navigate to="/family" replace />;
       default:
         return null;
     }
@@ -88,6 +91,8 @@ const Dashboard = () => {
             <SubjectResourcesList />
           </div>
         );
+      case 'messages':
+        return <MessagesPage />;
       case 'profile':
         return <ProfilePage />;
       default:

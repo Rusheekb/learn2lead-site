@@ -6,6 +6,7 @@ import TutorStudents from '@/components/tutor/TutorStudents';
 import { TutorDashboardSkeleton } from '@/components/shared/skeletons';
 import { ContentTransition } from '@/components/shared/PageTransition';
 import ProfilePage from '@/components/shared/ProfilePage';
+import MessagesPage from '@/components/shared/messages/MessagesPage';
 
 const TutorDashboard: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -39,6 +40,8 @@ const TutorDashboard: React.FC = () => {
         return <TutorDashboardContent />;
       case 'students':
         return <TutorStudents />;
+      case 'messages':
+        return <MessagesPage />;
       case 'profile':
         return <ProfilePage />;
       default:

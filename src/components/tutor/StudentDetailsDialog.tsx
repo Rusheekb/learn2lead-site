@@ -11,6 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { User } from 'lucide-react';
 import { Student } from '@/types/sharedTypes';
 import { useStudentNotes } from '@/hooks/useStudentNotes';
+import { useAuth } from '@/contexts/AuthContext';
+import { useOpenConversation } from '@/components/shared/messages/useOpenConversation';
 import StudentOverview from './StudentOverview';
 import StudentNotes from './StudentNotes';
 
@@ -32,6 +34,8 @@ const StudentDetailsDialog: React.FC<StudentDetailsDialogProps> = ({
   const { notes, loading, creating, addNote } = useStudentNotes(
     student?.id || null
   );
+  const { user } = useAuth();
+  const { open: openConversation } = useOpenConversation('/tutor-dashboard');
 
   if (!student) return null;
 
@@ -55,7 +59,9 @@ const StudentDetailsDialog: React.FC<StudentDetailsDialogProps> = ({
             <StudentOverview
               student={student}
               onViewNotes={() => setActiveTab('notes')}
-              onViewMessages={() => {}}
+              onViewMessages={() => {
+                if (user?.id) openConversation(student.id, user.id);
+              }}
             />
           </TabsContent>
 

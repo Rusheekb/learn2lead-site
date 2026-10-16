@@ -29,6 +29,7 @@ describe('getDashboardPath', () => {
     expect(getDashboardPath('student')).toBe('/dashboard');
     expect(getDashboardPath('tutor')).toBe('/tutor-dashboard');
     expect(getDashboardPath('admin')).toBe('/admin-dashboard');
+    expect(getDashboardPath('parent')).toBe('/family');
     expect(getDashboardPath(null)).toBe('/login');
   });
 });

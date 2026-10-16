@@ -13,7 +13,14 @@ import NotificationPreferences from './NotificationPreferences';
 import TimezoneSettings from './TimezoneSettings';
 import AppearanceToggle from './AppearanceToggle';
 import PasswordChangeCard from './PasswordChangeCard';
+import UsernameCard from './UsernameCard';
+import TextMessagesCard from './TextMessagesCard';
+import { useQueryClient } from '@tanstack/react-query';
 import CalendarFeedLink from '@/components/shared/CalendarFeedLink';
+import InviteParentCard from '@/components/student/InviteParentCard';
+import FamilyHoursHistory from '@/components/parent/FamilyHoursHistory';
+import { useSubscription } from '@/contexts/SubscriptionContext';
+import { isFamilySignupEnabled, isSmsEnabled } from '@/config/features';
 import { fields } from '@/lib/validation';
 import { logger } from '@/lib/logger';
 import { supabase } from '@/integrations/supabase/client';
@@ -30,6 +37,13 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
   updateProfile,
 }) => {
   const isTutor = profile.role === 'tutor';
+  const isParent = profile.role === 'parent';
+  const queryClient = useQueryClient();
+  const { managedBy } = useSubscription();
+  // Whoever pays manages billing: a parent, or a student without one.
+  const isPayer = isParent || (profile.role === 'student' && !managedBy);
+  const showFamily =
+    profile.role === 'student' && (isFamilySignupEnabled() || !!managedBy);
 
   const [zoomLink, setZoomLink] = useState(profile.zoom_link ?? '');
   const [isSavingZoom, setIsSavingZoom] = useState(false);
@@ -89,13 +103,27 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
       {/* Notifications */}
       <SettingsSection
         title="Notifications"
-        description="Choose which notifications you receive via email."
+        description={
+          isSmsEnabled()
+            ? 'Choose how you hear from us, by email or text.'
+            : 'Choose which notifications you receive via email.'
+        }
       >
         <NotificationPreferences
           profile={profile}
           updateProfile={updateProfile}
         />
       </SettingsSection>
+
+      {/* Text messages — everyone with a portal */}
+      {profile.role !== 'admin' && isSmsEnabled() && (
+        <SettingsSection
+          title="Text messages"
+          description="Get reminders and messages by text. Choose which ones under Notifications."
+        >
+          <TextMessagesCard userId={profile.id} />
+        </SettingsSection>
+      )}
 
       {/* Time zone */}
       <SettingsSection
@@ -154,11 +182,27 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
         </SettingsSection>
       )}
 
-      {/* Subscription & Hours — students only */}
-      {profile.role === 'student' && (
+      {/* Family — students (invite a parent / who manages their hours) */}
+      {showFamily && (
+        <SettingsSection
+          title="Family"
+          description="Let a parent follow your classes and manage your hours."
+        >
+          <div className="p-6">
+            <InviteParentCard />
+          </div>
+        </SettingsSection>
+      )}
+
+      {/* Subscription & Hours — whoever pays: students, or parents for the family */}
+      {isPayer && (
         <SettingsSection
           title="Subscription & Hours"
-          description="Manage your plan, auto-renewal, and hours history."
+          description={
+            isParent
+              ? "Manage your family's hours, auto-renewal, and history."
+              : 'Manage your plan, auto-renewal, and hours history.'
+          }
         >
           <div className="p-6 space-y-4">
             <SubscriptionStatusCard />
@@ -182,27 +226,38 @@ const SettingsTab: React.FC<SettingsTabProps> = ({
                 {isOpeningPortal ? 'Opening…' : 'Manage'}
               </Button>
             </div>
-            <CreditHistory />
+            {isParent ? <FamilyHoursHistory /> : <CreditHistory />}
           </div>
         </SettingsSection>
       )}
 
-      {/* Referral Program */}
-      <SettingsSection
-        title="Referral Program"
-        description="Share your referral code and earn rewards."
-      >
-        <div className="p-6">
-          <ReferralCodeSection />
-        </div>
-      </SettingsSection>
+      {/* Referral Program — rewards are hours, so only for whoever pays */}
+      {!managedBy && (
+        <SettingsSection
+          title="Referral Program"
+          description="Share your referral code and earn rewards."
+        >
+          <div className="p-6">
+            <ReferralCodeSection />
+          </div>
+        </SettingsSection>
+      )}
 
       {/* Account Security */}
       <SettingsSection
         title="Account Security"
-        description="Manage your login email and password."
+        description="Manage how you sign in."
       >
-        <PasswordChangeCard email={profile.email} />
+        {profile.username && (
+          <UsernameCard
+            username={profile.username}
+            managed={!!profile.managed}
+            onChanged={() =>
+              queryClient.invalidateQueries({ queryKey: ['profiles'] })
+            }
+          />
+        )}
+        <PasswordChangeCard email={profile.managed ? '' : profile.email} />
       </SettingsSection>
 
       {/* Appearance */}

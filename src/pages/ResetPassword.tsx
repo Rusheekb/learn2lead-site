@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { PASSWORD_HINT, passwordProblem } from '@/lib/validation';
+import { friendlyAuthError } from '@/utils/authErrors';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -45,8 +47,9 @@ const ResetPassword = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (password.length < 6) {
-      toast.error('Password must be at least 6 characters');
+    const problem = passwordProblem(password);
+    if (problem) {
+      toast.error(problem);
       return;
     }
 
@@ -74,9 +77,7 @@ const ResetPassword = () => {
       setTimeout(() => navigate('/login', { replace: true }), 3000);
     } catch (error) {
       log.error('Password update error:', error);
-      toast.error(
-        error instanceof Error ? error.message : 'Failed to update password'
-      );
+      toast.error(friendlyAuthError(error));
     } finally {
       setIsLoading(false);
     }
@@ -186,7 +187,7 @@ const ResetPassword = () => {
                     id="new-password-hint"
                     className="text-xs text-muted-foreground"
                   >
-                    Must be at least 6 characters
+                    {PASSWORD_HINT}
                   </p>
                 </div>
                 <div className="space-y-2">

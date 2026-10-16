@@ -6,6 +6,7 @@ import {
   checkRateLimit,
   rateLimitResponse,
 } from '../_shared/rateLimiter.ts';
+import { getBillingAccountId } from '../_shared/recipients.ts';
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
@@ -48,6 +49,40 @@ Deno.serve(async (req) => {
       throw new Error('User not authenticated or email not available');
 
     logStep('User authenticated', { userId: user.id, email: user.email });
+
+    // A student whose parent pays would be buying hours onto a balance their
+    // classes no longer use — the parent buys for the family instead.
+    // A failed lookup never blocks a purchase.
+    const billingId = await getBillingAccountId(supabaseClient, user.id).catch(
+      (e) => {
+        logStep('WARNING: billing account lookup failed', {
+          error: String(e),
+        });
+        return user.id;
+      }
+    );
+    if (billingId !== user.id) {
+      logStep('Blocked: hours managed by parent', { billingId });
+      return new Response(
+        JSON.stringify({
+          error:
+            'Your hours are managed by your parent. Ask them to buy more from their Learn2Lead account.',
+          code: 'MANAGED_BY_PARENT',
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 409,
+        }
+      );
+    }
+
+    // Parents land back on the family dashboard after paying.
+    const { data: buyer } = await supabaseClient
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle();
+    const buyerHome = buyer?.role === 'parent' ? 'family' : 'dashboard';
 
     const { priceId, referralCode, autoRenewOptIn } = await req.json();
     if (!priceId) throw new Error('Price ID is required');
@@ -216,7 +251,7 @@ Deno.serve(async (req) => {
       payment_intent_data: {
         setup_future_usage: 'off_session', // Save payment method for auto-renewal
       },
-      success_url: `${origin}/dashboard?purchase=success`,
+      success_url: `${origin}/${buyerHome}?purchase=success`,
       cancel_url: `${origin}/pricing?purchase=cancelled`,
       metadata: {
         user_id: user.id,

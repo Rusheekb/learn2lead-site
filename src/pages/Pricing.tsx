@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { CREDIT_TIERS, DEFAULT_TIER_INDEX } from '@/config/stripe';
@@ -89,6 +90,8 @@ const Pricing = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user, session } = useAuth();
+  // A student whose parent pays can't buy hours (the server refuses too).
+  const { managedBy } = useSubscription();
   const [loadingIndex, setLoadingIndex] = useState<number | null>(null);
   const [welcomeBackIndex, setWelcomeBackIndex] = useState<number | null>(null);
   const [autoRenewOptIn, setAutoRenewOptIn] = useState(false);
@@ -130,6 +133,11 @@ const Pricing = () => {
       return;
     }
 
+    if (managedBy) {
+      toast.info(`Your hours are managed by ${managedBy.name}.`);
+      return;
+    }
+
     if (tier.priceId.startsWith('MISSING_')) {
       toast.error(
         "This pack isn't available yet — please choose a different one."
@@ -165,9 +173,17 @@ const Pricing = () => {
       }
     } catch (error: any) {
       log.error('Checkout error:', error);
-      toast.error(
-        error.message || 'Failed to start checkout. Please try again.'
-      );
+      // A FunctionsHttpError carries the function's own message in its
+      // response body (e.g. "Your hours are managed by your parent").
+      let message =
+        error.message || 'Failed to start checkout. Please try again.';
+      try {
+        const body = await error?.context?.json?.();
+        if (body?.error) message = body.error;
+      } catch {
+        // Keep the message above if the body can't be read
+      }
+      toast.error(message);
       setLoadingIndex(null);
     }
   };
@@ -210,6 +226,16 @@ const Pricing = () => {
             subscriptions, no commitments.
           </p>
         </div>
+
+        {managedBy && (
+          <div
+            role="status"
+            className="max-w-5xl mx-auto mb-6 rounded-xl border border-tutoring-blue/30 bg-tutoring-blue/5 px-5 py-3.5 text-sm text-gray-800"
+          >
+            Your tutoring hours are managed by {managedBy.name}. Ask them if you
+            need more hours.
+          </div>
+        )}
 
         {welcomeBackIndex !== null && (
           <div className="max-w-5xl mx-auto mb-6 flex items-center gap-2.5 rounded-xl border border-tutoring-teal/30 bg-tutoring-teal/5 px-5 py-3.5">

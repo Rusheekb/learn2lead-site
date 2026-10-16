@@ -1,10 +1,22 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import {
+  PASSWORD_HINT,
+  USERNAME_HINT,
+  suggestUsername,
+} from '@/lib/validation';
+import {
+  USERNAME_STATUS_TEXT,
+  useUsernameAvailability,
+} from '@/hooks/useUsernameAvailability';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import AuthButton from './AuthButton';
 import SocialAuthButton from './SocialAuthButton';
 import GoogleIcon from './GoogleIcon';
+
+/** Who the classes are for: the person signing up, or their child(ren). */
+export type SignUpAccountType = 'self' | 'parent';
 
 interface SignUpFormProps {
   email: string;
@@ -15,9 +27,15 @@ interface SignUpFormProps {
   setFirstName: (firstName: string) => void;
   lastName: string;
   setLastName: (lastName: string) => void;
+  username: string;
+  setUsername: (username: string) => void;
   isLoading: boolean;
   handleSubmit: (e: React.FormEvent) => Promise<void>;
   handleGoogleSignIn: () => Promise<void>;
+  /** Shown only when family sign-up is enabled (see config/features). */
+  showAccountType?: boolean;
+  accountType?: SignUpAccountType;
+  setAccountType?: (type: SignUpAccountType) => void;
 }
 
 const SignUpForm: React.FC<SignUpFormProps> = ({
@@ -29,10 +47,40 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
   setFirstName,
   lastName,
   setLastName,
+  username,
+  setUsername,
   isLoading,
   handleSubmit,
   handleGoogleSignIn,
+  showAccountType = false,
+  accountType = 'self',
+  setAccountType,
 }) => {
+  const isParent = showAccountType && accountType === 'parent';
+  const usernameStatus = useUsernameAvailability(username);
+  const usernameText = USERNAME_STATUS_TEXT[usernameStatus] ?? USERNAME_HINT;
+  const usernameBad = ['taken', 'invalid', 'reserved'].includes(usernameStatus);
+
+  // Until the person types their own, suggest a username from their name,
+  // stepping to maya.lee2, maya.lee3… if the suggestion is taken.
+  const [usernameEdited, setUsernameEdited] = useState(false);
+  const [suffix, setSuffix] = useState(1);
+  useEffect(() => setSuffix(1), [firstName, lastName]);
+  useEffect(() => {
+    if (!usernameEdited)
+      setUsername(suggestUsername(firstName, lastName, suffix));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [firstName, lastName, suffix, usernameEdited]);
+  // Runs when a check finishes (status changes), never on a stale result:
+  // every new suggestion goes back through 'checking' first.
+  useEffect(() => {
+    if (
+      !usernameEdited &&
+      (usernameStatus === 'taken' || usernameStatus === 'reserved')
+    ) {
+      setSuffix((n) => Math.min(n + 1, 50));
+    }
+  }, [usernameStatus, usernameEdited]);
   return (
     <form
       onSubmit={handleSubmit}
@@ -40,9 +88,51 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
       aria-label="Create account form"
       noValidate
     >
+      {showAccountType && (
+        <fieldset className="space-y-2">
+          <legend className="text-sm font-medium">
+            Who are the classes for?
+          </legend>
+          <div
+            role="radiogroup"
+            aria-label="Who are the classes for?"
+            className="grid grid-cols-2 gap-2"
+          >
+            {(
+              [
+                ['self', 'Me'],
+                ['parent', 'My child or children'],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                role="radio"
+                aria-checked={accountType === value}
+                onClick={() => setAccountType?.(value)}
+                className={`rounded-md border px-3 py-2 text-sm text-left transition-colors ${
+                  accountType === value
+                    ? 'border-tutoring-blue bg-tutoring-blue/10 font-medium text-tutoring-blue'
+                    : 'border-input hover:bg-muted'
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {isParent && (
+            <p className="text-xs text-muted-foreground">
+              Sign up with your own name and email. You’ll add your child (no
+              email needed) right after.
+            </p>
+          )}
+        </fieldset>
+      )}
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="first-name-signup">First Name</Label>
+          <Label htmlFor="first-name-signup">
+            {isParent ? 'Your First Name' : 'First Name'}
+          </Label>
           <Input
             id="first-name-signup"
             type="text"
@@ -56,7 +146,9 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="last-name-signup">Last Name</Label>
+          <Label htmlFor="last-name-signup">
+            {isParent ? 'Your Last Name' : 'Last Name'}
+          </Label>
           <Input
             id="last-name-signup"
             type="text"
@@ -71,7 +163,46 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
         </div>
       </div>
       <div className="space-y-2">
-        <Label htmlFor="email-signup">Email</Label>
+        <Label htmlFor="username-signup">
+          {isParent ? 'Your Username' : 'Username'}
+        </Label>
+        <Input
+          id="username-signup"
+          type="text"
+          placeholder="e.g. jordan.lee"
+          value={username}
+          onChange={(e) => {
+            setUsernameEdited(true);
+            setUsername(e.target.value);
+          }}
+          required
+          autoCapitalize="none"
+          spellCheck={false}
+          autoComplete="username"
+          aria-required="true"
+          aria-invalid={usernameBad}
+          aria-describedby="username-hint"
+        />
+        <p
+          id="username-hint"
+          aria-live="polite"
+          className={`text-xs ${
+            usernameBad
+              ? 'text-destructive'
+              : usernameStatus === 'available'
+                ? 'text-green-600'
+                : 'text-muted-foreground'
+          }`}
+        >
+          {usernameStatus === 'available'
+            ? 'Available — you can sign in with this or your email.'
+            : usernameText}
+        </p>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="email-signup">
+          {isParent ? 'Your Email' : 'Email'}
+        </Label>
         <Input
           id="email-signup"
           type="email"
@@ -97,7 +228,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({
           aria-describedby="password-hint"
         />
         <p id="password-hint" className="text-xs text-muted-foreground">
-          Password must be at least 6 characters long
+          {PASSWORD_HINT}
         </p>
       </div>
       <AuthButton

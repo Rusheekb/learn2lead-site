@@ -39,6 +39,8 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({
           return <Navigate to="/tutor-dashboard" replace />;
         case 'admin':
           return <Navigate to="/admin-dashboard" replace />;
+        case 'parent':
+          return <Navigate to="/family" replace />;
         default:
           return <Navigate to="/login" replace />;
       }

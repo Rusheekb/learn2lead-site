@@ -3,6 +3,7 @@ import { AppRole } from '@/types/profile';
 import StudentNavLinks from './StudentNavLinks';
 import TutorNavLinks from './TutorNavLinks';
 import AdminNavLinks from './AdminNavLinks';
+import ParentNavLinks from './ParentNavLinks';
 
 interface SidebarNavLinksProps {
   userRole: AppRole;
@@ -29,6 +30,8 @@ const SidebarNavLinks: React.FC<SidebarNavLinksProps> = ({
       return (
         <AdminNavLinks isExpanded={isExpanded} profilePath={profilePath} />
       );
+    case 'parent':
+      return <ParentNavLinks isExpanded={isExpanded} />;
     default:
       return null;
   }

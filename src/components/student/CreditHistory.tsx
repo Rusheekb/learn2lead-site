@@ -15,14 +15,15 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { logger } from '@/lib/logger';
 import { describeHoursActivity } from '@/lib/hours';
+import { useSubscription } from '@/contexts/SubscriptionContext';
 
 const log = logger.create('CreditHistory');
 
 interface CreditTransaction {
   id: string;
-  transaction_type: 'credit' | 'debit';
+  transaction_type: 'credit' | 'debit' | 'refund' | 'adjustment';
   amount: number;
-  balance_after: number;
+  balance_after: number | null;
   reason: string;
   related_class_id: string | null;
   dollar_amount: number | null;
@@ -31,6 +32,7 @@ interface CreditTransaction {
 
 export const CreditHistory: React.FC = () => {
   const { user } = useAuth();
+  const { managedBy } = useSubscription();
   const [isExpanded, setIsExpanded] = useState(false);
 
   const {
@@ -38,8 +40,33 @@ export const CreditHistory: React.FC = () => {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['credit-history', user?.id],
+    queryKey: ['credit-history', user?.id, !!managedBy],
     queryFn: async () => {
+      // A student whose parent pays sees their class usage only — never
+      // purchases or amounts paid (the database enforces this too).
+      if (managedBy) {
+        const { data, error: usageError } = await supabase.rpc(
+          'get_my_hours_activity',
+          { p_limit: 50 }
+        );
+        if (usageError) {
+          log.error('Error fetching hours activity', usageError);
+          throw usageError;
+        }
+        return (data || []).map(
+          (u): CreditTransaction => ({
+            id: u.id,
+            transaction_type: Number(u.amount) < 0 ? 'debit' : 'credit',
+            amount: Number(u.amount),
+            balance_after: u.balance_after,
+            reason: u.reason,
+            related_class_id: null,
+            dollar_amount: null,
+            created_at: u.created_at,
+          })
+        );
+      }
+
       const { data, error: fetchError } = await supabase
         .from('class_credits_ledger')
         .select('*')
@@ -111,7 +138,8 @@ export const CreditHistory: React.FC = () => {
           ) : (
             <div className="max-h-80 overflow-y-auto divide-y divide-border">
               {transactions.map((t) => {
-                const isDebit = t.transaction_type === 'debit';
+                // By sign, not type: an 'adjustment' can go either way.
+                const isDebit = Number(t.amount) < 0;
                 return (
                   <div
                     key={t.id}
@@ -147,24 +175,24 @@ export const CreditHistory: React.FC = () => {
                         )}
                       >
                         {isDebit ? '−' : '+'}
-                        {t.amount}h
+                        {Math.abs(Number(t.amount))}h
                       </p>
                       {!isDebit && t.dollar_amount != null ? (
                         <p className="text-xs text-muted-foreground">
                           ${t.dollar_amount.toFixed(2)} paid
                         </p>
-                      ) : (
+                      ) : t.balance_after != null ? (
                         <p className="text-xs text-muted-foreground">
                           Bal: {t.balance_after}h
                         </p>
-                      )}
+                      ) : null}
                     </div>
 
                     <Badge
                       variant={isDebit ? 'destructive' : 'default'}
                       className="shrink-0 text-xs capitalize"
                     >
-                      {t.transaction_type === 'credit' ? 'Added' : 'Used'}
+                      {isDebit ? 'Used' : 'Added'}
                     </Badge>
                   </div>
                 );

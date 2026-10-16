@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { User, Calendar, Users } from 'lucide-react';
 import { useSidebarStyles } from './useSidebarStyles';
+import MessagesNavLink from '../messages/MessagesNavLink';
 
 interface TutorNavLinksProps {
   isExpanded: boolean;
@@ -35,6 +36,11 @@ const TutorNavLinks: React.FC<TutorNavLinksProps> = ({ isExpanded }) => {
         <Users className="h-4 w-4 shrink-0" aria-hidden="true" />
         {isExpanded && <span className="ml-2.5">My Students</span>}
       </NavLink>
+      <MessagesNavLink
+        to="/tutor-dashboard?tab=messages"
+        className={cls('messages')}
+        isExpanded={isExpanded}
+      />
       <NavLink
         to="/tutor-dashboard?tab=profile"
         className={cls('profile')}

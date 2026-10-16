@@ -1,4 +1,5 @@
 import React, { memo } from 'react';
+import { displayEmail } from '@/lib/managedEmail';
 import { Student } from '@/types/tutorTypes';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import SearchInput from '@/components/shared/filters/SearchInput';
@@ -74,11 +75,11 @@ const StudentsManager: React.FC<StudentsManagerProps> = memo(({ onSelect }) => {
                       <TableCell>
                         <div className="font-medium">{student.name}</div>
                         <div className="text-xs text-muted-foreground sm:hidden">
-                          {student.email}
+                          {displayEmail(student.email)}
                         </div>
                       </TableCell>
                       <TableCell className="hidden sm:table-cell">
-                        {student.email}
+                        {displayEmail(student.email)}
                       </TableCell>
                     </TableRow>
                   ))}

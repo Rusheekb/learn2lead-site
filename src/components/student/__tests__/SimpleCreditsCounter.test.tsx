@@ -104,4 +104,37 @@ describe('SimpleCreditsCounter', () => {
 
     expect(screen.getByRole('link')).toHaveAttribute('href', '/pricing');
   });
+
+  describe('student whose parent pays', () => {
+    it('shows the family hours with no buy link and no price', () => {
+      mockUseSubscription.mockReturnValue({
+        creditsRemaining: 6.5,
+        pricePerHour: null,
+        isLoading: false,
+        managedBy: { name: 'Pat Lee' },
+        hoursHidden: false,
+      });
+      renderWithRouter(<SimpleCreditsCounter />);
+      expect(
+        screen.getByText('Family hours · managed by Pat Lee')
+      ).toBeInTheDocument();
+      expect(screen.getByText('6.5 hours remaining')).toBeInTheDocument();
+      expect(screen.queryByRole('link')).not.toBeInTheDocument();
+    });
+
+    it('shows no number when the parent hides the hours', () => {
+      mockUseSubscription.mockReturnValue({
+        creditsRemaining: null,
+        pricePerHour: null,
+        isLoading: false,
+        managedBy: { name: 'Pat Lee' },
+        hoursHidden: true,
+      });
+      renderWithRouter(<SimpleCreditsCounter />);
+      expect(
+        screen.getByText('Your hours are managed by Pat Lee')
+      ).toBeInTheDocument();
+      expect(screen.queryByText(/hours remaining/)).not.toBeInTheDocument();
+    });
+  });
 });

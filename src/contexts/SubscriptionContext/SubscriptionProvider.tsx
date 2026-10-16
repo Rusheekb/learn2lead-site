@@ -16,6 +16,10 @@ export interface SubscriptionState {
   creditsRemaining: number | null;
   planName: string | null;
   pricePerHour: number | null;
+  /** Set when a parent pays for this student's hours (family accounts). */
+  managedBy?: { name: string } | null;
+  /** The parent chose not to show this student the hours remaining. */
+  hoursHidden?: boolean;
   isLoading: boolean;
   error: string | null;
 }
@@ -141,6 +145,8 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({
         creditsRemaining: data.credits_remaining ?? null,
         planName: data.plan_name || null,
         pricePerHour: data.price_per_hour ?? null,
+        managedBy: data.managed_by ?? null,
+        hoursHidden: !!data.hours_hidden,
         isLoading: false,
         error: null,
       });

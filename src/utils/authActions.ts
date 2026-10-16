@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { friendlyAuthError } from './authErrors';
 import { toast } from 'sonner';
 import { addBreadcrumb, captureException } from '@/lib/sentry';
 import { logger } from '@/lib/logger';
@@ -27,8 +28,9 @@ export const signInWithEmail = async (email: string, password: string) => {
         message: `Sign-in failed: ${error.message}`,
         level: 'warning',
       });
-      toast.error(error.message);
-      throw error;
+      const message = friendlyAuthError(error);
+      toast.error(message);
+      throw new Error(message);
     }
 
     addBreadcrumb({
@@ -47,13 +49,74 @@ export const signInWithEmail = async (email: string, password: string) => {
 };
 
 /**
+ * Signs in with a username. The username-login function resolves it to the
+ * account on the server (so no email is ever revealed) and returns a session
+ * for this browser to adopt.
+ */
+export const signInWithUsername = async (
+  username: string,
+  password: string
+) => {
+  addBreadcrumb({
+    category: 'auth',
+    message: 'Sign-in attempt',
+    level: 'info',
+    data: { method: 'username' },
+  });
+
+  const { data, error } = await supabase.functions.invoke('username-login', {
+    body: { username, password },
+  });
+
+  let message: string | null = null;
+  if (error) {
+    message = 'That username and password don’t match. Please try again.';
+    try {
+      const body = await (
+        error as { context?: { json?: () => Promise<{ error?: string }> } }
+      ).context?.json?.();
+      if (body?.error) message = body.error;
+    } catch {
+      // keep the default message
+    }
+  } else if (!data?.access_token) {
+    message = data?.error || 'Sign-in failed. Please try again.';
+  }
+  if (message) {
+    addBreadcrumb({
+      category: 'auth',
+      message: 'Username sign-in failed',
+      level: 'warning',
+    });
+    toast.error(message);
+    throw new Error(message);
+  }
+
+  const { error: sessionError } = await supabase.auth.setSession({
+    access_token: data.access_token,
+    refresh_token: data.refresh_token,
+  });
+  if (sessionError) {
+    const msg = friendlyAuthError(sessionError);
+    toast.error(msg);
+    throw new Error(msg);
+  }
+  toast.success('Signed in successfully!');
+};
+
+/**
  * Signs up a user and ensures a profile row exists in the `profiles` table,
  * with default role 'student'.
  */
 export const signUpWithEmail = async (
   email: string,
   password: string,
-  userData?: { first_name?: string; last_name?: string }
+  userData?: {
+    first_name?: string;
+    last_name?: string;
+    account_type?: 'parent';
+    username?: string;
+  }
 ) => {
   addBreadcrumb({
     category: 'auth',
@@ -78,8 +141,9 @@ export const signUpWithEmail = async (
         message: `Sign-up failed: ${signupError.message}`,
         level: 'warning',
       });
-      toast.error(signupError.message);
-      throw signupError;
+      const message = friendlyAuthError(signupError);
+      toast.error(message);
+      throw new Error(message);
     }
 
     addBreadcrumb({
@@ -106,6 +170,7 @@ export const signUpWithEmail = async (
             id: user.id,
             email: user.email,
             role,
+            username: '', // the database generates one
             first_name: userData?.first_name || '',
             last_name: userData?.last_name || '',
           },
@@ -130,9 +195,11 @@ export const signUpWithEmail = async (
     }
 
     toast.success(
-      user?.email_confirmed_at
-        ? 'Account created! You can now log in.'
-        : 'Signed up successfully! Please check your email for verification.'
+      signupData.session
+        ? 'Welcome to Learn2Lead! Your account is ready.'
+        : user?.email_confirmed_at
+          ? 'Account created! You can now log in.'
+          : 'Signed up successfully! Please check your email for verification.'
     );
   } catch (error) {
     log.error('Error signing up', error);

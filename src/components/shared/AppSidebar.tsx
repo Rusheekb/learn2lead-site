@@ -36,6 +36,8 @@ const AppSidebar: React.FC<AppSidebarProps> = ({
         return '/tutor-profile';
       case 'admin':
         return '/admin-profile';
+      case 'parent':
+        return '/family?tab=profile';
       default:
         return '/';
     }

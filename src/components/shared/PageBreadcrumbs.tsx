@@ -21,6 +21,7 @@ const routeLabels: Record<string, string> = {
   '/dashboard': 'Dashboard',
   '/tutor-dashboard': 'Tutor Dashboard',
   '/admin-dashboard': 'Admin Dashboard',
+  '/family': 'Family Dashboard',
   '/profile': 'Profile',
   '/pricing': 'Pricing',
   '/login': 'Login',
@@ -32,10 +33,18 @@ const tabLabels: Record<string, Record<string, string>> = {
     dashboard: 'Overview',
     schedule: 'Schedule',
     resources: 'Resources',
+    messages: 'Messages',
   },
   '/tutor-dashboard': {
     schedule: 'Class Scheduler',
     students: 'My Students',
+    messages: 'Messages',
+  },
+  '/family': {
+    overview: 'Overview',
+    child: 'Student',
+    profile: 'Settings',
+    messages: 'Messages',
   },
   '/admin-dashboard': {
     schedule: 'Class Logs',
@@ -44,6 +53,7 @@ const tabLabels: Record<string, Record<string, string>> = {
     assignments: 'Assignments',
     reports: 'Reports',
     settings: 'Settings',
+    messages: 'Messages',
   },
 };
 

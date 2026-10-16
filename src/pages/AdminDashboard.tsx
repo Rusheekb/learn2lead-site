@@ -36,6 +36,9 @@ const ReferralAnalytics = lazy(
 const WebhookEventLog = lazy(
   () => import('@/components/admin/WebhookEventLog')
 );
+const MessagesPage = lazy(
+  () => import('@/components/shared/messages/MessagesPage')
+);
 const AdminCalendarView = lazy(
   () => import('@/components/admin/AdminCalendarView')
 );
@@ -153,6 +156,12 @@ const AdminDashboard: React.FC = () => {
         return (
           <Suspense fallback={<AdminDashboardSkeleton />}>
             <AdminCalendarView />
+          </Suspense>
+        );
+      case 'messages':
+        return (
+          <Suspense fallback={<AdminDashboardSkeleton />}>
+            <MessagesPage />
           </Suspense>
         );
       case 'profile':

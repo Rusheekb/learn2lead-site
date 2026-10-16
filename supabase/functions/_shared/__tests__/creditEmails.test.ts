@@ -105,6 +105,17 @@ describe('buildOutOfHoursEmail', () => {
     expect(html).toContain('Hello there');
     expect(html).toContain('keep booking classes');
   });
+
+  it("names the child in a parent's copy", () => {
+    const { html } = buildOutOfHoursEmail({
+      studentName: 'Pat',
+      upcomingClassCount: 2,
+      childName: 'Maya',
+    });
+    expect(html).toContain('Hello Pat');
+    expect(html).toContain("Maya's last class used your remaining hours");
+    expect(html).toContain('Your family has <strong>2 upcoming classes');
+  });
 });
 
 describe('buildBlockedClassLogEmail', () => {
@@ -132,6 +143,18 @@ describe('buildBlockedClassLogEmail', () => {
       hoursRemaining: null,
     });
     expect(html).toContain('No hours have been purchased');
+  });
+
+  it("names the child in a parent's copy", () => {
+    const { subject, html } = buildBlockedClassLogEmail({
+      ...args,
+      studentName: 'Pat',
+      childName: 'Maya',
+    });
+    expect(subject).toContain("Action needed: Maya's ");
+    expect(html).toContain("Maya's class couldn't be recorded");
+    expect(html).toContain("tried to log Maya's <strong>");
+    expect(html).toContain('Hello Pat');
   });
 
   it('escapes user-supplied text', () => {

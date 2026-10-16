@@ -14,6 +14,7 @@ import {
   Webhook,
 } from 'lucide-react';
 import { useSidebarStyles } from './useSidebarStyles';
+import MessagesNavLink from '../messages/MessagesNavLink';
 
 interface AdminNavLinksProps {
   isExpanded: boolean;
@@ -107,6 +108,11 @@ const AdminNavLinks: React.FC<AdminNavLinksProps> = ({ isExpanded }) => {
         <UsersRound className="h-4 w-4 shrink-0" aria-hidden="true" />
         {isExpanded && <span className="ml-2.5">Assignments</span>}
       </NavLink>
+      <MessagesNavLink
+        to="/admin-dashboard?tab=messages"
+        className={cls('messages')}
+        isExpanded={isExpanded}
+      />
 
       <div className="my-2 mx-1 border-t border-border/60" />
 
