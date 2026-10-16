@@ -17,3 +17,13 @@ export const isFamilySignupEnabled = (): boolean =>
  */
 export const isSmsEnabled = (): boolean =>
   import.meta.env.VITE_ENABLE_SMS === 'true';
+
+/**
+ * Google sign-in through Google's own button (Google Identity Services) when
+ * set: Google then shows "learn2lead.page" / the app name instead of the
+ * Supabase project address. Unset, the "Continue with Google" button uses the
+ * usual Supabase redirect. The value is the public OAuth web client ID — the
+ * same one configured in Supabase Auth → Google. See docs/google-sign-in.md.
+ */
+export const getGoogleClientId = (): string =>
+  import.meta.env.VITE_GOOGLE_CLIENT_ID ?? '';

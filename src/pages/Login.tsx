@@ -17,6 +17,8 @@ import { addBreadcrumb, captureException } from '@/lib/sentry';
 import { useRateLimiter } from '@/hooks/useRateLimiter';
 import { logger } from '@/lib/logger';
 import { isSafeReturnPath } from '@/utils/authNavigation';
+import { signInWithGoogleIdToken } from '@/utils/authActions';
+import type { GoogleCredential } from '@/lib/googleIdentity';
 
 const log = logger.create('Login');
 
@@ -186,19 +188,21 @@ const Login = () => {
     }
   };
 
-  // From the sign-up tab: remember a family choice across Google's redirect.
-  const handleGoogleSignUp = async () => {
+  // From the sign-up tab: remember a family choice across Google's sign-in.
+  const handleGoogleSignUp = async (credential?: GoogleCredential) => {
     if (showAccountType && accountType === 'parent') setFamilySignupIntent();
     else clearFamilySignupIntent();
-    await handleGoogleSignIn();
+    await handleGoogleSignIn(credential);
   };
 
-  const handleGoogleSignIn = async () => {
+  // With a credential, Google's own button was used; otherwise redirect.
+  const handleGoogleSignIn = async (credential?: GoogleCredential) => {
     setIsLoading(true);
     setAuthError(null);
 
     try {
-      await signInWithOAuth('google');
+      if (credential) await signInWithGoogleIdToken(credential);
+      else await signInWithOAuth('google');
     } catch (error) {
       log.error('Google sign in error:', error);
       if (error instanceof Error) {

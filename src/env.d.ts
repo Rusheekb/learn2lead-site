@@ -7,6 +7,7 @@ interface ImportMetaEnv {
   /** 'true' shows family sign-up and "Invite a parent" (see src/config/features.ts) */
   readonly VITE_ENABLE_FAMILY_SIGNUP?: string;
   readonly VITE_ENABLE_SMS?: string;
+  readonly VITE_GOOGLE_CLIENT_ID?: string;
 }
 
 interface ImportMeta {
