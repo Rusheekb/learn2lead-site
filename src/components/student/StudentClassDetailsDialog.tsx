@@ -28,6 +28,7 @@ import { useToast } from '@/hooks/use-toast';
 import { viewClassFile, deleteClassFile } from '@/services/classUploadsService';
 import { logger } from '@/lib/logger';
 import CalendarLinks from '@/components/shared/CalendarLinks';
+import MaterialLink from '@/components/shared/MaterialLink';
 
 const log = logger.create('StudentClassDetailsDialog');
 
@@ -401,14 +402,10 @@ const StudentClassDetailsDialog: React.FC<StudentClassDetailsDialogProps> = ({
                                   </div>
                                 </div>
                                 <Button variant="outline" size="sm" asChild>
-                                  <a
-                                    href={url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                  >
+                                  <MaterialLink reference={url}>
                                     <Download className="h-4 w-4 mr-1" />
                                     View
-                                  </a>
+                                  </MaterialLink>
                                 </Button>
                               </div>
                             ))}
