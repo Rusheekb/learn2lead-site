@@ -93,4 +93,4 @@ Jest + Testing Library + jsdom. Config: `jest.config.ts`, setup in `src/setupTes
 
 ### Observability
 
-Sentry (`src/lib/sentry.ts`) for error monitoring, PostHog (`src/lib/posthog.ts`) for product analytics, both env-gated for production. `src/lib/logger.ts` provides a `logger.create(scope)` pattern used instead of raw `console.*` — prefer it in new code so logs are consistently scoped and stripped appropriately in production builds.
+Sentry (`src/lib/sentry.ts`) for error monitoring, PostHog (`src/lib/posthog.ts`) for product analytics, both env-gated for production. Edge functions report failures to the same Sentry project through `reportError(functionName, error, extra?)` from `supabase/functions/_shared/errorReporting.ts` (tagged `runtime: edge-function`; no-op unless the `SENTRY_DSN` secret is set). Call it in the top-level `catch` of any function that handles money, notifications or user data; keep personal data out of `extra`. `src/lib/logger.ts` provides a `logger.create(scope)` pattern used instead of raw `console.*` — prefer it in new code so logs are consistently scoped and stripped appropriately in production builds.

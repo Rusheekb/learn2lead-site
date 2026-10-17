@@ -1,4 +1,5 @@
 import Stripe from 'https://esm.sh/stripe@18.5.0';
+import { reportError } from '../_shared/errorReporting.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 import { Resend } from 'npm:resend@2.0.0';
 import { resolvePackFromClassesPerMonth } from '../_shared/renewalPackMapping.ts';
@@ -212,6 +213,11 @@ Deno.serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep('ERROR in webhook', { message: errorMessage });
+    // Only after the signature checked out: bad requests from strangers
+    // would otherwise be noise.
+    if (eventId !== 'unknown') {
+      await reportError('stripe-webhooks', error, { eventId, eventType });
+    }
 
     if (eventId !== 'unknown') {
       await logWebhookEvent(
