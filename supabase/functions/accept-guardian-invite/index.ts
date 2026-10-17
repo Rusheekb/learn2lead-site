@@ -1,4 +1,5 @@
 import Stripe from 'https://esm.sh/stripe@18.5.0';
+import { reportError } from '../_shared/errorReporting.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 import {
@@ -145,6 +146,7 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     logStep('ERROR', { message: String(error) });
+    await reportError('accept-guardian-invite', error);
     return json(
       { success: false, error: 'Could not accept the invitation.' },
       500

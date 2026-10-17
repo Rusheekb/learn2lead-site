@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { reportError } from '../_shared/errorReporting.ts';
 import {
   getRateLimitKey,
   checkRateLimit,
@@ -154,6 +155,7 @@ Deno.serve(async (req) => {
     );
   } catch (error) {
     console.error('Error in restore-class-credit:', error);
+    await reportError('restore-class-credit', error);
     return new Response(
       JSON.stringify({
         success: false,

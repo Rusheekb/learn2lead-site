@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
+import { reportError } from '../_shared/errorReporting.ts';
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 import {
   getRateLimitKey,
@@ -182,6 +183,7 @@ Deno.serve(async (req) => {
         }
       }
     } catch (alertError) {
+      await reportError('send-message', alertError, { stage: 'alerts' });
       logStep('WARNING: alerts failed', {
         error:
           alertError instanceof Error ? alertError.message : String(alertError),
@@ -192,6 +194,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     logStep('ERROR', { message });
+    await reportError('send-message', error);
     return json(
       { success: false, error: 'Your message could not be sent.' },
       500

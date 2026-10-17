@@ -1,4 +1,5 @@
 import Stripe from 'https://esm.sh/stripe@18.5.0';
+import { reportError } from '../_shared/errorReporting.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 import { getCorsHeaders, handleCorsPreflightRequest } from '../_shared/cors.ts';
 import {
@@ -251,6 +252,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep('ERROR in check-subscription', { message: errorMessage });
+    await reportError('check-subscription', error);
     return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 500,

@@ -1,4 +1,5 @@
 import Stripe from 'https://esm.sh/stripe@18.5.0?target=deno';
+import { reportError } from '../_shared/errorReporting.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2?target=deno';
 import { Resend } from 'https://esm.sh/resend@2.0.0?target=deno';
 import {
@@ -492,6 +493,7 @@ Deno.serve(async (req) => {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep('ERROR', { message: errorMessage });
+    await reportError('process-auto-renewal', error);
 
     // Try to update settings and notify on failure
     try {

@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.58.0';
+import { reportError } from '../_shared/errorReporting.ts';
 import { Resend } from 'npm:resend@2.0.0';
 import {
   getRateLimitKey,
@@ -442,6 +443,7 @@ Deno.serve(async (req) => {
     );
   } catch (error) {
     logStep('ERROR', { message: String(error) });
+    await reportError('send-weekly-digest', error);
     return new Response(
       JSON.stringify({ success: false, error: String(error) }),
       {
