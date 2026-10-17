@@ -10,6 +10,11 @@ updates:
     groups:
       minor-and-patch:
         update-types: [minor, patch]
+    # Major versions (Vite, lucide, tailwind-merge, …) change behaviour and
+    # are planned upgrades, not weekly PRs. Security alerts still appear.
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
   - package-ecosystem: github-actions
     directory: /
     schedule:
