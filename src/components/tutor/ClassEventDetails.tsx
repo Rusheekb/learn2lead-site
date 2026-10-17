@@ -8,6 +8,7 @@ import { ClassEvent } from '@/types/tutorTypes';
 import { StudentUpload } from '@/types/classTypes';
 import { StudentContent } from '@/components/shared/StudentContent';
 import CalendarLinks from '@/components/shared/CalendarLinks';
+import MaterialLink from '@/components/shared/MaterialLink';
 import CompletedClassActions from '@/components/tutor/CompletedClassActions';
 import {
   uploadMaterial,
@@ -213,15 +214,13 @@ const ClassEventDetails: React.FC<ClassEventDetailsProps> = ({
                         key={index}
                         className="flex items-center justify-between border p-2 rounded"
                       >
-                        <a
-                          href={url}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <MaterialLink
+                          reference={url}
                           className="text-tutoring-blue hover:underline flex items-center"
                         >
                           <FileText className="h-4 w-4 mr-2" />
                           <span>{getFilenameFromUrl(url || '')}</span>
-                        </a>
+                        </MaterialLink>
                         <Button
                           variant="ghost"
                           size="sm"

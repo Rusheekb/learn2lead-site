@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { StudentContent } from '@/components/shared/StudentContent';
+import MaterialLink from '@/components/shared/MaterialLink';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 
@@ -449,15 +450,13 @@ const ClassDetailsDialog: React.FC<ClassDetailsDialogProps> = ({
                               key={index}
                               className="border p-2 rounded flex items-center"
                             >
-                              <a
-                                href={url}
-                                target="_blank"
-                                rel="noopener noreferrer"
+                              <MaterialLink
+                                reference={url}
                                 className="text-primary hover:underline flex items-center gap-1"
                               >
                                 <span>{getFilenameFromUrl(url)}</span>
                                 <ExternalLink className="h-3 w-3" />
-                              </a>
+                              </MaterialLink>
                             </div>
                           )
                         )}

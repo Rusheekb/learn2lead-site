@@ -4,6 +4,37 @@ import { logger } from '@/lib/logger';
 
 const log = logger.create('materials');
 
+/**
+ * Class materials live in the private `materials` bucket. A class stores a
+ * reference per file: a storage path ("<class id>/<file>"), or — for files
+ * added before the bucket went private — the old public link, which still
+ * contains the path. These helpers accept either.
+ */
+export function materialPath(reference: string): string {
+  const match = reference.match(
+    /\/object\/(?:public|sign|authenticated)\/materials\/([^?]+)/
+  );
+  return match ? decodeURIComponent(match[1]) : reference;
+}
+
+/** The file name to show for a material reference. */
+export function materialFileName(reference: string): string {
+  const name = materialPath(reference).split('/').pop() ?? reference;
+  return name || reference;
+}
+
+/** A link that opens a class material for the next hour. */
+export async function getSignedMaterialUrl(reference: string): Promise<string> {
+  const { data, error } = await supabase.storage
+    .from('materials')
+    .createSignedUrl(materialPath(reference), 3600);
+  if (error || !data?.signedUrl) {
+    log.error('Could not open material', error);
+    throw error ?? new Error('Could not open this file.');
+  }
+  return data.signedUrl;
+}
+
 export async function uploadMaterial(
   file: File,
   classId: string
@@ -28,9 +59,8 @@ export async function uploadMaterial(
       return null;
     }
 
-    const { data } = supabase.storage.from('materials').getPublicUrl(filePath);
-
-    return data.publicUrl;
+    // The bucket is private: store the path; links are signed when opened.
+    return filePath;
   } catch (error) {
     log.error('Error in uploadMaterial', error);
     toast.error('Failed to upload material');
@@ -109,17 +139,12 @@ export async function removeMaterialFromClass(
       return false;
     }
 
-    const filePathMatch = materialUrl.match(/\/materials\/([^?]+)/);
-    if (filePathMatch && filePathMatch[1]) {
-      const filePath = filePathMatch[1];
+    const { error: removeError } = await supabase.storage
+      .from('materials')
+      .remove([materialPath(materialUrl)]);
 
-      const { error: removeError } = await supabase.storage
-        .from('materials')
-        .remove([filePath]);
-
-      if (removeError) {
-        log.error('Error removing file from storage', removeError);
-      }
+    if (removeError) {
+      log.error('Error removing file from storage', removeError);
     }
 
     toast.success('Material removed from class');

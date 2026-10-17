@@ -60,6 +60,16 @@ Deno.serve(async (req) => {
     const bucket = formData.get('bucket') as string;
     const path = formData.get('path') as string;
 
+    // This function uploads with server rights, so only the class-files
+    // bucket may be targeted (never avatars, backups, etc.).
+    const ALLOWED_BUCKETS = ['materials'];
+    if (bucket && !ALLOWED_BUCKETS.includes(bucket)) {
+      return new Response(JSON.stringify({ error: 'Invalid upload target' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     if (!file || !bucket || !path) {
       return new Response(
         JSON.stringify({
@@ -189,8 +199,6 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: true,
         path: securePath,
-        publicUrl: supabaseClient.storage.from(bucket).getPublicUrl(securePath)
-          .data.publicUrl,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
