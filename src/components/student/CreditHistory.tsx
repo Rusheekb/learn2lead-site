@@ -53,18 +53,16 @@ export const CreditHistory: React.FC = () => {
           log.error('Error fetching hours activity', usageError);
           throw usageError;
         }
-        return (data || []).map(
-          (u): CreditTransaction => ({
-            id: u.id,
-            transaction_type: Number(u.amount) < 0 ? 'debit' : 'credit',
-            amount: Number(u.amount),
-            balance_after: u.balance_after,
-            reason: u.reason,
-            related_class_id: null,
-            dollar_amount: null,
-            created_at: u.created_at,
-          })
-        );
+        return (data || []).map((u): CreditTransaction => ({
+          id: u.id,
+          transaction_type: Number(u.amount) < 0 ? 'debit' : 'credit',
+          amount: Number(u.amount),
+          balance_after: u.balance_after,
+          reason: u.reason,
+          related_class_id: null,
+          dollar_amount: null,
+          created_at: u.created_at,
+        }));
       }
 
       const { data, error: fetchError } = await supabase

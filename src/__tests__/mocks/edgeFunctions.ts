@@ -15,8 +15,7 @@ export interface DeductCreditErrorResponse {
 }
 
 export type DeductCreditResponse =
-  | DeductCreditSuccessResponse
-  | DeductCreditErrorResponse;
+  DeductCreditSuccessResponse | DeductCreditErrorResponse;
 
 export interface RestoreCreditSuccessResponse {
   success: true;
@@ -30,8 +29,7 @@ export interface RestoreCreditErrorResponse {
 }
 
 export type RestoreCreditResponse =
-  | RestoreCreditSuccessResponse
-  | RestoreCreditErrorResponse;
+  RestoreCreditSuccessResponse | RestoreCreditErrorResponse;
 
 export interface CheckSubscriptionResponse {
   subscribed: boolean;

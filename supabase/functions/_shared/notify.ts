@@ -25,11 +25,7 @@ export function canEmail(email: string | null | undefined): boolean {
 }
 
 export type NotifyCategory =
-  | 'class_reminders'
-  | 'class_updates'
-  | 'billing'
-  | 'summaries'
-  | 'messages';
+  'class_reminders' | 'class_updates' | 'billing' | 'summaries' | 'messages';
 
 export interface NotifyTarget {
   user_id: string;

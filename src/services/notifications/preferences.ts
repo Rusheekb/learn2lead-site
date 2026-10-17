@@ -4,11 +4,7 @@ import { logger } from '@/lib/logger';
 const log = logger.create('notificationPreferences');
 
 export type NotifyCategory =
-  | 'class_reminders'
-  | 'class_updates'
-  | 'billing'
-  | 'summaries'
-  | 'messages';
+  'class_reminders' | 'class_updates' | 'billing' | 'summaries' | 'messages';
 export type NotifyChannel = 'email' | 'sms';
 
 export type PreferenceMap = Partial<

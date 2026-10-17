@@ -4,8 +4,9 @@ import { motion } from 'framer-motion';
 
 import { cn } from '@/lib/utils';
 
-interface ProgressProps
-  extends React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root> {
+interface ProgressProps extends React.ComponentPropsWithoutRef<
+  typeof ProgressPrimitive.Root
+> {
   shimmer?: boolean;
   animated?: boolean;
 }

@@ -180,9 +180,7 @@ Deno.serve(async (req) => {
       // infers a list, so accept either shape.
       type Plan = { name: string | null; price_per_hour: number | null };
       const planRow = subData.subscription_plans as unknown as
-        | Plan
-        | Plan[]
-        | null;
+        Plan | Plan[] | null;
       const plan = Array.isArray(planRow) ? planRow[0] : planRow;
       planName = plan?.name || 'Direct Payment';
       pricePerHour = plan?.price_per_hour || null;
