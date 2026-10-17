@@ -1,0 +1,75 @@
+name: Database backup
+
+# Weekly encrypted backup of the production database (schema + data,
+# including auth users), kept as a workflow artifact for 30 days.
+#
+# This repository is public, so the dump is encrypted (AES-256, gpg) before
+# it's stored; without the passphrase the artifact is useless. Off until
+# both secrets exist (Settings → Secrets and variables → Actions):
+#   SUPABASE_DB_URL     Postgres connection string (Supabase → Connect →
+#                       Session pooler), including the database password
+#   BACKUP_PASSPHRASE   long random passphrase; keep a copy somewhere safe
+# Restore steps: docs/backups.md
+
+on:
+  schedule:
+    - cron: '0 9 * * 0' # Sundays 09:00 UTC (early morning US time)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check configuration
+        id: config
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ] || [ -z "$BACKUP_PASSPHRASE" ]; then
+            echo "::warning::Backups are off: add the SUPABASE_DB_URL and BACKUP_PASSPHRASE secrets (see docs/backups.md)."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+          elif [ ${#BACKUP_PASSPHRASE} -lt 24 ]; then
+            echo "::error::BACKUP_PASSPHRASE must be at least 24 characters: the encrypted backup is downloadable from this public repository."
+            exit 1
+          else
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Setup Supabase CLI
+        if: steps.config.outputs.enabled == 'true'
+        uses: supabase/setup-cli@v3
+        with:
+          version: 2.100.1
+
+      - name: Dump and encrypt
+        if: steps.config.outputs.enabled == 'true'
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p backup out
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f backup/roles.sql --role-only
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f backup/schema.sql
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f backup/data.sql --data-only --use-copy --schema public,auth,storage
+          name="learn2lead-$(date -u +%Y-%m-%d)"
+          tar -czf - -C backup . |
+            gpg --batch --yes --symmetric --cipher-algo AES256 \
+              --passphrase-fd 3 3<<<"$BACKUP_PASSPHRASE" -o "out/$name.tar.gz.gpg"
+          rm -rf backup
+          echo "BACKUP_NAME=$name" >> "$GITHUB_ENV"
+          ls -l out
+
+      - name: Store encrypted backup (30 days)
+        if: steps.config.outputs.enabled == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ env.BACKUP_NAME }}
+          path: out/*.gpg
+          retention-days: 30
+          if-no-files-found: error
