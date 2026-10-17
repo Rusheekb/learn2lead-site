@@ -1,11 +1,7 @@
 // Common status and payment types
 export type ClassStatus = 'scheduled' | 'completed' | 'cancelled' | 'pending';
 export type AttendanceStatus =
-  | 'present'
-  | 'absent'
-  | 'late'
-  | 'excused'
-  | 'pending';
+  'present' | 'absent' | 'late' | 'excused' | 'pending';
 export type PaymentStatus = 'paid' | 'unpaid' | 'pending' | 'overdue';
 
 // Base interface for shared properties
