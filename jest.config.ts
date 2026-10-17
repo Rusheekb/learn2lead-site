@@ -7,6 +7,9 @@ export default {
     '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
   },
   testMatch: ['**/?(*.)+(spec|test).ts?(x)'],
+  // .claude/ holds local agent tooling and worktrees (full repo copies).
+  testPathIgnorePatterns: ['/node_modules/', '<rootDir>/.claude/'],
+  modulePathIgnorePatterns: ['<rootDir>/.claude/'],
   transform: {
     '^.+\\.tsx?$': '<rootDir>/jest.importMetaEnvTransform.cjs',
   },

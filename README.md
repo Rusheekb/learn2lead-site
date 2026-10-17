@@ -66,9 +66,13 @@ src/
   integrations/     Supabase client and generated database types
   lib/              Logger, Sentry and PostHog setup, shared helpers
 supabase/
-  migrations/       SQL migrations, applied in filename order
+  migrations/       SQL migrations, applied in filename order (start: the baseline)
+  migrations_archive/  Pre-baseline migrations, kept for history only
   functions/        Edge functions, one directory each; shared code in _shared/
-docs/               Feature docs
+  tests/            Database behaviour tests (run.sh)
+  cron/             Production-only scheduled jobs (reference)
+scripts/release/    Migration dry run and changed-function helpers
+docs/               Feature docs, and the release checklist (docs/releasing.md)
 ```
 
 [`CLAUDE.md`](CLAUDE.md) describes the architecture in detail: routing and role gating, auth and role sync, the credit ledger, family accounts, the services layer, data fetching and testing conventions. Feature docs live in `docs/`:
@@ -78,7 +82,8 @@ docs/               Feature docs
 
 ## Supabase
 
-- **Migrations** live in `supabase/migrations/` and are applied in filename (timestamp) order. Prefix new files with `YYYYMMDD...` and apply them with the Supabase CLI (`supabase db push`).
+- **Migrations** live in `supabase/migrations/` and are applied in filename (timestamp) order. Prefix new files with `YYYYMMDD...`. The first one, `20261017100000_baseline.sql`, is the full production schema; older migrations are in `migrations_archive/` because they can't rebuild a database on their own. Ship migrations with the steps in [`docs/releasing.md`](docs/releasing.md) (dry run on production, then `supabase db push --linked`).
+- **Local database:** `supabase db start` builds a Postgres 15 database from the migrations (Docker required); `supabase db reset` rebuilds it. Then `supabase/tests/run.sh` runs the database tests against it.
 - **Types:** after a schema change, regenerate `src/integrations/supabase/types.ts` (`supabase gen types`) instead of editing it by hand.
 - **Edge functions** live in `supabase/functions/<name>/` and are deployed separately from the frontend. Merging or deploying the site does not update them; run `supabase functions deploy <name>` and confirm the new version is live.
 - **`verify_jwt`** is set per function in `supabase/config.toml`. Functions called by Stripe or by cron have it turned off and authenticate another way (Stripe signature verification, or the shared `x-cron-secret` header).
@@ -90,8 +95,10 @@ docs/               Feature docs
 
 | Job                  | Checks                                                                    |
 | -------------------- | ------------------------------------------------------------------------- |
-| `lint-and-typecheck` | `npm run lint`, `npm run type-check`, `npm run check-format`              |
+| `lint-and-typecheck` | ESLint (no auto-fix), `npm run type-check`, `npm run check-format`        |
 | `test`               | `npm run test -- --coverage` (50% threshold), uploads the coverage report |
 | `build`              | `npm run build`, after the other two jobs pass                            |
+| `edge-functions`     | `deno check` on every edge function                                       |
+| `database`           | builds a fresh database from `supabase/migrations`, runs `supabase/tests` |
 
 Run the same checks locally before pushing. A husky pre-commit hook also runs Prettier and `eslint --fix` on staged files through lint-staged.

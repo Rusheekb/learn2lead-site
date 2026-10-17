@@ -29,7 +29,12 @@ Node version is pinned in `.nvmrc`.
 
 ### Supabase / edge functions
 
-- Migrations live in `supabase/migrations/*.sql`, applied in filename (timestamp) order. Create new ones with a `YYYYMMDD...` prefix.
+- Migrations live in `supabase/migrations/*.sql`, applied in filename (timestamp) order. Create new ones with a `YYYYMMDD...` prefix. The first, `20261017100000_baseline.sql`, is the whole production schema (pre-baseline history is in `supabase/migrations_archive/`, which can't rebuild a database). `supabase db start` / `db reset` build a local Postgres 15 from them.
+- Ship database and function changes with `docs/releasing.md`: `scripts/release/dry-run-migrations.sh` (runs pending migrations on production inside a transaction it then aborts), then `supabase db push --linked`. Never apply a migration to production without the dry run.
+- Database behaviour tests live in `supabase/tests/*.test.sql` (plain SQL with a `pg_temp.ok(cond, msg)` helper; impersonate users with `request.jwt.claims` + `SET ROLE authenticated`) and run with `supabase/tests/run.sh` against a local database; CI runs them on every PR. Add a test with every access-rule or RPC change.
+- Access rules: signed-out visitors (`anon`) may execute only the allowlisted SECURITY DEFINER functions asserted in `supabase/tests/01_access_hardening.test.sql`; new RPCs need `REVOKE ALL ... FROM PUBLIC, anon` plus explicit grants. In RLS policies write `(SELECT auth.uid())` / `(SELECT get_auth_user_role())` so they're evaluated once per query.
+- Storage: `materials` (class files) and `shared_content` are private; open files with signed URLs (`MaterialLink` / `getSignedMaterialUrl`), never `getPublicUrl`. Read/write rules go through `can_read_class_file` / `can_write_class_file`. `secure-file-upload` runs with server rights and only accepts allowlisted buckets.
+- pg_cron schedules are production-only (`supabase/cron/jobs.sql`), kept out of migrations so local/CI databases never call production.
 - Edge functions live in `supabase/functions/<name>/`. **Editing a function's local file does not deploy it** — you must run `supabase functions deploy <name>` and verify the change landed (e.g. bump a version/log line) before assuming it's live.
 - `supabase/config.toml` declares `verify_jwt` per function — functions called by cron or by Stripe webhooks (`stripe-webhooks`, `class-reminder`, `admin-weekly-digest`, `send-weekly-digest`, `cron-quarterly-reports`, `process-auto-renewal`, `send-contact-email`) have `verify_jwt = false` and must authenticate/validate by other means (e.g. Stripe signature verification). The four cron-triggered ones check a shared `x-cron-secret` header via `_shared/cronAuth.ts` — pg_cron reads it from Vault (`cron_secret`), the functions from the `CRON_SECRET` edge secret; never commit the value.
 - `scripts/db-migrate.js` is a legacy helper for applying migrations against `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY` outside the Supabase CLI; prefer the Supabase CLI (`supabase db push`, `supabase functions deploy`) for real workflows.
@@ -80,7 +85,7 @@ React Query (`@tanstack/react-query`) is the standard for server state; query ho
 
 ### Testing
 
-Jest + Testing Library + jsdom. Config: `jest.config.ts`, setup in `src/setupTests.ts`. Tests live alongside code in `__tests__/` folders (e.g. `src/services/__tests__/`, `src/utils/__tests__/`, `src/components/student/__tests__/`, `src/contexts/__tests__/`). `jest.importMetaEnvTransform.cjs` shims `import.meta.env` for Jest since the app otherwise relies on Vite env handling. Coverage threshold (50% branches/functions/lines/statements) is enforced in both `jest.config.ts` and CI.
+Jest + Testing Library + jsdom. Config: `jest.config.ts`, setup in `src/setupTests.ts`. Tests live alongside code in `__tests__/` folders (e.g. `src/services/__tests__/`, `src/utils/__tests__/`, `src/components/student/__tests__/`, `src/contexts/__tests__/`). `jest.importMetaEnvTransform.cjs` shims `import.meta.env` for Jest since the app otherwise relies on Vite env handling. Coverage threshold (50% branches/functions/lines/statements) is enforced in both `jest.config.ts` and CI. Database tests are separate (see Supabase above); edge functions are type-checked in CI with `deno check`, and their pure helpers in `supabase/functions/_shared/` are unit-tested with Jest.
 
 ### Linting notes
 

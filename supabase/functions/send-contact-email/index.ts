@@ -92,7 +92,7 @@ const handler = async (req: Request): Promise<Response> => {
     const notificationResponse = await resend.emails.send({
       from: 'Learn2Lead <noreply@learn2lead.page>',
       to: ['learn2leadtutoring@gmail.com'],
-      replyTo: email,
+      reply_to: email, // resend@2 sends fields as-is; the API expects reply_to
       subject: `Contact Form: ${subject}`,
       html: `
         <h2>New Contact Form Submission</h2>

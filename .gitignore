@@ -23,7 +23,8 @@ dist-ssr
 *.sln
 *.sw?
 
-# Local environment variables
+# Local environment variables (see .env.example)
+.env
 .env.local
 .env.test
 

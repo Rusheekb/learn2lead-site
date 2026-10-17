@@ -175,8 +175,16 @@ Deno.serve(async (req) => {
     if (subData && !subError) {
       hasAccount = true;
       creditsRemaining = subData.credits_remaining || 0;
-      planName = subData.subscription_plans?.name || 'Direct Payment';
-      pricePerHour = subData.subscription_plans?.price_per_hour || null;
+      // A many-to-one embed arrives as one object; the untyped client
+      // infers a list, so accept either shape.
+      type Plan = { name: string | null; price_per_hour: number | null };
+      const planRow = subData.subscription_plans as unknown as
+        | Plan
+        | Plan[]
+        | null;
+      const plan = Array.isArray(planRow) ? planRow[0] : planRow;
+      planName = plan?.name || 'Direct Payment';
+      pricePerHour = plan?.price_per_hour || null;
       logStep('Found subscription record', {
         planName,
         pricePerHour,
