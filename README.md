@@ -72,7 +72,7 @@ supabase/
   tests/            Database behaviour tests (run.sh)
   cron/             Production-only scheduled jobs (reference)
 scripts/release/    Migration dry run and changed-function helpers
-docs/               Feature docs, and the release checklist (docs/releasing.md)
+docs/               Feature docs, the release checklist (docs/releasing.md) and backups (docs/backups.md)
 ```
 
 [`CLAUDE.md`](CLAUDE.md) describes the architecture in detail: routing and role gating, auth and role sync, the credit ledger, family accounts, the services layer, data fetching and testing conventions. Feature docs live in `docs/`:
