@@ -84,7 +84,7 @@ Jest + Testing Library + jsdom. Config: `jest.config.ts`, setup in `src/setupTes
 
 ### Linting notes
 
-`eslint.config.js` deliberately excludes `**/pages/**`, `src/components/ui/**` (shadcn-generated), and `src/utils/**` from linting — don't be surprised these directories can have lint issues that CI won't flag.
+`eslint.config.js` excludes only `src/components/ui/**` (shadcn-generated) from linting; everything else under `src/`, including `pages/` and `utils/`, is linted in CI.
 
 ### Observability
 
