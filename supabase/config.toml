@@ -5,6 +5,11 @@ project_id = "lnhtlbatcufmsyoujuqh"
   port = 54321
   schemas = ["public", "storage"]
 
+[db]
+  port = 54322
+  # Match production (Postgres 15) so local and CI databases behave the same.
+  major_version = 15
+
 [functions]
 [functions.check-subscription]
   verify_jwt = false

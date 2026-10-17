@@ -108,12 +108,8 @@ export const generateTestCSV = (): string => {
       row
         .map((cell) => {
           // Escape cells with commas or quotes
-          if (
-            cell.includes(',') ||
-            cell.includes('\"') ||
-            cell.includes('\n')
-          ) {
-            return `\"${cell.replace(/\"/g, '\"\"')}\"`;
+          if (cell.includes(',') || cell.includes('"') || cell.includes('\n')) {
+            return `"${cell.replace(/"/g, '""')}"`;
           }
           return cell;
         })
