@@ -10,13 +10,7 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 export default [
   // 1) Don’t lint these folders at all
   {
-    ignores: [
-      'dist/**',
-      'node_modules/**',
-      '**/pages/**',
-      'src/components/ui/**',
-      'src/utils/**',
-    ],
+    ignores: ['dist/**', 'node_modules/**', 'src/components/ui/**'],
   },
 
   // 2) Core JS/JSON rules
